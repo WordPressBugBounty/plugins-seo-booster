@@ -1,0 +1,370 @@
+
+= 3.5.27 =
+* [404 Error tracking] New:Ignore URLs that match what you enter in the settings page.
+* Minor improvement on admin dashboard page.
+
+= 3.5.26 =
+* [Autolink]: Improvement to the replace system now searches for longest keywords first.
+* (Pro) [Autolink]: Enable/disable individual types of pages, eg. categories or terms.
+* Removed translation files and upload on WP translation project page.
+
+= 3.5.25 =
+* Added 3 more search engines to list.
+* Fixed PHP notices in code.
+* (Pro) Autolink: Now works with category and tag descriptions (if your theme supports it).
+* (Pro) Autolink: Added Compatibility with WPForo forum.
+
+= 3.5.24 =
+* Fix - Autolink page - pagination not working properly due to faulty counting method. URL vs. unique ID.
+* Fix - Autolink page - Search works properly now, for keyword, URL and "Last used on".
+* Fix - Autolink page - Duplicate keywords on autolink are now automatically removed.
+* Fix - Autolink page - Yoast SEO keywords for categories, tags and other terms can be imported.
+
+
+= 3.5.23 =
+* Fix: Autolink can now insert multiple links per paragraph.
+* New: Autolink replace limit - Set how many times autolink should insert links on your page.
+* Fix: Yoast Focus Keywords showing up multiple times.
+
+= 3.5.22 =
+* NEW: Auto Link - Replace keywords only once or multiple times. You can now control if you want the "keyword" changed to a link just first time found in the text or every time it is found.
+* Fix: Minor - PHP notice if website has less than 2 logged visits.
+* Fix: PHP notice for WF_SN_TEXT_DOMAIN not found.
+* Tested Auto Link in Avada theme.
+
+= 3.5.21 =
+* Fix: PHP notices when deleting URLs from database.
+* Fix: Improve speed in automatic keyword to link module.
+* Hardening code security.
+
+= 3.5.2O =
+* FIX: Buggy keyword injection (turn keywords to links) now works much better - many fixes, UTF8 compatibility, much much faster also due to recording big part of the functionality.
+* NEW: You can choose to replace keywords only once or multiple times on each URL. Default is to only inject a link on the first occurence of the keyword.
+
+= 3.5.19 =
+* New: MojeekBot is now detected as a crawler bot.
+* FIX: Keyword injection in title tag for Yoast SEO not always working.
+* FIX: Bug in keyword injection in title-tags on 404 pages.
+* Checked with WP 5.2.2
+
+= 3.5.18 =
+* NEW: Added sort option in Dynamic Links widget - show latest keywords first.
+* FIX: Prevent SQL error "http_code doesn't have a default value" - Thank you Gregg
+
+= 3.5.17 =
+* Updated 3rd party code to latest version, Freemius.
+* Fix - PageSpeed Insights tests saved a lot of data - Thank you for reporting Stephen.
+
+= 3.5.16 =
+* Fixes errors in a few MySQL strings, thank you Marco :-)
+
+= 3.5.15 =
+* Fixes undefined variable error - thank you @a4jpcom
+* Verified working with WP 5.2
+
+= 3.5.14 =
+* Fix: Only loading Help Scout support beacon on SEO Booster pages.
+
+= 3.5.13 =
+* Helpscout beacon permissions must be accepted for the help system to load.
+
+= 3.5.12 =
+* Cleaning up unused CSS and other files.
+* Hardening database operations, making plugin more secure.
+
+= 3.5.11 =
+* Improved the search engine detection in the backlinks page.
+* Added 6 keyword sources - searx.ch, ankiro.dk, flysrch.com, my-search.site, zapmeta.hk, facemojikeyboard.com
+* Fixed minor bugs in MySQL queries.
+* Restructered settings page, easier to understand and use.
+* Code cleanup, Easter :-)
+
+= 3.5.10 =
+* Fixed minor bugs introduced in previous release.
+* Fixed when deleting in a Multisite not all database tables were removed.
+* Fixes save problem with Google PageSpeed Insights scores.
+
+= 3.5.9 =
+* New: Revamped dashboard page - better overview.
+* New: Maintenance schedule now properly sets to every hour.
+* No more included language files, uses translate.wordpress.org instead.
+* New: Maintenance routines now cleaning up URLS table.
+* Cleaned up messages in log to reduce clutter.
+* PRO: PageSpeed Insights no longer in beta.
+* PRO: New - Set limit 1-5 of URLs per PageSpeed Insights tests.
+* PRO: You can now reset the score of an URL from "PageSpeed" page or remove the URL entirely.
+* PRO: Click anywhere to reset suggestion popup.
+
+= 3.5.7 =
+* FIX: (Incoming Keywords) Order by Keyword column did not work, this has been fixed. Thank you Glen Rowell :-)
+* PRO: PageSpeed Insights Audit was not working properly - this has been fixed.
+
+= 3.5.6 =
+* FIX: Multisite database creation. Databases are now created properly for subsites. Thank you Richard.
+* FIX: Two tables not removed properly if deleting data when deactivating. Tables sb2_urls and sb2_urls_meta.
+* FIX: PHP notices about undefined variables. Thank you Richard.
+* Improved 404 detection routines so they run faster.
+
+= 3.5.5 =
+* Fix - diffucult to click links in backlinks page if thumbnail overlapped - Thank you Glen Rowell.
+* New - Added "Account Reset" on the settings page.
+
+= 3.5.4 =
+* NEW: Configuration checker on Dashboard page - tests if all database tables are created and up to date - https://support.cleverplugins.com/article/46-database-tables-needs-updating
+* FIX: PHP Notices on Autolink admin page.
+* 33 keyword sources added.
+* Added more inline help - look for "Quick help" buttons.
+* Checked up to WordPress 5.1.1
+* PRO: Backlinks are now removed after 5 failed attempts. Used to be 10.
+
+= 3.5.3 =
+* Daily maintenance - Changed to every hour. Guess it should be called hourly maintenance now :-)
+* Fix: PHP notices on Dashboard page.
+* Fix: Fatal error when upgrading from free to premium.
+* Updated language files.
+
+= 3.5.2 =
+* Minor: Added missing CSS file from SDK
+* Minor: Added email sending result to log for debugging.
+* Minor: Added keyword sources instasrch.com, betabuzz.com and wbsrch.com
+
+= 3.5.1 =
+* Minor typo in Yoast SEO import logging functionality.
+* Audit - Updated to v5 Pagespeed Insights - new reports and more details on how you can improve your website speed.
+* Security fix.
+
+= 3.5 =
+
+**Lots of changes, please update**
+
+* NEW: Backlinks - Ignore specific URLs or domains.
+The plugin comes with a default set of domains and URLs to ignore, now you can add your own to the list.
+
+Getting a lot of spam referral links from .ru domains? You can enter ".ru" in the new "Ignore backlink sources" field in settings page.
+
+All previous backlinks from domains you spefify will be gradually removed by the maintenance routines running in the background.
+
+
+* NEW: You can now turn on/off automatically adding the list of popular keywords on each post or page. Previously this was either on or off for all pages and posts.
+
+Look for it next to the "Turn keywords to links" checkbox.
+
+
+* NEW: Autolink - Import from Yoast.
+
+If you use the Focus Keyword in Yoast SEO plugin, you can now import keywords and links on the "Autolink" page.
+
+
+* FIX: Bug in detecting internal navigation fixed - Should reduce internal links showing up as external backlinks.
+
+
+* NEW: Backlinks page now highlights potential keyword sources. If one or more of your backlinks looks like they could be from a search engine they will be highlighted with a mild green color. You can check if this is a keyword source and if so send it to us. Once we add the source to the plugin, the next version will automatically adjust the database and move from the Backlinks page to Incoming Keywords.
+
+
+* NEW: Country flags on "Incoming Keywords" page - showing origin country of the keyword source.
+
+
+* UPDATE: Improved inline help. On all admin pages there is a floating button bottom right corner of your window, use this to access the knowledge-base and get direct help.
+
+
+* UPDATE: More help. Look throughout the plugin for the little blue label, "Quick help" - this will open the related help article for the page or feature. More is coming as the knowledge base is expanded.
+
+
+* UPDATE: Backlinks page - rearranged for more space. Moved screenshot of the backlink to when you hover over the link itself.
+
+
+* UPDATE: Removed PHP check script - WordPress 5.1 will introduce a PHP version checker, so no need to nag anyone running PHP 5. If you are, you really need to upgrade - please ask your webmaster or hosting company to help you.
+
+
+* UPDATE: Improved SQL queries to be even faster, every small bit helps :-)
+
+
+* UPDATE: Freemius SDK updated from 2.1.3 to 2.2.3
+
+
+* UPDATE: Extended the log, now showing the last 2000 entries (used to be 1000).
+
+
+* UPDATE: Tested up to WordPress 5.1 release.
+
+
+* FIX: Missing background image on welcome panel.
+
+
+PRO only updates:
+* NEW: Maintenance routines now clean up backlinks which can not be verified.
+* FIX: No more injecting keywords in title tags on 404 pages.
+* UPDATE : Backlinks page - Added number of failed attempts under Last Check - Over 10 failed attempts removes the link from the list.
+* UPDATE: Backlinks page - Added a label to nofollowed links so you can easily see which backlinks have nofollowed links to you.
+
+
+= 3.4.7 =
+* FIX - Minor bug in backlink checking.
+* FIX - Updated the list of database tables to be removed when removing plugin from a Multisite installation.
+* 5 keyword sources added, 	bravesearch.net, hao123.com, search.gmx.co, ecosia.org, so.m.sm.cn
+* Updated Freemius SDK to 2.1.3
+
+= 3.4.6 =
+* Added zlsite.com, gosearchresults.com
+
+= 3.4.5 =
+* FIX - Backlink checking routines had a bug that prevented updating some links in the database.
+* Updated language files.
+* Added 9 more backlinks - zapmeta.co.in, g.results.supply, search.trustnav.com, homeandgardenideas.com, newtab.club, vinden.nl, searchingdog.com, get.tv.com, izito.co.in
+
+= 3.4.4 =
+* Fix - Code that detects the current url, sometimes with and sometimes without parameters, this created problems with getting the right keywords.
+* Fix - Bug in "Popular searches to this page" where the wrong URL was sometimes detected.
+* Fix - The keyword filtering code had a couple of logic bugs.
+* Removed code from previous versions that was no longer used.
+* Minor fixes in the code.
+* Settings page - slight visual improvements.
+* Pro features more visible in settings page.
+
+= 3.4.3 =
+Summary: The autolink module now runs smoother and better with a couple of fixes. There are helpful links to support and account handling on all admin pages. The Dashboard widget was also changed a bit, looks nicer and has more helpful info and direct link.
+
+* Improvement - The Dashboard widget looks much nicer and is more informative.
+* Improvement - "Visitors from Search Engines" graph is back again on the main page.
+* Fix - Plugged a potential memory leak in autolink module.
+* Fix - Improved character encoding in autolink module.
+* PRO: Fix bug preventing some visits by search engine crawlers to not be logged.
+* PRO: Added SeznamBot crawler detection.
+* Fix - PHP notice on "Autolink" pages
+
+
+= 3.4.2 =
+* FIX - Keyword replacement. The new library used for inserting links in the content was not doing that great. This release reverts back to the old version that works a lot better.
+* Improvement - Started cleaning up search engine list, old engines no longer in use.
+
+
+= 3.4.1 =
+* Fix - "Change keywords on this page to links." did not always work, sometimes you could not turn off automatic linking for a post/page.
+* Fix - Only add links if feature turned on for current post/page and global setting also.
+* Fix - "Popular searches to this page" - Added default CSS styling to remove some overlaps with other plugin adding content.
+* Fix - No more links generated pointing to current page.
+* Cleaned out some debug code from previous release.
+
+= 3.4 =
+
+* NEW - Automatic text to link feature reworked.
+
+That means that you can enter any word or phrase and turn those in to links to any URL you choose. Internal or external, it is up to you - weee! :-)
+
+* Fixed a bug in the code that detects visits from old undetected search engines.
+
+There are maintenance routines in the plugin that regularly checks old visitor log to identify search engines or to clean out. I am always trying to improve the routines behind.
+
+* FIX - PHP notice missing index (minor error) - thank you Alan :-)
+
+* Reworked code and cleaned out hundreds of lines of code no longer needed for the keyword autolink module.
+
+* Vastly improved the code that converts keywords to links. Already fast, now much faster :-)
+
+The code handling the keyword to link routine was also optimized to run faster and be more accurate.
+
+The plugin has to handle many different things. Different kinds of page builders, making sure that the links are not injected into existing links or a link in the middle of a headline.
+
+Things like that would look bad and even break your code.
+
+* Improved debug information for automatic linking module. That means more meaningful information if you turn on debug logging.
+
+* Updated language files with new translations.
+
+
+= 3.3.35 =
+* Fixed 404 error monitoring that was running even if turned off in settings. Doh, sorry :-/
+* Fixed a bug in the premium crawler system storing visits some crawlers.
+* Used the chance to improve security in database operations in the crawler system.
+* Removed "Recent Events" from Dashboard. Nobody is going to miss it. Dashboard widget is coming up for a refresh.
+* Added 28 keyword sources to the list
+
+= 3.3.34 =
+* Fixed the old PHP warning from showing up on main WP Dashboard page.
+* Removed a bit of old code not used anymore related to old PHP warnings.
+* Added a keyword source, areaguides.net
+* Refined the "ignore link" functionality with a few more urls to filter out.
+
+= 3.3.33 =
+* Added more flags to search engine list - easier to see where links and visitors are coming from.
+* Fix: PageSpeed Audit routines running even if not turned on.
+* Fixed repeated text, typos, unused text and improved the language here and there to make things easier.
+* Cleaned up old code no longer needed - backlinks RSS feed from earlier versions.
+* Cleaned up interface and log messages.
+* Updated language files.
+* Extended the log database table.
+
+= 3.3.32 =
+* New: Warning for PHP versions 5.6 and lower. It is time to update and move on.
+* Fix: Cleaned up the Dashboard, now much easier to an overview.
+* Fix: Keywords discovery now has "Not Provided" instead of "# for unknown searches.
+* Upgraded Freemius system from SDK 2.1.0 to 2.1.2.
+* Added more languages and flags to the overview, looks much nicer.
+* Added 2 more search engine sources - froogle.ihyd.com and wibki.com
+* Fixed PHP warning about missing $parsedurl reference.
+* Tested with WordPress 4.9.8
+
+= 3.3.31 =
+* Added flags from GoSquared - https://github.com/gosquared/flags
+* Added Internal Links page beta - showing where keywords go to links - More functionality planned for future versions.
+* Added debug logging when adding keywords to title-tag. Works with SEOPress, AIO SEO and Yoast SEO.
+* Moved Quick Help in settings page to the right, settings page look less cluttered.
+* Updated language files.
+
+= 3.3.30 =
+* Fixed bug introduced in 3.3.29, missing internal reference.
+
+= 3.3.29 =
+* Now you can sort 404 errors by the last visited column.
+* Fix: Removed PHP notifice when detecting visits from crawler robots.
+* Cleaned up a bit of debug that can overflow the log.
+* Tested with WP 4.9.7
+
+= 3.3.28 =
+* Fixed PHP warnings when using any of the widgets with no ignore list - Thank you Saso.
+* Improved wording in marketing box to avoid confusion - Thank you Sergio.
+
+= 3.3.27 =
+* Fixed minor error notice displayed in admin after upgrading to 3.3.26 - Thank you Charles.
+* Fixing upgrade from free to pro error. Both free and pro plugins cannot be activated at same time. This release tries to help make it a bit easier to upgrade by deactivating the free version automatically.
+
+= 3.3.26 =
+* Verified working with WP 4.9.6
+* Upgrades 3rd party library Freemius in relation to GDPR and privacy policy.
+* Fix PHP notice - Thank you Yomi.
+
+= 3.3.25 =
+* Fix conflict with Maxbuttons plugin - Loading the same 3rd party library twice caused a fatal error. Thank you Tiffany for reporting the bug.
+
+= 3.3.24 =
+* Fixed bug in "Append keywords" feature - Thank you losteineu.
+* PRO - Improved Audit section - does not audits error pages.
+
+= 3.3.23 =
+* Improvements to the maintenance routines.
+* Improved the settings page - added more Quick help links.
+* Improved page detection logic - fixes bugs with backlinks and keywords not showing up.
+* PRO - Fixes "reset audit" button that did not work.
+* PRO - Fix audit page - You can now delete individual urls from table.
+* PRO - Visual improvements to the list of urls to audit, 404 errors are highlighted
+
+= 3.3.22 =
+* Keywords page now sorts by default "Latest visit".
+
+= 3.3.21 =
+* Fixes bug with backlink detection - new backlinks were not saved :-/
+* Fixes bug in the audit system.
+* Improved maintenance routines - This release will clean a lot of clutter.
+* Improved ignore filters for tracking going forward.
+* Cleaning up code - PHP notices and unused code.
+
+= 3.3.20 =
+* Updated translation files.
+* Fixed minor debug notices in debug.log
+* Fixes in SEO audit beta module (Pro only) -
+
+= 3.3.19 =
+* Fixes to recently introduced PageSpeed Insights module - Still in beta.
+* Improved filtering of internal links non relevant to SEO Audit.
+* Increased length of trial from 7 to 14 days.
+* Missing styling on Audit page (pro only)
