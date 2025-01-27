@@ -1,0 +1,317 @@
+.postbox .inside .label.label-info {
+  background-color: #ccefff;
+border: transparent;
+font-size: .8em;
+}
+
+.postbox .inside .label.label-warning {
+background-color: #ccefff;
+border: transparent;
+font-size: .8em;
+}
+
+
+#sb-gsc-keywords-container.tabulator {
+background-color: #ffffff;
+width: 100%;
+margin-top: 20px;
+margin-bottom: 20px;
+}
+
+#sb-gsc-keywords-container .tabulatorselect.tabulator-page-size {
+padding-right: 15px !important;
+}
+
+#sb-gsc-keywords-container .copyicon {
+  margin-left: 5px;
+  font-size: 18px;
+  background: #e6e6e6;
+  padding: 3px;
+  height: 16px;
+  border-radius: 2px;
+  line-height: 16px;
+  width: 16px;
+  display: inline-block;
+  text-align: center;
+  margin-right: 5px;
+}
+
+
+
+
+#sb-gsc-keywords-container .copyicon {
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+#sb-gsc-keywords-container .copyicon.copied {
+  color: green; /* Change the color to indicate success */
+  position: relative;
+}
+
+#sb-gsc-keywords-container .copyicon.copied::after {
+  content: '✔'; /* Add a checkmark */
+  position: absolute;
+  left: 100%; /* Position it to the right of the icon */
+  margin-left: 5px; /* Add some space between the icon and the checkmark */
+  color: green;
+  font-size: 0.8em; /* Adjust size as needed */
+}
+
+
+
+#sb-gsc-keywords-container .copyicon:hover {
+  background: #cbcbcb;
+}
+
+#sb-gsc-keywords-container.tabulator .tabulator-header .tabulator-col {
+  background-color: #ffffff;
+  color: #2c3338;
+  font-weight: normal;
+  border-right: 1px #f2f2f2 solid;
+}
+
+#sb-gsc-keywords-container.tabulator .tabulator-footer .tabulator-page:disabled {
+  color: #a7aaad !important;
+  border-color: #dcdcde !important;
+  background: #f6f7f7 !important;
+  box-shadow: none !important;
+  cursor: default;
+  transform: none !important;
+  font-weight: normal;
+
+
+
+}
+
+#sb-gsc-keywords-container.tabulator .tabulator-footer .tabulator-footer-contents {
+
+  background-color: #ffffff;
+}
+
+#sb-gsc-keywords-container.tabulator .tabulator-footer .tabulator-page {
+  display: inline-block;
+  vertical-align: baseline;
+  min-width: 30px;
+  min-height: 30px;
+  margin: 0;
+  padding: 0 4px;
+  font-size: 14px;
+  line-height: 1.625;
+  text-align: center;
+  color: #a7aaad;
+  border-color: #a7aaad;
+  background: #f6f7f7;
+  font-weight: normal;
+  margin-left: 4px;
+}
+
+
+#sb-gsc-keywords-container.tabulator .tablenav .tablenav-pages .button {
+
+  display: inline-block;
+  vertical-align: baseline;
+  min-width: 30px;
+  min-height: 30px;
+  margin: 0;
+  padding: 0 4px;
+  font-size: 16px;
+  line-height: 1.625;
+  text-align: center;
+
+
+  color: #2271b1;
+  border-color: #2271b1;
+  background: #f6f7f7;
+}
+
+#sb-gsc-keywords-container.tabulator .tabulator-footer .tabulator-page:hover,
+#sb-gsc-keywords-container.tabulator .tabulator-footer .tabulator-page.active {
+  color: #2271b1;
+  border-color: #2271b1;
+  background: #f6f7f7;
+}
+
+#sb-gsc-keywords-container .tabulator-row .tabulator-cell {
+  border-right: 0px;
+}
+
+#sb-gsc-keywords-container .tabulator-row.tabulator-row-even {
+  background-color: #f6f7f7;
+}
+
+#sb-gsc-keywords-container.tabulator .tabulator-row.tabulator-selectable:hover {
+  background-color: #f6f7f7;
+}
+
+.seo-booster-tooltip-icon {
+  display: inline-block;
+  border-bottom: 1px dotted #000;
+  text-decoration: none;
+  position: relative;
+  cursor: pointer;
+  font-weight: bold;
+  color: #0073aa;
+  margin-left: 5px;
+}
+
+.seo-booster-tooltip-icon:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 100%;
+  margin-bottom: 5px;
+  padding: 5px;
+  width: 200px;
+  background-color: #000;
+  color: #fff;
+  text-align: center;
+  border-radius: 5px;
+  font-size: 12px;
+  z-index: 100;
+  white-space: pre-wrap;
+}
+
+.warning-icon {
+  color: red;
+  font-weight: bold;
+}
+
+.info-icon::before {
+  content: "\2139";
+  margin-right: 5px;
+  font-size: 14px;
+  color: #0073aa;
+}
+
+
+
+.postbox .inside .label {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  font-size: 0.75rem;
+  font-weight: normal;
+
+  line-height: 1;
+  color: #363636;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 4px;
+  border: 1px solid #a9a712;
+
+  background-color: #fbf6e4;
+}
+
+.foundkw {
+  color: #538f52;
+}
+
+/* Add these new styles */
+.tabulator-header-filter input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.table-controls select {
+  margin-left: 10px;
+}
+
+/* Pagination styles */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.pagination-controls .tabulator-page {
+  margin: 0 2px;
+}
+
+.pagination-controls .tabulator-page-number {
+  display: inline-block;
+  min-width: 17px;
+  border: 1px solid #ccc;
+  padding: 3px 5px 7px;
+  background: #e5e5e5;
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 400;
+  text-align: center;
+}
+
+.pagination-controls .tabulator-page-number.current-page {
+  border-color: #999;
+  background: #f7f7f7;
+}
+
+#keyword-search {
+  width: 15em;
+}
+
+/* Page size selector */
+.tabulator-page-size select {
+  margin-left: 5px;
+}
+
+/* Table controls layout */
+#table-controls.tablenav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+#table-controls .alignleft.actions {
+  display: flex;
+  align-items: center;
+}
+
+#table-controls .tablenav-pages {
+  display: flex;
+  align-items: center;
+}
+
+/* Search input */
+#keyword-search {
+  margin-right: 5px;
+}
+
+/* Filter dropdown */
+#filter-dropdown {
+  margin-right: 5px;
+}
+
+/* Pagination styles */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.pagination-controls .tabulator-page {
+  margin: 0 2px;
+}
+
+.pagination-controls .tabulator-page.current-page {
+  background-color: #0073aa;
+  border-color: #006799;
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Page size selector */
+.tabulator-page-size select {
+  margin-left: 5px;
+}
+
+/* Hide Tabulator's built-in footer */
+.tabulator-footer {
+  display: none !important;
+}

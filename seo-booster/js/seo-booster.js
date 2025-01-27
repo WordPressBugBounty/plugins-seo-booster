@@ -1,89 +1,520 @@
-/* globals Beacon:true; sbbeacondata:true, jQuery:true */
+/* global Beacon, sbdata, jQuery, Chart, sb_gsc_ajax, ajaxurl */
 
 jQuery(document).on("click", function () {
 	jQuery(".sugglist").hide();
 });
 
 
-/**
- * Enables plugin background updates
- *
- * @author	Lars Koudal
- * @since	v0.0.1
- * @version	v1.0.0	Friday, March 18th, 2022.	
- * @version	v1.0.1	Tuesday, March 22nd, 2022.
- * @global
- * @return	void
- */
- function sbp_enable_background_updates(e) {
-  jQuery(this).attr('disabled');
-  jQuery('#sbp-enable-background-updates a.button').addClass('disabled');
-  jQuery('#sbp-enable-background-updates .dismiss-this').addClass('disabled');
-  jQuery('.wrap').prepend('<div class="secning-loading-popup"><p>Please wait<span class="spinner is-active"></span></p></div>');
-  jQuery(".secnin-loading-popup").toggle();
-  var nonce = jQuery('#sbp-enable-background-updates-nonce').val();
-  jQuery.ajax({
-    type: 'POST',
-    url: ajaxurl,
-    data: {
-      action: 'sbp_enable_background_updates',
-      nonce: nonce
-    },
-    success: function (data) {
-      location.reload();
-    },
-    error: function (xhr, textStatus, error) {
-      console.log(xhr.statusText);
-      console.log(textStatus);
-      console.log(error);
+
+
+jQuery(document).ready(function($) {
+
+	jQuery(document).on('click', '#seobooster_getsupport', function (e) {
+    e.preventDefault();
+    if (typeof Beacon !== 'undefined') {
+        Beacon('toggle');
     }
-  });
+});
+
+
+
+
+jQuery(document).on('submit', '#seobooster_email_container form', function(e) {
+    e.preventDefault();
+    
+    var $form = jQuery(this);
+    var $emailInput = $form.find('#seobooster_email');
+    var $submitButton = $form.find('input[type="submit"]');
+    var $messageContainer = jQuery('#sbweeklyemail_signupmessage');
+    
+    // Validate email(s)
+    var emails = $emailInput.val().split(',').map(function(email) {
+        return email.trim();
+    });
+    
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var validEmails = emails.filter(function(email) {
+        return emailRegex.test(email);
+    });
+    
+    if (validEmails.length === 0) {
+        showMessage(sbdata.strings.pleaseEnterAtLeastOneEmail, 'error');
+        return;
+    }
+    
+    $emailInput.prop('disabled', true);
+    $submitButton.prop('disabled', true).addClass('disabled');
+    $submitButton.after('<span class="spinner is-active" style="float:none;"></span>');
+
+    var selected_nonce = jQuery('#seobooster_selected_site_nonce').val();
+
+    jQuery.ajax({
+        url: ajaxurl,
+        type: 'POST',
+        data: {
+            action: 'weeklyemailsignup',
+            nonce: selected_nonce,
+            email: validEmails.join(',')
+        },
+        success: function(response) {
+            if (response.success) {
+                $form.hide();
+                $('#seobooster_email_container .innercont').hide();
+                showMessage(response.data, 'success');
+            } else {
+                showMessage(response.data || sbdata.strings.errorProcessingRequest, 'error');
+            }
+        },
+        error: function(xhr, status, error) {
+            showMessage(sbdata.strings.errorProcessingRequest, 'error');
+        },
+        complete: function() {
+            $emailInput.prop('disabled', false);
+            $submitButton.prop('disabled', false).removeClass('disabled');
+            $form.find('.spinner').remove();
+        }
+    });
+
+    function showMessage(message, type) {
+        $messageContainer
+            .html('<p>' + message + '</p>')
+            .removeClass('success error')
+            .addClass(type)
+            .attr('role', 'alert')
+            .slideDown();
+    }
+});
+
+
+
+
+
+
+
+	const threshold = 10; // Number of keywords to show initially
+
+	jQuery('.report-section .kwlist,.content-section .kwlist').each(function() {
+			const $section = jQuery(this);
+			// const $kwlist = $section.find('.kwlist');
+			const $toggleButton = $section.find('.toggle-button');
+			const $keywords = $section.find('.kw');
+
+			if ($keywords.length > threshold) {
+					// Initially hide keywords beyond the threshold
+					$keywords.each(function(index) {
+							if (index >= threshold) {
+									jQuery(this).hide();
+							}
+					});
+
+					// Show the toggle button if there are more keywords than the threshold
+					$toggleButton.show();
+
+					$toggleButton.on('click', function() {
+							if ($kwlist.hasClass('expanded')) {
+									$kwlist.removeClass('expanded');
+									$toggleButton.text(sbdata.strings.showMore);
+
+									// Hide keywords beyond the threshold with animation
+									$keywords.each(function(index) {
+											if (index >= threshold) {
+													jQuery(this).slideUp('fast');
+											}
+									});
+							} else {
+									$kwlist.addClass('expanded');
+									$toggleButton.text(sbdata.strings.showLess);
+
+									// Show all keywords with animation
+									$keywords.each(function() {
+											jQuery(this).slideDown('slow');
+									});
+							}
+					});
+			} else {
+					// Hide the toggle button if there are not more keywords than the threshold
+					$toggleButton.hide();
+			}
+	});
+
+
+
+
+
+
+
+
+	
+
+
+
+	jQuery("#seobooster2selectsite").on("click", function (e) {
+    e.preventDefault();
+
+    var $this = jQuery(this);
+    var step = 0;
+    var startTime = new Date(); // Start the timer
+
+    // Hide the timer initially
+    jQuery('#elapsed-time').hide();
+
+    $this.prop('disabled', true);
+    $this.val(sbdata.strings.pleaseWait);
+
+    jQuery('#seobooster-api-status').html('<span class="spinner is-active"></span>').fadeIn();
+
+    jQuery('select[name="seobooster_selected_site"]').prop('disabled', true);
+    jQuery('select[name="seobooster_selected_days"]').prop('disabled', true);
+    function sendRequest(step, siteUrl, Days) {
+        if (step === 1) {
+            jQuery('#seobooster_email_container').slideDown('slow');
+        }
+        jQuery.ajax({
+            url: ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'sb_gsc_import_data',
+                step: step,
+                site_url: siteUrl,
+                nonce: sb_gsc_ajax.security,
+								days: Days
+            },
+            success: function (response) {
+                if (response.success) {
+                    // Show the timer if it's hidden
+                    jQuery('#elapsed-time').fadeIn();
+
+                    const message = '<span class="spinner is-active"></span>' + 
+                        sbdata.strings.uniqueKeywordsImported + ': ' + response.data.total_keywords + '<br>' +
+                        sbdata.strings.totalEntriesProcessed + ': ' + response.data.total_entries + '<br>' +
+                        sbdata.strings.lastImportKeyword + ': <code class="test">' + response.data.last_keyword + '</code><br>' +
+                        sbdata.strings.lastBatch + ': ' + response.data.time.toFixed(2) + ' ' + sbdata.strings.seconds + '.<br>' + 
+                        response.data.message;
+                    updateStatus(message);
+
+                    if (response.data.more_results) {
+                        // If there are more results, send a new request with the next step
+                        sendRequest(step + 1, siteUrl);
+                    } else {
+                        // Import is complete
+                        var endTime = new Date(); // End the timer
+                        var totalTime = calculateElapsedTime(startTime, endTime);
+
+                        jQuery('#import-status').val(sbdata.strings.completed);
+                        const completeMessage = sbdata.strings.importComplete + ' ' + response.data.total_keywords + ' ' + sbdata.strings.uniqueKeywordsImported + '.<br>' +
+                            sbdata.strings.totalEntriesProcessed + ': ' + response.data.total_entries + '<br>' +
+                            sbdata.strings.totalTime + ': ' + totalTime + '<p><a href="' + sb_gsc_ajax.dashboard_url + '" class="button button-hero button-primary">' + sbdata.strings.goToDashboard + '</a></p>';
+                        updateStatus(completeMessage);
+
+                        // Hide the timer after completion
+                        jQuery('#elapsed-time').fadeOut();
+												// Show the email container
+												jQuery('#seobooster_email_container').slideDown('slow');
+												jQuery('#seobooster_email_container #seobooster_email').focus();
+										
+
+											}
+                } else {
+                    // Handle error
+                    jQuery("#seobooster-api-error").html(response.data).fadeIn();
+                    jQuery('#import-status').val(sbdata.strings.retry);
+                }
+            },
+            error: function () {
+                // Handle AJAX error
+                jQuery("#seobooster-api-error").html(sbdata.strings.errorProcessingRequest).fadeIn();
+                jQuery('#import-status').val(sbdata.strings.retry);
+            }
+        });
+    }
+
+    function updateStatus(message) {
+        jQuery('#seobooster-api-status').html(message).fadeIn();
+    }
+
+    function calculateElapsedTime(startTime, endTime) {
+        var elapsed = Math.floor((endTime - startTime) / 1000); // Elapsed time in seconds
+        var minutes = Math.floor(elapsed / 60);
+        var seconds = elapsed % 60;
+        return (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+    }
+
+    function updateTimer() {
+        var currentTime = new Date();
+        var elapsedTime = calculateElapsedTime(startTime, currentTime);
+        jQuery('#elapsed-time').text(sbdata.strings.elapsedTime + ': ' + elapsedTime);
+    }
+
+    // Clear any previous errors and start the first request
+    jQuery("#seobooster-api-error").fadeOut();
+    updateStatus(sbdata.strings.savingSiteAndLoadingData + '<span class="spinner is-active"></span>');
+
+    var siteurl = jQuery('select[name="seobooster_selected_site"]').val();
+		var days = jQuery('select[name="seobooster_selected_days"]').val();
+		// make sure days is a number and betwenn 1 and 448
+
+
+		sendRequest(0, siteurl, days);
+		
+
+    // Start the timer update loop
+    setInterval(updateTimer, 1000); // Update every second
+
+    // Initial rendering of the timer (hidden initially)
+    jQuery('<div id="elapsed-time" style="margin-top: 10px; display: none;">' + sbdata.strings.elapsedTime + ': 00:00</div>').insertAfter('#seobooster-api-status');
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if (jQuery('#seobooster-gsc-chart').length) {
+	setupDateRangeSelector();
+	fetchChartData();
+}
+function setupDateRangeSelector() {
+	const container = document.createElement('div');
+	container.style.display = 'flex';
+	container.style.justifyContent = 'flex-start'; // Align the content to the left
+	container.style.marginBottom = '10px';
+
+	const dateRangeSelector = document.createElement('select');
+	dateRangeSelector.id = 'date-range-selector';
+	dateRangeSelector.classList.add('regular-text'); // Use the appropriate WordPress class for <select>
+	dateRangeSelector.innerHTML = `
+			<option value="28_days">${sbdata.strings.last28Days}</option>
+			<option value="3_months" selected>${sbdata.strings.last3Months}</option>
+			<option value="6_months">${sbdata.strings.last6Months}</option>
+			<option value="12_months">${sbdata.strings.last12Months}</option>
+			<option value="all">${sbdata.strings.allTime}</option>
+	`;
+
+	// Append the select to the container
+	container.appendChild(dateRangeSelector);
+
+	// Insert the container before the chart
+	document.getElementById('sb2canvascont').insertAdjacentElement('beforebegin', container);
+
+	// Event listener to refresh data when the dropdown changes
+	dateRangeSelector.addEventListener('change', function() {
+			fetchChartData();
+	});
+
+	// Create the refresh button
+	const refreshButtonContainer = document.createElement('div');
+	refreshButtonContainer.style.textAlign = 'center';
+	refreshButtonContainer.style.marginTop = '20px';
+
+	const refreshButton = document.createElement('button');
+	refreshButton.innerText = sbdata.strings.refresh;
+	refreshButton.classList.add('button', 'button-small', 'button-secondary');
+
+	// Event listener to refresh data when the button is clicked
+	refreshButton.addEventListener('click', function() {
+			fetchChartData();
+	});
+
+	// Append the button to the container
+	refreshButtonContainer.appendChild(refreshButton);
+
+	// Insert the refresh button container after the chart
+	document.getElementById('sb2canvascont').insertAdjacentElement('afterend', refreshButtonContainer);
 }
 
 
 
 
-function seobooster_freemius_opt_in( element ) {
-	var nonce  = jQuery( '#seobooster-freemius-opt-nonce' ).val(); // Nonce.
-	var choice = jQuery( element ).data( 'opt' ); // Choice.
 
-	jQuery.ajax( {
-		type: 'POST',
-		url: ajaxurl,
-		async: true,
-		data: {
-			action: 'seobooster_freemius_opt_in',
-			opt_nonce: nonce,
-			choice: choice
-		},
-		success: function( data ) {
-			location.reload();
-		},
-		error: function( xhr, textStatus, error ) {
-			console.log( xhr.statusText );
-			console.log( textStatus );
-			console.log( error );
-		}
-	} );
+let chartInstance = null; // Variable to hold the chart instance
+
+
+
+function fetchChartData() {
+	const loadingIndicator = document.getElementById('loading-indicator');
+	const range = document.getElementById('date-range-selector').value;
+
+	// Show loading indicator
+	loadingIndicator.style.display = 'block';
+
+	jQuery.ajax({
+			url: sbdata.ajaxurl,
+			method: 'POST',
+			data: {
+					action: 'fetch_chart_data',
+					nonce: sbdata.nonce,
+					range: range // Send the selected date range
+			},
+			success: function(response) {
+					// Hide loading indicator
+					loadingIndicator.style.display = 'none';
+
+					if (response.success) {
+							var ctx = document.getElementById('seobooster-gsc-chart').getContext('2d');
+
+							// If a chart instance already exists, destroy it before creating a new one
+							if (chartInstance) {
+									chartInstance.destroy();
+							}
+
+							chartInstance = new Chart(ctx, {
+									type: 'line',
+									data: {
+											labels: response.data.labels,
+											datasets: [{
+												label: sbdata.strings.clicks,
+												data: response.data.clicks,
+												borderColor: '#5e97f7',
+												backgroundColor: 'rgba(75, 192, 192, 0.2)',
+												fill: false,
+												pointStyle: 'circle',
+												pointRadius: 6, // Increased radius for data points
+												pointHoverRadius: 8, // Increased hover radius
+												cubicInterpolationMode: 'monotone',
+												tension: 0.4
+										}, {
+												label: sbdata.strings.impressions,
+												data: response.data.impressions,
+												borderColor: '#5f35b2',
+												backgroundColor: 'rgba(153, 102, 255, 0.2)',
+												fill: false,
+												pointStyle: 'circle',
+												pointRadius: 6, // Increased radius for data points
+												pointHoverRadius: 8, // Increased hover radius
+												cubicInterpolationMode: 'monotone',
+												tension: 0.4
+										}, {
+												label: sbdata.strings.ctr,
+												data: response.data.ctr,
+												borderColor: '#19897b',
+												backgroundColor: 'rgba(255, 99, 132, 0.2)',
+												fill: false,
+												pointRadius: 6,
+												pointHoverRadius: 8
+										}, {
+												label: sbdata.strings.uniqueKeywords,
+												data: response.data.uniqueKeywords,
+												borderColor: '#ff9800',
+												backgroundColor: 'rgba(255, 152, 0, 0.2)',
+												fill: false,
+												pointStyle: 'circle',
+												pointRadius: 6,
+												pointHoverRadius: 8,
+												cubicInterpolationMode: 'monotone',
+												tension: 0.4
+										}]										
+									},
+									options: {
+											responsive: true,
+											plugins: {
+													title: {
+															display: true,
+															text: sbdata.strings.seoBoosterDataVisualization
+													},
+													tooltip: {
+															mode: 'index',
+															intersect: false
+													}
+											},
+											interaction: {
+													mode: 'nearest',
+													intersect: true
+											},
+											scales: {
+													x: {
+															display: true,
+															title: {
+																	display: true,
+																	text: sbdata.strings.date
+															}
+													},
+													y: {
+															display: true,
+															title: {
+																	display: true,
+																	text: sbdata.strings.value
+															}
+													}
+											}
+									}
+							});
+					} else {
+							const errorMessage = `
+									<div style="color: red; font-weight: bold; padding: 10px; border: 1px solid red; background-color: #fdd;">
+											${sbdata.strings.errorFetchingData} 
+											${sbdata.strings.tryAgainLater} 
+											${sbdata.strings.visitTroubleshootingGuide}
+											<a href="https://seoboosterpro.com/docs/errors-and-troubleshooting/failed-to-fetch-data/" target="_blank" rel="noopener">
+													${sbdata.strings.troubleshootingGuide}
+											</a>.
+									</div>
+							`;
+							document.getElementById('sb2canvascont').outerHTML = errorMessage;                
+					}
+			}
+	});
 }
 
 
 
 
-jQuery(document).ready(function() {
 
 
 
 
-	jQuery('a.quickhelp').attr('title', 'You have to allow Helpscout beacon to load to get help.');
+
+
+
+
+
+	jQuery('.sparkline').each(function() {
+    // Extract the original data from the data attribute
+    let rawData = jQuery(this).data('original').split(',').map(Number);
+    
+    // Find the maximum and minimum values in the data
+    let maxValue = Math.max(...rawData);
+    let minValue = Math.min(...rawData);
+
+    // Adjust the data so lower values are higher points, but keep the progression
+    let adjustedData = rawData.map(value => maxValue + minValue - value);
+
+    // Render the sparkline with adjusted data
+    jQuery(this).sparkline(adjustedData, {
+        type: 'line', 
+        width: '100px', 
+        height: '20px', 
+        lineColor: '#6f42c1', 
+        fillColor: '#32abe2',
+				chartRangeMin: 1,
+				chartRangeMax: 100,
+        tooltipFormatter: function(sp, options, fields) {
+            return rawData[fields.x];
+        }
+    });
+});
+
+
+
+	jQuery('a.quickhelp').attr('title', sbdata.strings.youHaveToAllowHelpscoutBeaconToLoadToGetHelp);
 
 	jQuery('.sbp-dismiss-review-notice, .sbp-review-notice .notice-dismiss').on('click', function() {
 		if ( ! jQuery(this).hasClass('sbp-reviewlink') ) {
 			event.preventDefault();
 		}
-		jQuery.post( sbbeacondata.ajaxurl, {
+		jQuery.post( sbdata.ajaxurl, {
 			action: 'sbp_dismiss_review',
-			nonce: sbbeacondata.nonce
+			nonce: sbdata.nonce
 		});
 		jQuery('.sbp-review-notice').slideUp().remove();
 	});
@@ -98,6 +529,8 @@ jQuery(document).ready(function() {
 		$this.slideToggle();
 
 	});
+
+
 	jQuery(".suggtitle").on("click", function (event) {
 		event.stopPropagation();
 	});
@@ -113,7 +546,7 @@ jQuery( "#sb2_autolink_add" ).submit( function( event ) {
 		jQuery("#sb2_autolink_add form #targeturl").removeClass('hasError').prop('disabled', true);
 
 		jQuery.post(
-			sbbeacondata.ajaxurl, {
+			sbdata.ajaxurl, {
 				'dataType': 'json',
 				'action'						: 'ajax_add_keyword',
 				'add-keyword-nonce' : jQuery('#_ajax_sb2_add_keyword_nonce').val(),
@@ -128,14 +561,19 @@ jQuery( "#sb2_autolink_add" ).submit( function( event ) {
 
 			jQuery('#addkwresponse').html(response.answer); // Show the response from server
 
-
+	
+/*
 			if (response.newrow) {
 				jQuery(response.newrow).appendTo(jQuery(".seo-booster_page_sb2_autolink #urls-filter .wp-list-table"));
 			}
-
+*/
 			if (response.success) {
 				jQuery("#sb2_autolink_add_form #newkeyword").prop('disabled', false).val('');
 				jQuery("#sb2_autolink_add_form #targeturl").prop('disabled', false).val('');
+						// wait 2 seconds and then reload the page
+						setTimeout(function() {
+							location.reload();
+					}, 2000);
 			}
 
 			if (response.error==='malurl') {
@@ -156,24 +594,5 @@ jQuery( "#sb2_autolink_add" ).submit( function( event ) {
 	});
 
 
-
-	// Changes the css and visual appearance of some settings in SEO Booster 2 if the "Use Dynamic Tagging" feature is turned on.
-	jQuery('#seobooster_dynamic_tagging').on('click', function() {
-		if (jQuery(this).prop('checked')) {
-			jQuery('.taggingrelated').each( function( i, elem ) {
-				jQuery(elem).removeClass('muted');
-			});
-		}
-		else {
-			jQuery('.taggingrelated').each( function( i, elem ) {
-				jQuery(elem).addClass('muted');
-			});
-		}
-	});
-
-
-	// todo - check if any images needs to be lazy loaded before running the script
-	// todo - any lazy load library included with WP?
-	jQuery("img.lazy").lazyload();
 
 });

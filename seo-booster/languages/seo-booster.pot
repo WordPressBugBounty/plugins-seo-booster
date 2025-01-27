@@ -1,1562 +1,2766 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
-"Project-Id-Version: SEO Booster 3\n"
-"POT-Creation-Date: 2020-05-02 14:12+0200\n"
-"PO-Revision-Date: 2016-10-15 00:34-0400\n"
-"Last-Translator: Lars Koudal <lars@koudal.dk>\n"
-"Language-Team: Lars Koudal <admin@cleverplugins.com>\n"
+"Project-Id-Version: SEO Booster\n"
+"POT-Creation-Date: 2024-10-29 02:38-0400\n"
+"PO-Revision-Date: 2024-10-11 23:16-0400\n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.3\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"X-Generator: Poedit 3.5\n"
 "X-Poedit-Basepath: ..\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
 "X-Poedit-WPHeader: seo-booster.php\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
 "esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
 "_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
 "X-Poedit-SearchPath-0: .\n"
-"X-Poedit-SearchPathExcluded-0: *.js\n"
+"X-Poedit-SearchPathExcluded-0: *.min.js\n"
+"X-Poedit-SearchPathExcluded-1: images/vendor\n"
+"X-Poedit-SearchPathExcluded-2: vendor\n"
 
-#: inc/class-404-pages-list-table.php:30
+#: inc/class-404-pages-list-table.php:44 inc/class-gsc-pages-list-table.php:53
 msgid "Nothing found."
 msgstr ""
 
-#: inc/class-404-pages-list-table.php:37
-#: inc/class-forgotten-pages-list-table.php:23
-#: inc/class-sb-backlink-pages-list-table.php:61
+#: inc/class-404-pages-list-table.php:61
 msgctxt "Column label"
 msgid "Landing Page"
 msgstr ""
 
-#: inc/class-404-pages-list-table.php:38
-#: inc/class-sb-backlink-pages-list-table.php:62
+#: inc/class-404-pages-list-table.php:62
 msgctxt "Column label"
 msgid "Visitors"
 msgstr ""
 
-#: inc/class-404-pages-list-table.php:39
+#: inc/class-404-pages-list-table.php:63
 msgctxt "Column label"
 msgid "Latest Visit"
 msgstr ""
 
-#: inc/class-404-pages-list-table.php:40
+#: inc/class-404-pages-list-table.php:64
 msgctxt "Column label"
 msgid "Referrer"
 msgstr ""
 
-#: inc/class-404-pages-list-table.php:94 inc/class-autolink-list-table.php:126
+#: inc/class-404-pages-list-table.php:194 inc/class-autolink-list-table.php:208
 msgctxt "List table row action"
 msgid "Delete"
 msgstr ""
 
-#: inc/class-404-pages-list-table.php:110 inc/class-autolink-list-table.php:142
-#: inc/class-forgotten-pages-list-table.php:33
-#: inc/class-sb-backlink-pages-list-table.php:198
+#: inc/class-404-pages-list-table.php:220 inc/class-autolink-list-table.php:225
 msgctxt "List table bulk action"
 msgid "Delete"
 msgstr ""
 
-#: inc/class-404-pages-list-table.php:119
+#: inc/class-404-pages-list-table.php:247
 msgid "Resetting 404 Errors"
 msgstr ""
 
-#: inc/class-audit-list-table__premium_only.php:282
-msgid "No results"
-msgstr ""
-
-#: inc/class-autolink-list-table.php:23
+#: inc/class-autolink-list-table.php:26
 msgid "No keyword to links made."
 msgstr ""
 
-#: inc/class-autolink-list-table.php:51
+#: inc/class-autolink-list-table.php:75
 msgctxt "Column label"
 msgid "Keyword"
 msgstr ""
 
-#: inc/class-autolink-list-table.php:53
+#: inc/class-autolink-list-table.php:77
 msgctxt "Column label"
 msgid "Target URL"
 msgstr ""
 
-#: inc/class-autolink-list-table.php:54
+#: inc/class-autolink-list-table.php:78
 msgctxt "Column label"
-msgid "Last used on"
+msgid "Last seen used on"
 msgstr ""
 
-#: inc/class-crawled-pages-list-table.php:167
+#: inc/class-cachemanager.php:49
+msgid "Failed to initialize WP_Filesystem"
+msgstr ""
+
+#: inc/class-cachemanager.php:66
+msgid "Failed to create base cache directory"
+msgstr ""
+
+#: inc/class-cachemanager.php:70
+msgid "Failed to create index.php in base cache directory"
+msgstr ""
+
+#: inc/class-cachemanager.php:75
+msgid "Failed to create seo-booster cache directory"
+msgstr ""
+
+#: inc/class-cachemanager.php:79
+msgid "Failed to create index.php in seo-booster cache directory"
+msgstr ""
+
+#: inc/class-cachemanager.php:97
 #, php-format
-msgid "%d visit"
-msgid_plural "%d visits"
-msgstr[0] ""
-msgstr[1] ""
-
-#: inc/class-forgotten-pages-list-table.php:24
-msgctxt "Column label"
-msgid "Latest SE Visitor"
+msgid "Invalid URL: %s"
 msgstr ""
 
-#: inc/class-forgotten-pages-list-table.php:25
-msgctxt "Column label"
-msgid "Keywords"
+#: inc/class-cachemanager.php:98
+msgid "Invalid URL"
 msgstr ""
 
-#: inc/class-forgotten-pages-list-table.php:172
-#: inc/class-forgotten-pages-list-table.php:174
-#: inc/class-forgotten-pages-list-table.php:176
-msgid "ago"
-msgstr ""
-
-#: inc/class-forgotten-pages-list-table.php:176
-msgid "First visit:"
-msgstr ""
-
-#: inc/class-forgotten-pages-list-table.php:187
-msgid "Last crawled by"
-msgstr ""
-
-#: inc/class-sb-backlink-pages-list-table.php:56
-msgctxt "Column label"
-msgid "Verified"
-msgstr ""
-
-#: inc/class-sb-backlink-pages-list-table.php:60
-msgctxt "Column label"
-msgid "Link From"
-msgstr ""
-
-#: inc/class-sb-backlink-pages-list-table.php:63
-msgctxt "Column label"
-msgid "First Visit"
-msgstr ""
-
-#: inc/class-sb-backlink-pages-list-table.php:67
-msgctxt "Column label"
-msgid "Anchor Text"
-msgstr ""
-
-#: inc/class-sb-backlink-pages-list-table.php:68
-msgctxt "Column label"
-msgid "Last Checked"
-msgstr ""
-
-#: inc/class-sb-backlink-pages-list-table.php:69
-msgctxt "Column label"
-msgid "HTTP Status"
-msgstr ""
-
-#: inc/class-sb-backlink-pages-list-table.php:94
-#: seo-booster-seobooster2.php:417
-msgid "Verified"
-msgstr ""
-
-#: inc/class-sb-backlink-pages-list-table.php:101
-msgid "Not found"
-msgstr ""
-
-#: inc/class-sb-backlink-pages-list-table.php:110
-msgid "Nofollow"
-msgstr ""
-
-#: inc/class-sb-backlink-pages-list-table.php:118
-msgid "Not checked yet"
-msgstr ""
-
-#: inc/class-sb-backlink-pages-list-table.php:124
+#: inc/class-cachemanager.php:148
 #, php-format
-msgid "%s failed attempt"
-msgid_plural "%s failed attempts"
-msgstr[0] ""
-msgstr[1] ""
-
-#: inc/class-sb-backlink-pages-list-table.php:156 seo-booster.php:2284
-msgid "Unknown"
+msgid "Failed to fetch URL: %s. Error: %s"
 msgstr ""
 
-#: inc/proonly.php:56
-msgid "Start 7 Day Trial"
+#: inc/class-cachemanager.php:223
+#, php-format
+msgid "Failed to create cache file: %s"
 msgstr ""
 
-#: inc/proonly.php:57
-msgid "See prices"
+#: inc/class-cachemanager.php:248
+msgid "Failed to list cache directory contents"
 msgstr ""
 
-#: seo-booster-keywords.php:35
-msgid "Incoming keywords"
+#: inc/class-cachemanager.php:255
+#, php-format
+msgid "Failed to get size of file: %s"
 msgstr ""
 
-#: seo-booster-keywords.php:37 seo-booster-log.php:15
-#: seo-booster-seobooster2.php:38 seo-booster-settings.php:344
-#: seo-booster-settings.php:376 seo-booster-settings.php:770
-#: seo-booster-settings.php:803 seo-booster-settings.php:1000
-#: views/404-pages.php:14 views/autolink-pages.php:13
-#: views/backlink-pages.php:14 views/forgotten-pages.php:14
-msgid "Quick help"
+#: inc/class-cachemanager.php:275
+msgid "Cache cleaned."
 msgstr ""
 
-#: seo-booster-keywords.php:39 seo-booster.php:2385
+#: inc/class-cachemanager.php:287
+msgid "Cache directory deleted on uninstall."
+msgstr ""
+
+#: inc/class-email-status.php:73
+msgid "New Keywords in the Past 7 Days"
+msgstr ""
+
+#: inc/class-email-status.php:75
+msgid ""
+"The following keywords were used to find content on your website for the "
+"first time in the past 7 days."
+msgstr ""
+
+#: inc/class-email-status.php:77 inc/class-email-status.php:146
+#: inc/class-email-status.php:185 inc/class-email-status.php:248
+msgid "Keyword:"
+msgstr ""
+
+#: inc/class-email-status.php:81 inc/class-email-status.php:207
+msgid "Avg. Position:"
+msgstr ""
+
+#: inc/class-email-status.php:82 inc/class-email-status.php:206
+#: inc/class-email-status.php:252
+msgid "Clicks:"
+msgstr ""
+
+#: inc/class-email-status.php:83 inc/class-email-status.php:205
+#: inc/class-email-status.php:251
+msgid "Impressions:"
+msgstr ""
+
+#: inc/class-email-status.php:90
+#, php-format
+msgid ""
+"Note: There are more than 10 new keywords detected. %s new keywords the past "
+"7 days. Please visit the <a href=\"%s\" target=\"_blank\">SEO Booster "
+"dashboard</a> for the full list."
+msgstr ""
+
+#: inc/class-email-status.php:96
+#, php-format
+msgid "You have %s new keywords discovered in the past 7 days."
+msgstr ""
+
+#: inc/class-email-status.php:98 templates/dashboard/report.php:411
+msgid "No new keywords found in the past 7 days."
+msgstr ""
+
+#: inc/class-email-status.php:99
+msgid "No new keywords were discovered in the past 7 days."
+msgstr ""
+
+#: inc/class-email-status.php:108
+msgid "Total new keywords in the past 30 days:"
+msgstr ""
+
+#: inc/class-email-status.php:130
+msgid "Trend Analysis"
+msgstr ""
+
+#: inc/class-email-status.php:131
+msgid ""
+"The following keywords have shown significant changes in performance in "
+"either clicks or impressions over the last 14 days."
+msgstr ""
+
+#: inc/class-email-status.php:148
+msgid "Impressions change:"
+msgstr ""
+
+#: inc/class-email-status.php:151
+msgid "Clicks change:"
+msgstr ""
+
+#: inc/class-email-status.php:155
+msgid ""
+"Significant changes were observed in keyword performance over the last 14 "
+"days."
+msgstr ""
+
+#: inc/class-email-status.php:156
+msgid "Suggested Action: Focus on improving the pages with declining trends."
+msgstr ""
+
+#: inc/class-email-status.php:158
+msgid "No significant changes in keyword performance over the last 14 days."
+msgstr ""
+
+#: inc/class-email-status.php:161
+msgid ""
+"These trends show how your keywords performed over the last two weeks. Focus "
+"on improving the pages with declining trends."
+msgstr ""
+
+#: inc/class-email-status.php:182
+msgid "Keyword Cannibalization Detected"
+msgstr ""
+
+#: inc/class-email-status.php:183
+msgid ""
+"Keyword cannibalization occurs when multiple pages on your website target "
+"the same keyword. This can lead to confusion for search engines and lower "
+"rankings."
+msgstr ""
+
+#: inc/class-email-status.php:212
+msgid ""
+"Note: These are just some examples. More instances of keyword "
+"cannibalization may exist. Visit the dashboard for the complete details."
+msgstr ""
+
+#: inc/class-email-status.php:213
+msgid ""
+"Keyword cannibalization detected for some keywords across multiple pages. "
+"Please review the affected pages."
+msgstr ""
+
+#: inc/class-email-status.php:215
+msgid "No keyword cannibalization detected."
+msgstr ""
+
+#: inc/class-email-status.php:245
+msgid "Ranking Anomalies Detected"
+msgstr ""
+
+#: inc/class-email-status.php:246
+msgid ""
+"Ranking anomalies occur when a keyword experiences significant fluctuations "
+"in search engine rankings. This could indicate issues with your pages."
+msgstr ""
+
+#: inc/class-email-status.php:253
+msgid "Position fluctuation:"
+msgstr ""
+
+#: inc/class-email-status.php:256
+#, php-format
+msgid "Current Position (as of %s): %s"
+msgstr ""
+
+#: inc/class-email-status.php:261
+msgid ""
+"Ranking anomalies were detected. These fluctuations could indicate issues "
+"with your pages and is also not uncommon once your website has been updated "
+"and Google determines your new position. Further investigation is "
+"recommended."
+msgstr ""
+
+#: inc/class-email-status.php:262
+msgid ""
+"Suggested Action: Review the affected pages and make necessary improvements "
+"to stabilize rankings."
+msgstr ""
+
+#: inc/class-email-status.php:263
+msgid ""
+"Ranking anomalies detected with significant fluctuations in positions. "
+"Please review these keywords."
+msgstr ""
+
+#: inc/class-email-status.php:265
+msgid "No significant ranking anomalies detected."
+msgstr ""
+
+#: inc/class-email-status.php:294
+msgid "404 Errors - Not found content"
+msgstr ""
+
+#: inc/class-email-status.php:295
+#, php-format
+msgid ""
+"A total of %s not found 404 errors have been detected. The following URLs "
+"have been reported as 404 errors. This means that the content was not found "
+"on your website."
+msgstr ""
+
+#: inc/class-email-status.php:297
+msgid "times"
+msgstr ""
+
+#: inc/class-email-status.php:299
+msgid "Referrer:"
+msgstr ""
+
+#: inc/class-email-status.php:302
+msgid "Unknown origin"
+msgstr ""
+
+#: inc/class-email-status.php:306
+msgid ""
+"Please review these URLs. If they are from links inside your website, you "
+"should fix them immediately. Any external link you cannot control you can "
+"consider redirecting them to relevant content on your website."
+msgstr ""
+
+#: inc/class-email-status.php:307
+msgid ""
+"404 errors have been detected. Please review the URLs and take necessary "
+"actions."
+msgstr ""
+
+#: inc/class-email-status.php:309
+msgid "No 404 errors found."
+msgstr ""
+
+#: inc/class-email-status.php:318
+#, php-format
+msgid ""
+"For a comprehensive overview of your SEO performance, please visit the <a "
+"href=\"%s\" target=\"_blank\">SEO Booster Dashboard</a>."
+msgstr ""
+
+#: inc/class-email-status.php:319
+msgid "To delve deeper into specific details and insights, check out the"
+msgstr ""
+
+#: inc/class-email-status.php:319
+msgid "SEO Booster Report"
+msgstr ""
+
+#: inc/class-email-status.php:323
+msgid "This report was generated on"
+msgstr ""
+
+#: inc/class-email-status.php:329
+msgid "Report from SEO Booster on "
+msgstr ""
+
+#: inc/class-email-status.php:330
+msgid "SEO Booster Dashboard"
+msgstr ""
+
+#: inc/class-email-status.php:331
+msgid ""
+"Hello! We’ve prepared your weekly SEO report, providing insights on new "
+"keywords, trends, potential issues, and recommendations."
+msgstr ""
+
+#: inc/class-email-status.php:349
+#, php-format
+msgid "Status email was sent to %1$s"
+msgstr ""
+
+#: inc/class-email-status.php:351
+#, php-format
+msgid "Status email was not sent to %1$s"
+msgstr ""
+
+#: inc/class-google-api.php:27 seo-booster-settings.php:100
+#: seo-booster-settings.php:125 seo-booster-settings.php:139
+#: seo-booster-settings.php:219 seo-booster-settings.php:223
+#: seo-booster.php:1875 seo-booster.php:2073
+msgid "Security check failed."
+msgstr ""
+
+#: inc/class-google-api.php:32
+msgid "You do not have permission to perform this action."
+msgstr ""
+
+#: inc/class-google-api.php:45
+msgid "Invalid site URL."
+msgstr ""
+
+#: inc/class-google-api.php:67 inc/class-google-api.php:1718
+msgid "Access token is not set."
+msgstr ""
+
+#: inc/class-google-api.php:103
+msgid "Invalid data received from Google Search Console API."
+msgstr ""
+
+#: inc/class-google-api.php:182
+#, php-format
+msgid "Processed %s records. Current keyword: \"%s\" (%s)"
+msgstr ""
+
+#: inc/class-google-api.php:187
+msgid "There is more data to import. Do not leave this page."
+msgstr ""
+
+#: inc/class-google-api.php:187 inc/class-google-api.php:198
+#: seo-booster-seobooster2.php:162 seo-booster.php:1695
+msgid "Import complete!"
+msgstr ""
+
+#: inc/class-google-api.php:214
+msgid "Error fetching query keywords: "
+msgstr ""
+
+#: inc/class-google-api.php:256 inc/class-sb-gsc-metaboxes.php:147
+#: seo-booster.php:521
+msgid "Error"
+msgstr ""
+
+#: inc/class-google-api.php:257
 msgid "Loading..."
 msgstr ""
 
-#: seo-booster-keywords.php:56
-msgid "Filtering options"
+#: inc/class-google-api.php:258 inc/class-gsc-pages-list-table.php:81
+#: inc/class-sb-gsc-metaboxes.php:132 templates/dashboard/report.php:583
+#: templates/dashboard/report.php:622 templates/dashboard/report.php:671
+#: templates/dashboard/report.php:716 templates/dashboard/report.php:755
+msgid "Query"
 msgstr ""
 
-#: seo-booster-keywords.php:62
-msgid "Hide internal searches"
+#: inc/class-google-api.php:259
+msgid "Used"
 msgstr ""
 
-#: seo-booster-keywords.php:70
-msgid "Show all"
+#: inc/class-google-api.php:260
+msgid "Stats"
 msgstr ""
 
-#: seo-booster-keywords.php:76
-msgid "Show only known keywords"
+#: inc/class-google-api.php:261
+msgid "Avg. position"
 msgstr ""
 
-#: seo-booster-keywords.php:82
-msgid "Show only unknown traffic"
+#: inc/class-google-api.php:262
+msgid "Not found"
 msgstr ""
 
-#: seo-booster-keywords.php:90 seo-booster-keywords.php:103
-#: seo-booster-seobooster2.php:328 seo-booster-seobooster2.php:342
-#: seo-booster.php:439 views/autolink-pages.php:297
-msgid "Keyword"
+#: inc/class-google-api.php:263 inc/class-gsc-pages-list-table.php:83
+#: inc/class-sb-gsc-metaboxes.php:137 seo-booster.php:1714 seo-booster.php:1802
+#: templates/dashboard/report.php:674 templates/dashboard/report.php:719
+#: templates/dashboard/report.php:758
+msgid "Clicks"
 msgstr ""
 
-#: seo-booster-keywords.php:91 seo-booster-keywords.php:104
-#: seo-booster-seobooster2.php:329 seo-booster-seobooster2.php:343
-msgid "Landing Page"
+#: inc/class-google-api.php:264 inc/class-gsc-pages-list-table.php:84
+#: inc/class-sb-gsc-metaboxes.php:138 seo-booster.php:1715 seo-booster.php:1803
+#: templates/dashboard/report.php:673 templates/dashboard/report.php:718
+#: templates/dashboard/report.php:757
+msgid "Impressions"
 msgstr ""
 
-#: seo-booster-keywords.php:92 seo-booster-keywords.php:105
-#: seo-booster-keywords.php:130 seo-booster-keywords.php:153
-msgid "Search Engine"
+#: inc/class-google-api.php:265 inc/class-gsc-pages-list-table.php:85
+#: inc/class-sb-gsc-metaboxes.php:139 seo-booster.php:1716 seo-booster.php:1804
+#: templates/dashboard/report.php:675 templates/dashboard/report.php:720
+#: templates/dashboard/report.php:759
+msgid "CTR"
 msgstr ""
 
-#: seo-booster-keywords.php:93 seo-booster-keywords.php:106
-#: seo-booster-seobooster2.php:330 seo-booster-seobooster2.php:344
-#: seo-booster-seobooster2.php:417 seo-booster-seobooster2.php:418
-#: seo-booster-seobooster2.php:419
-msgid "Visits"
+#: inc/class-google-api.php:266
+msgid "Avg. pos"
 msgstr ""
 
-#: seo-booster-keywords.php:94 seo-booster-keywords.php:107
-msgid "First Visit"
+#: inc/class-google-api.php:267
+msgid "No keywords data available."
 msgstr ""
 
-#: seo-booster-keywords.php:95 seo-booster-keywords.php:108
-msgid "Latest Visit"
+#: inc/class-google-api.php:449
+#, php-format
+msgid "Empty content for post ID: %d"
 msgstr ""
 
-#: seo-booster-keywords.php:125 seo-booster-seobooster2.php:355
-#: seo-booster-seobooster2.php:374
-msgid "Top Search Engines"
+#: inc/class-google-api.php:458
+#, php-format
+msgid "Invalid content type for post ID: %d"
 msgstr ""
 
-#: seo-booster-keywords.php:129 seo-booster-keywords.php:152
+#: inc/class-google-api.php:464
+#, php-format
+msgid "Failed to parse HTML content for post ID: %d"
+msgstr ""
+
+#: inc/class-google-api.php:478
+msgid "Href attribute"
+msgstr ""
+
+#: inc/class-google-api.php:484
+msgid "In a link"
+msgstr ""
+
+#: inc/class-google-api.php:495
+msgid "Headline"
+msgstr ""
+
+#: inc/class-google-api.php:507
+msgid "Img alt= attribute"
+msgstr ""
+
+#: inc/class-google-api.php:517
+msgid "Title tag"
+msgstr ""
+
+#: inc/class-google-api.php:523
+msgid "Meta description"
+msgstr ""
+
+#: inc/class-google-api.php:531
+msgid "Content"
+msgstr ""
+
+#: inc/class-google-api.php:551
+msgid "Unauthorized user"
+msgstr ""
+
+#: inc/class-google-api.php:612
+msgid "No data found"
+msgstr ""
+
+#: inc/class-google-api.php:733
+msgid "Table Name"
+msgstr ""
+
+#: inc/class-google-api.php:733
+msgid "Number of Records"
+msgstr ""
+
+#: inc/class-google-api.php:733
+msgid "Size (MB)"
+msgstr ""
+
+#: inc/class-google-api.php:756
+msgid "Total"
+msgstr ""
+
+#: inc/class-google-api.php:756
+msgid "of total db size"
+msgstr ""
+
+#: inc/class-google-api.php:897
+#, php-format
+msgid "Failed to update keyword entry: %s"
+msgstr ""
+
+#: inc/class-google-api.php:916
+#, php-format
+msgid "Failed to insert new keyword entry: %s"
+msgstr ""
+
+#: inc/class-google-api.php:948
+#, php-format
+msgid "Failed to update history entry: %s"
+msgstr ""
+
+#: inc/class-google-api.php:960
+#, php-format
+msgid "Failed to insert new history entry: %s"
+msgstr ""
+
+#: inc/class-google-api.php:969
+#, php-format
+msgid "Finished batch_add_or_update_keyword_entries in %s seconds"
+msgstr ""
+
+#. translators: 1: site URL, 2: number of days
+#: inc/class-google-api.php:990
+#, php-format
+msgid "Fetching query keywords for %1$s for the past %2$d days"
+msgstr ""
+
+#: inc/class-google-api.php:997
+msgid "User does not have permission to fetch query keywords"
+msgstr ""
+
+#: inc/class-google-api.php:1006
+#, php-format
+msgid "Access token error: %s"
+msgstr ""
+
+#: inc/class-google-api.php:1007
+#, php-format
+msgid "Access token is not set or invalid: %s"
+msgstr ""
+
+#: inc/class-google-api.php:1037 inc/class-google-api.php:1162
+#, php-format
+msgid "Error fetching query keywords: %s"
+msgstr ""
+
+#: inc/class-google-api.php:1047
+#, php-format
+msgid "Skipped incomplete data row: %s"
+msgstr ""
+
+#: inc/class-google-api.php:1137
+msgid "Scheduled action to process all pages"
+msgstr ""
+
+#. translators: %s: formatted number of rows
+#: inc/class-google-api.php:1144
+#, php-format
+msgid ""
+"More than 1000 results found, fetching more keywords starting from row %s"
+msgstr ""
+
+#. translators: 1: formatted number of records, 2: site URL
+#: inc/class-google-api.php:1157
+#, php-format
+msgid "Processed %1$s records from %2$s"
+msgstr ""
+
+#: inc/class-google-api.php:1180
+msgid ""
+"Seobooster is not registered. Authentication status cannot be displayed."
+msgstr ""
+
+#: inc/class-google-api.php:1193
+msgid "Failed to fetch sites or no sites available."
+msgstr ""
+
+#: inc/class-google-api.php:1198
+msgid "Cannot fetch sites without access token. Please authenticate."
+msgstr ""
+
+#: inc/class-google-api.php:1211
+msgid "You have connected the following site:"
+msgstr ""
+
+#: inc/class-google-api.php:1219
+msgid "Select Google Search Console Site"
+msgstr ""
+
+#. translators: %s: Google email address
+#: inc/class-google-api.php:1223
+#, php-format
+msgid "Great, you have now connected your Google account (%s)."
+msgstr ""
+
+#: inc/class-google-api.php:1228
+msgid "Please select a site to continue."
+msgstr ""
+
+#: inc/class-google-api.php:1249
+msgid "Get keyword data"
+msgstr ""
+
+#: inc/class-google-api.php:1260
+msgid "Made a mistake? You can reauthenticate with another account here:"
+msgstr ""
+
+#: inc/class-google-api.php:1260 inc/class-google-api.php:1269
+#: inc/class-google-api.php:1304
+msgid "Reauthenticate with Google"
+msgstr ""
+
+#: inc/class-google-api.php:1266 inc/class-google-api.php:1267
+msgid "No sites found but access token is set."
+msgstr ""
+
+#: inc/class-google-api.php:1268
+msgid "Please try to reauthenticate with Google."
+msgstr ""
+
+#: inc/class-google-api.php:1276 seo-booster-settings.php:663
+msgid "Authenticate with Google"
+msgstr ""
+
+#: inc/class-google-api.php:1287
+msgid "Get Started"
+msgstr ""
+
+#: inc/class-google-api.php:1288
+msgid "You will be taken to Google to authorize your account."
+msgstr ""
+
+#: inc/class-google-api.php:1289
+msgid "Connect to the API to gather data from GSC via seoboosterauth.com."
+msgstr ""
+
+#: inc/class-google-api.php:1354
+msgid "No keywords found in the database."
+msgstr ""
+
+#. translators: 1: keyword, 2: post permalink
+#: inc/class-google-api.php:1412
+#, php-format
+msgid "Keyword %1$s found in %2$s"
+msgstr ""
+
+#. translators: %s: time in seconds
+#: inc/class-google-api.php:1437
+#, php-format
+msgid "fetch_and_search_keywords took %s seconds"
+msgstr ""
+
+#: inc/class-google-api.php:1470
+msgid "Missing Google email"
+msgstr ""
+
+#: inc/class-google-api.php:1518
+msgid "Error retrieving access token"
+msgstr ""
+
+#: inc/class-google-api.php:1538
+msgid "Disable Highlight"
+msgstr ""
+
+#: inc/class-google-api.php:1538
+msgid "Highlight Links"
+msgstr ""
+
+#: inc/class-google-api.php:1551 inc/class-google-api.php:1575
+msgid "Show Details"
+msgstr ""
+
+#: inc/class-google-api.php:1603
+msgid "Problem getting the access token in fetch_sites()"
+msgstr ""
+
+#: inc/class-google-api.php:1606
+msgid "Fetching sites"
+msgstr ""
+
+#: inc/class-google-api.php:1615
+#, php-format
+msgid "WP_Error in fetch_sites(): %s"
+msgstr ""
+
+#: inc/class-google-api.php:1623
+#, php-format
+msgid "JSON decode error in fetch_sites(): %s"
+msgstr ""
+
+#: inc/class-google-api.php:1624
+msgid "Error decoding JSON response"
+msgstr ""
+
+#: inc/class-google-api.php:1638
+#, php-format
+msgid "Entries in sitelist fetched: %d. Last three sites: %s"
+msgstr ""
+
+#: inc/class-google-api.php:1711
+msgid "get_gsc_sites(): Access token does not exist."
+msgstr ""
+
+#: inc/class-google-api.php:1712
+msgid "Access token does not exist."
+msgstr ""
+
+#: inc/class-google-api.php:1717
+msgid "get_gsc_sites(): Access token is not set."
+msgstr ""
+
+#: inc/class-google-api.php:1735
+msgid "Invalid response from Google Search Console API."
+msgstr ""
+
+#: inc/class-google-api.php:1744
+#, php-format
+msgid "Error in get_gsc_sites(): %s"
+msgstr ""
+
+#: inc/class-google-api.php:1766
+msgid "Click to refresh"
+msgstr ""
+
+#: inc/class-google-api.php:1787
+msgid "Authentication settings have been reset."
+msgstr ""
+
+#. translators: 1: date, 2: average position
+#: inc/class-google-api.php:1818
+#, php-format
+msgid "%1$s Avg Pos: %2$s"
+msgstr ""
+
+#: inc/class-google-api.php:1843
+msgid "Resetting authentication settings."
+msgstr ""
+
+#: inc/class-gsc-pages-list-table.php:82 templates/dashboard/report.php:345
+#: templates/dashboard/report.php:386 templates/dashboard/report.php:435
+#: templates/dashboard/report.php:487 templates/dashboard/report.php:541
+#: templates/dashboard/report.php:584 templates/dashboard/report.php:623
+#: templates/dashboard/report.php:672 templates/dashboard/report.php:717
+#: templates/dashboard/report.php:756 templates/dashboard/report.php:796
+msgid "Page"
+msgstr ""
+
+#: inc/class-gsc-pages-list-table.php:86
+msgid "Average Pos"
+msgstr ""
+
+#: inc/class-gsc-pages-list-table.php:87 inc/class-sb-gsc-metaboxes.php:134
+#: templates/dashboard/report.php:498 templates/dashboard/report.php:798
+msgid "Last Seen"
+msgstr ""
+
+#: inc/class-gsc-pages-list-table.php:274
+msgid "Edit"
+msgstr ""
+
+#: inc/class-sb-gsc-ajax.php:42 inc/class-sb-gsc-ajax.php:175
+msgid "You do not have permission to view the keywords."
+msgstr ""
+
+#: inc/class-sb-gsc-ajax.php:48 inc/class-sb-gsc-ajax.php:181
+msgid "Invalid post URL."
+msgstr ""
+
+#: inc/class-sb-gsc-ajax.php:60 inc/class-sb-gsc-ajax.php:193
+msgid "Could not determine the permalink for the given post ID."
+msgstr ""
+
+#: inc/class-sb-gsc-ajax.php:63 inc/class-sb-gsc-ajax.php:196
+msgid "Could not determine the post ID from the given URL."
+msgstr ""
+
+#: inc/class-sb-gsc-ajax.php:93 inc/class-sb-gsc-ajax.php:225
+msgid "No keywords found for this URL."
+msgstr ""
+
+#: inc/class-sb-gsc-ajax.php:120 inc/class-sb-gsc-ajax.php:256
+msgid "Keyword is used"
+msgstr ""
+
+#: inc/class-sb-gsc-ajax.php:120 inc/class-sb-gsc-ajax.php:256
+msgid "Keyword is not used"
+msgstr ""
+
+#: inc/class-sb-gsc-ajax.php:146 inc/class-utils.php:148
+msgid "Linked"
+msgstr ""
+
+#: inc/class-sb-gsc-ajax.php:148
+msgid "Create links"
+msgstr ""
+
+#: inc/class-sb-gsc-ajax.php:255
+msgid "Used in content"
+msgstr ""
+
+#: inc/class-sb-gsc-ajax.php:255
+msgid "Not used in content"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:47
+msgid "SEO Booster Keyword Analysis"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:69
+msgid "Detected SEO plugin: "
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:74
+msgid "Focus keyword(s)"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:79
+msgid "No focus keyword found."
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:121 inc/class-sb-gsc-metaboxes.php:124
+msgid "Analyzing..."
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:122
+msgid "Refresh Analysis"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:125
+msgid "GSC Metabox script loaded"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:126
+msgid "Search..."
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:127
+msgid "All Keywords"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:128
+msgid "Keywords with no clicks"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:129
+msgid "Keywords not used in content"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:130
+msgid "Keywords used in content"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:131
+msgid "Reset Filters"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:133 templates/dashboard/report.php:797
+msgid "First Seen"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:135
+msgid "Showing"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:136
+msgid "Seen in content?"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:140
 msgid "Position"
 msgstr ""
 
-#: seo-booster-keywords.php:131 seo-booster-keywords.php:154
-msgid "Different Keywords"
+#: inc/class-sb-gsc-metaboxes.php:141
+msgid "Autolink"
 msgstr ""
 
-#: seo-booster-keywords.php:132 seo-booster-keywords.php:155
-#: seo-booster-seobooster2.php:365
-msgid "Visitors"
+#: inc/class-sb-gsc-metaboxes.php:142
+msgid "Hide Column"
 msgstr ""
 
-#: seo-booster-log.php:14
-msgid "The log"
+#: inc/class-sb-gsc-metaboxes.php:143
+msgid "Show All Columns"
 msgstr ""
 
-#: seo-booster-log.php:28
-msgid "Log emptied manually"
+#: inc/class-sb-gsc-metaboxes.php:144
+msgid "Time"
 msgstr ""
 
-#: seo-booster-log.php:45 seo-booster-log.php:80
-msgid "Time ago"
+#: inc/class-sb-gsc-metaboxes.php:145 seo-booster-settings.php:908
+msgid "Total Keywords"
 msgstr ""
 
-#: seo-booster-log.php:46 seo-booster-log.php:81
-msgid "Event"
+#: inc/class-sb-gsc-metaboxes.php:146
+msgid "No keywords found."
 msgstr ""
 
-#: seo-booster-log.php:89
-msgid "Reset Log"
+#: inc/class-sb-gsc-metaboxes.php:148
+msgid "Copy Selected"
 msgstr ""
 
-#: seo-booster-log.php:97
-msgid "No activity logged yet."
+#: inc/class-sb-gsc-metaboxes.php:149
+msgid "Copied to clipboard"
 msgstr ""
 
-#: seo-booster-seobooster2.php:36
-msgid "Dashboard"
+#: inc/class-sb-gsc-metaboxes.php:150
+msgid "Show/Hide Columns"
 msgstr ""
 
-#: seo-booster-seobooster2.php:52
-msgid "Database tables updated"
+#: inc/class-sb-gsc-metaboxes.php:151
+msgid "Refresh Keywords"
 msgstr ""
 
-#: seo-booster-seobooster2.php:78
+#: inc/class-sb-gsc-metaboxes.php:152
+msgid "Copy All"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:153 seo-booster.php:1808
+msgid "Refresh Keyword Analysis"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:154 seo-booster.php:1809
+msgid "Error deleting transients"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:172
+msgid "You do not have permission to perform this action"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:177
+msgid "Invalid post ID"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:188
+msgid "Failed to delete transients"
+msgstr ""
+
+#: inc/class-sb-gsc-metaboxes.php:195
+#, php-format
+msgid "Successfully deleted %d transients and scheduled %d jobs for post ID %d"
+msgstr ""
+
+#. translators: %1$s is the batch index, %2$s is the URL path, %3$s is the time taken in seconds
+#: inc/class-sb-gsc-processor.php:60
+#, php-format
+msgid "Processed keyword batch %1$s for URL: %2$s in %3$s seconds"
+msgstr ""
+
+#: inc/class-sb-gsc-processor.php:101
+msgid "Scheduled keyword processing for all pages"
+msgstr ""
+
+#: inc/class-sb-gsc-processor.php:107
+msgid "Failed to get URL for post ID: "
+msgstr ""
+
+#: inc/class-sb-gsc-processor.php:125
+msgid "Completed keyword analysis for post ID: "
+msgstr ""
+
+#: inc/class-utils.php:69 seo-booster-settings.php:300 seo-booster.php:2231
+#: seo-booster.php:2232
+msgid "Settings"
+msgstr ""
+
+#: inc/class-utils.php:74
+msgid "Support"
+msgstr ""
+
+#: inc/class-utils.php:103 seo-booster.php:371 seo-booster.php:713
+msgid "Nonce verification failed."
+msgstr ""
+
+#: inc/class-utils.php:112
+msgid "You do not have permission to create auto links."
+msgstr ""
+
+#: inc/class-utils.php:125
+msgid "Post ID or Query ID is missing."
+msgstr ""
+
+#: inc/class-utils.php:157
+msgid "Link creation failed."
+msgstr ""
+
+#: inc/class-utils.php:314
+msgid "Updated database tables"
+msgstr ""
+
+#: inc/class-utils.php:551
+msgid "Documentation"
+msgstr ""
+
+#: inc/class-utils.php:555
+msgid "Get Support"
+msgstr ""
+
+#: inc/class-utils.php:562
+msgid "Suggest feature"
+msgstr ""
+
+#: inc/class-utils.php:564
+msgid "Whats New"
+msgstr ""
+
+#: inc/class-utils.php:588
+msgid "Security check failed"
+msgstr ""
+
+#: inc/class-utils.php:594
+msgid "Insufficient permissions"
+msgstr ""
+
+#: inc/class-utils.php:601
+msgid "No email address provided"
+msgstr ""
+
+#: inc/class-utils.php:615
+msgid "No valid email addresses provided"
+msgstr ""
+
+#. translators: %s: Email recipient(s)
+#: inc/class-utils.php:629
+#, php-format
+msgid "Weekly email signup processed successfully for: %s"
+msgstr ""
+
+#: js/min/sb-gsc-metabox-min.js:1 js/sb-gsc-metabox.js:179
+msgid "per page"
+msgstr ""
+
+#: js/min/sb-gsc-metabox-min.js:1 js/sb-gsc-metabox.js:398
+msgid ""
+"Are you sure you want to create internal links using this keyword on other "
+"pages, linking to this page?"
+msgstr ""
+
+#: js/min/sb-gsc-metabox-min.js:1 js/sb-gsc-metabox.js:410
+msgid "Error:"
+msgstr ""
+
+#: js/min/sb-gsc-metabox-min.js:1 js/sb-gsc-metabox.js:413
+msgid "An error occurred. Please try again."
+msgstr ""
+
+#: seo-booster-log.php:11 seo-booster.php:2240 seo-booster.php:2241
+msgid "Debug Log"
+msgstr ""
+
+#: seo-booster-log.php:16
+msgid "Search Pages"
+msgstr ""
+
+#: seo-booster-log.php:18
+msgid "Search Logs"
+msgstr ""
+
+#: seo-booster-log.php:21 seo-booster.php:1713 seo-booster.php:1801
+msgid "Refresh"
+msgstr ""
+
+#: seo-booster-report-page.php:88 views/404-pages.php:72
+msgid "Upgrade to SEO Booster Pro"
+msgstr ""
+
+#: seo-booster-report-page.php:90
+msgid "Unlock powerful SEO reports and take your website to the next level!"
+msgstr ""
+
+#: seo-booster-report-page.php:93
+msgid "Benefits of SEO Booster Pro Reports:"
+msgstr ""
+
+#: seo-booster-report-page.php:95
+msgid "In-depth keyword analysis and optimization suggestions"
+msgstr ""
+
+#: seo-booster-report-page.php:96
+msgid "Identify and fix content cannibalization issues"
+msgstr ""
+
+#: seo-booster-report-page.php:97
+msgid "Track your most improved and declining keywords"
+msgstr ""
+
+#: seo-booster-report-page.php:98
+msgid "Discover long-tail keyword opportunities"
+msgstr ""
+
+#: seo-booster-report-page.php:99
+msgid "Improve click-through rates with actionable insights"
+msgstr ""
+
+#: seo-booster-report-page.php:100
+msgid "Monitor 404 errors"
+msgstr ""
+
+#: seo-booster-report-page.php:104 views/404-pages.php:84
+msgid "Upgrade Now"
+msgstr ""
+
+#: seo-booster-seobooster2.php:19
+msgid "Google Search Console data has been successfully updated."
+msgstr ""
+
+#. translators:
+#: seo-booster-seobooster2.php:37
 #, php-format
 msgid "Database table %1$s is missing."
 msgstr ""
 
-#: seo-booster-seobooster2.php:88
+#. translators:
+#: seo-booster-seobooster2.php:44
 #, php-format
 msgid "Database out of date %1$s vs. current %2$s"
 msgstr ""
 
-#: seo-booster-seobooster2.php:97
+#: seo-booster-seobooster2.php:53
 msgid "Database tables needs updating"
 msgstr ""
 
-#: seo-booster-seobooster2.php:130
-#, php-format
-msgid "Tracking visitors from %1$s keyword sources."
+#: seo-booster-seobooster2.php:66
+msgid "Click here to fix"
 msgstr ""
 
-#: seo-booster-seobooster2.php:136
-msgid "Uncluttered view of what content brings traffic."
+#: seo-booster-seobooster2.php:77 seo-booster.php:2180
+msgid "Dashboard"
 msgstr ""
 
-#: seo-booster-seobooster2.php:148
-msgid "Quick Overview"
+#: seo-booster-seobooster2.php:86
+msgid "Welcome to SEO Booster!"
 msgstr ""
 
-#: seo-booster-seobooster2.php:149
+#: seo-booster-seobooster2.php:87
+msgid ""
+"You're all set to explore the powerful features of SEO Booster. While you "
+"can navigate existing data and use free features, connecting to Google "
+"Search Console for real-time keyword data requires account validation."
+msgstr ""
+
+#: seo-booster-seobooster2.php:89
+msgid "Unlock with Validation:"
+msgstr ""
+
+#: seo-booster-seobooster2.php:91
+msgid "Real-time keyword tracking"
+msgstr ""
+
+#: seo-booster-seobooster2.php:92
+msgid "Advanced performance analytics"
+msgstr ""
+
+#: seo-booster-seobooster2.php:93
+msgid "Seamless Google Search Console integration"
+msgstr ""
+
+#: seo-booster-seobooster2.php:94
+msgid "On-page SEO analysis"
+msgstr ""
+
+#: seo-booster-seobooster2.php:95
+msgid "Basic keyword research tools"
+msgstr ""
+
+#: seo-booster-seobooster2.php:96
+msgid "Site structure optimization"
+msgstr ""
+
+#: seo-booster-seobooster2.php:100
+msgid "Validate Your Account to Unlock Full Potential"
+msgstr ""
+
+#: seo-booster-seobooster2.php:135 seo-booster-seobooster2.php:136
+#: seo-booster-settings.php:950 seo-booster-settings.php:970
+msgid "N/A"
+msgstr ""
+
+#: seo-booster-seobooster2.php:140
 #, php-format
 msgid ""
-"Since installation SEO BOOSTER has recorded <span>%1$s</span> keywords found "
-"from visitors and <span>%2$s</span> sources."
-msgstr ""
+"There is data from Google Search Console for <span>%s</span> unique day, "
+"from <span>%s</span> to <span>%s</span>."
+msgid_plural ""
+"There is data from Google Search Console for <span>%s</span> unique days, "
+"from <span>%s</span> to <span>%s</span>."
+msgstr[0] ""
+msgstr[1] ""
 
-#: seo-booster-seobooster2.php:157
-msgid "Latest detected keywords:"
-msgstr ""
-
-#: seo-booster-seobooster2.php:174
+#: seo-booster-seobooster2.php:151
 #, php-format
-msgid "Found <span>%s</span>  external links from visitors."
-msgstr ""
-
-#: seo-booster-seobooster2.php:182
-#, php-format
-msgid "Detected <span>%s</span> not found pages and links."
-msgstr ""
-
-#: seo-booster-seobooster2.php:212
-msgid "Seems a bit boring here?"
-msgstr ""
-
-#: seo-booster-seobooster2.php:214
-msgid "If you have just installed the plugin, that is to be expected."
-msgstr ""
-
-#: seo-booster-seobooster2.php:216
 msgid ""
-"The plugin needs some time to listen to your traffic and figure out the "
-"details."
+"A total of <span>%s</span> different keyword terms have been used to find "
+"<span>%s</span> different pages on your website."
 msgstr ""
 
-#: seo-booster-seobooster2.php:222
-msgid "Need help?"
+#: seo-booster-seobooster2.php:163
+msgid "Get your personalized weekly SEO insights!"
 msgstr ""
 
-#: seo-booster-seobooster2.php:224
-msgid "Documentation"
+#: seo-booster-seobooster2.php:163
+msgid "Stay informed and ahead of the competition"
 msgstr ""
 
-#: seo-booster-seobooster2.php:225
-msgid "Get support"
+#: seo-booster-seobooster2.php:171
+msgid ""
+"Confirm or change your email to receive your personalized weekly report:"
 msgstr ""
 
-#: seo-booster-seobooster2.php:228
-msgid "Plugin pages"
+#: seo-booster-seobooster2.php:173
+msgid "email@example.com"
 msgstr ""
 
-#: seo-booster-seobooster2.php:230
-msgid "The Settings"
+#: seo-booster-seobooster2.php:176
+msgid "Confirm Email for Weekly Reports"
 msgstr ""
 
-#: seo-booster-seobooster2.php:231
-msgid "Keyword Details"
+#: seo-booster-seobooster2.php:178
+msgid "You can add multiple email addresses, separated by commas"
 msgstr ""
 
-#: seo-booster-seobooster2.php:232
-msgid "Backlink Details"
+#: seo-booster-seobooster2.php:180
+msgid "You can modify your report preferences anytime in the plugin settings"
 msgstr ""
 
-#: seo-booster-seobooster2.php:233
-msgid "Crawled Pages"
+#: seo-booster-seobooster2.php:188
+msgid ""
+"Receive a tailored weekly report to help you monitor performance, address "
+"issues promptly, and capitalize on new opportunities to boost your traffic!"
 msgstr ""
 
-#: seo-booster-seobooster2.php:234 seo-booster-settings.php:802
-#: seo-booster.php:3311 views/404-pages.php:10
-msgid "404 Errors"
+#: seo-booster-seobooster2.php:189
+msgid "Your weekly report includes:"
+msgstr ""
+
+#: seo-booster-seobooster2.php:191
+msgid "Your top-performing keywords driving traffic"
+msgstr ""
+
+#: seo-booster-seobooster2.php:192
+msgid "Emerging keyword opportunities specific to your site"
+msgstr ""
+
+#: seo-booster-seobooster2.php:193
+msgid "Significant changes in your rankings"
+msgstr ""
+
+#: seo-booster-seobooster2.php:194
+msgid "Content areas requiring your attention"
+msgstr ""
+
+#: seo-booster-seobooster2.php:195
+msgid "404 errors - content that is not found"
+msgstr ""
+
+#: seo-booster-seobooster2.php:198
+msgid ""
+"Your data privacy is our priority. All information is processed locally on "
+"your server and sent to your email address from your own server — we never "
+"access your data."
 msgstr ""
 
 #: seo-booster-seobooster2.php:235
-msgid "Forgotten Pages"
+msgid "What to do now?"
 msgstr ""
 
-#: seo-booster-seobooster2.php:236
-msgid "The Log"
+#: seo-booster-seobooster2.php:238
+msgid "All keywords from Google Search Console"
 msgstr ""
 
-#: seo-booster-seobooster2.php:257 seo-booster-seobooster2.php:273
-msgid "Visitors from Search Engines"
+#: seo-booster-seobooster2.php:239
+msgid "Go to the keyword overview page."
 msgstr ""
 
-#: seo-booster-seobooster2.php:323
-msgid "Top Keywords"
-msgstr ""
-
-#: seo-booster-seobooster2.php:365
-msgid "Day"
-msgstr ""
-
-#: seo-booster-seobooster2.php:403
-msgid "Backlink Stats"
-msgstr ""
-
-#: seo-booster-seobooster2.php:404
-msgid "Details of the backlinks recorded."
-msgstr ""
-
-#: seo-booster-seobooster2.php:418
-msgid "Ignored"
-msgstr ""
-
-#: seo-booster-seobooster2.php:419
-msgid "Total"
-msgstr ""
-
-#: seo-booster-seobooster2.php:422
+#: seo-booster-seobooster2.php:240
 msgid ""
-"Verified means SEO Booster has verified the link, and if possible collected "
-"anchor text and other details. Ignored links are backlinks that do not have "
-"a link back or are filtered for other reasons."
+"Get a combined overview of all the keywords that have been used to find your "
+"website. Discover opportunities for improvement and inspiration for new "
+"content."
 msgstr ""
 
-#: seo-booster-seobooster2.php:430
-msgid "Top Linking Domains"
+#: seo-booster-seobooster2.php:243
+msgid "Keywords used to find your front page"
 msgstr ""
 
-#: seo-booster-seobooster2.php:435 seo-booster-seobooster2.php:451
-msgid "Domain"
+#: seo-booster-seobooster2.php:244
+msgid "Open the front page with SEO Booster Details window opened."
 msgstr ""
 
-#: seo-booster-seobooster2.php:436 seo-booster-seobooster2.php:452
-msgid "Total Links"
+#: seo-booster-seobooster2.php:245
+msgid ""
+"All keyword details for each page are available a few clicks away in the "
+"admin bar."
 msgstr ""
 
-#: seo-booster-seobooster2.php:437 seo-booster-seobooster2.php:453
-msgid "Total Visits"
+#: seo-booster-seobooster2.php:248 seo-booster.php:2213 seo-booster.php:2214
+#: templates/dashboard/report.php:208
+msgid "Reports"
 msgstr ""
 
-#: seo-booster-settings.php:8
+#: seo-booster-seobooster2.php:249
+msgid "Open the report page to get deep insights."
+msgstr ""
+
+#: seo-booster-seobooster2.php:250
+msgid ""
+"Dive into the data and get insights on how to improve your website. "
+"Different reports give you suggestions for improvements and practical advice."
+msgstr ""
+
+#: seo-booster-seobooster2.php:260
+msgid "No data collected yet - import data"
+msgstr ""
+
+#: seo-booster-seobooster2.php:262
+msgid "It looks like no data has been collected yet. To get started:"
+msgstr ""
+
+#: seo-booster-seobooster2.php:264 seo-booster-seobooster2.php:269
+msgid "Go to the Settings page"
+msgstr ""
+
+#: seo-booster-seobooster2.php:265
+msgid "Find the \"Reimport\" function"
+msgstr ""
+
+#: seo-booster-seobooster2.php:266
+msgid "Use it to import your Google Search Console data"
+msgstr ""
+
+#: seo-booster-seobooster2.php:268
+msgid "This will populate your dashboard with valuable SEO insights."
+msgstr ""
+
+#: seo-booster-seobooster2.php:289
+msgid ""
+"The chart is based on the data collected from Google Search Console. It does "
+"not represent a full picture of your website's traffic."
+msgstr ""
+
+#: seo-booster-seobooster2.php:310
+msgid "Next scheduled update:"
+msgstr ""
+
+#: seo-booster-seobooster2.php:310 seo-booster-settings.php:455
+#, php-format
+msgid "in %s"
+msgstr ""
+
+#: seo-booster-seobooster2.php:313
+#, php-format
+msgid "You are connected to the GSC site %s"
+msgstr ""
+
+#: seo-booster-settings.php:12
 msgid "You are not allowed to update plugins on this blog."
 msgstr ""
 
-#: seo-booster-settings.php:298 seo-booster.php:2051 seo-booster.php:3315
-msgid "Settings"
+#: seo-booster-settings.php:98
+msgid "All pages have been scheduled for GSC data processing."
 msgstr ""
 
-#: seo-booster-settings.php:310
-msgid "Keywords"
+#: seo-booster-settings.php:119
+msgid "Log emptied manually"
 msgstr ""
 
-#: seo-booster-settings.php:317 seo-booster.php:2535
-msgid "Filter out keywords"
+#: seo-booster-settings.php:129 seo-booster-settings.php:143
+#: seo-booster.php:366 seo-booster.php:1877 seo-booster.php:2077
+msgid "Permission denied."
 msgstr ""
 
-#: seo-booster-settings.php:321
-msgid ""
-"Enter keywords to be filtered out. Separate keywords with comma or linebreak."
+#. translators: %s: number of cleaned transients
+#: seo-booster-settings.php:155 seo-booster-settings.php:247
+#, php-format
+msgid "Keyword analysis transients cleaned: %s"
 msgstr ""
 
-#: seo-booster-settings.php:322
-msgid ""
-"Note: Works as wildcard search - if you enter \"widgets\" all keywords "
-"containing \"widgets\" will be ignored."
+#. translators: %s: number of cleaned action scheduler jobs
+#: seo-booster-settings.php:170 seo-booster-settings.php:262
+#, php-format
+msgid "SEO Booster action scheduler jobs cleaned: %s"
 msgstr ""
 
-#: seo-booster-settings.php:329 seo-booster.php:2543
-msgid "Ignore internal searches"
+#. translators: %s: number of cleaned action scheduler logs
+#: seo-booster-settings.php:189
+#, php-format
+msgid "SEO Booster action scheduler logs cleaned: %s"
 msgstr ""
 
-#: seo-booster-settings.php:333
-msgid "Do not monitor regular searches on your website."
+#: seo-booster-settings.php:202
+msgid "Database tables emptied"
 msgstr ""
 
-#: seo-booster-settings.php:342
-msgid "Do not monitor searches made directly on your site"
+#: seo-booster-settings.php:206
+msgid "Cleaned cache"
 msgstr ""
 
-#: seo-booster-settings.php:345
-msgid ""
-"People searching internally on your site and clicking the results can also "
-"help gather keyword information. Turn this on to ignore."
+#: seo-booster-settings.php:270
+msgid "Database tables emptied and options deleted."
 msgstr ""
 
-#: seo-booster-settings.php:354 seo-booster.php:3307
-#: views/backlink-pages.php:13
-msgid "Backlinks"
+#: seo-booster-settings.php:275
+msgid "Cleaned keyword analysis cache"
 msgstr ""
 
-#: seo-booster-settings.php:359
-msgid "Ignore backlink sources"
-msgstr ""
-
-#: seo-booster-settings.php:363
-msgid ""
-"Enter any URL or domain extension to not show up in the backlinks list - eg ."
-"ru"
-msgstr ""
-
-#: seo-booster-settings.php:364 seo-booster-settings.php:832
-msgid "Separate with a comma or linebreak."
-msgstr ""
-
-#: seo-booster-settings.php:375 seo-booster.php:2551
-msgid "Automatic Tagging"
-msgstr ""
-
-#: seo-booster-settings.php:382 seo-booster-settings.php:561
-#: seo-booster-settings.php:775 seo-booster-settings.php:808
-#: seo-booster-settings.php:850
-msgid "Enable/Disable"
-msgstr ""
-
-#: seo-booster-settings.php:392
-msgid ""
-"Tags can be created automatically using the search terms that visitors use. "
-"This works with both internal searches and visitors from search engines."
-msgstr ""
-
-#: seo-booster-settings.php:404
-msgid "Tag Related Posts:"
-msgstr ""
-
-#: seo-booster-settings.php:414
-msgid ""
-"SEO Booster will attempt to find related posts and also tag with the search "
-"term."
-msgstr ""
-
-#: seo-booster-settings.php:427
-msgid "Choose Taxonomy:"
-msgstr ""
-
-#: seo-booster-settings.php:464
-msgid ""
-"If you use Custom Post Types on your site, they might not be configured to "
-"use the taxonomy you have chosen above."
-msgstr ""
-
-#: seo-booster-settings.php:465
-msgid "By clicking this checkbox, the taxonomy is properly 'assigned'."
-msgstr ""
-
-#: seo-booster-settings.php:476
-msgid "Assign Custom Post Types:"
-msgstr ""
-
-#: seo-booster-settings.php:499
-msgid ""
-"Turning this on ensures that the chosen taxonomy will be used on all custom "
-"post types listed below."
-msgstr ""
-
-#: seo-booster-settings.php:500
-msgid "Custom Post Types"
-msgstr ""
-
-#: seo-booster-settings.php:511
-msgid "Minimum length of term"
-msgstr ""
-
-#: seo-booster-settings.php:515
-msgid ""
-"If the number of characters in the query is less than the specified number, "
-"no tag (taxonomy term) will be created."
-msgstr ""
-
-#: seo-booster-settings.php:529
-msgid "Maximum length of term"
-msgstr ""
-
-#: seo-booster-settings.php:533
-msgid ""
-"If the number of characters in the query is MORE than the specified number, "
-"no tag (taxonomy term) will be created."
-msgstr ""
-
-#: seo-booster-settings.php:544
-msgid "Maximum tags per post"
-msgstr ""
-
-#: seo-booster-settings.php:555
+#: seo-booster-settings.php:313 seo-booster.php:2204
 msgid "Automatic Links"
 msgstr ""
 
-#: seo-booster-settings.php:565 seo-booster-settings.php:574
+#: seo-booster-settings.php:321 seo-booster-settings.php:434
+#: seo-booster-settings.php:484
+msgid "Enable/Disable"
+msgstr ""
+
+#: seo-booster-settings.php:328 seo-booster-settings.php:339
 msgid "Change keywords in text to links to relevant pages on your site."
 msgstr ""
 
-#: seo-booster-settings.php:579
-msgid "This feature only works with PHP 7+"
-msgstr ""
-
-#: seo-booster-settings.php:590
+#: seo-booster-settings.php:349
 msgid "Repeat Keywords"
 msgstr ""
 
-#: seo-booster-settings.php:594
+#: seo-booster-settings.php:356
 msgid ""
 "If the same word is used multiple times, only the first occurence will be "
 "replaced by a link."
 msgstr ""
 
-#: seo-booster-settings.php:603
+#: seo-booster-settings.php:365
 msgid ""
 "This will allow the same keyword and URL to be used repeatedly. Usually, if "
 "the same word is used multiple times, only the first occurence will be "
 "replaced by a link."
 msgstr ""
 
-#: seo-booster-settings.php:612
+#: seo-booster-settings.php:375
 msgid "Maximum Replacements"
 msgstr ""
 
-#: seo-booster-settings.php:616
+#: seo-booster-settings.php:382
 msgid ""
 "Maximum number of links created per post. It does not include current links "
 "in the content."
 msgstr ""
 
-#: seo-booster-settings.php:752
-msgid "Title"
+#: seo-booster-settings.php:399
+msgid "Enable keyword link in WooCommerce product descriptions"
 msgstr ""
 
-#: seo-booster-settings.php:769 seo-booster.php:2559
+#: seo-booster-settings.php:408
+msgid "Enables keywords to links in WooCommerce product descriptions."
+msgstr ""
+
+#: seo-booster-settings.php:414 seo-booster-settings.php:501
+msgid "Upgrade to SEO Booster Pro to unlock this feature."
+msgstr ""
+
+#: seo-booster-settings.php:426
 msgid "Weekly Email Reports"
 msgstr ""
 
-#: seo-booster-settings.php:784
+#: seo-booster-settings.php:445
+msgid "Send a weekly email with new information from the past week."
+msgstr ""
+
+#: seo-booster-settings.php:455
+msgid "Next scheduled email"
+msgstr ""
+
+#: seo-booster-settings.php:463
+msgid "Recipient(s)"
+msgstr ""
+
+#: seo-booster-settings.php:471
 msgid ""
-"Send a weekly email with information of keyword stats, new backlinks and 404 "
-"errors detected the past week."
+"Email recipient. To add multiple recipients, separate each email address "
+"with a comma."
 msgstr ""
 
-#: seo-booster-settings.php:791
-msgid "Email recipient"
+#: seo-booster-settings.php:479 seo-booster.php:2223
+msgid "404 Errors"
 msgstr ""
 
-#: seo-booster-settings.php:795
-msgid "Email recipent."
+#: seo-booster-settings.php:494
+msgid "Enable monitoring of 404 errors on your site."
 msgstr ""
 
-#: seo-booster-settings.php:819
-msgid "If turned on, 404 errors will be monitored."
-msgstr ""
-
-#: seo-booster-settings.php:825
+#: seo-booster-settings.php:508
 msgid "Ignore links"
 msgstr ""
 
-#: seo-booster-settings.php:829
-msgid ""
-"Here you can instruct the plugin to ignore 404 errors on URLs that match."
+#: seo-booster-settings.php:510 views/404-pages.php:45
+msgid "SEO Booster ignores a range of common URLs."
 msgstr ""
 
-#: seo-booster-settings.php:830
-msgid "For example if you want to ignore 404 errors URLs with"
+#: seo-booster-settings.php:519
+msgid "Currently ignored URLs"
 msgstr ""
 
-#: seo-booster-settings.php:845
-msgid "Debug Logging"
+#: seo-booster-settings.php:531
+msgid "Read more here on how to manipulate the ignore list"
 msgstr ""
 
-#: seo-booster-settings.php:861
-msgid ""
-"If turned on, the log will have debug information that can be helpful for "
-"finding errors or configuration issues."
+#: seo-booster-settings.php:531
+msgid "Customizing the List of Ignored URLs"
 msgstr ""
 
-#: seo-booster-settings.php:949
-msgid "Delete data on deactivate:"
+#: seo-booster-settings.php:542
+msgid "Delete data on deactivate"
 msgstr ""
 
-#: seo-booster-settings.php:959
+#: seo-booster-settings.php:551
 msgid ""
 "Turn this on to delete all data when deactivating the plugin. This cannot be "
 "undone."
 msgstr ""
 
-#: seo-booster-settings.php:961
+#: seo-booster-settings.php:556
 msgid ""
 "WordPress Multisite users: Careful! Turning this on and deactivating the "
 "plugin deletes ALL SEO Booster database tables on ALL sites."
 msgstr ""
 
-#: seo-booster-settings.php:979
+#: seo-booster-settings.php:578
 msgid "Tools"
 msgstr ""
 
-#: seo-booster-settings.php:986
+#: seo-booster-settings.php:590
 msgid "Database Update"
 msgstr ""
 
-#: seo-booster-settings.php:989
+#: seo-booster-settings.php:595
 msgid "Run Update Database"
 msgstr ""
 
-#: seo-booster-settings.php:990
+#: seo-booster-settings.php:598
 msgid ""
 "If you need to manually run the database updates. No need to use unless "
 "directed by support."
 msgstr ""
 
-#: seo-booster-settings.php:996
-msgid "Guided Tour"
+#: seo-booster-settings.php:606
+msgid "Reset Log"
 msgstr ""
 
-#: seo-booster-settings.php:999
-msgid "See Guided Tour"
+#: seo-booster-settings.php:611
+msgid "Reset the log"
 msgstr ""
 
-#: seo-booster-settings.php:1001
-msgid "Click to start the Guided Tour again."
+#: seo-booster-settings.php:615
+msgid "Resets all the entries in the log."
 msgstr ""
 
-#: seo-booster-settings.php:1006
-msgid "Account Reset"
+#: seo-booster-settings.php:623
+msgid "Send email now"
 msgstr ""
 
-#: seo-booster-settings.php:1009
-msgid "Click to Reset"
+#: seo-booster-settings.php:628
+msgid "Send status email"
 msgstr ""
 
-#: seo-booster-settings.php:1010
-msgid "Click to reset and start registration process again."
+#: seo-booster-settings.php:630
+msgid ""
+"It can be hard to wait for good things. Once a week is not often enough? "
+"Send the weekly report email now."
 msgstr ""
 
-#: seo-booster.php:405
+#: seo-booster-settings.php:633
+msgid ""
+"Remember to save any changes to email recipients first, before clicking send."
+msgstr ""
+
+#: seo-booster-settings.php:641
+msgid "GSC selected site"
+msgstr ""
+
+#: seo-booster-settings.php:648
+#, php-format
+msgid "Selected site: %s"
+msgstr ""
+
+#: seo-booster-settings.php:651
+#, php-format
+msgid "Google Email: %s"
+msgstr ""
+
+#: seo-booster-settings.php:663
+msgid "Reauthenticate or change account here"
+msgstr ""
+
+#: seo-booster-settings.php:670
+msgid "No site selected."
+msgstr ""
+
+#: seo-booster-settings.php:676
+msgid "The selected site used for Google Search Console data."
+msgstr ""
+
+#: seo-booster-settings.php:679
+msgid "This will allow you to select a different site to import data from."
+msgstr ""
+
+#: seo-booster-settings.php:681
+msgid ""
+"Erases all keyword data and the history of keyword positions and clicks."
+msgstr ""
+
+#: seo-booster-settings.php:682
+msgid ""
+"GSC options - Authentication details are not affected, but you need to "
+"select a site again."
+msgstr ""
+
+#: seo-booster-settings.php:686
+msgid "Change selected site"
+msgstr ""
+
+#: seo-booster-settings.php:695
+msgid "Manual Update"
+msgstr ""
+
+#: seo-booster-settings.php:715
+#, php-format
+msgid "Last %d days"
+msgstr ""
+
+#: seo-booster-settings.php:720
+msgid "Reimport"
+msgstr ""
+
+#: seo-booster-settings.php:724
+msgid ""
+"Reimport button is disabled because no site is selected. Please select a "
+"site first."
+msgstr ""
+
+#: seo-booster-settings.php:730
+msgid "New data will be added, no overwriting existing data."
+msgstr ""
+
+#: seo-booster-settings.php:737
+msgid "RESET KEYWORDS AND ALL HISTORY"
+msgstr ""
+
+#: seo-booster-settings.php:742
+msgid ""
+"Removes all keyword data along with the history of keyword positions and "
+"clicks."
+msgstr ""
+
+#: seo-booster-settings.php:743 seo-booster-settings.php:769
+msgid "Resets the debug log."
+msgstr ""
+
+#: seo-booster-settings.php:744 seo-booster-settings.php:770
+msgid "Clears all 404 error records."
+msgstr ""
+
+#: seo-booster-settings.php:745
+msgid "Deletes cached pages used for keyword research."
+msgstr ""
+
+#: seo-booster-settings.php:746 seo-booster-settings.php:772
+msgid "Purges all keyword analysis results for a fresh start."
+msgstr ""
+
+#: seo-booster-settings.php:747 seo-booster-settings.php:773
+msgid ""
+"Cancels and removes all scheduled Action Scheduler jobs related to SEO "
+"Booster."
+msgstr ""
+
+#: seo-booster-settings.php:749
+msgid "Automatic links remain unaffected."
+msgstr ""
+
+#: seo-booster-settings.php:750
+msgid "GSC options like authentication and the selected site won't be touched."
+msgstr ""
+
+#: seo-booster-settings.php:752
+msgid ""
+"Warning: This action makes permanent changes to your database. Proceed "
+"carefully—there's no undo!"
+msgstr ""
+
+#: seo-booster-settings.php:755
+msgid "Reset keyword data"
+msgstr ""
+
+#: seo-booster-settings.php:763
+msgid "Clear Database and Reset Options"
+msgstr ""
+
+#: seo-booster-settings.php:768
+msgid ""
+"Removes all keyword data and the history of keyword positions and clicks."
+msgstr ""
+
+#: seo-booster-settings.php:771
+msgid "Deletes cached content pages used for keyword research."
+msgstr ""
+
+#: seo-booster-settings.php:774
+msgid ""
+"Removes all GSC options, including authentication, keyword data, and "
+"selected site."
+msgstr ""
+
+#: seo-booster-settings.php:776
+msgid "Keywords to links you've created will remain intact."
+msgstr ""
+
+#: seo-booster-settings.php:779
+msgid "Clear All Data and Options"
+msgstr ""
+
+#: seo-booster-settings.php:781
+msgid ""
+"Warning: This will permanently change your database. Proceed with care—"
+"there's no going back!"
+msgstr ""
+
+#: seo-booster-settings.php:787 seo-booster-settings.php:792
+msgid "Schedule All Pages"
+msgstr ""
+
+#: seo-booster-settings.php:794
+msgid "This will schedule all pages for GSC data processing."
+msgstr ""
+
+#: seo-booster-settings.php:801
+msgid "Database Stats"
+msgstr ""
+
+#: seo-booster-settings.php:855
+msgid "Keyword Processing Job Statistics"
+msgstr ""
+
+#: seo-booster-settings.php:858
+msgid ""
+"This section provides statistics for the jobs related to the keyword "
+"analysis of your posts and pages. \"Total Jobs\" refers to the total jobs "
+"for the plugin, and \"Total Queue Jobs\" shows the number of actions in the "
+"queue for all plugins."
+msgstr ""
+
+#: seo-booster-settings.php:869 seo-booster-settings.php:921
+msgid "Pending Jobs"
+msgstr ""
+
+#: seo-booster-settings.php:904
+msgid "Keyword Analysis Overview"
+msgstr ""
+
+#: seo-booster-settings.php:905
+msgid ""
+"This section provides an overview of the keyword analysis process for your "
+"posts and pages."
+msgstr ""
+
+#: seo-booster-settings.php:906
+msgid ""
+"The process runs in batches in the background, the speed depends on how many "
+"pages and keywords you have."
+msgstr ""
+
+#: seo-booster-settings.php:909
+msgid "Keywords Analyzed"
+msgstr ""
+
+#: seo-booster-settings.php:910
+msgid "Keywords Used in Content"
+msgstr ""
+
+#: seo-booster-settings.php:911
+msgid "Keywords Not Used"
+msgstr ""
+
+#: seo-booster-settings.php:912
+msgid "Keywords Pending Analysis"
+msgstr ""
+
+#: seo-booster-settings.php:915
+msgid "Scheduled Actions - Keyword Analysis"
+msgstr ""
+
+#: seo-booster-settings.php:916
+msgid ""
+"Keyword analysis jobs are scheduled to process the keyword analysis of your "
+"posts and pages."
+msgstr ""
+
+#: seo-booster-settings.php:918
+msgid "Total Jobs Submitted"
+msgstr ""
+
+#: seo-booster-settings.php:919
+msgid "Completed Jobs"
+msgstr ""
+
+#: seo-booster-settings.php:920
+msgid "Failed Jobs"
+msgstr ""
+
+#: seo-booster-settings.php:922
+msgid "Total Queue Jobs (All Plugins)"
+msgstr ""
+
+#: seo-booster-settings.php:926
+msgid "Last 7 Jobs"
+msgstr ""
+
+#: seo-booster-settings.php:930
+msgid "Job ID"
+msgstr ""
+
+#: seo-booster-settings.php:931
+msgid "Hook"
+msgstr ""
+
+#: seo-booster-settings.php:932
+msgid "Status"
+msgstr ""
+
+#: seo-booster-settings.php:933
+msgid "Scheduled Date"
+msgstr ""
+
+#: seo-booster-settings.php:934
+msgid "Completed Date"
+msgstr ""
+
+#: seo-booster-settings.php:935
+msgid "Parameters"
+msgstr ""
+
+#: seo-booster-settings.php:962
+msgid "Batch"
+msgstr ""
+
+#: seo-booster-settings.php:966
+msgid "Keywords analysed"
+msgstr ""
+
+#: seo-booster-settings.php:989
+msgid ""
+"Action Scheduler is not available. Some features may not work as expected."
+msgstr ""
+
+#: seo-booster.php:519
+msgid "Normal"
+msgstr ""
+
+#: seo-booster.php:520
+msgid "Debug"
+msgstr ""
+
+#: seo-booster.php:522
+msgid "Warning"
+msgstr ""
+
+#: seo-booster.php:523
+msgid "Info"
+msgstr ""
+
+#: seo-booster.php:524
+msgid "Success"
+msgstr ""
+
+#: seo-booster.php:528
+msgid "Unknown"
+msgstr ""
+
+#: seo-booster.php:641
+msgid "Missing something."
+msgstr ""
+
+#: seo-booster.php:722
+msgid "You do not have permission to enable automatic background updates."
+msgstr ""
+
+#: seo-booster.php:737
+msgid "Automatic background updates enabled."
+msgstr ""
+
+#: seo-booster.php:760 seo-booster.php:1952
+msgid "Newsletter"
+msgstr ""
+
+#: seo-booster.php:761
+msgid "Your email is added to the user newsletter."
+msgstr ""
+
+#: seo-booster.php:941
+msgid "You do not have permission to add keywords."
+msgstr ""
+
+#. translators:
+#: seo-booster.php:954
 #, php-format
 msgid "Error - Keyword <code>%s</code> is already used."
 msgstr ""
 
-#: seo-booster.php:417
+#. translators:
+#: seo-booster.php:964
 #, php-format
 msgid "Error - <code>%s</code> is not a valid URL."
 msgstr ""
 
-#: seo-booster.php:439
-msgid "Show more details"
-msgstr ""
-
-#: seo-booster.php:439 views/autolink-pages.php:303
-msgid "Target URL"
-msgstr ""
-
-#: seo-booster.php:443
+#. translators:
+#: seo-booster.php:989
 #, php-format
 msgid "Success! <code>%1$s</code> now links to <code>%2$s</code>."
 msgstr ""
 
 #. Plugin Name of the plugin/theme
-#: seo-booster.php:465 seo-booster.php:3288 seo-booster.php:3289
+#: seo-booster.php:1019 seo-booster.php:2180 seo-booster.php:2181
 msgid "SEO Booster"
 msgstr ""
 
-#: seo-booster.php:492
+#: seo-booster.php:1054
 msgid "Automatic Linking"
 msgstr ""
 
-#: seo-booster.php:501
+#: seo-booster.php:1066
 msgid "Change keywords on this page to links."
 msgstr ""
 
-#: seo-booster.php:525
-msgid "Append Keywords List"
+#: seo-booster.php:1074
+msgid "Feature is disabled. Enable in SEO Booster settings."
 msgstr ""
 
-#: seo-booster.php:534
-msgid "Append the list of popular keywords to this page."
-msgstr ""
-
-#: seo-booster.php:762
+#: seo-booster.php:1079
 #, php-format
-msgid "PageSpeed Insights - Benchmarked <code>%1$s</code> in %2$s sec."
+msgid "Change keywords and links in %sAutolink%s"
 msgstr ""
 
-#: seo-booster.php:950
+#. translators:
+#: seo-booster.php:1369
 #, php-format
-msgid "Debug: Automatic links turned off on %s - No links added. "
+msgid "Created %1$d link on %2$s (%3$s sec. %4$s loops)"
 msgstr ""
 
-#: seo-booster.php:990
-msgid "Auto link turned on, but no results found."
-msgstr ""
-
-#: seo-booster.php:995
-msgid "Auto link turned on, but no keyword found."
-msgstr ""
-
-#: seo-booster.php:1101
-#, php-format
-msgid "<a href=\"%1$s\" target=\"_blank\">%2$s</a>"
-msgstr ""
-
-#: seo-booster.php:1125
-#, php-format
-msgid "<code>%1$d</code> auto link on %2$s (%3$s sec. %4$s loops)"
-msgstr ""
-
-#: seo-booster.php:1324
-#, php-format
-msgid ""
-"<strong>%1$s</strong> <span class=\"redir\">%2$s redirects to</span> <strong>"
-"%3$s</strong>"
-msgstr ""
-
-#: seo-booster.php:1353
-msgid ""
-"Too many redirects. When following redirects, libcurl hit the maximum amount."
-msgstr ""
-
-#: seo-booster.php:1512
-#, php-format
-msgid "New 404 - <a href=\"%1$s\" target=\"_blank\">%2$s</a> Referer: %3$s"
-msgstr ""
-
+#. translators:
 #: seo-booster.php:1515
 #, php-format
-msgid "New 404 - <a href=\"%1$s\" target=\"_blank\">%2$s</a>"
+msgid "New 404 - %1$s Referer: %2$s"
 msgstr ""
 
-#: seo-booster.php:1651
+#. translators:
+#: seo-booster.php:1523
 #, php-format
-msgid "Debug: Ignoring referrer <code>%1$s</code> Matches: <code>%2$s</code> "
+msgid "New 404 - %1$s"
 msgstr ""
 
-#: seo-booster.php:1664
-#, php-format
-msgid "Debug: Ignoring user agent <code>%s</code> "
+#: seo-booster.php:1688
+msgid "Please wait"
 msgstr ""
 
-#: seo-booster.php:1763
-msgid "This is a local site, email not sent."
+#: seo-booster.php:1689 seo-booster.php:1783
+msgid "Unique keywords imported"
+msgstr ""
+
+#: seo-booster.php:1690 seo-booster.php:1784
+msgid "Total entries processed"
+msgstr ""
+
+#: seo-booster.php:1691
+msgid "Last import keyword"
+msgstr ""
+
+#: seo-booster.php:1692 seo-booster.php:1786
+msgid "Last batch"
+msgstr ""
+
+#: seo-booster.php:1693 seo-booster.php:1787 seo-booster.php:1810
+#: templates/dashboard/report.php:839
+msgid "seconds"
+msgstr ""
+
+#: seo-booster.php:1694 seo-booster.php:1788
+msgid "Completed"
+msgstr ""
+
+#: seo-booster.php:1696
+msgid "Total time"
+msgstr ""
+
+#: seo-booster.php:1697 seo-booster.php:1790
+msgid "Go to Dashboard"
+msgstr ""
+
+#: seo-booster.php:1698 seo-booster.php:1791
+msgid "Retry"
+msgstr ""
+
+#: seo-booster.php:1699
+msgid "An error occurred while processing the request."
+msgstr ""
+
+#: seo-booster.php:1700
+msgid "Saving site and loading data. This can take several minutes."
+msgstr ""
+
+#: seo-booster.php:1701 seo-booster.php:1794
+msgid "Elapsed time"
+msgstr ""
+
+#: seo-booster.php:1702 seo-booster.php:1780
+msgid "Please wait..."
+msgstr ""
+
+#: seo-booster.php:1703 seo-booster.php:1781
+msgid "Show more"
+msgstr ""
+
+#: seo-booster.php:1704 seo-booster.php:1782
+msgid "Show less"
+msgstr ""
+
+#: seo-booster.php:1705 seo-booster.php:1785
+msgid "Last imported keyword"
+msgstr ""
+
+#: seo-booster.php:1706 seo-booster.php:1789
+msgid "Import complete"
+msgstr ""
+
+#: seo-booster.php:1707 seo-booster.php:1793
+msgid "Error processing request"
+msgstr ""
+
+#: seo-booster.php:1708 seo-booster.php:1796
+msgid "Last 28 days"
+msgstr ""
+
+#: seo-booster.php:1709 seo-booster.php:1797
+msgid "Last 3 months"
+msgstr ""
+
+#: seo-booster.php:1710 seo-booster.php:1798
+msgid "Last 6 months"
+msgstr ""
+
+#: seo-booster.php:1711 seo-booster.php:1799
+msgid "Last 12 months"
+msgstr ""
+
+#: seo-booster.php:1712 seo-booster.php:1800
+msgid "All time"
+msgstr ""
+
+#: seo-booster.php:1717 seo-booster.php:1805
+msgid "SEO Booster Data Visualization"
+msgstr ""
+
+#: seo-booster.php:1718 seo-booster.php:1806
+msgid "Date"
+msgstr ""
+
+#: seo-booster.php:1719 seo-booster.php:1807
+msgid "Value"
+msgstr ""
+
+#: seo-booster.php:1720 seo-booster.php:1811
+msgid "Error fetching data"
+msgstr ""
+
+#: seo-booster.php:1721 seo-booster.php:1812
+msgid "Please try again later."
+msgstr ""
+
+#: seo-booster.php:1722 seo-booster.php:1813
+msgid "Visit our"
+msgstr ""
+
+#: seo-booster.php:1723 seo-booster.php:1814
+msgid "Troubleshooting Guide"
+msgstr ""
+
+#: seo-booster.php:1724 seo-booster.php:1815
+msgid "You have to allow Helpscout Beacon to load to get help"
+msgstr ""
+
+#: seo-booster.php:1725 seo-booster.php:1756 seo-booster.php:1816
+msgid "Timestamp"
+msgstr ""
+
+#: seo-booster.php:1726 seo-booster.php:1757 seo-booster.php:1817
+msgid "Priority"
+msgstr ""
+
+#: seo-booster.php:1727 seo-booster.php:1758 seo-booster.php:1818
+msgid "Log Entry"
+msgstr ""
+
+#: seo-booster.php:1728 seo-booster.php:1759 seo-booster.php:1819
+msgid "Tabulator library is not loaded."
+msgstr ""
+
+#: seo-booster.php:1729
+msgid "Unique Keywords"
 msgstr ""
 
 #: seo-booster.php:1792
-#, php-format
-msgid "Top 10 pages with Search Engine traffic the past %s days."
+msgid "Please enter at least one email address."
 msgstr ""
 
-#: seo-booster.php:1809
-#, php-format
-msgid "%1$s visit from search engines past %2$s days"
-msgid_plural "%1$s visits from search engines past %2$s days"
-msgstr[0] ""
-msgstr[1] ""
-
-#: seo-booster.php:1813
-msgid "New Keywords:"
+#: seo-booster.php:1795
+msgid "Saving site and loading data"
 msgstr ""
 
-#: seo-booster.php:1818
-msgid "Report from SEO Booster on "
-msgstr ""
-
-#: seo-booster.php:1819
-msgid "SEO Booster Dashboard"
-msgstr ""
-
-#: seo-booster.php:1843
-#, php-format
-msgid "Status email was sent to %1$s - result %2$s"
-msgstr ""
-
-#: seo-booster.php:1848
-#, php-format
-msgid "No results for past %s days - no email was sent."
-msgstr ""
-
-#: seo-booster.php:1897 seo-booster.php:1911
-#, php-format
-msgid "Prepended keyword <code>%1$s</code> to title tag on %2$s %3$s"
-msgstr ""
-
-#: seo-booster.php:1901 seo-booster.php:1916
-#, php-format
-msgid "Appended keyword <code>%1$s</code> to title tag on %2$s %3$s"
-msgstr ""
-
-#: seo-booster.php:2052
-msgid "Support"
-msgstr ""
-
-#: seo-booster.php:2247
-msgid "Not Provided"
-msgstr ""
-
-#: seo-booster.php:2383
-msgid "Search:"
-msgstr ""
-
-#: seo-booster.php:2384
-msgid "Showing _START_ to _END_ of _TOTAL_ keywords."
-msgstr ""
-
-#: seo-booster.php:2386
-msgid " - filtering from _MAX_ records"
-msgstr ""
-
-#: seo-booster.php:2387
-msgid "Display _MENU_ keywords"
-msgstr ""
-
-#: seo-booster.php:2388
-msgid "Please wait - loading..."
-msgstr ""
-
-#: seo-booster.php:2389
-msgid "No records to display"
-msgstr ""
-
-#: seo-booster.php:2390
-msgid "Previous"
-msgstr ""
-
-#: seo-booster.php:2391 seo-booster.php:2464 seo-booster.php:2474
-#: seo-booster.php:2484 seo-booster.php:2493 seo-booster.php:2501
-#: seo-booster.php:2510 seo-booster.php:2520 seo-booster.php:2529
-#: seo-booster.php:2537 seo-booster.php:2545 seo-booster.php:2553
-#: seo-booster.php:2561
-msgid "Next"
-msgstr ""
-
-#: seo-booster.php:2392
-msgid "First"
-msgstr ""
-
-#: seo-booster.php:2393
-msgid "Last"
-msgstr ""
-
-#: seo-booster.php:2394
-msgid "No data available in table"
-msgstr ""
-
-#: seo-booster.php:2461
-msgid "The Dashboard Page"
-msgstr ""
-
-#: seo-booster.php:2462
-msgid ""
-"SEO Booster monitors traffic from hundreds of keyword sources, detects "
-"visitors from backlinks, 404 errors and much more."
-msgstr ""
-
-#: seo-booster.php:2463
-msgid "The Dashboard page gives you a quick overview."
-msgstr ""
-
-#: seo-booster.php:2470
-msgid "Keywords Module"
-msgstr ""
-
-#: seo-booster.php:2471
-msgid "What your visitors searches for on search engines to find your website"
-msgstr ""
-
-#: seo-booster.php:2472
-msgid ""
-"Keyword traffic from 400+ sources are monitored and keywords will show up "
-"here."
-msgstr ""
-
-#: seo-booster.php:2473
-msgid ""
-"Google and Yandex have stopped sharing information about what people search "
-"for, but there are hundreds of other search engines who still shares."
-msgstr ""
-
-#: seo-booster.php:2480
-msgid "Filter Keywords"
-msgstr ""
-
-#: seo-booster.php:2481
-msgid ""
-"All pages that receive search engine traffic are listed. Also when the "
-"keyword was not provided."
-msgstr ""
-
-#: seo-booster.php:2482
-msgid "Use the filter settings to show only when keywords were provided."
-msgstr ""
-
-#: seo-booster.php:2483
-msgid "You can also filter out internal searches."
-msgstr ""
-
-#: seo-booster.php:2490
-msgid "Who links to you?"
-msgstr ""
-
-#: seo-booster.php:2491
-msgid ""
-"Every new visitor that comes from another website is monitored and listed "
-"here."
-msgstr ""
-
-#: seo-booster.php:2492
-msgid "Note - Pro version also checks each backlink and removes fake links."
-msgstr ""
-
-#: seo-booster.php:2498 seo-booster.php:3309 views/forgotten-pages.php:12
-msgid "Lost Traffic"
-msgstr ""
-
-#: seo-booster.php:2499
-msgid ""
-"Discover pages that used to receive traffic from Search Engines, but no "
-"longer gets any traffic."
-msgstr ""
-
-#: seo-booster.php:2500
-msgid "Do not worry if you see nothing listed here. That is good."
-msgstr ""
-
-#: seo-booster.php:2507
-msgid "404 Errors!"
-msgstr ""
-
-#: seo-booster.php:2508
-msgid "404 Errors refers to wrong links or missing content on your website."
-msgstr ""
-
-#: seo-booster.php:2509
-msgid "You should fix any as soon as possible. Use this list to get started."
-msgstr ""
-
-#: seo-booster.php:2517
-msgid "Reset 404 errors"
-msgstr ""
-
-#: seo-booster.php:2518
-msgid ""
-"Sometimes the list fills up very quickly and you want to get a clean "
-"overview."
-msgstr ""
-
-#: seo-booster.php:2519
-msgid "Use the Reset button to clean the list and start over."
-msgstr ""
-
-#: seo-booster.php:2526
-msgid "Whats going on?"
-msgstr ""
-
-#: seo-booster.php:2527
-msgid "Per default only most important events is logged."
-msgstr ""
-
-#: seo-booster.php:2528
-msgid ""
-"If you want more details, go to the settings page and turn on \"Debug Logging"
-"\"."
-msgstr ""
-
-#: seo-booster.php:2536
-msgid ""
-"Sometimes you get a keyword in your system you do not want to use on your "
-"website, filter out any you do not want here."
-msgstr ""
-
-#: seo-booster.php:2544
-msgid ""
-"Visitors clicking on search results on your own website are also tracked. "
-"You can turn this off here if you wish only keywords from external visitors."
-msgstr ""
-
-#: seo-booster.php:2552
-msgid ""
-"The keywords people use to find your content can be used as Tags for your "
-"posts and pages."
-msgstr ""
-
-#: seo-booster.php:2560
-msgid ""
-"Enable this and enter your e-mail to get a weekly update from your website "
-"about new keywords and incoming links."
-msgstr ""
-
-#: seo-booster.php:2567
-msgid "End of the Guided Tour"
-msgstr ""
-
-#: seo-booster.php:2568
-msgid ""
-"Thank you for finishing the tour. This was just a quick tour of the most "
-"important features - there are more cool features for you to discover."
-msgstr ""
-
-#: seo-booster.php:2569
-msgid "Need Help?"
-msgstr ""
-
-#: seo-booster.php:2571
-msgid "Knowledge Base"
-msgstr ""
-
-#: seo-booster.php:2572
-msgid "Contact Support"
-msgstr ""
-
-#: seo-booster.php:2573
-msgid "Please leave a review if you like the plugin."
-msgstr ""
-
-#: seo-booster.php:2603
-msgid "Thank you for installing SEO Booster :-)"
-msgstr ""
-
-#: seo-booster.php:2604
-msgid ""
-"This Quick Guided Tour will help you learn the interface in a few minutes."
-msgstr ""
-
-#: seo-booster.php:2605
-msgid "Click the <em>Begin Tour</em> button to get started."
-msgstr ""
-
-#: seo-booster.php:2606
-msgid ""
-"If you want to watch it later use the <em>Close</em> button and start the "
-"tour from the bottom of the Settings page."
-msgstr ""
-
-#: seo-booster.php:2614
-msgid "Begin Tour"
-msgstr ""
-
-#: seo-booster.php:2649
-msgid "Close"
-msgstr ""
-
-#: seo-booster.php:2867
+#. translators:
+#: seo-booster.php:1919
 #, php-format
 msgid "Created database tables on blog id <code>%s</code>."
 msgstr ""
 
-#: seo-booster.php:3070
-msgid "Updated database tables"
+#: seo-booster.php:1944
+msgid "Rendering Help Scout's beacon for easy help and support"
 msgstr ""
 
-#: seo-booster.php:3288
-msgid "General Settings"
+#: seo-booster.php:1953
+msgid "You are added to our newsletter. Unsubscribe anytime."
 msgstr ""
 
-#: seo-booster.php:3296
-msgid "Incoming Keywords"
+#: seo-booster.php:2092
+msgid "Selected site was reset and keyword history erased."
 msgstr ""
 
-#: seo-booster.php:3298
-msgid "Autolink"
+#: seo-booster.php:2107
+msgid "Site selected successfully."
 msgstr ""
 
-#: seo-booster.php:3311
+#: seo-booster.php:2117
+msgid "Select Site:"
+msgstr ""
+
+#: seo-booster.php:2125
+msgid "Save Site"
+msgstr ""
+
+#: seo-booster.php:2129
+msgid "Go to SEO Booster Dashboard"
+msgstr ""
+
+#: seo-booster.php:2144
+msgid "Select GSC Site"
+msgstr ""
+
+#: seo-booster.php:2194
+msgid "GSC"
+msgstr ""
+
+#: seo-booster.php:2195
+msgid "Google Search Console"
+msgstr ""
+
+#: seo-booster.php:2205
+msgid "Keywords -> Links"
+msgstr ""
+
+#: seo-booster.php:2222
 msgid "404s"
 msgstr ""
 
-#: seo-booster.php:3313
-msgid "Log"
+#: templates/dashboard/report.php:218
+msgid "Back to Top"
 msgstr ""
 
-#: seo-booster.php:3366
-msgid "Debug Information"
+#: templates/dashboard/report.php:263 templates/dashboard/report.php:286
+#: templates/dashboard/report.php:335
+msgid "Top Pages"
 msgstr ""
 
-#: seo-booster.php:3448
-msgid "Debug Data"
+#: templates/dashboard/report.php:264 templates/dashboard/report.php:284
+#: templates/dashboard/report.php:369
+msgid "New Keywords"
 msgstr ""
 
-#: seo-booster.php:3449
+#: templates/dashboard/report.php:264 templates/dashboard/report.php:265
+#: templates/dashboard/report.php:266 templates/dashboard/report.php:267
+#: templates/dashboard/report.php:268 templates/dashboard/report.php:269
+#: templates/dashboard/report.php:270
+msgid "Keyword Analysis"
+msgstr ""
+
+#: templates/dashboard/report.php:265 templates/dashboard/report.php:572
+msgid "Top Performing Keywords"
+msgstr ""
+
+#: templates/dashboard/report.php:266 templates/dashboard/report.php:521
+msgid "Keywords with Most Improvements"
+msgstr ""
+
+#: templates/dashboard/report.php:267 templates/dashboard/report.php:612
+msgid "Keywords with Declining Performance"
+msgstr ""
+
+#: templates/dashboard/report.php:268 templates/dashboard/report.php:661
+msgid "Long-Tail Keyword Opportunities"
+msgstr ""
+
+#: templates/dashboard/report.php:269 templates/dashboard/report.php:470
+msgid "Keywords Not Getting Traffic Anymore"
+msgstr ""
+
+#: templates/dashboard/report.php:270 templates/dashboard/report.php:420
+msgid "Keyword Terms Leading to Different Pages"
+msgstr ""
+
+#: templates/dashboard/report.php:271 templates/dashboard/report.php:745
+msgid "CTR Improvement Opportunities"
+msgstr ""
+
+#: templates/dashboard/report.php:271 templates/dashboard/report.php:273
+msgid "Query Analysis"
+msgstr ""
+
+#: templates/dashboard/report.php:272
+msgid "Missing 404 Pages"
+msgstr ""
+
+#: templates/dashboard/report.php:272
+msgid "Error Analysis"
+msgstr ""
+
+#: templates/dashboard/report.php:273 templates/dashboard/report.php:706
+msgid "Question-Based Queries"
+msgstr ""
+
+#: templates/dashboard/report.php:279
+msgid "SEO Booster Report Dashboard"
+msgstr ""
+
+#: templates/dashboard/report.php:281
 msgid ""
-"If support asks you for more details about your website to help debugging, "
-"here it is in easy to copy and paste format."
+"This report offers a deep dive into the key aspects of your website's search "
+"engine optimization, providing actionable insights to help you enhance your "
+"online visibility."
 msgstr ""
 
-#: seo-booster.php:3454
-msgid "Copy site info to clipboard"
+#: templates/dashboard/report.php:283
+msgid ""
+"We've grouped the findings into clear categories, allowing you to easily "
+"navigate through the various sections, such as"
 msgstr ""
 
-#: seo-booster.php:3456
-msgid "Copied!"
+#: templates/dashboard/report.php:285
+msgid "and"
 msgstr ""
 
-#: seo-booster.php:3605
-msgid "Latest Keywords"
+#: templates/dashboard/report.php:289
+msgid ""
+"Whether you're looking to capitalize on new keyword opportunities, improve "
+"your click-through rates, or identify areas where performance is declining, "
+"this report is your guide to optimizing your site's SEO strategy."
 msgstr ""
 
-#: seo-booster.php:3615
-msgid "See all on the Keywords page"
+#: templates/dashboard/report.php:295
+msgid "Table of Contents"
 msgstr ""
 
-#: seo-booster.php:3645
-msgid "Latest Backlinks"
+#: templates/dashboard/report.php:339
+msgid ""
+"Pages receiving the most traffic from organic search over the past 30 days."
 msgstr ""
 
-#: seo-booster.php:3653
-msgid "See all on the Backlinks page."
+#: templates/dashboard/report.php:340
+msgid ""
+"Consider optimizing these pages further to improve their search engine "
+"rankings and increase organic traffic."
 msgstr ""
 
-#: seo-booster.php:3992
+#: templates/dashboard/report.php:346 templates/dashboard/report.php:438
+#: templates/dashboard/report.php:586
+msgid "Total Clicks"
+msgstr ""
+
+#: templates/dashboard/report.php:347 templates/dashboard/report.php:437
+#: templates/dashboard/report.php:585
+msgid "Total Impressions"
+msgstr ""
+
+#: templates/dashboard/report.php:361
+msgid "No top pages found."
+msgstr ""
+
+#: templates/dashboard/report.php:373
+msgid "Keywords that have appeared for the first time recently."
+msgstr ""
+
+#: templates/dashboard/report.php:374
+msgid ""
+"Consider optimizing your content to target these new keywords and improve "
+"your search engine rankings."
+msgstr ""
+
+#: templates/dashboard/report.php:387
+msgid "Keywords"
+msgstr ""
+
+#: templates/dashboard/report.php:398
+#, php-format
+msgid "First seen: %s"
+msgstr ""
+
+#: templates/dashboard/report.php:424
+msgid ""
+"Keywords that are leading to different pages on your website, causing "
+"keyword cannibalization. Ideally you want focus keyword terms to help boost "
+"traffic and increase conversion on the most relevant pages for your vistors."
+msgstr ""
+
+#: templates/dashboard/report.php:425
+msgid ""
+"Consider focusing your SEO strategy on one of the pages listed below to "
+"improve your search engine rankings for the keywords."
+msgstr ""
+
+#: templates/dashboard/report.php:436
+msgid "Average Position"
+msgstr ""
+
+#: templates/dashboard/report.php:439
+msgid "Average CTR"
+msgstr ""
+
+#: templates/dashboard/report.php:457
+msgid "No keyword cannibalizations found."
+msgstr ""
+
+#: templates/dashboard/report.php:474
+msgid "Keywords that have not received traffic in the past 30 days."
+msgstr ""
+
+#: templates/dashboard/report.php:475
+msgid ""
+"Consider optimizing your content to target these keywords and improve your "
+"search engine rankings."
+msgstr ""
+
+#: templates/dashboard/report.php:488 templates/dashboard/report.php:542
+#: views/autolink-pages.php:100
+msgid "Keyword"
+msgstr ""
+
+#: templates/dashboard/report.php:498
+msgid "Last Known Position"
+msgstr ""
+
+#: templates/dashboard/report.php:509
+msgid "All keywords are receiving traffic in the past 30 days."
+msgstr ""
+
+#: templates/dashboard/report.php:525
 #, php-format
 msgid ""
-"Debug: checkreferrer(): Visitor on  <code>%1$s</code> from <code>%2$s</code>"
+"Keywords that have shown the most improvement in rankings over the past %d "
+"days."
 msgstr ""
 
-#: seo-booster.php:4028
-#, php-format
+#: templates/dashboard/report.php:526
 msgid ""
-"Visit from %1$s - Searching for <code>%2$s</code> <a href='%3$s' "
-"target='_blank'>%4$s</a>"
+"Consider optimizing your content even further to capitalize on these "
+"improvements and increase your search engine rankings."
 msgstr ""
 
-#: seo-booster.php:4030
-#, php-format
+#: templates/dashboard/report.php:552
+msgid "Keyword: "
+msgstr ""
+
+#: templates/dashboard/report.php:552
+msgid "Top Position"
+msgstr ""
+
+#: templates/dashboard/report.php:552
+msgid "Bottom Position"
+msgstr ""
+
+#: templates/dashboard/report.php:552 templates/dashboard/report.php:624
+msgid "Position Change"
+msgstr ""
+
+#: templates/dashboard/report.php:552
+msgid "CTR Change: "
+msgstr ""
+
+#: templates/dashboard/report.php:552
+msgid "Impressions Change"
+msgstr ""
+
+#: templates/dashboard/report.php:552 templates/dashboard/report.php:626
+msgid "Current Position"
+msgstr ""
+
+#: templates/dashboard/report.php:563
 msgid ""
-"Visit from %1$s. <a href='%2$s' target='_blank'>%3$s</a> Keyword not "
-"provided."
+"No keywords have shown significant improvements in the specified period."
 msgstr ""
 
-#: seo-booster.php:4125
-#, php-format
-msgid "Ignored invalid URL <code>%s</code>"
-msgstr ""
-
-#: seo-booster.php:4263
-#, php-format
+#: templates/dashboard/report.php:576
 msgid ""
-"Created a new term <a href='%1$s'>%2$s</a> in the <code>%3$s</code> "
-"taxonomy. For <a href='%4$s' target='_blank'>%5$s</a> (ID %6$d)"
+"This report shows the top performing keywords over the past 30 days, "
+"highlighting those that are driving the most traffic and have the highest "
+"CTR."
 msgstr ""
 
-#: seo-booster.php:4275
-#, php-format
-msgid "Error tagging <code>%s</code>"
-msgstr ""
-
-#: seo-booster.php:4277
-#, php-format
-msgid "Tagged <a href='%1$s'>%2$s</a> with <a href='%3$s'>%4$s</a>"
-msgstr ""
-
-#: seo-booster.php:4307
-#, php-format
+#: templates/dashboard/report.php:577
 msgid ""
-"Tagged related post <a href='%1$s'>%2$s</a> with <a href='%3$s'>%4$s</a>"
+"These keywords are already performing well, so consider optimizing your "
+"content further to maintain or improve their rankings. Or change your focus "
+"to other areas of your website."
 msgstr ""
 
-#: seo-booster.php:4369
-msgid "Updated daily maintenance schedule to run every hour instead."
+#: templates/dashboard/report.php:587 templates/dashboard/report.php:676
+msgid "Avg Position"
 msgstr ""
 
-#: seo-booster.php:4380
-#, php-format
-msgid "Log table has %1$s entries, trimming to %2$s."
+#: templates/dashboard/report.php:588
+msgid "Avg CTR"
 msgstr ""
 
-#: seo-booster.php:4389
-#, php-format
-msgid "Removed %s old daily keywords tracking data."
+#: templates/dashboard/report.php:605
+msgid "No top performing keywords found."
 msgstr ""
 
-#: seo-booster.php:4414
-#, php-format
-msgid "Maintenance - Removing backlink <code>%1$s</code> Step %2$s"
-msgstr ""
-
-#: seo-booster.php:4430
-#, php-format
+#: templates/dashboard/report.php:616
 msgid ""
-"Maintenance - Removing backlink <code>%1$s</code> after %2$d failed attempts "
-"to verify."
+"This report compares keyword performance over the last 30 days with the "
+"previous 30 days to identify keywords with declining performance."
 msgstr ""
 
-#: seo-booster.php:4454
-#, php-format
+#: templates/dashboard/report.php:617
+msgid "This can help you pinpoint areas that need improvement."
+msgstr ""
+
+#: templates/dashboard/report.php:625
+msgid "Previous Position"
+msgstr ""
+
+#: templates/dashboard/report.php:627
+msgid "Current Impressions"
+msgstr ""
+
+#: templates/dashboard/report.php:628
+msgid "Previous Impressions"
+msgstr ""
+
+#: templates/dashboard/report.php:629
+msgid "Current Clicks"
+msgstr ""
+
+#: templates/dashboard/report.php:630
+msgid "Previous Clicks"
+msgstr ""
+
+#: templates/dashboard/report.php:652
+msgid "No keywords with declining performance found."
+msgstr ""
+
+#: templates/dashboard/report.php:665
 msgid ""
-"Maintenance - Removing backlink <code>%1$s</code> - Matched <code>%2$s</"
-"code> in 'Ignore backlink sources'"
+"Long-tail keywords with high impressions but lower CTR, indicating potential "
+"for optimization."
 msgstr ""
 
-#: seo-booster.php:4483
-#, php-format
+#: templates/dashboard/report.php:666
 msgid ""
-"Maintenance - Removed URL in audit table <code>%s</code> - Matched ignored "
-"fileextension."
+"These keyword terms are long (long-tail) meaning there might be less "
+"competetion for the keyword term, and there seems to be traffic already. "
+"This indicates potential to bring more traffic."
 msgstr ""
 
-#: seo-booster.php:4508
-#, php-format
-msgid "Maintenance - Removing backlink <code>%s</code>"
+#: templates/dashboard/report.php:677
+msgid "Latest Position"
 msgstr ""
 
-#: seo-booster.php:4537
-#, php-format
+#: templates/dashboard/report.php:697
+msgid "No long-tail keyword opportunities found."
+msgstr ""
+
+#: templates/dashboard/report.php:710
 msgid ""
-"Maintenance - Found a search engine visitor from <code>%s</code> - updating "
-"keyword records."
+"Search queries that start with common question phrases, indicating potential "
+"content opportunities."
 msgstr ""
 
-#: seo-booster.php:4572
-#, php-format
-msgid "Maintenance - Removing a reference to <code>%s</code>."
-msgstr ""
-
-#: seo-booster.php:4579
-#, php-format
-msgid "Maintenance routines made %d changes to the database."
-msgstr ""
-
-#: seo-booster.php:4625
-#, php-format
-msgid "(PRO) Backlink verified on <code>%s</code>"
-msgstr ""
-
-#: seo-booster.php:4759
-msgid "SEO Booster - Dynamic Links"
-msgstr ""
-
-#: seo-booster.php:4760
+#: templates/dashboard/report.php:711
 msgid ""
-"List of links to other pages with anchor text detected from search engines."
+"These terms can be used to create content for FAQ lists and for making sure "
+"your users questions are answered in your content."
 msgstr ""
 
-#: seo-booster.php:4845
-msgid "Internal Links"
+#: templates/dashboard/report.php:738
+msgid "No question-based queries found."
 msgstr ""
 
-#: seo-booster.php:4874 seo-booster.php:4996
-msgid "Title:"
+#: templates/dashboard/report.php:749
+msgid ""
+"Keywords and pages with high impressions but low CTR, suggesting potential "
+"for meta description and title tag optimization."
 msgstr ""
 
-#: seo-booster.php:4877
-msgid "The Widget title."
+#: templates/dashboard/report.php:750
+msgid ""
+"A high impression count indicates that your page is ranking well for the "
+"keyword, but a low CTR suggests that users are not clicking through to your "
+"site."
 msgstr ""
 
-#: seo-booster.php:4881 seo-booster.php:5001
-msgid "Limit:"
+#: templates/dashboard/report.php:777
+msgid "No CTR improvement opportunities found."
 msgstr ""
 
-#: seo-booster.php:4884
-msgid "The maximum amount of links. Defaults to 10."
+#: templates/dashboard/report.php:784
+msgid "404 Errors - Missing Pages"
 msgstr ""
 
-#: seo-booster.php:4888
-msgid "What to show:"
+#: templates/dashboard/report.php:788
+msgid ""
+"Pages that returned a 404 error, indicating they are missing or have been "
+"moved."
 msgstr ""
 
-#: seo-booster.php:4896
-msgid "Pages with the most SEO traffic"
+#: templates/dashboard/report.php:789
+msgid ""
+"These pages should be fixed or redirected to avoid losing traffic and "
+"negatively impacting your search engine rankings."
 msgstr ""
 
-#: seo-booster.php:4903
-msgid "Pages with little SEO traffic"
+#: templates/dashboard/report.php:790
+msgid ""
+"The easiest solution is to make 301 redirects, but we highly recommend to "
+"fix any internal links that are pointing to the wrong URL. Making a redirect "
+"should not be the first option, but the last option."
 msgstr ""
 
-#: seo-booster.php:4911
-msgid "Show the latest keywords first"
+#: templates/dashboard/report.php:799
+msgid "Visits"
 msgstr ""
 
-#: seo-booster.php:4946
-msgid "SEO Booster - Incoming Keywords"
+#: templates/dashboard/report.php:800
+msgid "Referer"
 msgstr ""
 
-#: seo-booster.php:4986
-msgid "Tagged With"
+#: templates/dashboard/report.php:816
+msgid "No missing pages found."
 msgstr ""
 
-#: views/404-pages.php:24
+#: templates/dashboard/report.php:823
+msgid "Report Generation Information"
+msgstr ""
+
+#: templates/dashboard/report.php:827
+msgid "Report"
+msgstr ""
+
+#: templates/dashboard/report.php:828
+msgid "Last Generated"
+msgstr ""
+
+#: templates/dashboard/report.php:829
+msgid "Generation Time"
+msgstr ""
+
+#: templates/dashboard/report.php:830
+msgid "Next Update"
+msgstr ""
+
+#: templates/dashboard/report.php:831
+msgid "Time Until Next Update"
+msgstr ""
+
+#: views/404-pages.php:27
 msgid "404 Error monitoring is turned off."
 msgstr ""
 
-#: views/404-pages.php:24
+#: views/404-pages.php:31
 msgid "Turn on in the settings"
 msgstr ""
 
-#: views/404-pages.php:32 views/autolink-pages.php:282
-#: views/backlink-pages.php:24
+#: views/404-pages.php:40 views/autolink-pages.php:81 views/gsc-pages.php:62
 msgid "Search"
 msgstr ""
 
-#: views/404-pages.php:41
+#: views/404-pages.php:50
+msgid "Currently ignored URLs:"
+msgstr ""
+
+#: views/404-pages.php:63
 msgid "Reset 404 Errors"
 msgstr ""
 
-#: views/404-pages.php:50
-msgid "Export to .csv"
+#: views/404-pages.php:74
+msgid "Unlock powerful SEO features:"
 msgstr ""
 
-#: views/404-pages.php:62
-msgid "You are ignoring URLs that match:"
+#: views/404-pages.php:76
+msgid "Monitor and analyze 404 errors"
 msgstr ""
 
-#: views/autolink-pages.php:12
-msgid "Autolink - Change keywords to links"
+#: views/404-pages.php:77
+msgid "Improve user experience and SEO performance"
 msgstr ""
 
-#: views/autolink-pages.php:17
+#: views/404-pages.php:78
+msgid "Advanced reporting and insights"
+msgstr ""
+
+#: views/404-pages.php:79
+msgid "Comprehensive keyword analysis"
+msgstr ""
+
+#: views/404-pages.php:81
+msgid "Take your website to the next level with SEO Booster Pro!"
+msgstr ""
+
+#: views/autolink-pages.php:16
 msgid "Add keywords or phrases that should be changed in your posts to links."
 msgstr ""
 
-#: views/autolink-pages.php:18
-msgid ""
-"The last used column shows the latest 3 pages where the keyword phrase was "
-"last replaced. "
-msgstr ""
-
-#: views/autolink-pages.php:33
+#. translators:
+#: views/autolink-pages.php:32
 #, php-format
 msgid "<code>%s</code> duplicate keyword links were removed automatically. "
 msgstr ""
 
-#: views/autolink-pages.php:36 views/autolink-pages.php:247
+#: views/autolink-pages.php:35
 msgid "Click to reload page"
 msgstr ""
 
-#: views/autolink-pages.php:70
-#, php-format
-msgid "Success! Turned on automatic link on <code>%s</code> posts and pages."
-msgstr ""
-
-#: views/autolink-pages.php:77
-#, php-format
-msgid "Success! Turned on automatic linking on %s posts and pages."
-msgstr ""
-
-#: views/autolink-pages.php:241 views/autolink-pages.php:244
-#, php-format
-msgid "Added <code>%1$s</code> - links to <code>%2$s</code>."
-msgstr ""
-
-#: views/autolink-pages.php:262
+#: views/autolink-pages.php:51
 msgid ""
 "Automatic Linking is turned off! Turn on the option in the settings page."
 msgstr ""
 
-#: views/autolink-pages.php:289
+#: views/autolink-pages.php:89
 msgid "Add new link"
 msgstr ""
 
-#: views/autolink-pages.php:291
+#: views/autolink-pages.php:93
 msgid ""
 "Enter keyword and which URL the keyword should link til. Works with internal "
 "and external links."
 msgstr ""
 
-#: views/autolink-pages.php:298
+#: views/autolink-pages.php:102
 msgid "Enter keyword"
 msgstr ""
 
-#: views/autolink-pages.php:299
-msgid "Enter the phrase you want to automatically link to a URL."
+#: views/autolink-pages.php:108
+msgid "Target URL"
 msgstr ""
 
-#: views/autolink-pages.php:305
-msgid "Enter the URL you would like to link to."
-msgstr ""
-
-#: views/autolink-pages.php:312
+#: views/autolink-pages.php:115
 msgid "Add Keyword"
 msgstr ""
 
-#: views/autolink-pages.php:345
-#, php-format
-msgid "%s keyword found"
-msgid_plural "%s keywords found"
-msgstr[0] ""
-msgstr[1] ""
-
-#: views/autolink-pages.php:351
-msgid ""
-"Import Focus Keyword from Yoast SEO plugin and turn in to links on other "
-"pages."
+#: views/gsc-pages.php:37
+msgid "Filter by:"
 msgstr ""
 
-#: views/autolink-pages.php:361
-msgid "Duplicates will be ignored."
+#: views/gsc-pages.php:40
+msgid "Select a filter"
 msgstr ""
 
-#: views/autolink-pages.php:364
-msgid "Convert focus keywords"
+#: views/gsc-pages.php:42
+msgid "New Keywords (Past 30 Days)"
 msgstr ""
 
-#: views/autolink-pages.php:374
-msgid "Turn on automatic linking everywhere"
+#: views/gsc-pages.php:45
+msgid "Keywords Not Seen (Over 30 Days)"
 msgstr ""
 
-#: views/autolink-pages.php:375
-msgid ""
-"Clicking this button turns on automatic linking on all post and pages on "
-"your website. You can still edit individual pages to turn them off again."
+#: views/gsc-pages.php:48
+msgid "High Position (1-10)"
 msgstr ""
 
-#: views/autolink-pages.php:378
-msgid "Turn on autolink on all published posts and pages."
+#: views/gsc-pages.php:51
+msgid "Medium Position (11-50)"
 msgstr ""
 
-#: views/backlink-pages.php:17
-msgid ""
-"Who links to you - These backlinks have been detected via visits from other "
-"websites that links to you."
+#: views/gsc-pages.php:54
+msgid "Low Position (50+)"
 msgstr ""
 
-#: views/backlink-pages.php:18
-msgid ""
-"These visits can be faked, you need to verify each link exists. The PRO "
-"version does this for you."
-msgstr ""
-
-#: views/backlink-pages.php:28
-msgid ""
-"Note - Backlinks you delete from this list will reappear next time someone "
-"visits again."
-msgstr ""
-
-#: views/backlink-pages.php:29
-msgid "You can filter out specific domains in the settings."
-msgstr ""
-
-#: views/forgotten-pages.php:19
-msgid "Pages that have not received search engine traffic for a while."
+#: views/gsc-pages.php:68
+msgid "Exact Match"
 msgstr ""
 
 #. Plugin URI of the plugin/theme
-msgid "https://cleverplugins.com/"
+#. Author URI of the plugin/theme
+msgid "https://seeboosterpro.com/"
 msgstr ""
 
 #. Description of the plugin/theme
 msgid ""
-"Automatic linking + Monitor keywords from hundreds of search engines + 404 "
-"errors tracking + backlink collecting + Crosslinking widgets and template "
-"functions + much more."
+"SEO Booster integrates with Google Search Console data - bringing the data "
+"to life on your website like never before. Optimize keywords and content, "
+"track your rankings, and get actionable insights to improve your SEO."
 msgstr ""
 
 #. Author of the plugin/theme
 msgid "cleverplugins.com"
-msgstr ""
-
-#. Author URI of the plugin/theme
-msgid "https://cleverplugins.com"
 msgstr ""

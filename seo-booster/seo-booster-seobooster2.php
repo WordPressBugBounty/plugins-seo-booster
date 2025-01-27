@@ -1,628 +1,385 @@
 <?php
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
-if ( ! current_user_can( 'update_plugins' ) ) {
-	wp_die( 'You are not allowed to update plugins on this blog.' );
-}
-global  $wpdb, $seobooster_fs;
-$foftable = $wpdb->prefix . 'sb2_404';
+namespace Cleverplugins\SEOBooster;
 
+use Cleverplugins\SEOBooster\Utils;
+if ( !defined( 'ABSPATH' ) ) {
+    exit;
+}
+if ( !current_user_can( 'update_plugins' ) ) {
+    wp_die( esc_html__( 'You are not allowed to update plugins on this blog.', 'seo-booster' ) );
+}
+global $wpdb, $seobooster_fs;
 ?>
 <div class="wrap">
-	<?php
-	global  $seobooster_fs;
-	// todo
-	$kws_google         = $wpdb->get_var( "SELECT count(*) as kws FROM {$wpdb->prefix}sb2_kw WHERE `kw` NOT LIKE '#' AND `engine` LIKE '%google%';" );
-	$kws_not_google     = $wpdb->get_var( "SELECT count(*) as kws FROM {$wpdb->prefix}sb2_kw WHERE `kw` NOT LIKE '#' AND `engine` NOT LIKE '%google%' AND `engine` NOT LIKE 'Internal Search'" );
-	$kws_total          = $kws_google + $kws_not_google;
-	$traffic_google     = $wpdb->get_var( "SELECT sum(visits) FROM {$wpdb->prefix}sb2_kw WHERE `engine` LIKE '%google.%';" );
-	$traffic_not_google = $wpdb->get_var( "SELECT sum(visits) FROM {$wpdb->prefix}sb2_kw WHERE `engine` NOT LIKE '%google.%';" );
-	$traffic_total      = $traffic_google + $traffic_not_google;
-	$lps_google         = $wpdb->get_var( "SELECT count(DISTINCT(lp)) FROM {$wpdb->prefix}sb2_kw WHERE `engine` LIKE '%google.%';" );
-	$lps_not_google     = $wpdb->get_var( "SELECT count(DISTINCT(lp)) FROM {$wpdb->prefix}sb2_kw WHERE `engine` NOT LIKE '%google.%';" );
-	$over90daysold      = $wpdb->get_var( "SELECT COUNT(*) AS cnt FROM {$wpdb->prefix}sb2_kw pm WHERE lastvisit < DATE_SUB(NOW(), INTERVAL 90 DAY)" );
-	$known_keywords     = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sb2_kw WHERE `kw` <> '#' AND `engine` NOT LIKE 'Internal Search';" );
-	require_once SEOBOOSTER_PLUGINPATH . 'inc/adminheader.php';
-	// Contains general info
-	?>
-	<h1><?php esc_html_e( 'Dashboard', 'seo-booster' ); ?> - SEO Booster v. <?php echo esc_html( SEOBOOSTER_VERSION ); ?></h1>
-	<?php
-
-	global  $wpdb;
-	$dbliste = array(
-		$wpdb->prefix . 'sb2_autolink',
-		$wpdb->prefix . 'sb2_bl',
-		$wpdb->prefix . 'sb2_kwdt',
-		$wpdb->prefix . 'sb2_crawl',
-		$wpdb->prefix . 'sb2_urls',
-		$wpdb->prefix . 'sb2_urls_meta',
-		$wpdb->prefix . 'sb2_404',
-		$wpdb->prefix . 'sb2_log',
-		$wpdb->prefix . 'sb2_kw',
-	);
-	$missing = '';
-	foreach ( $dbliste as $dbt ) {
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $dbt ) ) !== $dbt ) {
-			// translators:
-			$missing .= '<p>' . sprintf( __( 'Database table %1$s is missing.', 'seo-booster' ), '<code>' . $dbt . '</code>' ) . '</p>';
-		}
-	}
-	$seobooster_db_version = get_option( 'SEOBOOSTER_INSTALLED_DB_VERSION', '1.0' );
-	// latest update
-	if ( version_compare( $seobooster_db_version, SEOBOOSTER_DB_VERSION ) < 0 ) {
-		// translators:
-		$missing .= '<p>' . sprintf( __( 'Database out of date %1$s vs. current %2$s', 'seo-booster' ), $seobooster_db_version, SEOBOOSTER_DB_VERSION ) . '</p>';
-	}
-
-	if ( $missing ) {
-		$allowed_html = wp_kses_allowed_html( 'post' );
-		?>
-			<div class="notice notice-error">
-				<h3>
-				<?php
-				esc_html_e( 'Database tables needs updating', 'seo-booster' );
-				?>
-	</h3>
-			<?php
-			echo wp_kses( $missing, $allowed_html );
-		//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			?>
+	<?php 
+global $wpdb;
+$dbliste = array(
+    $wpdb->prefix . 'sb2_autolink',
+    $wpdb->prefix . 'sb2_404',
+    $wpdb->prefix . 'sb2_log',
+    $wpdb->prefix . 'sb2_query_keywords',
+    $wpdb->prefix . 'sb2_query_keywords_history'
+);
+$missing = '';
+foreach ( $dbliste as $dbt ) {
+    if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $dbt ) ) !== $dbt ) {
+        // translators:
+        $missing .= '<p>' . sprintf( __( 'Database table %1$s is missing.', 'seo-booster' ), '<code>' . $dbt . '</code>' ) . '</p>';
+    }
+}
+$seobooster_db_version = get_option( 'SEOBOOSTER_INSTALLED_DB_VERSION', '1.0' );
+// latest update
+if ( version_compare( $seobooster_db_version, SEOBOOSTER_DB_VERSION ) < 0 ) {
+    // translators:
+    $missing .= '<p>' . sprintf( __( 'Database out of date %1$s vs. current %2$s', 'seo-booster' ), $seobooster_db_version, SEOBOOSTER_DB_VERSION ) . '</p>';
+}
+if ( $missing ) {
+    $allowed_html = wp_kses_allowed_html( 'post' );
+    ?>
+		<div class="notice notice-error seobooster-notice">
+			<h3>
+				<?php 
+    esc_html_e( 'Database tables needs updating', 'seo-booster' );
+    ?>
+			</h3>
+			<?php 
+    echo wp_kses( $missing, $allowed_html );
+    ?>
 
 			<form id="fixdatabase" method="post">
-				<input type="hidden" name="page" value="<?php echo esc_attr( sanitize_text_field( $_REQUEST['page'] ) ); ?>" />
+				<input type="hidden" name="page" value="<?php 
+    echo esc_attr( ( isset( $_REQUEST['page'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['page'] ) ) : '' ) );
+    ?>" />
 				<input type="hidden" name="action" value="sbp_fixdatabasetables" />
-				<input type="hidden" name="_wpnonce" value="
-				<?php
-				echo esc_attr( wp_create_nonce( 'fixdbtables' ) );
-				?>
-				">
-			<?php
-			submit_button(
-				'Click here to fix',
-				'primary',
-				'updatedb',
-				true
-			);
-			?>
+				<input type="hidden" name="_wpnonce" value=" <?php 
+    echo esc_attr( wp_create_nonce( 'fixdbtables' ) );
+    ?>">
+				<?php 
+    submit_button(
+        __( 'Click here to fix', 'seo-booster' ),
+        'primary',
+        'updatedb',
+        true
+    );
+    ?>
 			</form>
 
 		</div>
-			<?php
-	}
+	<?php 
+}
+echo wp_kses_post( Utils::show_plugin_headline( esc_html__( 'Dashboard', 'seo-booster' ), true ) );
+?>
 
-	?>
 	<div id="welcome-panel" class="new-welcome-panel clearfix clear">
 		<div id="inner-welcome">
 			<div class="welcome-panel-content">
-				<div class="wp-columns">
-					<div class="welcome-panel-column1">
-						<img src="
-						<?php
-						echo esc_url( plugin_dir_url( __FILE__ ) . 'images/seoboosterlogo.png' );
-						?>
-						" height="35" width="150" class="seoboosterlogo" alt="SEO Booster">
+				<?php 
+$selected_site = get_option( 'seobooster_selected_site' );
+$access_token = get_option( 'seobooster_access_token' );
+// check if authentication is set
+if ( !seobooster_fs()->is_registered() && !seobooster_fs()->is_tracking_allowed() ) {
+    echo '<div class="card">';
+    echo '<h3>' . esc_html__( 'Welcome to SEO Booster!', 'seo-booster' ) . '</h3>';
+    echo '<p>' . esc_html__( 'You\'re all set to explore the powerful features of SEO Booster. While you can navigate existing data and use free features, connecting to Google Search Console for real-time keyword data requires account validation.', 'seo-booster' ) . '</p>';
+    echo '<div class="seobooster-features">';
+    echo '<h4>' . esc_html__( 'Unlock with Validation:', 'seo-booster' ) . '</h4>';
+    echo '<ul>';
+    echo '<li>' . esc_html__( 'Real-time keyword tracking', 'seo-booster' ) . '</li>';
+    echo '<li>' . esc_html__( 'Advanced performance analytics', 'seo-booster' ) . '</li>';
+    echo '<li>' . esc_html__( 'Seamless Google Search Console integration', 'seo-booster' ) . '</li>';
+    echo '<li>' . esc_html__( 'On-page SEO analysis', 'seo-booster' ) . '</li>';
+    echo '<li>' . esc_html__( 'Basic keyword research tools', 'seo-booster' ) . '</li>';
+    echo '<li>' . esc_html__( 'Site structure optimization', 'seo-booster' ) . '</li>';
+    echo '</ul>';
+    echo '</div>';
+    echo '<p><a href="' . esc_url( seobooster_fs()->get_reconnect_url() ) . '" class="button button-primary">' . esc_html__( 'Validate Your Account to Unlock Full Potential', 'seo-booster' ) . '</a></p>';
+    echo '</div>';
+}
+if ( !$access_token || !$selected_site || $selected_site === "" ) {
+    Google_API::display_auth_status();
+}
+// if ($selected_site) {
+$query_keywords_table = $wpdb->prefix . 'sb2_query_keywords';
+$history_table = $wpdb->prefix . 'sb2_query_keywords_history';
+// Try to get cached stats first
+$cache_key = 'seobooster_keyword_stats';
+$stats = wp_cache_get( $cache_key );
+if ( false === $stats ) {
+    $stats = array(
+        'total_keywords'      => $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT query) \n\t\t\t\t\t\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords \n\t\t\t\t\t\t\t\t\tWHERE %s = %s", '1', '1' ) ),
+        'unique_pages'        => $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT page) \n\t\t\t\t\t\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords \n\t\t\t\t\t\t\t\t\tWHERE %s = %s", '1', '1' ) ),
+        'unique_days'         => $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT date) \n\t\t\t\t\t\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords_history \n\t\t\t\t\t\t\t\t\tWHERE %s = %s", '1', '1' ) ),
+        'first_history_date'  => $wpdb->get_var( $wpdb->prepare( "SELECT MIN(date) \n\t\t\t\t\t\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords_history \n\t\t\t\t\t\t\t\t\tWHERE %s = %s", '1', '1' ) ),
+        'latest_history_date' => $wpdb->get_var( $wpdb->prepare( "SELECT MAX(date) \n\t\t\t\t\t\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords_history \n\t\t\t\t\t\t\t\t\tWHERE %s = %s", '1', '1' ) ),
+    );
+    // Cache the results for 1 hour (3600 seconds)
+    wp_cache_set(
+        $cache_key,
+        $stats,
+        '',
+        3600
+    );
+}
+$total_keywords = $stats['total_keywords'];
+$unique_pages = $stats['unique_pages'];
+$unique_days = $stats['unique_days'];
+$first_history_date = $stats['first_history_date'];
+$latest_history_date = $stats['latest_history_date'];
+$first_history_date_str = ( $first_history_date ? date_i18n( get_option( 'date_format' ), strtotime( $first_history_date ) ) : __( 'N/A', 'seo-booster' ) );
+$latest_history_date_str = ( $latest_history_date ? date_i18n( get_option( 'date_format' ), strtotime( $latest_history_date ) ) : __( 'N/A', 'seo-booster' ) );
+echo '<h3>' . esc_html__( 'Quick Overview', 'seo-booster' ) . '</h3>';
+$overview_message = sprintf(
+    // translators: 1: number of days, 2: first date, 3: last date
+    _n(
+        'There is data from Google Search Console for <span>%1$s</span> unique day, from <span>%2$s</span> to <span>%3$s</span>.',
+        'There is data from Google Search Console for <span>%1$s</span> unique days, from <span>%2$s</span> to <span>%3$s</span>.',
+        $unique_days,
+        'seo-booster'
+    ),
+    number_format_i18n( $unique_days ),
+    $first_history_date_str,
+    $latest_history_date_str
+);
+$overview_message .= '<br>' . sprintf( 
+    // translators: 1: number of keywords, 2: number of pages
+    __( 'A total of <span>%1$s</span> different keyword terms have been used to find <span>%2$s</span> different pages on your website.', 'seo-booster' ),
+    number_format_i18n( $total_keywords ),
+    number_format_i18n( $unique_pages )
+ );
+$seobooster_weekly_email = get_option( 'seobooster_weekly_email' );
+if ( isset( $_GET['gsc_updated'] ) && $_GET['gsc_updated'] == '1' && !$seobooster_weekly_email ) {
+    ?>
+						<div id="seobooster_email_container" class="notice notice-success is-dismissible seobooster-notice">
+							<div class="innercont">
+						<h3><?php 
+    esc_html_e( 'Import complete!', 'seo-booster' );
+    ?></h3>
+								<h4><?php 
+    esc_html_e( 'Get your personalized weekly SEO insights!', 'seo-booster' );
+    ?><span><?php 
+    esc_html_e( 'Stay informed and ahead of the competition', 'seo-booster' );
+    ?></span></h4>
+								<div class="cont">
+								<div class="col">
+										<form method="post" action="" class="card">
+											<?php 
+    $current_user = wp_get_current_user();
+    ?>
+											<?php 
+    wp_nonce_field( 'seobooster_save_selected_site', 'seobooster_selected_site_nonce' );
+    ?>
 
-						<?php
-						require 'inc/search_engines.php';
+											<div class="">
+												<p><?php 
+    esc_html_e( 'Confirm or change your email to receive your personalized weekly report:', 'seo-booster' );
+    ?></p>
+												<p>
+													<input type="text" name="seobooster_email" id="seobooster_email" class="regular-text" placeholder="<?php 
+    esc_attr_e( 'email@example.com', 'seo-booster' );
+    ?>" value="<?php 
+    echo esc_html( $current_user->user_email );
+    ?>" autocomplete="off" data-1p-ignore>
+												</p>
+												<p>
+													<input type="submit" name="submit" value="<?php 
+    esc_attr_e( 'Confirm Email for Weekly Reports', 'seo-booster' );
+    ?>" class="button button-primary">
+												</p>
+												<p class="description"><?php 
+    esc_html_e( 'You can add multiple email addresses, separated by commas', 'seo-booster' );
+    ?>
+												</p>
+												<p class="description"><?php 
+    esc_html_e( 'You can modify your report preferences anytime in the plugin settings', 'seo-booster' );
+    ?>
+												</p>
+											</div>
 
-						if ( $sengine ) {
-							$secount = count( $sengine );
-							?>
-							<p class="lead">
-								<?php
-								// translators:
-								printf( esc_html__( 'Tracking visitors from %1$s keyword sources.', 'seo-booster' ), '<span>' . esc_attr( number_format_i18n( $secount ) ) . '</span>' );
-								?>
-							</p>
-							<?php
-						}
+										</form>
 
-						?>
-						<p class="lead">
-						<?php
-						esc_html_e( 'Uncluttered view of what content brings traffic.', 'seo-booster' );
-						?>
-						</p>
+									</div>
+								<div class="col">
+										<p><?php 
+    esc_html_e( 'Receive a tailored weekly report to help you monitor performance, address issues promptly, and capitalize on new opportunities to boost your traffic!', 'seo-booster' );
+    ?></p>
+										<h4><?php 
+    esc_html_e( 'Your weekly report includes:', 'seo-booster' );
+    ?></h4>
+										<ul class="sb2weeklybenefits">
+											<li><?php 
+    esc_html_e( 'Your top-performing keywords driving traffic', 'seo-booster' );
+    ?></li>
+											<li><?php 
+    esc_html_e( 'Emerging keyword opportunities specific to your site', 'seo-booster' );
+    ?></li>
+											<li><?php 
+    esc_html_e( 'Significant changes in your rankings', 'seo-booster' );
+    ?></li>
+											<li><?php 
+    esc_html_e( 'Content areas requiring your attention', 'seo-booster' );
+    ?></li>
+											<li>Pro: <?php 
+    esc_html_e( '404 errors - content that is not found', 'seo-booster' );
+    ?></li>
 
-						<?php
-						$show_welcome_text = true;
-						$engines_arr       = $wpdb->get_results( "SELECT engine, sum(visits) as visits from {$wpdb->prefix}sb2_kw WHERE `engine` NOT LIKE 'Internal Search' AND `engine` NOT LIKE '%google.%' GROUP BY engine ORDER BY visits DESC;" );
-						$totalengines      = count( $engines_arr ) + 1;
+										</ul>
+										<p><?php 
+    esc_html_e( 'Your data privacy is our priority. All information is processed locally on your server and sent to your email address from your own server — we never access your data.', 'seo-booster' );
+    ?></p>
+									</div>
+								</div>
+							
+							</div><!-- .innercont -->
+							<div id="sbweeklyemail_signupmessage" style="display: none;"></div>
 
-						if ( $known_keywords > 2 ) {
-							$show_welcome_text = false;
+						</div><!-- #seobooster_email_container -->
+					<?php 
+}
+if ( 0 < $unique_days ) {
+    // Display the overview
+    echo wp_kses_post( '<p class="quickie">' . $overview_message . '</p>' );
+}
+// Lars - commented out for now
+/*
+else {
+	// We need to set it up
+	Google_API::display_auth_status();
+}
+*/
+$css_class = ' proonly';
+// if ($access_token && $selected_site && (0 < $unique_days)) {
+if ( $selected_site && 0 < $unique_days ) {
+    $gsc_link = admin_url( 'admin.php?page=sb2_gsc' );
+    ?>
 
-							if ( $engines_arr ) {
-								echo '<h3>' . esc_html( __( 'Quick Overview', 'seo-booster' ) ) . '</h3>';
-								echo '<p class="quickie">' . esc_html( sprintf( __( 'Since installation SEO BOOSTER has recorded <span>%1$s</span> keywords found from visitors and <span>%2$s</span> sources.', 'seo-booster' ), number_format_i18n( $known_keywords ), number_format_i18n( $totalengines ) ) ) . '</p>';
-							}
+					<h3><?php 
+    esc_html_e( 'What to do now?', 'seo-booster' );
+    ?></h3>
+					<div class="helpcont">
+						<div class="helpbox">
+							<h3><?php 
+    esc_html_e( 'All keywords from Google Search Console', 'seo-booster' );
+    ?></h3>
 
-							$latestlimit = 10;
-							$latestkws   = $wpdb->get_results( $wpdb->prepare( "SELECT kw, engine, firstvisit FROM {$wpdb->prefix}sb2_kw WHERE `engine` NOT LIKE 'Internal Search' AND `kw`<>%s GROUP BY kw ORDER BY visits ASC LIMIT {$latestlimit};", array( '#' ) ) );
+							<p><?php 
+    echo esc_html__( 'Get a combined overview of all the keywords that have been used to find your website. Discover opportunities for improvement and inspiration for new content.', 'seo-booster' );
+    ?></p>
+							<a href="<?php 
+    echo esc_url( admin_url( 'admin.php?page=sb2_gsc' ) );
+    ?>" class="button button-secondary"><?php 
+    esc_html_e( 'Go to the keyword overview page', 'seo-booster' );
+    ?></a>
+						</div>
+						<div class="helpbox<?php 
+    echo esc_attr( $css_class );
+    ?>">
+							<h3><?php 
+    esc_html_e( 'Keywords used to find your front page', 'seo-booster' );
+    ?></h3>
+							
+							<p><?php 
+    echo esc_html__( 'All keyword details for each page are available a few clicks away in the admin bar.', 'seo-booster' );
+    ?></p>
+							<a href="<?php 
+    echo esc_url( home_url( '?seobooster_showdetails=1' ) );
+    ?>" class="button button-secondary" target="_blank"><?php 
+    echo esc_html__( 'Open the front page', 'seo-booster' );
+    ?></a>
+						</div>
+						<div class="helpbox<?php 
+    echo esc_attr( $css_class );
+    ?>">
+							<h3><?php 
+    esc_html_e( 'Reports', 'seo-booster' );
+    ?></h3>
+							
+							<p><?php 
+    echo esc_html__( 'Dive into the data and get insights on how to improve your website. Different reports give you suggestions for improvements and practical advice.', 'seo-booster' );
+    ?></p>
+							<a href="<?php 
+    echo esc_url( admin_url( 'admin.php?page=sb2_reports' ) );
+    ?>" class="button button-secondary"><?php 
+    echo esc_html__( 'Open the report page', 'seo-booster' );
+    ?></a>
+						</div>
+					</div><!-- .helpcont -->
+				<?php 
+}
+if ( (!isset( $total_keywords ) || '0' === $total_keywords) && seobooster_fs()->is_registered() && seobooster_fs()->is_tracking_allowed() && $access_token && $selected_site ) {
+    ?>
 
-							if ( $latestkws ) {
-								echo '<p>' . esc_html( __( 'Latest detected keywords:', 'seo-booster' ) ) . '</p>';
-								echo '<div class="kwcontainer">';
-								foreach ( $latestkws as $lkw ) {
-									$engine = $lkw->engine;
-									$engine = str_replace( 'www.', '', $engine );
-									$kw     = str_replace( '  ', ' ', $lkw->kw );
-									echo '<div class="kws">' . esc_html( $kw ) . '</div>';
-								}
-								echo '</div>';
-								echo "<div class='clearfix'></div>";
-							}
-						}
+					<div class="helpcont">
+						<div class="helpbox">
+							<h3><?php 
+    esc_html_e( 'No data collected yet - import data', 'seo-booster' );
+    ?></h3>
 
-						$totalbls = $wpdb->get_var( "SELECT count(*) FROM {$wpdb->prefix}sb2_bl;" );
-
-						if ( $totalbls > 0 ) {
-							$show_welcome_text = false;
-							// translators:
-							echo wp_kses( '<p class="quickie">' . sprintf( __( 'Found <span>%s</span>  external links from visitors.', 'seo-booster' ), number_format_i18n( $totalbls ), number_format_i18n( $totalengines ) ) . '</p>', wp_kses_allowed_html() );
-						}
-
-						$totalfofs = $wpdb->get_var( "SELECT count(*) FROM {$wpdb->prefix}sb2_404;" );
-
-						if ( $totalfofs > 0 ) {
-							$show_welcome_text = false;
-							// translators: %s - number of 404 errors - pages and links not found
-							echo esc_html( '<p class="quickie">' . sprintf( __( 'Detected <span>%s</span> not found pages and links.', 'seo-booster' ), number_format_i18n( $totalfofs ) ) . '</p>' );
-						}
-
-
-						if ( $show_welcome_text ) {
-							?>
-							<h3>
-							<?php
-							esc_html_e( 'Seems a bit boring here?', 'seo-booster' );
-							?>
-	</h3>
-
-							<p class="lead">
-							<?php
-							esc_html_e( 'If you have just installed the plugin, that is to be expected.', 'seo-booster' );
-							?>
-	</p>
-
-							<p>
-							<?php
-							esc_html_e( 'The plugin needs some time to listen to your traffic and figure out the details.', 'seo-booster' );
-							?>
-	</p>
-							<?php
-						}
-
-						?>
-					</div><!-- .welcome-panel-column1 -->
-					<div class="helpbox">
-						<h3><span class="dashicons dashicons-welcome-learn-more"></span>  
-						<?php
-						esc_html_e( 'Need help?', 'seo-booster' );
-						?>
-						</h3>
-						<ul>
-							<li><a href="https://wordpress.org/support/plugin/seo-booster/" target="_blank">
-							<?php
-							esc_html_e( 'WP Support Forum', 'seo-booster' );
-							?>
-							</a></li>
-						</ul>
-
-						<h3><span class="dashicons dashicons-welcome-widgets-menus"></span> 
-						<?php
-						esc_html_e( 'Plugin pages', 'seo-booster' );
-						?>
-						</h3>
-						<ul>
-							<li><a href="
-							<?php
-							echo esc_url( admin_url( 'admin.php?page=sb2_settings' ) );
-							?>
-							">
-							<?php
-							esc_html_e( 'The Settings', 'seo-booster' );
-							?>
-							</a></li>
-							<li><a href="
-							<?php
-							echo esc_url( admin_url( 'admin.php?page=sb2_keywords' ) );
-							?>
-							">
-							<?php
-							esc_html_e( 'Keyword Details', 'seo-booster' );
-							?>
-							</a></li>
-							<li><a href="
-							<?php
-							echo esc_url( admin_url( 'admin.php?page=sb2_backlinks' ) );
-							?>
-							">
-							<?php
-							esc_html_e( 'Backlink Details', 'seo-booster' );
-							?>
-							</a></li>
-							<li><a href="
-							<?php
-							echo esc_url( admin_url( 'admin.php?page=sb2_crawled' ) );
-							?>
-							">
-							<?php
-							esc_html_e( 'Crawled Pages', 'seo-booster' );
-							?>
-							</a></li>
-							<li><a href="
-							<?php
-							echo esc_url( admin_url( 'admin.php?page=sb2_404s' ) );
-							?>
-							">
-							<?php
-							esc_html_e( '404 Errors', 'seo-booster' );
-							?>
-							</a></li>
-							<li><a href="
-							<?php
-							echo esc_url( admin_url( 'admin.php?page=sb2_forgotten' ) );
-							?>
-							">
-							<?php
-							esc_html_e( 'Forgotten Pages', 'seo-booster' );
-							?>
-							</a></li>
-							<li><a href="
-							<?php
-							echo esc_url( admin_url( 'admin.php?page=sb2_log' ) );
-							?>
-							">
-							<?php
-							esc_html_e( 'The Log', 'seo-booster' );
-							?>
-							</a></li>
-						</ul>
+							<p><?php 
+    esc_html_e( 'It looks like no data has been collected yet. To get started:', 'seo-booster' );
+    ?></p>
+							<ol>
+								<li><?php 
+    esc_html_e( 'Go to the Settings page', 'seo-booster' );
+    ?></li>
+								<li><?php 
+    esc_html_e( 'Find the "Reimport" function', 'seo-booster' );
+    ?></li>
+								<li><?php 
+    esc_html_e( 'Use it to import your Google Search Console data', 'seo-booster' );
+    ?></li>
+							</ol>
+							<p><?php 
+    esc_html_e( 'This will populate your dashboard with valuable SEO insights.', 'seo-booster' );
+    ?></p>
+							<p><a href="<?php 
+    echo esc_url( admin_url( 'admin.php?page=sb2_settings#manualupdate' ) );
+    ?>"><?php 
+    esc_html_e( 'Go to the Settings page', 'seo-booster' );
+    ?></a></p>
+						</div>
 					</div>
-				</div><!-- .wp-columns -->
+				<?php 
+}
+?>
 			</div><!-- .welcome-panel-content -->
+
+
+			<?php 
+if ( $access_token && $selected_site && 0 < $unique_days ) {
+    ?>
+				<div id="sb2canvascont" style="height:550px;max-height:750px;display:block;margin:0 auto 20px auto;">
+					<canvas id="seobooster-gsc-chart"><?php 
+    esc_html_e( 'Chart', 'seo-booster' );
+    ?></canvas>
+					<div id="loading-indicator">
+						<div id="spinner"></div>
+					</div>
+				</div>
+				<p><?php 
+    esc_html_e( 'The chart is based on the data collected from Google Search Console. It does not represent a full picture of your website\'s traffic.', 'seo-booster' );
+    ?></p>
+
+			<?php 
+}
+?>
+
 		</div><!--#inner-welcome-->
 	</div><!-- .welcome-panel -->
-
-	<?php
-	$searchtrafficbyday_query = "SELECT daday, sum(visits) as totalvisits FROM {$wpdb->prefix}sb2_kwdt WHERE daday > DATE_SUB(NOW(), INTERVAL 120 DAY) GROUP BY daday ORDER BY daday ASC";
-
-	$searchtrafficbyday = $wpdb->get_results( $searchtrafficbyday_query );
-
-	if ( $searchtrafficbyday ) {
-		?>
-			<div id="sb2traffic" class="clearfix clear">
-				<h3>
-				<?php
-				esc_html_e( 'Visitors from Search Engines', 'seo-booster' );
-				?>
-				</h3>
-				<div id="searchtrafficbydaychart"></div>
-				<script type="text/javascript">
-
-					jQuery(document).ready(function() {
-
-						google.charts.load('current', {packages: ['corechart']});
-						google.charts.setOnLoadCallback(drawTrafficChart);
-						function drawTrafficChart() {
-							var data = google.visualization.arrayToDataTable([
-								['Day','Visits'],
-							<?php
-							foreach ( $searchtrafficbyday as $stbd ) {
-												echo "['" . esc_html( $stbd->daday ) . "', " . esc_html( $stbd->totalvisits ) . '],';
-							}
-							?>
-								]);
-
-							var options = {
-								title: ' <?php esc_html_e( 'Visitors from Search Engines', 'seo-booster' ); ?>',
-					curveType: 'function', // makes curved lines
-					legend: { position: 'bottom' },
-					backgroundColor : 'transparent',
-					pointSize:7,
-					titlePosition:'none',
-					height:300,
-					chartArea:{
-						left:50,
-						width:'100%'
-					},
-					series: [
-					{
-						color: '#36ace0',
-						visibleInLegend: true
-					}
-					],
-					lineWidth:4,
-					trendlines: {
-						0: {
-							type: 'exponential',
-							color: '#333',
-							opacity: 1
-						}
-					}
-				};
-				var trafficchart = new google.visualization.LineChart(document.getElementById('searchtrafficbydaychart'));
-				trafficchart.draw(data, options);
-		} // function drawTrafficChart()
-	});
-</script>
-</div><!-- #sb2traffic -->
-			<?php
-	}
-
-	?>
-
-<div id="sb2dashboard" class="clearfix clear">
-	<div>
-		<?php
-		$totalkeywords      = $wpdb->get_var( "SELECT count(*) FROM {$wpdb->prefix}sb2_kw;" );
-		$totalunknown       = $wpdb->get_var( "SELECT count(*) FROM {$wpdb->prefix}sb2_kw WHERE kw IN ('#','');" );
-		$totalknown         = $wpdb->get_var( "SELECT count(*) FROM {$wpdb->prefix}sb2_kw WHERE kw NOT IN ('#','');" );
-		$totalvisits        = $wpdb->get_var( "SELECT SUM(visits) FROM {$wpdb->prefix}sb2_kw;" );
-		$totalknownvisits   = $wpdb->get_var( "SELECT SUM(visits) FROM {$wpdb->prefix}sb2_kw WHERE kw<>'#' AND kw<>'';" );
-		$totalunknownvisits = $wpdb->get_var( "SELECT SUM(visits) FROM {$wpdb->prefix}sb2_kw WHERE kw='#' OR kw='';" );
-		$topkeywords        = $wpdb->get_results( "SELECT kw,lp,visits FROM {$wpdb->prefix}sb2_kw WHERE ig='0' AND kw<>'Internal Search' AND kw<>'#' AND kw<>'' GROUP BY kw ORDER BY visits DESC limit 10;", ARRAY_A );
-
-		if ( $topkeywords ) {
-			?>
-			<h2>
-			<?php
-			esc_html_e( 'Top Keywords', 'seo-booster' );
-			?>
-	</h2>
-
-			<table class="wp-list-table widefat">
-				<thead>
-					<tr>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Keyword', 'seo-booster' );
-						?>
-	</th>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Landing Page', 'seo-booster' );
-						?>
-	</th>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Visits', 'seo-booster' );
-						?>
-	</th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php
-					foreach ( $topkeywords as $topkw ) {
-						echo '<tr><td>' . esc_html( $topkw['kw'] ) . "</td><td><a href='" . esc_html( $topkw['lp'] ) . "'>" . esc_html( $topkw['lp'] ) . '</a></td><td>' . esc_html( number_format_i18n( $topkw['visits'] ) ) . '</td></tr>';
-					}
-					?>
-				</tbody>
-				<tfoot>
-					<tr>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Keyword', 'seo-booster' );
-						?>
-	</th>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Landing Page', 'seo-booster' );
-						?>
-	</th>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Visits', 'seo-booster' );
-						?>
-	</th>
-					</tr>
-				</tfoot>
-			</table>
-					<?php
-		}
-
-		$query   = "SELECT engine, COUNT(*) as cnt, SUM(visits) as visits FROM {$wpdb->prefix}sb2_kw WHERE `ig`='0' AND engine<>'Internal Search' GROUP BY `engine` ORDER BY `visits` DESC LIMIT 35;";
-		$engines = $wpdb->get_results( $query, ARRAY_A );
-
-		if ( $engines ) {
-			?>
-			<h2>
-			<?php
-			esc_html_e( 'Top Search Engines', 'seo-booster' );
-			?>
-	</h2>
-			<div id="searchengineschart"></div>
-			<script type="text/javascript">
-				jQuery(document).ready(function() {
-					google.charts.load('current', {'packages':['corechart','line']});
-
-					google.charts.setOnLoadCallback(drawPieChart);
-
-					function drawPieChart() {
-						var data = google.visualization.arrayToDataTable([
-							['
-							<?php
-							esc_html_e( 'Day', 'seo-booster' );
-							?>
-	', '
-			<?php
-			esc_html_e( 'Visitors', 'seo-booster' );
-			?>
-	'],
-							<?php
-							foreach ( $engines as $eng ) {
-										echo "['" . esc_html( $eng['engine'] ) . "', " . esc_html( $eng['cnt'] ) . '],';
-							}
-							?>
-							]);
-						var options = {
-							backgroundColor : 'transparent',
-							title: '
-							<?php
-							esc_html_e( 'Top Search Engines', 'seo-booster' );
-							?>
-	',
-							height: 330,
-							legend: {
-								position: 'right',
-								textStyle: {
-									fontSize: 16
-								}
-							},
-							pieHole: 0.2,
-							chartArea: {
-								'top': 10,
-								'width':'100%',
-								'left':0,
-								'height': 310,
-								'backgroundColor': {
-									'fill': 'transparent',
-									'opacity': 50
-								},
-								'width':'100%'
-							}
-						};
-						var chart = new google.visualization.PieChart(document.getElementById('searchengineschart'));
-						chart.draw(data, options);
-					}
-				});
-			</script>
-					<?php
-		}
-
-		?>
-		<h2>
-		<?php
-		esc_html_e( 'Backlink Stats', 'seo-booster' );
-		?>
-		</h2>
-		<p>
-		<?php
-		esc_html_e( 'Details of the backlinks recorded.', 'seo-booster' );
-		?>
-		</p>
-		<?php
-		$totalbls               = $wpdb->get_var( "SELECT count(*) FROM {$wpdb->prefix}sb2_bl;" );
-		$totalblsignore         = $wpdb->get_var( "SELECT count(*) FROM {$wpdb->prefix}sb2_bl WHERE ig='1';" );
-		$totalblsverified       = $wpdb->get_var( "SELECT count(*) FROM {$wpdb->prefix}sb2_bl WHERE verified='1' AND ig<>'1';" );
-		$totalblsvisits         = $wpdb->get_var( "SELECT SUM(visits) FROM {$wpdb->prefix}sb2_bl;" );
-		$totalblsignorevisits   = $wpdb->get_var( "SELECT SUM(visits) FROM {$wpdb->prefix}sb2_bl WHERE ig='1';" );
-		$totalblsverifiedvisits = $wpdb->get_var( "SELECT SUM(visits) FROM {$wpdb->prefix}sb2_bl WHERE verified='1' AND ig<>'1';" );
-		?>
-		<table class="wp-list-table widefat">
-			<tr><td>
-			<?php
-			esc_html_e( 'Verified', 'seo-booster' );
-			?>
-			</td><td>
-<?php
-echo esc_html( number_format_i18n( $totalblsverified ) );
+	<?php 
+if ( $selected_site ) {
+    $timestamp_output = '';
+    $timestamp = wp_next_scheduled( 'seobooster_gsc_data_fetch' );
+    // display the timestamp
+    if ( $timestamp ) {
+        $timestamp = gmdate( 'Y-m-d H:i:s', $timestamp );
+        $current_time = current_time( 'timestamp' );
+        $time_diff = human_time_diff( $current_time, strtotime( $timestamp ) );
+        // translators: %1$s: timestamp, %2$s: time difference
+        $timestamp_output = ' - <small>' . __( 'Next scheduled update:', 'seo-booster' ) . ' ' . $timestamp . ' (' . sprintf( __( 'in %s', 'seo-booster' ), $time_diff ) . ')</small>';
+    }
+    // translators: %s: Google Search Console site URL
+    echo '<p>' . sprintf( esc_html__( 'You are connected to the GSC site %s', 'seo-booster' ), '<strong>' . esc_html( $selected_site ) . '</strong>' ) . wp_kses_post( $timestamp_output ) . '</p>';
+}
 ?>
-</td><td>(
-<?php
-echo esc_html( number_format_i18n( $totalblsverifiedvisits ) ) . ' ' . esc_html__( 'Visits', 'seo-booster' );
-?>
-)</td></tr>
-			<tr><td>
-			<?php
-			esc_html_e( 'Ignored', 'seo-booster' );
-			?>
-			</td><td>
-<?php
-echo esc_html( number_format_i18n( $totalblsignore ) );
-?>
-</td><td>(
-<?php
-echo esc_html( number_format_i18n( $totalblsignorevisits ) ) . ' ' . esc_html__( 'Visits', 'seo-booster' );
-?>
-)</td></tr>
-			<tr><td>
-			<?php
-			esc_html_e( 'Total', 'seo-booster' );
-			?>
-			</td><td>
-<?php
-echo esc_html( number_format_i18n( $totalbls ) );
-?>
-</td><td>(
-<?php
-echo esc_html( number_format_i18n( $totalblsvisits ) ) . ' ' . esc_html__( 'Visits', 'seo-booster' );
-?>
-)</td></tr>
-
-		</table>
-		<p>
-		<?php
-		esc_html_e( 'Verified means SEO Booster has verified the link, and if possible collected anchor text and other details. Ignored links are backlinks that do not have a link back or are filtered for other reasons.', 'seo-booster' );
-		?>
-		</p>
-		<?php
-		$samplelinks = $wpdb->get_results( "SELECT domain, (SELECT COUNT(*) FROM {$wpdb->prefix}sb2_bl O WHERE O.domain = M.domain ) AS totallinks, (SELECT SUM(D.visits) FROM {$wpdb->prefix}sb2_bl D WHERE D.domain = M.domain ) AS totalvisits FROM {$wpdb->prefix}sb2_bl M where ig='0' AND domain<>'' group by domain order by totalvisits desc limit 15;", ARRAY_A ); //phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-
-		if ( $samplelinks ) {
-			?>
-
-			<h2>
-			<?php
-			esc_html_e( 'Top Linking Domains', 'seo-booster' );
-			?>
-	</h2>
-
-			<table class="wp-list-table widefat">
-				<thead>
-					<tr>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Domain', 'seo-booster' );
-						?>
-	</th>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Total Links', 'seo-booster' );
-						?>
-	</th>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Total Visits', 'seo-booster' );
-						?>
-	</th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php
-					foreach ( $samplelinks as $sample ) {
-						echo '<tr><td>' . esc_html( $sample['domain'] ) . '</td><td>' . esc_html( $sample['totallinks'] ) . '</td><td>' . esc_html( $sample['totalvisits'] ) . '</td></tr>';
-					}
-					?>
-				</tbody>
-				<tfoot>
-					<tr>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Domain', 'seo-booster' );
-						?>
-	</th>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Total Links', 'seo-booster' );
-						?>
-	</th>
-						<th scope="col">
-						<?php
-						esc_html_e( 'Total Visits', 'seo-booster' );
-						?>
-	</th>
-					</tr>
-				</tfoot>
-
-			</table>
-					<?php
-		}
-
-		?>
-	</div>
-</div>
-</div> <!-- .wrap -->
+</div> <!-- .wrap --><?php 
