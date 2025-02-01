@@ -1,7 +1,7 @@
 /*
  * CSS for SEO Booster plugin admin pages.
-
-*/
+ *
+ */
 
 html {
   scroll-behavior: smooth;
@@ -73,8 +73,61 @@ span[data-peity] {
 }
 
 
+.editable-field {
+	display: block;
+	width: 100%;
+	padding: 8px;
+	box-sizing: border-box;
+	cursor: pointer;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	transition: border-color 0.2s ease;
+}
 
+.editable-field.keyword-field {
+	margin-top: 10px;
+	background-color: #f0f0f1;
 
+}
+
+.editable-field:hover {
+	background-color: #f0f0f1;
+	border-color: #007cba;
+}
+
+.ok-icon, .cancel-icon {
+    margin-left: 8px;
+    cursor: pointer;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.inline-edit-input {
+    width: calc(100% - 60px);
+    padding: 5px;
+    margin: 0;
+    border: 1px solid #ddd;
+    background: #fff;
+    box-shadow: 0 0 0 1px #007cba;
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+}
+
+.inline-edit-input:focus {
+    outline: none;
+}
+
+/* Ensure text selection is visible */
+.inline-edit-input::selection {
+    background: #0073aa;
+    color: #fff;
+}
+
+.column-keyword, .column-url {
+	cursor: text;
+}
 
 .loading-message {
 	color: #666;

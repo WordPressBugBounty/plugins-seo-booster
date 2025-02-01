@@ -186,6 +186,8 @@ if ( !empty( $_POST['submit_allempty'] ) ) {
     delete_option( 'seobooster_selected_site' );
     delete_option( 'seobooster_gsc_access_token' );
     Utils::log( esc_html__( 'Database tables emptied and options deleted.', 'seo-booster' ), 5 );
+    wp_safe_redirect( admin_url( 'admin.php?page=sb2_dashboard' ) );
+    exit;
 }
 global $seobooster_fs;
 $seobooster_replace_kw_limit = get_option( 'seobooster_replace_kw_limit', 10 );

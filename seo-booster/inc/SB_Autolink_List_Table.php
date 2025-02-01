@@ -74,8 +74,7 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 			'cb'       => '<input type="checkbox" />',
 			'keyword'  => _x('Keyword', 'Column label', 'seo-booster'),
 			'pointing' => '', // cannot call it arrow because of CSS clashes
-			'url'      => _x( 'Target URL', 'Column label', 'seo-booster' ),
-			'lastseen' => _x( 'Last seen used on', 'Column label', 'seo-booster' ),
+			'url'      => _x('Target URL', 'Column label', 'seo-booster'),
 		);
 
 		return $columns;
@@ -115,15 +114,21 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 	{
 		switch ($column_name) {
 			case 'keyword':
-				return $item[$column_name];
+				return sprintf(
+					'<span class="editable-field keyword-field" data-id="%d">%s</span>',
+					$item['id'],
+					esc_html($item['keyword'])
+				);
 			case 'url':
-				return $item[$column_name];
+				return sprintf(
+					'<span class="editable-field url-field" data-id="%d">%s</span>',
+					$item['id'],
+					esc_url($item['url'])
+				);
 			case 'pointing':
-				return $item[ $column_name ];
-			case 'lastseen':
-				return $item[ $column_name ];
+				return '<span class="dashicons dashicons-arrow-right-alt"></span>';
 			default:
-				return wp_json_encode($item, true);
+				return print_r($item, true);
 		}
 	}
 
@@ -140,26 +145,6 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 	protected function column_pointing($item)
 	{
 		return '<span class="dashicons dashicons-arrow-right-alt"></span>';
-	}
-
-	/**
-	 * column_url.
-	 *
-	 * @author	Lars Koudal
-	 * @since	v0.0.1
-	 * @version	v1.0.0	Wednesday, March 27th, 2024.
-	 * @access	protected
-	 * @param	mixed	$item	
-	 * @return	mixed
-	 */
-	protected function column_url($item)
-	{
-		return sprintf(
-			'<a href="%1$s" target="_blank">%2$s</a>',
-			$item['url'],
-			$item['url'],
-			rawurlencode($item['url'])
-		);
 	}
 
 	/**
@@ -240,18 +225,17 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 	 */
 	protected function process_bulk_action()
 	{
-
-		// security check!
+		// Security check
 		if (isset($_GET['_wpnonce']) && !empty($_GET['_wpnonce'])) {
-
-			$nonce = sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) );
+			$nonce = sanitize_text_field(wp_unslash($_GET['_wpnonce'] ?? ''));
 			$action = 'bulk-' . $this->_args['plural'];
 
-			if (!wp_verify_nonce($nonce, $action))
+			if (!wp_verify_nonce($nonce, $action)) {
 				wp_die(esc_html__('Nope! Security check failed!', 'seo-booster'));
+			}
 		}
 
-		// check user has permission
+		// Check user has permission
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Nope! Security check failed!', 'seo-booster'));
 		}
@@ -259,18 +243,12 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 		if ('delete' === $this->current_action()) {
 			global $wpdb;
 			if (isset($_GET['alid'])) {
-
-				$alidsan = isset($_GET['alid']) ? array_map('absint', (array) wp_unslash($_GET['alid'])) : array(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-
-
+				$alidsan = $_GET['alid'];
 				if (is_array($alidsan)) {
 					foreach ($alidsan as $alid) {
-						$alid = intval($alid); // just to be sure
-						$wpdb->delete("{$wpdb->prefix}sb2_autolink", array('id' => $alid), array('%d'));
+						$alid = absint($alid);
+						$wpdb->delete($wpdb->prefix . 'sb2_autolink', ['id' => $alid], ['%d']);
 					}
-				} else {
-					$alid = intval($_GET['alid']);
-					$wpdb->delete("{$wpdb->prefix}sb2_autolink", array('id' => $alid), array('%d'));
 				}
 			}
 		}
@@ -321,7 +299,11 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 	{
 		global $wpdb;
 
-		$per_page = 50;
+		// Get per_page from URL parameter first, then user meta, then default to 25
+		$url_per_page = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 0;
+		$user_per_page = get_user_meta(get_current_user_id(), 'sb_autolink_per_page', true);
+		$per_page = $url_per_page ?: (!empty($user_per_page) ? (int) $user_per_page : 25);
+
 		$columns  = $this->get_columns();
 		$hidden   = $this->hidden_columns;
 		$sortable = $this->get_sortable_columns();
@@ -338,8 +320,7 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 
 		if ($search) {
 			$do_search = $wpdb->prepare(
-				' AND (keyword LIKE %s OR url LIKE %s OR lastseen LIKE %s ) ',
-				'%' . $wpdb->esc_like($search) . '%',
+				' AND (keyword LIKE %s OR url LIKE %s) ',
 				'%' . $wpdb->esc_like($search) . '%',
 				'%' . $wpdb->esc_like($search) . '%'
 			);
@@ -359,16 +340,16 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 		$table_name = esc_sql($wpdb->prefix . 'sb2_autolink');
 
 		$data = $wpdb->get_results($wpdb->prepare(
-			"SELECT id, keyword, url, lastseen 
+			"SELECT id, keyword, url 
 			FROM {$table_name} 
 			WHERE 1 = 1 
 			{$do_search} 
 			ORDER BY %1\$s %2\$s 
 			LIMIT %3\$d, %4\$d",
-			$orderby,    // Already sanitized by sanitize_orderby()
-			$order,      // Already sanitized by sanitize_order()
-			$offset,     // Integer
-			$per_page    // Integer
+			$orderby,
+			$order,
+			$offset,
+			$per_page
 		), ARRAY_A);
 
 		$current_page = $this->get_pagenum();
@@ -404,4 +385,24 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 
 		return ('asc' === $order) ? $result : -$result;
 	}
+
+
+
+
+	public static function ajax_update_per_page() {
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error('Permission denied');
+		}
+
+		$nonce = isset($_POST['nonce']) ? sanitize_text_field($_POST['nonce']) : '';
+		if (!wp_verify_nonce($nonce, 'add-keyword-nonce')) {
+			wp_send_json_error('Invalid nonce');
+		}
+
+		$per_page = isset($_POST['per_page']) ? (int) $_POST['per_page'] : 25;
+		update_user_meta(get_current_user_id(), 'sb_autolink_per_page', $per_page);
+		wp_send_json_success();
+	}
+
+
 }

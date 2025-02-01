@@ -1,4 +1,5 @@
 <?php
+namespace Cleverplugins\SEOBooster;
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -14,7 +15,7 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
 
-require __DIR__ . '/inc/class-404-pages-list-table.php';
+require __DIR__ . '/inc/SB_FOF_List_Table.php';
 
 
 	// Create an instance of our package class.

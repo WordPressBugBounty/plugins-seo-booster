@@ -5,7 +5,7 @@ Tags: SEO, google, Google Search Console, GSC
 Requires at least: 5.2
 Requires PHP: 7.4
 Tested up to: 6.7
-Stable tag: 6.1.3
+Stable tag: 6.1.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -67,6 +67,21 @@ Please contact us at [cleverplugins.com/contact/](https://cleverplugins.com/cont
 1. Integration with Google Search Console
 
 == Changelog ==
+
+= 6.1.5 =
+* Fixed issue with fatal error warning for some free users.
+
+
+= 6.1.4 =
+* Fix issues with keyword replacements in content:
+  - Fixed missing spaces after keyword replacements
+  - Improved handling of multi-word keyword phrases
+  - Better word boundary detection for keyword matching
+  - Fixed issues with multiple keyword replacements in the same text
+  - Fix ability to delete multiple automatic links at once
+* Removed deprecated "Last Seen" functionality for automatic link creation for better performance
+* Fixed PHP 8.1+ compatibility warnings
+* Code cleanup and performance improvements
 
 = 6.1.3 =
 * Fix issues with keyword replacements in content.

@@ -20,11 +20,11 @@ jQuery(document).ready(function($) {
                 .text(headingText);
             
             // Debug log to help identify issues
-            console.log('Adding section:', {
-                id: $heading.attr('id'),
-                text: headingText,
-                originalText: $heading.text()
-            });
+            // console.log('Adding section:', {
+            //     id: $heading.attr('id'),
+            //     text: headingText,
+            //     originalText: $heading.text()
+            // });
             
             $sectionSelect.append($option);
         } else {

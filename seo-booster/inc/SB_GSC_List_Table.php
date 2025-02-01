@@ -226,41 +226,11 @@ class SB_GSC_List_Table extends \WP_List_Table
 			case 'position':
 
 				return '<span title="' . esc_attr($item[$column_name]) . '">' . number_format_i18n($item[$column_name]) . '</span>';
-				// @todo - make faster and use the post id
-/*
-				$url = $item['page']; // Assuming $item['page'] contains the full URL
-				$path = wp_parse_url($url, PHP_URL_PATH); // Extract path from URL
-				$path = trailingslashit($path); // Ensure path ends with a slash
-				$post_id = url_to_postid($path);
 
-				$keyword_history = Google_API::get_keyword_history($item['query']);
-
-				if (!empty($keyword_history)) {
-
-					// if more than two entries, 
-					if (1 < count($keyword_history)) {
-						// take each entry and create a line chart
-						$chart_data = [];
-						foreach ($keyword_history as $history) {
-							$chart_data[] = $history['position'];
-						}
-						$chart_data = implode(',', $chart_data);
-
-
-						$history_output = Google_API::format_keyword_history_tooltip($keyword_history);
-
-						return '<span title="' . esc_attr($history_output) . '">' . number_format($item[$column_name], 2) . '</span><br><span class="sparkline" data-original="' . $chart_data . '"></span>';
-					} else {
-						$history_output = Google_API::format_keyword_history_tooltip($keyword_history);
-						return '<span title="' . esc_attr($history_output) . '">' . number_format($item[$column_name], 2) . '</span>';
-					}
-				}
-*/
 				return $item[$column_name];
 
 			case 'page':
-				// @todo - make faster and use the post id
-				$url = $item['page']; // Assuming $item['page'] contains the full URL
+				$url = $item['page'];
 				$path = wp_parse_url($url, PHP_URL_PATH); // Extract path from URL
 				$path = trailingslashit($path); // Ensure path ends with a slash
 

@@ -155,7 +155,11 @@ class Google_API {
                     __( 'Invalid data received from Google Search Console API: %s', 'seo-booster' ),
                     $error_details
                  ), 3 );
-                throw new \Exception(__( 'Invalid data received from Google Search Console API.', 'seo-booster' ));
+                throw new \Exception(sprintf( 
+                    /* translators: %s: error details */
+                    __( 'Invalid data received from Google Search Console API: %s', 'seo-booster' ),
+                    $error_details
+                 ));
             }
             foreach ( $data['rows'] as $row ) {
                 if ( !isset( $row['keys'][0], $row['keys'][1], $row['keys'][2] ) ) {
@@ -1002,7 +1006,8 @@ class Google_API {
      */
     public static function display_auth_status() {
         if ( !seobooster_fs()->is_registered() ) {
-            Utils::log( esc_html__( 'Seobooster is not registered. Authentication status cannot be displayed.', 'seo-booster' ), 5 );
+            Utils::log( esc_html__( 'Authentication status cannot be displayed. You need to register a SEO Booster account to use this feature.', 'seo-booster' ), 5 );
+            echo '<p>' . esc_html__( 'Authentication status cannot be displayed. You need to register a SEO Booster account to use this feature.', 'seo-booster' ) . '</p>';
             return;
         }
         $selected_site = get_option( 'seobooster_selected_site' );

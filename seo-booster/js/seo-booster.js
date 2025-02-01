@@ -593,6 +593,132 @@ jQuery( "#sb2_autolink_add" ).submit( function( event ) {
 
 	});
 
+  
 
+    // Enhanced search with debounce
+    let searchTimer;
+    $('#search_id').on('input', function() {
+        clearTimeout(searchTimer);
+        const searchInput = $(this);
+        
+        searchTimer = setTimeout(function() {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('s', searchInput.val());
+            window.location.href = currentUrl.toString();
+        }, 500);
+    });
 
+    // Make cells editable on double click
+    $('.wp-list-table').on('dblclick', '.editable-field', function(e) {
+        // Don't trigger if we're already editing
+        if ($(this).find('input').length) {
+            return;
+        }
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const $field = $(this);
+        const currentValue = $field.text();
+        const rowId = $field.data('id');
+        const isKeyword = $field.hasClass('keyword-field');
+        
+        // Create input field within a form to properly handle enter key
+        const $input = $('<input type="text" />')
+            .val(currentValue)
+            .addClass('inline-edit-input');
+        
+        // Create action icons
+        const $okIcon = $('<span class="ok-icon">✔️</span>');
+        const $cancelIcon = $('<span class="cancel-icon">❌</span>');
+        
+        // Save original content
+        $field.data('original', $field.html())
+              .empty()
+              .append($input, $okIcon, $cancelIcon);
+        
+        // Position cursor at click position within input
+        $input.focus();
+        
+        // Enable text selection within input
+        $input.on('dblclick', function(e) {
+            e.stopPropagation();
+            // Let default text selection behavior work
+        });
+        
+        // Prevent form submission on enter
+        $input.on('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission
+                saveEdit($field, rowId, currentValue, isKeyword);
+            } else if (e.key === 'Escape') {
+                cancelEdit($field);
+            }
+        });
+        
+        // Handle save on enter and cancel on escape
+        $okIcon.on('click', function() {
+            saveEdit($field, rowId, currentValue, isKeyword);
+        });
+        
+        $cancelIcon.on('click', function() {
+            cancelEdit($field);
+        });
+        
+        // Only save on blur if content changed
+        $input.on('blur', function() {
+            const newValue = $(this).val().trim();
+            if (newValue !== currentValue) {
+                saveEdit($field, rowId, currentValue, isKeyword);
+            } else {
+                cancelEdit($field);
+            }
+        });
+    });
+    
+    function saveEdit($field, rowId, originalValue, isKeyword) {
+        const $input = $field.find('input');
+        const newInputValue = $input.val().trim();
+        
+        if (newInputValue === originalValue) {
+            cancelEdit($field);
+            return;
+        }
+
+        // Show spinner and disable icons
+        const $spinner = $('<span class="spinner is-active"></span>');
+        $field.append($spinner);
+        $field.find('.ok-icon, .cancel-icon').hide();
+
+        $.ajax({
+            url: sbdata.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'sb_update_keyword',
+                nonce: $('#_ajax_sb2_add_keyword_nonce').val(),
+                id: rowId,
+                [isKeyword ? 'keyword' : 'url']: newInputValue
+            },
+            success: function(response) {
+                if (response.success) {
+                    $field.html(newInputValue);
+                } else {
+                    cancelEdit($field);
+                    alert(response.data || 'Error updating field');
+                }
+            },
+            error: function() {
+                cancelEdit($field);
+                alert('Error processing request');
+            },
+            complete: function() {
+                $spinner.remove();
+                $field.find('.ok-icon, .cancel-icon').show();
+            }
+        });
+    }
+    
+    function cancelEdit($field) {
+        $field.html($field.data('original'));
+    }
 });
