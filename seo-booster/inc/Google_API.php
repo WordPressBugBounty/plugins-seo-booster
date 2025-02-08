@@ -51,7 +51,7 @@ class Google_API {
         if ( 0 === $step ) {
             update_option( 'seobooster_selected_site', $site_url, 'no' );
         }
-        if ( seobooster_fs()->is__premium_only() && seobooster_fs()->can_use_premium_code() && 1 === $step ) {
+        if ( seobooster_fs()->can_use_premium_code() && 1 === $step ) {
             do_action( 'sb_gsc_schedule_all_pages' );
             Utils::log( 'Scheduled keyword analysis for first batch of pages', 5 );
         }
@@ -286,21 +286,45 @@ class Google_API {
             'winbox',
             SEOBOOSTER_PLUGINURL . 'js/min/winbox.bundle.min.js',
             ['jquery'],
-            $plugin_version,
+            filemtime(SEOBOOSTER_PLUGINPATH . 'js/min/winbox.bundle.min.js'),
             true
         );
+        
+        wp_enqueue_style('tabulator', 
+        SEOBOOSTER_PLUGINURL . 'js/tabulator/dist/css/tabulator.min.css',
+        [],
+        filemtime(SEOBOOSTER_PLUGINPATH . 'js/tabulator/dist/css/tabulator.min.css'),
+        'all'
+    );
+        
+        wp_enqueue_script(
+            'tabulator',
+            SEOBOOSTER_PLUGINURL . 'js/tabulator/dist/js/tabulator.min.js',
+            ['jquery'],
+            filemtime(SEOBOOSTER_PLUGINPATH . 'js/tabulator/dist/js/tabulator.min.js'),
+            true
+        );
+        wp_enqueue_style(
+            'seobooster-adminbar',
+            SEOBOOSTER_PLUGINURL . 'css/min/sb-adminbar-min.css',
+            [],
+            filemtime(SEOBOOSTER_PLUGINPATH . 'css/min/sb-adminbar-min.css'),
+        );
+
+        
         wp_enqueue_script(
             'seobooster-adminbar',
             SEOBOOSTER_PLUGINURL . 'js/min/seobooster-adminbar-min.js',
-            ['jquery', 'winbox', 'clipboardjs'],
-            $plugin_version,
+            ['jquery', 'winbox', 'tabulator'],
+            filemtime(SEOBOOSTER_PLUGINPATH . 'js/min/seobooster-adminbar-min.js'),
             true
         );
+
         wp_enqueue_script(
             'clipboardjs',
             SEOBOOSTER_PLUGINURL . 'js/min/clipboard.min.js',
             [],
-            $plugin_version,
+            filemtime(SEOBOOSTER_PLUGINPATH . 'js/min/clipboard.min.js'),
             true
         );
         $current_page = (( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" )) . "://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}";
@@ -310,6 +334,7 @@ class Google_API {
             'post_url' => $current_page,
             'security' => wp_create_nonce( 'sb_gsc_nonce' ),
             'text'     => [
+                'search'                     => __( 'Search', 'seo-booster' ),
                 'error'                      => __( 'Error', 'seo-booster' ),
                 'loading'                    => __( 'Loading...', 'seo-booster' ),
                 'query'                      => __( 'Query', 'seo-booster' ),
@@ -885,7 +910,7 @@ class Google_API {
                         $existing_keyword_id = wp_cache_get( $cache_key );
                         if ( false === $existing_keyword_id ) {
                             $wpdb->query( 'START TRANSACTION' );
-                            $existing_keyword_id = $wpdb->get_var( $wpdb->prepare( "SELECT id \n\t\t\t\t\t\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords \n\t\t\t\t\t\t\t\t\tWHERE query = %s AND page = %s", $query, $page ) );
+                            $existing_keyword_id = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}sb2_query_keywords WHERE query = %s AND page = %s", $query, $page ) );
                             if ( $existing_keyword_id ) {
                                 wp_cache_set(
                                     $cache_key,
@@ -1432,7 +1457,13 @@ class Google_API {
      */
     public static function fetch_sites() {
         $install_id = seobooster_fs()->get_site()->id;
-        $access_token = self::maybe_decrypt_token( self::get_access_token(), $install_id );
+        $my_access_token = self::get_access_token();
+        if ( is_wp_error( $my_access_token ) ) {
+            Utils::log( esc_html__( 'WP_Error encountered while getting the access token in fetch_sites()', 'seo-booster' ), 5 );
+            return $my_access_token;
+        }
+        
+        $access_token = self::maybe_decrypt_token( $my_access_token, $install_id );
         if ( is_wp_error( $access_token ) ) {
             Utils::log( esc_html__( 'Problem getting the access token in fetch_sites()', 'seo-booster' ), 5 );
             return $access_token;

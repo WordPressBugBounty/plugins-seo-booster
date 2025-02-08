@@ -376,8 +376,8 @@ public static function get_most_improved_keywords($days) {
         
         // $response_size = strlen(json_encode($response));
 
-        // $overall_time = (microtime(true) - $overall_start) * 1000;
-
+        $overall_time = (microtime(true) - $overall_start) * 1000;
+        $response['overall_time'] = $overall_time;
         wp_send_json_success($response);
     }
 
@@ -478,6 +478,7 @@ public static function get_most_improved_keywords($days) {
      * @return int Cache time in seconds.
      */
     private static function get_cache_time($table_id) {
+       // @todo - 12*1 is not correct, it should be 12*HOUR_IN_SECONDS
         $cache_times = [
             // Real-time data needs shorter cache
             '404-missing-pages' => 5 * MINUTE_IN_SECONDS,
@@ -525,26 +526,34 @@ public static function get_most_improved_keywords($days) {
         foreach ($data as $row) {
             $table_html .= '<tr>';
             foreach ($row as $key => $value) {
-                // Special handling for competing_pages array
-                if ($key === 'competing_pages' && is_array($value)) {
-                    // Convert to JSON for JavaScript to parse
-                    $value = htmlspecialchars(json_encode($value), ENT_QUOTES, 'UTF-8');
-                }
-                // Format other numeric values
-                else if (is_numeric($value)) {
-                    if (strpos($key, 'ctr') !== false) {
-                        $value = number_format($value, 2) . '%';
-                    } elseif (strpos($key, 'position') !== false) {
-                        $value = number_format($value, 1);
-                    }
-                }
-                $table_html .= '<td>' . $value . '</td>';
+                $formatted_value = self::format_table_cell($key, $value, $table_id);
+                $table_html .= '<td>' . $formatted_value . '</td>';
             }
             $table_html .= '</tr>';
         }
         $table_html .= '</tbody></table></div>';
         
         return $table_html;
+    }
+
+    private static function format_table_cell($key, $value, $table_id) {
+
+        
+        // Special handling for competing_pages array
+        if ($key === 'competing_pages' && is_array($value)) {
+            return htmlspecialchars(json_encode($value), ENT_QUOTES, 'UTF-8');
+        }
+        
+        // Format numeric values
+        if (is_numeric($value)) {
+            if (strpos($key, 'ctr') !== false) {
+                return number_format($value, 4) . '%';
+            } elseif (strpos($key, 'position') !== false) {
+                return number_format($value, 1);
+            }
+        }
+        
+        return esc_html($value);
     }
 
     private static function get_table_headers($table_id) {

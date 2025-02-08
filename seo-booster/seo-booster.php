@@ -2,24 +2,23 @@
 
 /**
  * Plugin Name: SEO Booster
- * Version: 6.1.5
- * Plugin URI: https://seeboosterpro.com/
+ * Version: 6.1.8
+ * Plugin URI: https://seoboosterpro.com/
  * Description: SEO Booster integrates with Google Search Console data - bringing the data to life on your website like never before. Optimize keywords and content, track your rankings, and get actionable insights to improve your SEO.
- * Author: cleverplugins.com
- * Author URI: https://seeboosterpro.com/
+ * Author: seoboosterpro.com
+ * Author URI: https://seoboosterpro.com/
  * Text Domain: seo-booster
  * Domain Path: /languages
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  *
- *
  * This plugin uses the following 3rd party MIT licensed projects - Thank you for making other developer lives easier :-)
+ * 
  * Jose Solorzano (https://sourceforge.net/projects/php-html/) for the Simple HTML DOM parser.
- * Thank you Matt van Andel for the WP List Table Example class - https://github.com/Veraxus/wp-list-table-example/blob/master/list-table-example.php
+ * 
  * The email template (heavily modified by us) is brought to you by EmailOctopus https://emailoctopus.com/ - email marketing for less, via Amazon SES. MIT License
- * https://github.com/themefoundation/custom-meta-box-template/blob/master/custom-meta-box-template.php
- * https://github.com/lukehaas/css-loaders
- * Copyright 2008-2024 cleverplugins.com
+ *  
+ * Copyright 2008-2025 cleverplugins.com and seoboosterpro.com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -113,6 +112,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
     require_once SEOBOOSTER_PLUGINPATH . 'inc/SB_GSC_Metaboxes.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/SB_GSC_Processor.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/email_status.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/class-page-builder-filters.php';
     if ( !class_exists( 'seobooster2' ) ) {
         class Seobooster2 {
             /**
@@ -133,6 +133,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
              */
             public function __construct() {
                 include_once SEOBOOSTER_PLUGINPATH . 'inc/Utils.php';
+                add_action( 'init', ['\\Cleverplugins\\SEOBooster\\Page_Builder_Filters', 'init'] );
                 add_action( 'wp_ajax_sb_gsc_import_data', [Google_API::class, 'sb_gsc_import_data'] );
                 add_action( 'wp_ajax_sb_log_table', [__CLASS__, 'sb_log_table'] );
                 add_action( 'wp_ajax_sb_gsc_table', [__CLASS__, 'sb_gsc_table'] );
@@ -182,77 +183,12 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 register_deactivation_hook( __FILE__, array(__CLASS__, 'seobooster_deactivate') );
                 add_action( 'admin_footer', array(__CLASS__, 'do_action_admin_footer') );
                 add_filter( 'fl_builder_ui_bar_buttons', array(__CLASS__, 'add_bb_diag_button') );
-            }
-
-            private static function get_filter_priority( $filter_name ) {
-                $priorities = [
-                    'the_content'                       => PHP_INT_MAX,
-                    'the_excerpt'                       => PHP_INT_MAX,
-                    'term_description'                  => PHP_INT_MAX,
-                    'render_block'                      => 20,
-                    'elementor/widget/render_content'   => 15,
-                    'fl_builder_before_render_content'  => 15,
-                    'fl_builder_after_render_content'   => 15,
-                    'fl_builder_render_module_content'  => 15,
-                    'fl_builder_render_node'            => 15,
-                    'fl_builder_layout_data'            => 5,
-                    'fl_builder_post_content'           => 999,
-                    'et_builder_render_layout'          => 20,
-                    'oxygen_vsb_after_render_content'   => 20,
-                    'thrive_architect_template_content' => 15,
-                    'wpb_content'                       => 15,
-                    'fusion_component_content'          => 20,
-                    'cornerstone_content'               => 15,
-                    'bricks/frontend/render_content'    => 20,
-                    'woocommerce_short_description'     => 11,
-                    'kadence_blocks_render_content'     => 15,
-                    'generate_blocks_content'           => 15,
-                    'the_content_feed'                  => PHP_INT_MAX,
-                ];
-                return ( isset( $priorities[$filter_name] ) ? $priorities[$filter_name] : 10 );
-            }
-
-            /**
-             * Check if we should skip filtering for a given content and context
-             *
-             * @author	Unknown
-             * @since	v0.0.1
-             * @version	v1.0.0	Thursday, January 23rd, 2025.
-             * @access	private static
-             * @param	mixed 	$content	
-             * @param	string	$context	Default: ''
-             * @return	boolean
-             */
-            private static function should_skip_filtering( $content, $context = 'content' ) {
-                // Skip empty content
-                if ( empty( $content ) || !is_string( $content ) ) {
-                    return true;
-                }
-                // Special handling for Beaver Builder content
-                if ( $context === 'beaver' ) {
-                    // Never skip rich text content
-                    if ( strpos( $content, 'fl-rich-text' ) !== false ) {
-                        return false;
-                    }
-                    // Skip button wrappers but not button text
-                    if ( strpos( $content, 'fl-button-wrap' ) !== false ) {
-                        return true;
-                    }
-                    // Continue with normal content checks
-                }
-                // Skip if content is just HTML without text
-                if ( strlen( strip_tags( $content ) ) < 2 ) {
-                    return true;
-                }
-                // Skip content inside existing links
-                if ( preg_match( '/<a[^>]*>.*?<\\/a>/is', $content ) ) {
-                    return true;
-                }
-                // Skip headings
-                if ( preg_match( '/<h[1-6][^>]*>.*?<\\/h[1-6]>/is', $content ) ) {
-                    return true;
-                }
-                return false;
+                add_action( 'admin_bar_menu', array(__CLASS__, 'add_seobooster_admin_bar'), 999 );
+                add_action( 'admin_enqueue_scripts', array(__NAMESPACE__ . '\\Google_API', 'load_adminbar_js') );
+                add_action( 'wp_enqueue_scripts', array(__NAMESPACE__ . '\\Google_API', 'load_adminbar_js') );
+                // Initialize Reports class
+                add_action( 'init', ['\\Cleverplugins\\SEOBooster\\Reports', 'init'] );
+                add_action( 'init', ['\\Cleverplugins\\SEOBooster\\Page_Builder_Filters', 'init'] );
             }
 
             /**
@@ -296,9 +232,6 @@ if ( function_exists( 'seobooster_fs' ) ) {
              * @return  mixed
              */
             public static function process_the_excerpt( $excerpt ) {
-                // if (!is_main_query() || is_feed()) {
-                //     return $excerpt;
-                // }
                 $new_excerpt = self::do_filter_the_content( $excerpt );
                 return $new_excerpt;
             }
@@ -334,7 +267,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 $orderby = ( isset( $_GET['sort_field'] ) ? sanitize_text_field( $_GET['sort_field'] ) : 'impressions' );
                 $order = ( isset( $_GET['sort_order'] ) && in_array( strtoupper( $_GET['sort_order'] ), ['ASC', 'DESC'], true ) ? strtoupper( sanitize_text_field( $_GET['sort_order'] ) ) : 'DESC' );
                 // Base query: Select all keywords
-                $query = "\n\t\t\t\tSELECT \n\t\t\t\t\tqk.id, \n\t\t\t\t\tqk.query, \n\t\t\t\t\tqk.page, \n\t\t\t\t\tqk.first_seen_date, \n\t\t\t\t\tqk.latest_date,\n\t\t\t\t\tCOALESCE(SUM(qkh.clicks), 0) as clicks,\n\t\t\t\t\tCOALESCE(SUM(qkh.impressions), 0) as impressions,\n\t\t\t\t\tCOALESCE(AVG(qkh.ctr), 0) as ctr,\n\t\t\t\t\tCOALESCE(AVG(qkh.position), 0) as position\n\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords AS qk\n\t\t\t\tLEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh ON qk.id = qkh.query_keywords_id\n\t\t\t\tWHERE 1=1";
+                $query = "\n                SELECT \n                qk.id, \n                qk.query, \n                qk.page, \n                qk.first_seen_date, \n                qk.latest_date,\n                COALESCE(SUM(qkh.clicks), 0) as clicks,\n                COALESCE(SUM(qkh.impressions), 0) as impressions,\n                COALESCE(AVG(qkh.ctr), 0) as ctr,\n                COALESCE(AVG(qkh.position), 0) as position\n                FROM {$wpdb->prefix}sb2_query_keywords AS qk\n                LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh ON qk.id = qkh.query_keywords_id\n                WHERE 1=1";
                 // Conditionally append search clause
                 if ( !empty( $_GET['search'] ) ) {
                     $search = '%' . $wpdb->esc_like( sanitize_text_field( $_GET['search'] ) ) . '%';
@@ -458,86 +391,6 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 // @todo - make it possible to turn this feature on or off.
                 $newcontent = self::do_filter_the_content( $desc );
                 return $newcontent;
-            }
-
-            /**
-             * Filter Elementor widget content
-             *
-             * @param string $content Widget content
-             * @param object $widget Widget instance
-             * @return string Filtered content
-             */
-            public static function filter_elementor_content( $content, $widget ) {
-                // Skip empty content
-                if ( empty( $content ) ) {
-                    return $content;
-                }
-                // Skip certain widget types that shouldn't be processed
-                $skip_widgets = ['code', 'shortcode'];
-                if ( in_array( $widget->get_name(), $skip_widgets, true ) ) {
-                    return $content;
-                }
-                return self::do_filter_the_content( $content, true );
-            }
-
-            /**
-             * Filter Beaver Builder content
-             *
-             * @param string $content The module content
-             * @return string Filtered content
-             */
-            public static function filter_beaver_content( $content ) {
-                // Early return if content is empty
-                if ( empty( $content ) || !is_string( $content ) ) {
-                    return $content;
-                }
-                // Reset processed keywords for each BB module
-                self::$processed_keywords = [];
-                // Process the content with forced=true
-                return self::do_filter_the_content( $content, true );
-            }
-
-            /**
-             * Filter WooCommerce short description
-             *
-             * @param string $short_description Product short description
-             * @return string Filtered short description
-             */
-            public static function do_filter_wc_short_description( $short_description ) {
-                if ( empty( $short_description ) ) {
-                    return $short_description;
-                }
-                return self::do_filter_the_content( $short_description, true );
-            }
-
-            /**
-             * Filter Gutenberg block content
-             *
-             * @param string $block_content The block content about to be appended
-             * @param array  $block        The full block, including name and attributes
-             * @return string Filtered block content
-             */
-            public static function do_filter_render_block_filter( $block_content, $block ) {
-                // Skip empty content
-                if ( empty( $block_content ) ) {
-                    return $block_content;
-                }
-                // Skip certain block types
-                $skip_blocks = [
-                    'core/shortcode',
-                    'core/html',
-                    'core/code',
-                    'core/preformatted',
-                    'core/template-part'
-                ];
-                if ( isset( $block['blockName'] ) && in_array( $block['blockName'], $skip_blocks, true ) ) {
-                    return $block_content;
-                }
-                // Process WooCommerce blocks differently if needed
-                if ( isset( $block['blockName'] ) && strpos( $block['blockName'], 'woocommerce/' ) === 0 ) {
-                    // Special handling for WooCommerce blocks if needed
-                }
-                return self::do_filter_the_content( $block_content, true );
             }
 
             /**
@@ -1040,7 +893,6 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     $processed_content = $html->save();
                     return $processed_content;
                 } catch ( \Exception $e ) {
-                    error_log( 'SEO Booster: Error processing content: ' . $e->getMessage() );
                     return $content;
                 } finally {
                     if ( isset( $html ) ) {
@@ -1658,11 +1510,14 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 register_setting( 'seobooster', 'seobooster_showsearch_queries' );
                 register_setting( 'seobooster', 'seobooster_weekly_email' );
                 register_setting( 'seobooster', 'seobooster_weekly_email_recipient' );
-                register_setting( 'seobooster', 'seobooster_fof_monitoring' );
                 register_setting( 'seobooster', 'seobooster_ignorelist' );
                 register_setting( 'seobooster', 'seobooster_debug_logging' );
                 register_setting( 'seobooster', 'seobooster_replace_cat_desc' );
                 register_setting( 'seobooster', 'seobooster_woocommerce' );
+                register_setting( 'seobooster', 'seobooster_fof_monitoring', array(
+                    'type'    => 'string',
+                    'default' => 'on',
+                ) );
                 if ( isset( $_POST['seobooster_selected_site_nonce'], $_POST['seobooster_selected_site'] ) && wp_verify_nonce( $_POST['seobooster_selected_site_nonce'], 'seobooster_save_selected_site' ) ) {
                     // Sanitize the input.
                     $seobooster_selected_days = 90;
@@ -1845,7 +1700,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
              * @return  void
              */
             public static function add_dashboard_widget() {
-                wp_add_dashboard_widget( 'add_dashboard_widget', 'News from cleverplugins.com', array(__CLASS__, 'dashboard_widget') );
+                wp_add_dashboard_widget( 'add_dashboard_widget', 'News from seoboosterpro.com', array(__CLASS__, 'dashboard_widget') );
             }
 
             /**
@@ -1862,23 +1717,68 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 global $wpdb;
                 ?>
                 <div style="float:right;">
-                    <a href="https://cleverplugins.com/" target="_blank"><img src="
-            <?php 
-                echo esc_url( plugin_dir_url( __FILE__ ) . 'images/cleverpluginslogo.png' );
-                ?>
-            " height="27" width="150" alt="cleverplugins.com"></a>
-                </div>
-
-
+                    <a href="https://seoboosterpro.com/" target="_blank"><img src="<?php 
+                echo esc_url( plugin_dir_url( __FILE__ ) . 'images/sblogo25.png' );
+                ?>" height="50" width="50" alt="seoboosterpro.com"></a></div>
 <?php 
                 $feeds = array(array(
-                    'url'          => 'https://cleverplugins.com/feed/',
+                    'url'          => 'https://seoboosterpro.com/feed/',
                     'items'        => 2,
                     'show_summary' => 1,
                     'show_author'  => 0,
                     'show_date'    => 0,
                 ));
                 wp_dashboard_primary_output( 'dw_dashboard_widget_news', $feeds );
+            }
+
+            public static function add_seobooster_admin_bar( $wp_admin_bar ) {
+                if ( !current_user_can( 'manage_options' ) ) {
+                    return;
+                }
+                // Main menu item
+                $wp_admin_bar->add_node( array(
+                    'id'    => 'seobooster',
+                    'title' => 'SEO Booster',
+                    'href'  => admin_url( 'admin.php?page=sb2_dashboard' ),
+                ) );
+                // Show Details submenu
+                $wp_admin_bar->add_node( array(
+                    'parent' => 'seobooster',
+                    'id'     => 'seobooster-details',
+                    'title'  => __( 'Show Details', 'seo-booster' ),
+                    'href'   => '#',
+                    'meta'   => array(
+                        'onclick' => 'open_floating_window(); return false;',
+                    ),
+                ) );
+                // Show Internal Links submenu
+                $wp_admin_bar->add_node( array(
+                    'parent' => 'seobooster',
+                    'id'     => 'seobooster-show-links',
+                    'title'  => __( 'Show Internal Links', 'seo-booster' ),
+                    'href'   => add_query_arg( 'seobooster_showlinks', '1', get_permalink() ),
+                ) );
+                // // Other menu items below
+                // $wp_admin_bar->add_node(array(
+                //     'parent' => 'seobooster',
+                //     'id'     => 'seobooster-gsc',
+                //     'title'  => __('GSC Overview', 'seo-booster'),
+                //     'href'   => admin_url('admin.php?page=sb2_gsc'),
+                // ));
+                // $wp_admin_bar->add_node(array(
+                //     'parent' => 'seobooster',
+                //     'id'     => 'seobooster-autolink',
+                //     'title'  => __('Automatic Links', 'seo-booster'),
+                //     'href'   => admin_url('admin.php?page=sb2_autolink'),
+                // ));
+            }
+
+            public static function reset_processed_keywords() {
+                self::$processed_keywords = [];
+            }
+
+            public static function get_processed_keywords() {
+                return self::$processed_keywords;
             }
 
         }

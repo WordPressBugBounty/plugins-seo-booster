@@ -50,6 +50,11 @@ if ( isset( $_POST['page'] ) && 'sb2_settings' === sanitize_text_field( wp_unsla
     if ( isset( $_POST['seobooster_ignorelist'] ) ) {
         update_option( 'seobooster_ignorelist', sanitize_text_field( wp_unslash( $_POST['seobooster_ignorelist'] ) ) );
     }
+    if ( isset( $_POST['seobooster_fof_monitoring'] ) ) {
+        update_option( 'seobooster_fof_monitoring', sanitize_text_field( wp_unslash( $_POST['seobooster_fof_monitoring'] ) ) );
+    } else {
+        delete_option( 'seobooster_fof_monitoring' );
+    }
 }
 if ( isset( $_POST['submit_dbupdates'] ) ) {
     $nonce = sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) );
@@ -121,21 +126,21 @@ if ( !empty( $_POST['submit_dbempty'] ) ) {
         die( esc_html__( 'Permission denied.', 'seo-booster' ) );
     }
     // Clean all transients related to keyword analysis
-    $cleaned_count = $wpdb->query( "DELETE FROM {$wpdb->options} \n\t\tWHERE option_name LIKE '_transient_sb_gsc_keyword_usage_%' \n\t\tOR option_name LIKE '_transient_timeout_sb_gsc_keyword_usage_%'" );
+    $cleaned_count = $wpdb->query( "DELETE FROM {$wpdb->options} \nWHERE option_name LIKE '_transient_sb_gsc_keyword_usage_%' \nOR option_name LIKE '_transient_timeout_sb_gsc_keyword_usage_%'" );
     Utils::log( sprintf( 
         /* translators: %s: number of cleaned transients */
         esc_html__( 'Keyword analysis transients cleaned: %s', 'seo-booster' ),
         number_format_i18n( $cleaned_count )
      ), 5 );
     // Clean all action scheduler jobs related to SEO Booster
-    $cleaned_jobs = $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}actionscheduler_actions \n\t\t\tWHERE hook LIKE %s", 'sb_gsc_%' ) );
+    $cleaned_jobs = $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}actionscheduler_actions WHERE hook LIKE %s", 'sb_gsc_%' ) );
     Utils::log( sprintf( 
         /* translators: %s: number of cleaned action scheduler jobs */
         esc_html__( 'SEO Booster action scheduler jobs cleaned: %s', 'seo-booster' ),
         number_format_i18n( $cleaned_jobs )
      ), 5 );
     // Clean all action scheduler logs related to SEO Booster
-    $cleaned_logs = $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}actionscheduler_logs \n\t\t\tWHERE action_id IN (\n\t\t\t\tSELECT action_id \n\t\t\t\tFROM {$wpdb->prefix}actionscheduler_actions \n\t\t\t\tWHERE hook LIKE %s\n\t\t\t)", 'sb_gsc_%' ) );
+    $cleaned_logs = $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}actionscheduler_logs WHERE action_id IN (SELECT action_id FROM {$wpdb->prefix}actionscheduler_actions WHERE hook LIKE %s)", 'sb_gsc_%' ) );
     Utils::log( sprintf( 
         /* translators: %s: number of cleaned action scheduler logs */
         esc_html__( 'SEO Booster action scheduler logs cleaned: %s', 'seo-booster' ),
@@ -168,14 +173,14 @@ if ( !empty( $_POST['submit_allempty'] ) ) {
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     }
     // Clean all transients related to keyword analysis
-    $cleaned_count = $wpdb->query( "DELETE FROM {$wpdb->options} \n\t\tWHERE option_name LIKE '_transient_sb_gsc_keyword_usage_%' \n\t\tOR option_name LIKE '_transient_timeout_sb_gsc_keyword_usage_%'" );
+    $cleaned_count = $wpdb->query( "DELETE FROM {$wpdb->options} \nWHERE option_name LIKE '_transient_sb_gsc_keyword_usage_%' \nOR option_name LIKE '_transient_timeout_sb_gsc_keyword_usage_%'" );
     Utils::log( sprintf( 
         /* translators: %s: number of cleaned transients */
         esc_html__( 'Keyword analysis transients cleaned: %s', 'seo-booster' ),
         number_format_i18n( $cleaned_count )
      ), 5 );
     // Clean all action scheduler jobs related to SEO Booster
-    $cleaned_jobs = $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}actionscheduler_actions \n\t\t\tWHERE hook LIKE %s", 'sb_gsc_%' ) );
+    $cleaned_jobs = $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}actionscheduler_actions WHERE hook LIKE %s", 'sb_gsc_%' ) );
     Utils::log( sprintf( 
         /* translators: %s: number of cleaned action scheduler jobs */
         esc_html__( 'SEO Booster action scheduler jobs cleaned: %s', 'seo-booster' ),
@@ -195,7 +200,7 @@ $seobooster_internal_linking = get_option( 'seobooster_internal_linking' );
 $replace_kw_multiple = get_option( 'seobooster_replace_kw_multiple' );
 $seobooster_weekly_email = get_option( 'seobooster_weekly_email' );
 $seobooster_weekly_email_recipient = get_option( 'seobooster_weekly_email_recipient' );
-$fof_monitoring = get_option( 'seobooster_fof_monitoring' );
+$fof_monitoring = get_option( 'seobooster_fof_monitoring', 'on' );
 $seobooster_delete_deactivate = get_option( 'seobooster_delete_deactivate' );
 ?>
 <div class="wrap">
@@ -381,7 +386,8 @@ esc_html_e( 'Email recipient. To add multiple recipients, separate each email ad
 
 				<tr valign="top">
 					<th colspan="2">
-						<h2><?php 
+						<h2>
+							<?php 
 esc_html_e( '404 Errors', 'seo-booster' );
 ?></h2>
 					</th>
@@ -402,6 +408,23 @@ if ( !seobooster_fs()->can_use_premium_code() ) {
     esc_html_e( 'Upgrade to SEO Booster Pro to unlock this feature.', 'seo-booster' );
     ?></p>
 						<?php 
+} else {
+    ?>
+    <fieldset>
+        <legend class="screen-reader-text">
+            <span><?php esc_html_e('Enable 404 error monitoring', 'seo-booster'); ?></span>
+        </legend>
+        <label for="seobooster_fof_monitoring">
+            <input type="checkbox" id="seobooster_fof_monitoring" 
+                   name="seobooster_fof_monitoring" 
+                   value="on" 
+                   <?php checked($fof_monitoring, 'on'); ?> />
+            <p class="description">
+                <?php esc_html_e('Monitor and track 404 errors on your website.', 'seo-booster'); ?>
+            </p>
+        </label>
+    </fieldset>
+    <?php
 }
 ?>
 					</td>
@@ -616,6 +639,10 @@ esc_html_e( 'Manual Update', 'seo-booster' );
 						<?php 
 wp_nonce_field( 'manual_update_nonce', 'manual_update_nonce_field' );
 $days_options = array(7, 14);
+if ( seobooster_fs()->can_use_premium_code() ) {
+	$days_options = array(7, 14, 30, 60, 90);
+	}
+
 $selected_days = ( isset( $_POST['reimport_days'] ) ? intval( $_POST['reimport_days'] ) : 7 );
 ?>
 						<div class="">

@@ -7,10 +7,6 @@ class KeywordCannibalization {
     public static function get_data() {
         global $wpdb;
 
-        $cache_key = 'sb2_keyword_cannibalization_report';
-
-        $results = wp_cache_get($cache_key);
-        if (false === $results) {
             // Simpler SQL query without GROUP_CONCAT
             $query = $wpdb->prepare(
                 "SELECT 
@@ -104,15 +100,10 @@ class KeywordCannibalization {
                 return $group;
             }, $results);
 
-            wp_cache_set($cache_key, $results, '', 3600);
             return $results;
-        }
+        
 
-        // Extra safety check when returning cached results
-        return array_map(function($group) {
-            $group->competing_pages = array_slice($group->competing_pages, 0, 7);
-            return $group;
-        }, $results);
+   
     }
 
     public static function clear_cache() {

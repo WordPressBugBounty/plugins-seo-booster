@@ -118,11 +118,21 @@ $cache_key = 'seobooster_keyword_stats';
 $stats = wp_cache_get( $cache_key );
 if ( false === $stats ) {
     $stats = array(
-        'total_keywords'      => $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT query) \n\t\t\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords \n\t\t\t\t\t\tWHERE %s = %s", '1', '1' ) ),
-        'unique_pages'        => $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT page) \n\t\t\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords \n\t\t\t\t\t\tWHERE %s = %s", '1', '1' ) ),
-        'unique_days'         => $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT date) \n\t\t\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords_history \n\t\t\t\t\t\tWHERE %s = %s", '1', '1' ) ),
-        'first_history_date'  => $wpdb->get_var( $wpdb->prepare( "SELECT MIN(date) \n\t\t\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords_history \n\t\t\t\t\t\tWHERE %s = %s", '1', '1' ) ),
-        'latest_history_date' => $wpdb->get_var( $wpdb->prepare( "SELECT MAX(date) \n\t\t\t\t\t\tFROM {$wpdb->prefix}sb2_query_keywords_history \n\t\t\t\t\t\tWHERE %s = %s", '1', '1' ) ),
+'total_keywords'      => $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT query) 
+FROM {$wpdb->prefix}sb2_query_keywords 
+WHERE %s = %s", '1', '1' ) ),
+'unique_pages'        => $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT page) 
+FROM {$wpdb->prefix}sb2_query_keywords 
+WHERE %s = %s", '1', '1' ) ),
+'unique_days'         => $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT date) 
+FROM {$wpdb->prefix}sb2_query_keywords_history 
+WHERE %s = %s", '1', '1' ) ),
+'first_history_date'  => $wpdb->get_var( $wpdb->prepare( "SELECT MIN(date) 
+FROM {$wpdb->prefix}sb2_query_keywords_history 
+WHERE %s = %s", '1', '1' ) ),
+'latest_history_date' => $wpdb->get_var( $wpdb->prepare( "SELECT MAX(date) 
+FROM {$wpdb->prefix}sb2_query_keywords_history 
+WHERE %s = %s", '1', '1' ) ),
     );
     // Cache the results for 1 hour (3600 seconds)
     wp_cache_set(
@@ -254,6 +264,12 @@ else {
 }
 */
 $css_class = ' proonly';
+
+
+if (seobooster_fs()->can_use_premium_code()) {
+	$css_class = '';
+}
+
 // if ($access_token && $selected_site && (0 < $unique_days)) {
 if ( $selected_site && 0 < $unique_days ) {
     $gsc_link = admin_url( 'admin.php?page=sb2_gsc' );

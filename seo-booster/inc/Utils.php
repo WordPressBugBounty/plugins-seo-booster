@@ -50,7 +50,7 @@ class Utils extends Seobooster2 {
 		if ( $plugin === $plugin_file ) {
 			$new_actions = array(
 				'settings'      => sprintf( '<a href="%s">%s</a>', esc_url( admin_url( 'admin.php?page=sb2_settings' ) ), esc_html__( 'Settings', 'seo-booster' ) ),
-				'documentation' => sprintf( '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>', esc_url( 'https://cleverplugins.com/support/' ), esc_html__( 'Support', 'seo-booster' ) ),
+				'documentation' => sprintf( '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>', esc_url( 'https://seoboosterpro.com/support/' ), esc_html__( 'Support', 'seo-booster' ) ),
 			);
 			$actions = array_merge( $new_actions, $actions );
 		}
@@ -201,7 +201,7 @@ class Utils extends Seobooster2 {
 				UNIQUE KEY unique_query_page (query, page),
 				KEY query (query),
 				KEY page (page)
-				) COLLATE $wpdb_collate";
+				) $wpdb_collate";
 
 								dbDelta( $sql );
 
@@ -218,7 +218,7 @@ PRIMARY KEY  (id),
 KEY query_keywords_id (query_keywords_id),
 KEY date (date),
 UNIQUE KEY unique_query_date (query_keywords_id, date)
-) COLLATE $wpdb_collate";
+) $wpdb_collate";
 
 								dbDelta( $sql );
 
@@ -232,7 +232,7 @@ nflw int(1) DEFAULT '0',
 lastseen longtext,
 PRIMARY KEY  (id),
 KEY keyword (keyword),
-KEY url (url)) COLLATE $wpdb_collate";
+KEY url (url)) $wpdb_collate";
 
 								dbDelta( $sql );
 
@@ -244,7 +244,7 @@ firstseen timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 lastseen timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 visits int(11) NOT NULL,
 referer text NOT NULL,
-PRIMARY KEY  (id)) COLLATE $wpdb_collate";
+PRIMARY KEY  (id)) $wpdb_collate";
 
 								dbDelta( $sql );
 
@@ -255,7 +255,7 @@ logtime timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 prio tinyint(1) NOT NULL,
 log varchar(2048) NOT NULL,
 PRIMARY KEY  (ID),
-KEY ID (ID)) COLLATE $wpdb_collate";
+KEY ID (ID)) $wpdb_collate";
 
 								dbDelta( $sql );
 
@@ -447,7 +447,7 @@ KEY ID (ID)) COLLATE $wpdb_collate";
 							* @return	void
 							*/
 							public static function show_plugin_headline( $title = '', $return = false ) {
-								$content = '<div class="big welcome"><span><img src="' . esc_url( SEOBOOSTER_PLUGINURL . 'images/sbsquaretrans.png' ) . '" height="40" class="SEO Booster logo" alt="SEO Booster"></span>SEO Booster <span class="version">v. ' . esc_html( Seobooster2::get_plugin_version() ) . '</span><span class="title">' . esc_html( $title ) . '</span>';
+								$content = '<div class="big welcome"><span><img src="' . esc_url( SEOBOOSTER_PLUGINURL . 'images/sblogo25.png' ) . '" height="40" class="SEO Booster logo" alt="SEO Booster"></span>SEO Booster <span class="version">v. ' . esc_html( Seobooster2::get_plugin_version() ) . '</span><span class="title">' . esc_html( $title ) . '</span>';
 								$documentation_url = Utils::generate_cp_web_link( 'admin', 'docs' );
 								$content .= '<span class="navcont">';
 								$content .= '<span class="documentation"><a href="' . esc_url( $documentation_url ) . '" target="_blank" class="documentation">' . esc_html__( 'Documentation', 'seo-booster' ) . '</a></span>';

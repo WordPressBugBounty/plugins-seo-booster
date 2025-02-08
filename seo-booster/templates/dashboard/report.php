@@ -10,7 +10,7 @@ use Cleverplugins\SEOBooster\Utils;
     <div id="scroll-navbar">
         <div class="scroll-navbar-inner">
             <?php
-            echo '<span style="margin-right:10px;"><img src="' . esc_url(SEOBOOSTER_PLUGINURL . 'images/sbsquaretrans.png') . '" height="40" class="SEO Booster logo" alt="SEO Booster"></span>'; 
+            echo '<span style="margin-right:10px;"><img src="' . esc_url(SEOBOOSTER_PLUGINURL . 'images/sblogo25.png') . '" height="40" class="SEO Booster logo" alt="SEO Booster"></span>'; 
             ?>
              <select id="section-select"></select>
             <a href="#" id="back-to-top" class="back-to-top alignright"><?php esc_html_e('Back to Top', 'seo-booster'); ?></a>

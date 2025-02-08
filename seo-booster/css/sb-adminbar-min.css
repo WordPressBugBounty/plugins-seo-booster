@@ -1,0 +1,70 @@
+
+/* WinBox Table Styles */
+.winbox .wb-body {
+	padding: 15px;
+}
+
+.winbox .tabulator {
+	margin: 0;
+	border: 1px solid #ddd;
+	background: #fff;
+}
+
+/* Controls Layout */
+.winbox .tablenav.top {
+	display: flex;
+	align-items: center;
+	padding: 8px 0;
+	margin-bottom: 10px;
+}
+
+.winbox .alignleft.actions {
+	flex: 1;
+}
+
+.winbox .tabulator-results {
+	flex: 0 0 auto;
+	padding: 0 15px;
+}
+
+.winbox .tabulator-pagination {
+	flex: 0 0 auto;
+}
+
+/* Pagination Buttons */
+.winbox .tabulator-page {
+	margin: 0 2px;
+	padding: 5px 10px;
+	border: 1px solid #ddd;
+	background: #f7f7f7;
+	color: #555;
+	border-radius: 3px;
+}
+
+.winbox .tabulator-page.active {
+	background: #0073aa;
+	color: #fff;
+	border-color: #006291;
+}
+
+/* Table Cell Formatting */
+.winbox .tabulator-row .tabulator-cell {
+	padding: 8px;
+	border-right: 1px solid #eee;
+}
+
+.winbox .query-container {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.winbox .copyicon {
+	cursor: pointer;
+	color: #666;
+	font-size: 14px;
+}
+
+.winbox .copyicon:hover {
+	color: #0073aa;
+}

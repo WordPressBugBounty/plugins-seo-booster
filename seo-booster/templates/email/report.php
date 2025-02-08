@@ -210,7 +210,7 @@
                                 <tr>
                                     <td align="left" style="color: #888888; font-size: 14px; font-family: Helvetica, Arial, sans-serif; line-height: 23px;" class="text_color">
                                         <div style="color: #333333; font-size: 14px; font-family: Helvetica, Arial, sans-serif; font-weight: 600; mso-line-height-rule: exactly; line-height: 23px;">
-                                            <p>Thank you for using <a href="https://seoboosterpro.com/" target="_blank" rel="noopener">SEO Booster</a> by <a href="https://cleverplugins.com/" target="_blank" rel="noopener">Cleverplugins</a><p>
+                                            <p>Thank you for using <a href="https://seoboosterpro.com/" target="_blank" rel="noopener">SEO Booster</a> by <a href="https://seoboosterpro.com/" target="_blank" rel="noopener">SEO Booster Pro</a><p>
                                         </div>
                                     </td>
                                 </tr>

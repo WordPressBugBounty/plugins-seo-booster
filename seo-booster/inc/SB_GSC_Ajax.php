@@ -59,10 +59,22 @@ class SB_GSC_Ajax {
             $post_id = url_to_postid( $post_url );
         }
         global $wpdb;
-        $results = $wpdb->get_results( $wpdb->prepare( "SELECT k.id, k.query, k.page, k.first_seen_date, k.latest_date,\n                   k.is_used_in_content, k.last_checked,\n                   SUM(h.clicks) AS clicks,\n                   SUM(h.impressions) AS total_impressions,\n                   AVG(h.ctr) AS average_ctr,\n                   AVG(h.position) AS average_position\n            FROM {$wpdb->prefix}sb2_query_keywords AS k\n            INNER JOIN {$wpdb->prefix}sb2_query_keywords_history AS h \n                ON k.id = h.query_keywords_id\n            WHERE k.page = %s\n            GROUP BY k.query, k.page\n            ORDER BY total_impressions DESC", $post_url ), ARRAY_A );
+        $results = $wpdb->get_results( $wpdb->prepare( "SELECT k.id, k.query, k.page, k.first_seen_date, k.latest_date,
+        k.is_used_in_content, k.last_checked,
+        SUM(h.clicks) AS clicks,
+        SUM(h.impressions) AS total_impressions,
+        AVG(h.ctr) AS average_ctr,
+        AVG(h.position) AS average_position
+        FROM {$wpdb->prefix}sb2_query_keywords AS k
+        INNER JOIN {$wpdb->prefix}sb2_query_keywords_history AS h 
+            ON k.id = h.query_keywords_id
+        WHERE k.page = %s
+        GROUP BY k.query, k.page
+        ORDER BY total_impressions DESC", $post_url ), ARRAY_A );
         if ( empty( $results ) ) {
             wp_send_json_success( [
                 'message'        => __( 'No keywords found for this URL.', 'seo-booster' ),
+                'status'         => 'no_keywords',
                 'last_refreshed' => get_option( 'sb_gsc_last_refreshed' ),
                 'time'           => Utils::timerstop( 'ajax_get_keywords' ),
             ] );
@@ -142,6 +154,7 @@ class SB_GSC_Ajax {
         if ( empty( $results ) ) {
             wp_send_json_success( [
                 'message'        => __( 'No keywords found for this URL.', 'seo-booster' ),
+                'status'         => 'no_keywords',
                 'last_refreshed' => get_option( 'sb_gsc_last_refreshed' ),
                 'time'           => Utils::timerstop( 'ajax_get_keywords' ),
             ] );

@@ -1,0 +1,458 @@
+.tabulator {
+  font-size: 14px;
+  border: none;
+  background-color: transparent;
+}
+
+.tabulator .tabulator-header {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.tabulator-row {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.tabulator-row.tabulator-row-even {
+  background-color: #f8f9fa;
+}
+
+.query-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tabulator-responsive-collapse {
+  padding: 10px;
+  background: #f8f9fa;
+  border-left: 3px solid #0073aa;
+  margin: 5px 0;
+}
+
+/* WinBox Table Styles */
+.winbox .wb-body {
+	padding: 15px;
+}
+
+.winbox .tabulator {
+	margin: 0;
+	border: 1px solid #ddd;
+	background: #fff;
+}
+
+/* Controls Layout */
+.sb-fixed-controls {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #fff;
+    border-bottom: 1px solid #dee2e6;
+    padding: 15px;
+    margin: -15px -15px 15px -15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.sb-controls-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+}
+
+.sb-search-wrapper {
+    flex: 1 1 300px; /* This will make it wrap when less than 300px width is available */
+}
+
+.sb-pagination-wrapper {
+    flex: 1 1 400px; /* This will make it wrap when less than 400px width is available */
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+
+.tabulator-responsive-collapse table tr td {
+border:0px !important;
+padding:0px !important;
+}
+.tabulator-row .tabulator-responsive-collapse:not(:empty) {
+
+}
+.tabulator-row .tabulator-responsive-collapse table {
+  margin-bottom: 0px;
+}
+
+
+.sb-search-wrapper .sb-search-input {
+    width: 100%;
+    font-family: sans-serif;
+    height: 38px;
+    padding: 8px 12px 8px 35px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.sb-search-wrapper .sb-search-input:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+/* Pagination Styling */
+.tabulator-page {
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    background: #fff;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tabulator-page:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+    color: #0056b3;
+}
+
+.tabulator-page.active {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: #fff;
+}
+
+/* Responsive Layout */
+@media screen and (max-width: 768px) {
+    .sb-search-wrapper,
+    .sb-pagination-wrapper {
+        flex: 1 1 100%;
+    }
+
+    .sb-pagination-wrapper {
+        justify-content: center;
+    }
+}
+
+/* Table Styling */
+.tabulator {
+    border: none;
+    background: transparent;
+    font-size: 14px;
+}
+
+.tabulator .tabulator-header {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #444;
+}
+
+.tabulator-row {
+    border-bottom: 1px solid #dee2e6;
+    transition: background-color 0.2s ease;
+}
+
+.tabulator-row:hover {
+    background-color: #f8f9fa !important;
+}
+
+.tabulator-row .tabulator-cell {
+    padding: 12px 8px;
+    border-right: none;
+}
+
+/* Collapsed Content */
+.tabulator-row .tabulator-responsive-collapse {
+    display: none;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-left: 3px solid #0073aa;
+    margin: 5px 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.tabulator-row .tabulator-responsive-collapse:not(:empty) {
+    display: block;
+}
+
+.tabulator-row .tabulator-responsive-collapse ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tabulator-row .tabulator-responsive-collapse ul li {
+    padding: 6px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.tabulator-row .tabulator-responsive-collapse ul li:last-child {
+    border-bottom: none;
+}
+
+.tabulator-row .tabulator-responsive-collapse ul li strong {
+    color: #444;
+    margin-right: 8px;
+}
+
+/* Table Cell Formatting */
+.winbox .tabulator-row .tabulator-cell {
+	padding: 8px;
+	border-right: 1px solid #eee;
+}
+
+.winbox.modern {
+  z-index: 9999999 !important;
+  position: fixed !important;
+  transform: translate3d(0,0,0);
+  will-change: transform;
+}
+.winbox.modern .wb-body {
+  z-index: 9999999 !important;
+}
+
+
+.winbox .query-container {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.winbox .copyicon {
+	cursor: pointer;
+	color: #666;
+	font-size: 14px;
+}
+
+.winbox .copyicon:hover {
+	color: #0073aa;
+}
+
+/* Base styles */
+.winbox {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    font-size: 13px;
+}
+
+/* Search input styling */
+.winbox .search-input {
+    height: 28px;
+    width: 200px;
+    font-size: 13px;
+}
+
+/* Pagination controls */
+.winbox .tabulator-pagination {
+    font-size: 13px;
+    padding: 4px 0;
+}
+
+.winbox .tabulator-page {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.winbox .tabulator-page-size {
+    height: 28px;
+    font-size: 13px;
+}
+
+/* Total keywords counter */
+.winbox .total-keywords {
+    margin: 0 0 10px;
+    padding: 8px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+/* WinBox styling */
+.winbox.modern {
+    border: 1px solid #282828 !important;
+    border-radius: 8px;
+}
+
+.winbox.modern .wb-title {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Table padding */
+.winbox .wb-body {
+    padding: 0 10px 10px 10px;
+}
+
+/* Responsive collapse styling */
+.tabulator-responsive-collapse {
+    display: none;
+}
+
+.tabulator-row-has-hidden .tabulator-responsive-collapse {
+    display: block;
+    padding: 10px;
+    background: #f8f9fa;
+    border-left: 3px solid #0073aa;
+    margin: 5px 0;
+}
+
+/* Pagination styling */
+.tabulator-pagination {
+    padding: 8px 0;
+    border-top: 1px solid #dee2e6;
+}
+
+.bottom-pagination {
+    display: none;
+}
+
+/* Refresh button */
+.wb-refresh {
+    position: absolute;
+    right: 35px;
+    top: 0;
+    width: 30px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.wb-refresh:hover {
+    opacity: 1;
+}
+
+/* Column visibility menu */
+.column-visibility-menu {
+    position: absolute;
+    top: 100%;
+    left: 220px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.column-visibility-menu label {
+    display: block;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.column-visibility-menu label:hover {
+    background: #f0f0f0;
+}
+
+/* Sorting indicators */
+.tabulator-col .tabulator-col-content .tabulator-col-sorter {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 4px;
+}
+
+.tabulator-col.tabulator-sortable:hover {
+    background-color: #e9ecef;
+}
+
+.tabulator-col.tabulator-sortable[aria-sort="asc"] .tabulator-col-sorter:after {
+    content: "↑";
+    color: #0073aa;
+}
+
+.tabulator-col.tabulator-sortable[aria-sort="desc"] .tabulator-col-sorter:after {
+    content: "↓";
+    color: #0073aa;
+}
+
+/* Loading spinner */
+.sb-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+.sb-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0073aa;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.tabulator-row .tabulator-responsive-collapse {
+    display: none;
+    padding: 10px;
+    background: #f8f9fa;
+    border-left: 3px solid #0073aa;
+    margin: 5px 0;
+}
+
+.tabulator-row .tabulator-responsive-collapse:not(:empty) {
+    display: block;
+}
+
+.tabulator-row.tabulator-row-has-hidden .tabulator-responsive-collapse:has(> ul:not(:empty)) {
+    display: block;
+}
+
+/* No Data Message */
+.sb-no-data-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.sb-message-content {
+    max-width: 400px;
+}
+
+.sb-message-content svg {
+    margin-bottom: 15px;
+    color: #ccc;
+}
+
+.sb-message-content h3 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.sb-message-content p {
+    margin: 0;
+    font-size: 14px;
+    color: #888;
+}
+
+.fl-builder-seobooster-button svg.hidden {
+    display: none;
+}

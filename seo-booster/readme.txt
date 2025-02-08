@@ -1,17 +1,19 @@
 === SEO Booster ===
 Contributors: cleverplugins, lkoudal, freemius
-Donate link: https://cleverplugins.com
+Donate link: https://seoboosterpro.com
 Tags: SEO, google, Google Search Console, GSC
 Requires at least: 5.2
 Requires PHP: 7.4
 Tested up to: 6.7
-Stable tag: 6.1.5
+Stable tag: 6.1.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Discover new keywords, create automatic internal links, monitor 404 errors, and track incoming links. Not your usual SEO plugin.
 
 == Description ==
+
+Import GSC data and monitor your keywords. Use GSC overview to dive in to the keyword data across your website.
 
 Create internal links easily everywhere by entering a keyword or phrase and where to link to.
 
@@ -60,7 +62,7 @@ Over the years SEO Booster grew up and went through many different variations an
 
 = Other questions =
 
-Please contact us at [cleverplugins.com/contact/](https://cleverplugins.com/contact/)
+Please contact us at [seoboosterpro.com/contact/](https://seoboosterpro.com/contact/)
 
 == Screenshots ==
 
@@ -68,9 +70,26 @@ Please contact us at [cleverplugins.com/contact/](https://cleverplugins.com/cont
 
 == Changelog ==
 
+= 6.1.8 =
+* Added: Comprehensive page builder support with proper content filtering
+* Supported Page Builders: Gutenberg Blocks, Beaver Builder and Elementor.
+* Improved: WooCommerce integration with short description support
+* Added: Debug logging for troubleshooting
+* Fixed: Skip filtering for special content types (buttons, existing links, etc.)
+
+= 6.1.7 =
+* Improved: Report loading system now uses a queue to prevent concurrent AJAX requests
+* Fixed: WinBox window now properly stays on top of other elements
+* Fixed: 404 error report now shows clean URLs without HTML formatting
+* Improved: Script versioning now uses file modification time for better cache control
+
+= 6.1.6 =
+* Fix issue with floating window not opening for some page builders.
+* NEW: Info window much improved, now with search and pagination.
+* NEW: Info windows: Columns are responsive and resize to the width of the window.
+
 = 6.1.5 =
 * Fixed issue with fatal error warning for some free users.
-
 
 = 6.1.4 =
 * Fix issues with keyword replacements in content:
@@ -127,7 +146,6 @@ Gutenberg Block Editor, Elementor, Beaver Builder, Divi Builder, WPBakery Page B
 = 6.0.14 =
 * Cache cleanup more effective
 * Fix for Beaver Builder editor query parameters - Thank you Thomas
-
 
 == Upgrade Notice ==
 6.0.1 Recommended update for a completely new experience!

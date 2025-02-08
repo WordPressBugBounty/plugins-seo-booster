@@ -18,14 +18,6 @@ jQuery(document).ready(function($) {
             const $option = $('<option></option>')
                 .val($heading.attr('id'))
                 .text(headingText);
-            
-            // Debug log to help identify issues
-            // console.log('Adding section:', {
-            //     id: $heading.attr('id'),
-            //     text: headingText,
-            //     originalText: $heading.text()
-            // });
-            
             $sectionSelect.append($option);
         } else {
             console.warn(`No valid heading found for section ${index}`, {
@@ -209,8 +201,6 @@ jQuery(document).ready(function($) {
                         if (container.dataset.tableId === '404-missing-pages') {
                             if (field === 'count') {
                                 value = parseInt(value, 10) || 0;
-                            } else if (field === 'url' || field === 'referer') {
-                                value = value ? `<a href="${value}" target="_blank">${value}</a>` : '';
                             } else if (field === 'last_seen' || field === 'first_seen') {
                                 const date = new Date(value);
                                 if (!isNaN(date)) {
@@ -274,19 +264,7 @@ jQuery(document).ready(function($) {
         maxConcurrent: 2,
         loadingTimers: {},
 
-        initializeTabulator: function(container) {
-            if (typeof Tabulator === 'undefined') {
-                console.error('Tabulator library is not loaded.');
-                return;
-            }
-
-            const $table = $(container).find('.wp-list-table');
-            if (!$table.length) {
-                console.error('No table found in container');
-                return;
-            }
-
-            // Reference existing convertWPListTables function
+        init: function(container) {
             convertWPListTables(container);
         },
 
@@ -307,17 +285,11 @@ jQuery(document).ready(function($) {
             switch(state) {
                 case 'waiting':
                     loadingEl.innerHTML = `
-                        <div class="loading-message">
-                            <span class="dashicons dashicons-clock"></span> 
-                            Waiting in queue to be loaded...
-                        </div>`;
+                        <div class="loading-message"><span class="dashicons dashicons-clock"></span> Waiting...</div>`;
                     break;
                 case 'loading':
                     loadingEl.innerHTML = `
-                        <div class="loading-message">
-                            <span class="dashicons dashicons-update spin"></span> 
-                            Loading data... <span class="loading-timer">0.0</span> seconds
-                        </div>`;
+                        <div class="loading-message"><span class="dashicons dashicons-update spin"></span> Loading data... <span class="loading-timer">0.0</span> seconds</div>`;
                     const timerEl = loadingEl.querySelector('.loading-timer');
                     const startTime = Date.now();
                     this.loadingTimers[container.dataset.tableId] = setInterval(() => {
@@ -392,7 +364,7 @@ jQuery(document).ready(function($) {
 
                         // Initialize Tabulator if available
                         if (typeof Tabulator !== 'undefined') {
-                            this.initializeTabulator(container);
+                            this.init(container);
                         }
 
                     } else {
@@ -425,27 +397,29 @@ jQuery(document).ready(function($) {
         }
     };
 
-    // Modify initializeLazyLoading to use the queue
+    // Modify initializeLazyLoading to be more aggressive
     function initializeLazyLoading() {
         const options = {
             root: null,
-            rootMargin: '100px',
-            threshold: 0.1
+            rootMargin: '500px',
+            threshold: 0.01
         };
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const tableContainer = entry.target;
+                const tableContainer = entry.target;
+                if (!tableContainer.dataset.queued) {
+                    tableContainer.dataset.queued = 'true';
                     ReportQueue.add(tableContainer);
                     observer.unobserve(tableContainer);
                 }
             });
         }, options);
 
-        // Observe all table containers
         document.querySelectorAll('.table-container').forEach(container => {
-            observer.observe(container);
+            if (!container.dataset.queued) {
+                observer.observe(container);
+            }
         });
     }
 

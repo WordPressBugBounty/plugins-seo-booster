@@ -2,16 +2,15 @@
 
 namespace Cleverplugins\SEOBooster\Reports;
 
+use Error;
+
 class DecliningKeywords {
 
     public static function get_data() {
         global $wpdb;
 
         // Match the cache key format from report page
-        $cache_key = 'seobooster_report_declining_keywords';
-        $results = wp_cache_get($cache_key);
-
-        if (false === $results) {
+ 
             $results = $wpdb->get_results(
                 $wpdb->prepare(
                     "SELECT 
@@ -36,7 +35,7 @@ class DecliningKeywords {
                     ORDER BY 
                         days_inactive DESC, total_clicks DESC
                     LIMIT %d",
-                    100  // LIMIT value
+                    500  // LIMIT value
                 ),
                 OBJECT
             );
@@ -46,16 +45,17 @@ class DecliningKeywords {
                 $display_url = preg_replace('#^https?://#', '', $row->page);
                 return (object)[
                     'query' => $row->query,
-                    'page' => [
-                        'display' => $display_url,
-                        'url' => $row->page,
-                        'html' => sprintf(
-                            '<a href="%s" target="_blank">%s</a>',
-                            esc_url($row->page),
-                            esc_html($display_url)
-                        )
-                    ],
-                    'current_position' => round($row->current_position, 1),
+                    'page' => $row->page,
+                    // 'page' => [
+                    //     'display' => $display_url,
+                    //     'url' => $row->page,
+                    //     'html' => sprintf(
+                    //         '<a href="%s" target="_blank">%s</a>',
+                    //         esc_url($row->page),
+                    //         esc_html($display_url)
+                    //     )
+                    // ],
+                    'current_position' => $row->current_position !== null ? round($row->current_position, 1) : null,
                     'days_inactive' => $row->days_inactive,
                     'last_activity' => $row->last_activity_date,
                     'total_clicks' => $row->total_clicks,
@@ -63,21 +63,24 @@ class DecliningKeywords {
                     'avg_ctr' => round($row->avg_ctr * 100, 2)
                 ];
             }, $results);
+       /*
+    [0] => stdClass Object
+        (
+            [query] => duplicate post plugin
+            [page] => https://cleverplugins.com/delete-duplicate-posts/
+            [current_position] => 90
+            [days_inactive] => 29
+            [last_activity] => 2025-01-06
+            [total_clicks] => 0
+            [total_impressions] => 1
+            [avg_ctr] => 0
+        )
 
-            // Use the cache time from the report page (86400)
-            wp_cache_set($cache_key, $formatted_results, '', 86400);
-            return $formatted_results;
-        }
+       */
 
-        return $results;
+          return $formatted_results;
+  
     }
 
-    /**
-     * Clear the declining keywords report cache
-     * 
-     * @return void
-     */
-    public static function clear_cache() {
-        wp_cache_delete('seobooster_report_declining_keywords');
-    }
+
 }

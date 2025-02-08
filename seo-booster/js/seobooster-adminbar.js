@@ -1,4 +1,4 @@
-/* global seobooster_adminbar:true, WinBox:true, jQuery:true */
+/* global seobooster_adminbar:true, WinBox:true, jQuery:true, Tabulator:true */
 
 function getUrlParameter(name) {
 	name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
@@ -11,182 +11,48 @@ function getUrlParameter(name) {
 let winboxInstance = null;
 
 function open_floating_window() {
-	// Check if the Winbox instance already exists and is not closed
-	if (winboxInstance && !winboxInstance.closed) {
-		// Bring the existing Winbox to focus
+	
+	// Check if window exists and is actually visible
+	if (winboxInstance && !winboxInstance.closed && document.querySelector('.winbox.modern')) {
 		winboxInstance.focus();
 	} else {
+		// Just nullify the old instance without trying to close it
+		winboxInstance = null;
+		
+		const adminBarHeight = jQuery('#wpadminbar').height() || 0;
+		
 
-		winboxInstance = new WinBox("SEO Booster", {
-			html: `<div class="sb-loader"></div>
-        <style>
-        .winbox {
-         z-index: 2147483647 !important;
-        }
-        .statsrow {
-        background:#f0f0f0;
-        }
-.statsrow td {
-    padding: 2px 5px 2px 5px;
-    padding-top: 2px;
-    padding-right: 5px;
-    padding-bottom: 2px;
-    padding-left: 5px;
-}
-        table.sbdetails {
-    font-size: 14px;
-        }
-			
-.copyicon {
-  width: 14px;
-  margin-right: 5px;
-  height: 14px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3E%3Cpath d='M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z'%3E%3C/path%3E%3Cpath d='M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z'%3E%3C/path%3E%3C/svg%3E") no-repeat center center;
-  background-size: contain;
-  cursor: pointer;
-  transition: all 0.350s ease-in-out;
-  border: 2px solid transparent; /* Default state with transparent border */
-  opacity: 0.2;
-  float: right;
-}
-			
-.copyicon:hover {
-    opacity: 1;
-}
-			
-.copyicon:active {
-  filter: brightness(0.5); /* Darken icon on click */
-  border:2px solid #00ffff;
-}
-			
-.sbdetails .label.notfound {
-	background-color: #fbf6e4;
-    color: #363636;
-    border-color: #a9a712;
-    }
-			
-.sbdetails .label{
-  display: inline-block;
-  padding: 0.25em 0.5em;
-  font-size: 0.75rem;
-  font-weight: normal;
-margin-right: 5px;
-  line-height: 1;
-  color: #363636;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: 4px;
-  background-color: #f5f5f5;
-  border: 1px solid transparent;
-}
-			
-.query {
-    font-family:monospace;
-}
-			
-.winbox .wb-header { 
-background:#2472b1;
-}
-			
-.innerstats {
-display:flex; flex-direction:row; justify-content:flex-end; align-items:center; flex-wrap:wrap;
-margin-bottom: 10px;
-}
-			
-.pos_details {
-    display: flex;
-    flex-wrap: wrap; /* Allows items to wrap onto multiple lines */
-    justify-content: flex-start; /* Aligns items to the start of the container */
-    align-items: flex-start; /* Aligns items at the start of the cross axis */
-			
-}
-.pos_details span {
- flex: 1 1 auto; /* Allows items to grow and shrink, default size is auto */
-    margin: 5px; /* Adjust the spacing between items as needed */
-    min-width: 100px; /* Minimum width for items to maintain readability */
-}
-			
-.query-container {
-    display: flex;
-    align-items: center;
-    font-family: monospace;
-    color: #000000;
-}
-.query-container:has(.copyicon[data-clipboard-text*="how to"]),
-.query-container:has(.copyicon[data-clipboard-text*="who"]),
-.query-container:has(.copyicon[data-clipboard-text*="hvad"]),
-.query-container:has(.copyicon[data-clipboard-text*="hvorfor"]),
-.query-container:has(.copyicon[data-clipboard-text*="hvordan"]) {
-    background-color: #ebecf6;
-    padding: 10px;
-    border-radius: 4px;
-    color: #333;
-}
-			
-			
-			
-.sb-loader,
-.sb-loader:before,
-.sb-loader:after {
-  border-radius: 50%;
-  width: 2.5em;
-  height: 2.5em;
-  -webkit-animation-fill-mode: both;
-  animation-fill-mode: both;
-  -webkit-animation: load7 1.8s infinite ease-in-out;
-  animation: load7 1.8s infinite ease-in-out;
-}
-.sb-loader {
-    max-width:200px;
-    color: #282828;
-    font-size: 10px;
-    margin: 80px auto;
-    position: relative;
-    text-indent: -9999em;
-    -webkit-transform: translateZ(0);
-    -ms-transform: translateZ(0);
-    transform: translateZ(0);
-    -webkit-animation-delay: -0.16s;
-    animation-delay: -0.16s;
-}
-		.nokws {
-		text-align:center;
-		margin-top:20px;
-		display:block;
-		}
-.sb-loader:before,
-.sb-loader:after {
-    content: '';
-    position: absolute;
-    top: 0;
-}
-.sb-loader:before {
-    left: -3.5em;
-    -webkit-animation-delay: -0.32s;
-    animation-delay: -0.32s;
-}
-.sb-loader:after {
-    left: 3.5em;
-}
-@-webkit-keyframes load7 {0%,80%,100% {box-shadow: 0 2.5em 0 -1.3em;}40% {box-shadow: 0 2.5em 0 0;}}
-@keyframes load7 {0%,80%,100% {box-shadow: 0 2.5em 0 -1.3em;}40% {box-shadow: 0 2.5em 0 0;}}
-        </style>`,
-			onclose: function () {
-				// Set the instance to null when the Winbox is closed
-				winboxInstance = null;
+		winboxInstance = new WinBox({
+			title: "SEO Booster",
+			class: ["modern", "no-full", "no-max"],
+			x: "20px",
+			y: (20 + adminBarHeight) + "px",
+			width: "90%",
+			height: "80%",
+			top: adminBarHeight,
+			background: "#1e1e1e",
+			border: "1px solid #282828",
+			max: false,
+			modal: false,
+			autosize: false,
+			root: document.body,
+			onbeforeclose: function() {
+				return true;
 			},
-			top: 40,
-			index: 9999999,
-			right: 30,
-			width: 540,
-			minwidth: 380,
-			bottom: 0,
-			class: ["no-full", "no-max"],
-			left: 10
+			onresize: function(width, height) {
+				this.window.style.transform = 'translate3d(0,0,0)';
+			},
+			index:9999999,
+			html: '<div id="seobooster-keywords-table"><div class="sb-loading"><div class="sb-spinner"></div></div></div>'
 		});
 
-		// Make AJAX call to load data
+		// Force window to top after creation
+		if (winboxInstance && winboxInstance.window) {
+			winboxInstance.focus();
+			// Remove from current parent and re-append to body
+			document.body.appendChild(winboxInstance.window);
+		}
+
 		jQuery.ajax({
 			url: seobooster_adminbar.ajax_url,
 			type: 'POST',
@@ -195,76 +61,168 @@ margin-bottom: 10px;
 				post_url: seobooster_adminbar.post_url,
 				security: seobooster_adminbar.security
 			},
-			success: function (response) {
-				jQuery('.winbox .wb-body .sb-loader').fadeOut();
-
-				// $spinner.removeClass('is-active');
-				if (response.success) {
-
-					if (Array.isArray(response.data.keywords) && response.data.keywords.length > 0) {
-						var html = `<table class="sbdetails wp-list-table widefat fixed striped table-view-list" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>${seobooster_adminbar.text.query}</th>
-                            <th>${seobooster_adminbar.text.used}</th>
-														<th>${seobooster_adminbar.text.stats}</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-
-						response.data.keywords.forEach(function (keyword) {
-							html += `<tr>
-                                    <td><div class="query-container"><div class="copyicon" data-clipboard-text="${keyword.query}"></div>${keyword.query}</div></td>
-                                    <td>`;
-							if (keyword.position_details && keyword.position_details.length > 0) {
-								html += `<div class="pos_details">`;
-								html += `<span class="nolabel">${keyword.position_details}</span>`;
-								html += `</div>`;
-							} else {
-								html += `<span class="nolabel notfound">&#8226; ${seobooster_adminbar.text.not_found}</span>`;
-							}
-							html += `</td>`;
-
-							html += `<td><div class="innerstats">
-							<span class="label">${seobooster_adminbar.text.clicks}: ${keyword.clicks}</span> - <span class="label">${seobooster_adminbar.text.impressions}: ${keyword.impressions}</span> - <span class="label">${seobooster_adminbar.text.ctr}: ${parseFloat(keyword.ctr).toFixed(2)}%</span> - <span class="label">${seobooster_adminbar.text.avg_position}: ${keyword.position}</span>
-					</div></td></tr>`;
-
-						});
-						html += `</tbody></table>`;
-					} else {
-						// Handle the case where keywords array is not available or empty
-						var html = `<div class="nokws">${seobooster_adminbar.text.no_keywords_data_available}</div>`;
+			success: function(response) {
+				// console.log('AJAX response received:', response);
+				jQuery('.sb-loading').remove();
+				
+				if (response && response.success === true) {
+					if (response.data.status === "no_keywords") {
+						// Hide the SVG in the button
+						jQuery('.fl-builder-seobooster-button svg').addClass('hidden');
+						
+						// Create a centered message container
+						const noDataMessage = `
+							<div class="sb-no-data-message">
+								<div class="sb-message-content">
+									<svg viewBox="0 0 24 24" width="48" height="48">
+										<path fill="currentColor" d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.5 2.54l2.54 2.54c.65-1.41 1-2.99 1-4.63 0-5.18-3.95-9.45-9.04-9.95M12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05C5.94 2.55 2 6.82 2 12c0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-2.6C16.17 17.64 14.21 19 12 19z"/>
+									</svg>
+									<h3>${response.data.message}</h3>
+									<p>Last refreshed: ${new Date(response.data.last_refreshed).toLocaleString()}</p>
+								</div>
+							</div>`;
+						jQuery('.winbox .wb-body').html(noDataMessage);
+					} else if (Array.isArray(response.data.keywords)) {
+						// Show the SVG in the button if it was hidden
+						jQuery('.fl-builder-seobooster-button svg').removeClass('hidden');
+						const keywordCount = response.data.keywords.length;
+						winboxInstance.setTitle(`SEO Booster - ${keywordCount} Keywords`);
+						initializeKeywordsTable(response.data.keywords);
 					}
-
-					jQuery('.winbox .wb-body .sb-loader').fadeOut('slow', function () {
-						jQuery(this).remove(); // Remove the loader
-						// Append the new content hidden, then fade it in
-						var $newContent = jQuery(html).hide();
-						jQuery('.winbox .wb-body').append($newContent);
-						$newContent.fadeIn('slow'); // Fade in the new content specifically
-					});
-
-					// Load the clipboard.js library
-					var clipboard = new ClipboardJS('.copyicon');
-
 				} else {
-					jQuery('.winbox .wb-body').html(`<div class="keyword-details">${seobooster_adminbar.text.error}: ${response.data.message}</div>`);
+					jQuery('.fl-builder-seobooster-button svg').addClass('hidden');
+					jQuery('.winbox .wb-body').html(`<div class="keyword-details">${seobooster_adminbar.text.error}: Invalid data structure</div>`);
 				}
 			},
-			error: function (xhr, status, error) {
+			error: function(xhr, status, error) {
+				console.error('AJAX failed:', status, error);
+				jQuery('.sb-loading').remove();
 				jQuery('.winbox .wb-body').html(`<div class="keyword-details">${seobooster_adminbar.text.error}: ${error}</div>`);
 			}
-
 		});
 	}
 }
 
-jQuery(document).ready(function ($) {
+function initializeKeywordsTable(data) {
+	// Create controls container with flex layout
+	const $controls = jQuery('<div>', {
+		class: 'sb-fixed-controls'
+	}).append(
+		jQuery('<div>', { class: 'sb-controls-wrapper' }).append(
+			jQuery('<div>', { class: 'sb-search-wrapper' }).append(
+				jQuery('<input>', {
+					type: 'text',
+					class: 'sb-search-input',
+					placeholder: seobooster_adminbar.text.search || 'Search...'
+				})
+			),
+			jQuery('<div>', { class: 'sb-pagination-wrapper' })
+		)
+	);
+
+	// Debug: Log before adding to DOM
+	
+	jQuery('#seobooster-keywords-table').before($controls);
+
+
+	// Set up event handler immediately after adding to DOM
+	jQuery('.sb-fixed-controls').on('input', '.sb-search-input', function() {
+		if (window.keywordsTable) {
+			window.keywordsTable.setFilter("query", "like", this.value);
+		}
+	});
+
+	// Update column definitions
+	const columns = [
+		{
+			title: seobooster_adminbar.text.query,
+			field: "query",
+			formatter: function(cell) {
+				return `<div class="query-container">${cell.getValue()}</div>`;
+			},
+			widthGrow: 3
+		},
+		{
+			title: seobooster_adminbar.text.impressions,
+			field: "impressions",
+			hozAlign: "right",
+			sorter: "number",
+			formatter: function(cell) {
+				return parseInt(cell.getValue()) || 0;
+			},
+			width: 120
+		},
+		{
+			title: seobooster_adminbar.text.clicks,
+			field: "clicks",
+			hozAlign: "right",
+			sorter: "number",
+			formatter: function(cell) {
+				return parseInt(cell.getValue()) || 0;
+			},
+			width: 100
+		},
+		{
+			title: seobooster_adminbar.text.ctr,
+			field: "ctr",
+			hozAlign: "right",
+			sorter: "number",
+			formatter: function(cell) {
+				return parseFloat(cell.getValue()) || "0.00%";
+			},
+			width: 100
+		},
+		{
+			title: seobooster_adminbar.text.avg_position,
+			field: "position",
+			formatter: function(cell) {
+				return parseFloat(cell.getValue()).toFixed(1);
+			},
+			sorter: "number",
+			hozAlign: "right",
+			width: 100
+		},
+		{
+			title: seobooster_adminbar.text.used,
+			field: "position_details",
+			formatter: function(cell) {
+				return cell.getValue();
+			},
+			width: 120
+		}
+	];
+
+	// Initialize table
+	window.keywordsTable = new Tabulator("#seobooster-keywords-table", {
+		data: data,
+		layout: "fitColumns",
+		responsiveLayout: "collapse",
+		responsiveLayoutCollapseStartOpen: true,
+		pagination: "local",
+		paginationSize: 50,
+		paginationElement: $controls.find('.sb-pagination-wrapper')[0],
+		columns: columns.map(function(col) {
+			return {
+				title: col.title,
+				field: col.field,
+				formatter: col.formatter,
+				hozAlign: col.hozAlign,
+				sorter: col.sorter,
+				width: col.width,
+				widthGrow: col.widthGrow,
+				responsive: col.field === "query" ? 0 : 1
+			};
+		})
+	});
+
+}
+
+jQuery(document).ready(function () {
 
 	// Check if the Beaver Builder is active
-	if ($('.fl-builder-bar-actions').length > 0) {
-		var button = $('.fl-builder-seobooster-button');
-		// var header = $('.site-header');
+	if (jQuery('.fl-builder-bar-actions').length > 0) {
+		var button = jQuery('.fl-builder-seobooster-button');
+		// var header = jQuery('.site-header');
 		button.addClass('fl-builder-button-silent');
 		// remove the text inside the button
 		button.text('');
@@ -278,7 +236,7 @@ jQuery(document).ready(function ($) {
 			<path style="paint-order: stroke; fill: rgb(130, 135, 140);" d="M 349.355 16.098 C 333.687 49.355 248.938 171.838 248.938 171.838 C 248.938 171.838 228.3 199.676 236.116 203.927 C 247.584 210.168 267.795 206.135 284.389 206.805 C 309.456 207.816 329.639 205.313 341.68 205.786 C 341.68 205.786 359.942 201.1 363.11 211.672 C 365.18 218.581 354.131 230.067 354.131 230.067 L 105.339 481.212 L 213.627 310.542 C 213.627 310.542 221.796 293.779 216.787 287.127 C 210.653 278.986 186.557 281.117 186.557 281.117 C 186.557 281.117 140.259 279.657 117.109 279.939 C 108.054 280.05 99.5 279.319 99.082 272.877 C 98.532 264.365 100.711 262.353 110.047 252.866 C 188.089 173.584 349.355 16.098 349.355 16.098 Z"/>
 			</svg>`);
 
-		$('.fl-builder-seobooster-button svg').css({
+		jQuery('.fl-builder-seobooster-button svg').css({
 			'height': '20px',
 			'width': '20px'
 		});
@@ -286,7 +244,7 @@ jQuery(document).ready(function ($) {
 		button.on('click', function (e) {
 			e.preventDefault();
 			open_floating_window();
-			$('#seobooster-floating-div').show();
+			jQuery('#seobooster-floating-div').show();
 
 		});
 	}
@@ -297,13 +255,14 @@ if (getUrlParameter('seobooster_showdetails') === '1') {
 }
 
 	// Toggle floating div and fetch keyword details
-	$(document).on('click', '.seobooster-details a', function (e) {
+	jQuery(document).on('click', '.seobooster-details a', function (e) {
 		e.preventDefault();
 		open_floating_window();
 	});
 
 	// Close button functionality
-	$(document).on('click', '.seobooster-close', function () {
-		$('#seobooster-floating-div').hide();
+	jQuery(document).on('click', '.seobooster-close', function () {
+		jQuery('#seobooster-floating-div').hide();
 	});
 });
+
