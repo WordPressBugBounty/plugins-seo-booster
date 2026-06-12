@@ -1,0 +1,5493 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SEO Booster\n"
+"POT-Creation-Date: 2025-12-23 22:30-0500\n"
+"PO-Revision-Date: 2025-12-26 11:44-0500\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.8\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: seo-booster.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: "
+"__;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.min.js\n"
+"X-Poedit-SearchPathExcluded-1: images/vendor\n"
+"X-Poedit-SearchPathExcluded-2: vendor\n"
+
+#: inc/AI_Writing_Outline.php:31 inc/AI_Writing_Outline.php:260
+#: inc/AI_Writing_Outline.php:280 inc/Bulk_SEO_Analysis.php:177
+#: inc/Bulk_SEO_Analysis.php:199 inc/Bulk_SEO_Analysis.php:327
+#: inc/Bulk_SEO_Analysis.php:348 inc/Bulk_SEO_Analysis.php:416
+#: inc/Bulk_SEO_Analysis.php:437 inc/Media/AI_Image_Generator.php:44
+#: inc/Media/AI_Image_Generator.php:72 inc/Media/AI_Image_Generator.php:100
+#: inc/Media/Media_Library_Enhancements.php:201
+#: inc/Media/Media_Library_Enhancements.php:223
+#: inc/Media/Media_Library_Enhancements.php:386
+#: inc/Media/Media_Library_Enhancements.php:407
+#: inc/Media/Media_Library_Enhancements.php:475
+#: inc/Media/Media_Library_Enhancements.php:496 inc/SB_SEO_Metabox.php:536
+#: inc/SB_SEO_Metabox.php:636 inc/SB_SEO_Metabox.php:662
+#: inc/SB_SEO_Metabox.php:701 inc/SB_SEO_Metabox.php:747
+#: inc/SB_SEO_Metabox.php:829 inc/SB_SEO_Metabox.php:875
+#: inc/SB_SEO_Metabox.php:921 inc/SB_SEO_Metabox.php:967
+#: inc/SB_SEO_Metabox.php:1016 inc/SB_SEO_Metabox.php:1041
+#: inc/SB_SEO_Metabox.php:1068 inc/SEO_Issues_Ajax.php:57
+#: inc/SEO_Issues_Ajax.php:155 inc/SEO_Issues_Ajax.php:265
+#: inc/SEO_Issues_Ajax.php:306 inc/SEO_Issues_Ajax.php:351
+#: inc/SEO_Issues_Ajax.php:397 inc/SEO_Issues_Ajax.php:424
+#: inc/SEO_Issues_Ajax.php:483 inc/SEO_Issues_Ajax.php:511
+#: inc/SEO_Issues_Ajax.php:552 seo-booster.php:3111
+msgid "Permission denied"
+msgstr "Zugriff verweigert"
+
+#: inc/AI_Writing_Outline.php:39 inc/AI_Writing_Outline.php:286
+msgid "Invalid request"
+msgstr "Ungültige Anfrage"
+
+#: inc/AI_Writing_Outline.php:54
+msgid "Preparing prompt..."
+msgstr "Vorbereitung läuft..."
+
+#: inc/AI_Writing_Outline.php:62
+msgid "Building context..."
+msgstr "Kontext aufbauen..."
+
+#: inc/AI_Writing_Outline.php:70
+msgid "Sending request to AI..."
+msgstr "Anfrage an KI senden..."
+
+#: inc/AI_Writing_Outline.php:85
+msgid "Receiving response..."
+msgstr "Antwort empfangen..."
+
+#: inc/AI_Writing_Outline.php:164 inc/AI_Writing_Outline.php:321
+msgid "AI provider is disabled"
+msgstr "KI-Anbieter ist deaktiviert"
+
+#: inc/AI_Writing_Outline.php:172 inc/AI_Writing_Outline.php:328
+#: inc/Media/AI_Image_Generator.php:323
+msgid "OpenAI API key not configured"
+msgstr "OpenAI-API-Schlüssel nicht konfiguriert"
+
+#: inc/AI_Writing_Outline.php:196 inc/Media/AI_Image_Generator.php:391
+msgid "OpenAI request failed: "
+msgstr "OpenAI-Anfrage fehlgeschlagen: "
+
+#: inc/AI_Writing_Outline.php:201
+msgid "OpenAI request failed with code: "
+msgstr "OpenAI-Anfrage fehlgeschlagen mit Code: "
+
+#: inc/AI_Writing_Outline.php:205 inc/Media/AI_Image_Generator.php:406
+msgid "OpenAI invalid response"
+msgstr "Ungültige Antwort von OpenAI"
+
+#: inc/AI_Writing_Outline.php:214 inc/AI_Writing_Outline.php:369
+msgid "DeepSeek API key not configured"
+msgstr "DeepSeek-API-Schlüssel nicht konfiguriert"
+
+#: inc/AI_Writing_Outline.php:236
+msgid "DeepSeek request failed: "
+msgstr "DeepSeek-Anfrage fehlgeschlagen: "
+
+#: inc/AI_Writing_Outline.php:241
+msgid "DeepSeek request failed with code: "
+msgstr "DeepSeek-Anfrage fehlgeschlagen mit Code: "
+
+#: inc/AI_Writing_Outline.php:245
+msgid "DeepSeek invalid response"
+msgstr "DeepSeek ungültige Antwort"
+
+#: inc/AI_Writing_Outline.php:250 inc/AI_Writing_Outline.php:405
+msgid "Unsupported AI provider"
+msgstr "Nicht unterstützter KI-Anbieter"
+
+#: inc/AI_Writing_Outline.php:264 inc/SB_SEO_Metabox.php:836
+#: inc/SB_SEO_Metabox.php:882 inc/SB_SEO_Metabox.php:928
+#: inc/SB_SEO_Metabox.php:973 inc/SB_SEO_Metabox.php:1048
+#: inc/SB_SEO_Metabox.php:1075
+msgid "Invalid post ID"
+msgstr "Ungültige Beitrags-ID"
+
+#: inc/AI_Writing_Outline.php:301 inc/Bulk_SEO_Analysis.php:214
+#: inc/LLM_DeepSeek_Service.php:128 inc/LLM_OpenAI_Service.php:106
+#: inc/LLM_SEO_Service.php:318
+msgid "Post not found"
+msgstr "Beitrag nicht gefunden"
+
+#: inc/AI_Writing_Outline.php:360 inc/AI_Writing_Outline.php:400
+msgid "Invalid AI response format"
+msgstr "Ungültiges AI-Antwortformat"
+
+#: inc/Admin_Columns.php:66 inc/Admin_Columns.php:94
+msgid "SEO Status"
+msgstr "SEO-Status"
+
+#: inc/Admin_Columns.php:142 inc/Admin_Columns.php:193
+#: inc/SEO_Issues_List_Table.php:422
+msgid "SEO Analysis Score"
+msgstr "SEO-Analyse-Ergebnis"
+
+#: inc/Admin_Columns.php:179
+msgid "Noindexed"
+msgstr "Nicht indexiert"
+
+#: inc/Bulk_SEO_Analysis.php:72 inc/SB_SEO_Metabox.php:214
+msgid "SEO Analysis"
+msgstr "SEO Analyse"
+
+#: inc/Bulk_SEO_Analysis.php:184 inc/Media/Media_Library_Enhancements.php:208
+#: inc/SEO_Issues_Ajax.php:275
+msgid "Invalid parameters"
+msgstr "Ungültige Parameter"
+
+#: inc/Bulk_SEO_Analysis.php:191 inc/Bulk_SEO_Analysis.php:340
+#: inc/Bulk_SEO_Analysis.php:429 inc/Media/Media_Library_Enhancements.php:215
+#: inc/Media/Media_Library_Enhancements.php:399
+#: inc/Media/Media_Library_Enhancements.php:488
+msgid "Batch not found"
+msgstr "Charge nicht gefunden"
+
+#: inc/Bulk_SEO_Analysis.php:204 inc/Media/Media_Library_Enhancements.php:228
+msgid "Batch was cancelled"
+msgstr "Der Stapel wurde abgebrochen."
+
+#: inc/Bulk_SEO_Analysis.php:220
+msgid "Post is excluded from analysis"
+msgstr "Beitrag ist von der Analyse ausgeschlossen"
+
+#: inc/Bulk_SEO_Analysis.php:234
+msgid "SEO analysis completed successfully"
+msgstr "SEO-Analyse erfolgreich abgeschlossen"
+
+#: inc/Bulk_SEO_Analysis.php:333 inc/Bulk_SEO_Analysis.php:422
+#: inc/Media/Media_Library_Enhancements.php:392
+#: inc/Media/Media_Library_Enhancements.php:481
+msgid "Invalid batch ID"
+msgstr "Ungültige Chargennummer"
+
+#: inc/Bulk_SEO_Analysis.php:452
+#, php-format
+msgid "Cancelled %d pending analysis(es)"
+msgstr "Abgebrochen %d ausstehende Analyse(n)"
+
+#: inc/Bulk_SEO_Analysis.php:556 inc/Media/Media_Library_Enhancements.php:617
+msgid "Processing..."
+msgstr "Wird verarbeitet..."
+
+#: inc/Bulk_SEO_Analysis.php:557 inc/Media/Media_Library_Enhancements.php:618
+#: seo-booster.php:1695 seo-booster.php:1807
+msgid "Completed"
+msgstr "Abgeschlossen"
+
+#: inc/Bulk_SEO_Analysis.php:558 inc/Google_API.php:434
+#: inc/Media/Media_Library_Enhancements.php:619 inc/SB_GSC_Metaboxes.php:264
+#: inc/email_status.php:390 seo-booster-seobooster2.php:785 seo-booster.php:402
+#: seo-booster.php:578
+msgid "Error"
+msgstr "Fehler"
+
+#: inc/Bulk_SEO_Analysis.php:559
+#, php-format
+msgid "Processing %d of %d posts..."
+msgstr "Verarbeitung von %d von %d Beiträgen..."
+
+#: inc/Bulk_SEO_Analysis.php:560
+#, php-format
+msgid "Completed: %d analyzed successfully"
+msgstr "Abgeschlossen: %d erfolgreich analysiert"
+
+#: inc/Bulk_SEO_Analysis.php:561 inc/Media/Media_Library_Enhancements.php:622
+#, php-format
+msgid "%d failed"
+msgstr "%d fehlgeschlagen"
+
+#: inc/Bulk_SEO_Analysis.php:562 inc/Media/Media_Library_Enhancements.php:623
+#, php-format
+msgid "%d remaining"
+msgstr "%d verbleibend"
+
+#: inc/Bulk_SEO_Analysis.php:563 inc/Media/Media_Library_Enhancements.php:624
+#, php-format
+msgid "Last: \"%s\""
+msgstr "Letzte: “%s”"
+
+#: inc/Bulk_SEO_Analysis.php:564 inc/Media/Media_Library_Enhancements.php:625
+msgid "Cancelled"
+msgstr "Abgebrochen"
+
+#: inc/Bulk_SEO_Analysis.php:565 inc/Media/Media_Library_Enhancements.php:626
+#: seo-booster-issues.php:372
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: inc/Bulk_SEO_Analysis.php:566 inc/Media/Media_Library_Enhancements.php:627
+msgid "Cancelling..."
+msgstr "Abbrechen ..."
+
+#: inc/Bulk_SEO_Analysis.php:567
+msgid "No posts were selected for analysis."
+msgstr "Es wurden keine Beiträge für die Analyse ausgewählt."
+
+#: inc/Bulk_SEO_Analysis.php:568
+msgid "No valid posts were selected for analysis."
+msgstr "Es wurden keine gültigen Beiträge für die Analyse ausgewählt."
+
+#: inc/Bulk_SEO_Analysis.php:569
+msgid "An error occurred while processing bulk analysis."
+msgstr "Bei der Verarbeitung der Massenanalyse ist ein Fehler aufgetreten."
+
+#: inc/CacheManager.php:78
+msgid "Failed to initialize WP_Filesystem"
+msgstr "Initialisierung von WP_Filesystem fehlgeschlagen"
+
+#: inc/CacheManager.php:95
+msgid "Failed to create base cache directory"
+msgstr "Das Basis-Cache-Verzeichnis konnte nicht erstellt werden."
+
+#: inc/CacheManager.php:99
+msgid "Failed to create index.php in base cache directory"
+msgstr "Fehler beim Erstellen von index.php im Basis-Cache-Verzeichnis"
+
+#: inc/CacheManager.php:104
+msgid "Failed to create seo-booster cache directory"
+msgstr "Das SEO-Booster-Cache-Verzeichnis konnte nicht erstellt werden."
+
+#: inc/CacheManager.php:108
+msgid "Failed to create index.php in seo-booster cache directory"
+msgstr ""
+"Fehler beim Erstellen von index.php im Cache-Verzeichnis von SEO-Booster"
+
+#: inc/CacheManager.php:128
+msgid "Invalid URL provided"
+msgstr "Ungültige URL angegeben"
+
+#: inc/CacheManager.php:129
+msgid "Invalid URL"
+msgstr "Ungültige URL"
+
+#. translators: 1: URL that failed to fetch, 2: error message
+#: inc/CacheManager.php:226
+#, php-format
+msgid "Failed to fetch URL: %1$s. Error: %2$s"
+msgstr "URL konnte nicht abgerufen werden: %1$s. Fehler: %2$s"
+
+#: inc/CacheManager.php:324
+#, php-format
+msgid "Failed to create cache file: %s"
+msgstr "Cache-Datei konnte nicht erstellt werden: %s"
+
+#. translators: 1: Number of files deleted, 2: Size in MB
+#: inc/CacheManager.php:375
+#, php-format
+msgid "Cache cleanup: Deleted all %1$s files (total size: %2$s MB)"
+msgstr "Cache-Bereinigung: Alle %1$s Dateien gelöscht (Gesamtgröße: %2$s MB)"
+
+#. translators: 1: Number of files deleted, 2: Size in MB
+#: inc/CacheManager.php:377
+#, php-format
+msgid "Cache cleanup: Deleted %1$s expired files (total size: %2$s MB)"
+msgstr ""
+"Cache-Bereinigung: %1$s abgelaufene Dateien gelöscht (Gesamtgröße: %2$s MB)"
+
+#: inc/ContentProcessing.php:353
+msgid "Error processing content: "
+msgstr "Fehler bei der Verarbeitung des Inhalts: "
+
+#: inc/Form_Processor.php:71 inc/Form_Processor.php:88
+#: inc/Form_Processor.php:105 inc/Form_Processor.php:125
+#: inc/Form_Processor.php:143 inc/SB_Autolink_Columns.php:208
+#: seo-booster.php:449 seo-booster.php:1963 seo-booster.php:2221
+msgid "Permission denied."
+msgstr "Zugriff verweigert."
+
+#: inc/Form_Processor.php:80
+msgid "Database tables updated successfully!"
+msgstr "Datenbanktabellen erfolgreich aktualisiert!"
+
+#: inc/Form_Processor.php:97
+msgid "Keyword scanning restarted successfully!"
+msgstr "Das Scannen nach Stichwörtern wurde erfolgreich neu gestartet!"
+
+#: inc/Form_Processor.php:117
+msgid "Log cleared successfully!"
+msgstr "Protokoll erfolgreich gelöscht!"
+
+#: inc/Form_Processor.php:135
+msgid "Weekly email sent successfully!"
+msgstr "Wöchentliche E-Mail erfolgreich versendet!"
+
+#: inc/Form_Processor.php:160
+msgid "Keyword data cleared successfully!"
+msgstr "Schlüsselwortdaten erfolgreich gelöscht!"
+
+#: inc/Form_Processor.php:459
+#, php-format
+msgid "Cache cleared successfully! Removed %d files (%s)."
+msgstr "Cache erfolgreich gelöscht! %d Dateien (%s) entfernt."
+
+#: inc/Form_Processor.php:470
+msgid "Some files could not be deleted:"
+msgstr "Einige Dateien konnten nicht gelöscht werden:"
+
+#: inc/Google_API.php:39 inc/SB_Autolink_Columns.php:203 seo-booster.php:1961
+#: seo-booster.php:2218
+msgid "Security check failed."
+msgstr "Sicherheits-Check ist fehlgeschlagen."
+
+#: inc/Google_API.php:43 inc/Google_API.php:2778
+msgid "You do not have permission to perform this action."
+msgstr "Du hast keine Berechtigung, um diese Aktion durchzuführen."
+
+#: inc/Google_API.php:68
+msgid "Invalid site URL."
+msgstr "Ungültige Website-URL."
+
+#. translators: %1$s: error message from access token
+#: inc/Google_API.php:81 inc/Google_API.php:1196
+#, php-format
+msgid "Access token error: %1$s"
+msgstr "Zugriffstoken-Fehler: %1$s"
+
+#: inc/Google_API.php:81 inc/Google_API.php:1196
+#, php-format
+msgid "Access token is not set or invalid: %1$s"
+msgstr "Zugriffstoken ist nicht festgelegt oder ungültig: %1$s"
+
+#: inc/Google_API.php:82
+msgid "Access token error in sb_gsc_import_data: "
+msgstr "Zugriffstoken-Fehler in sb_gsc_import_data: "
+
+#. translators: %s: error details
+#: inc/Google_API.php:182 inc/Google_API.php:187
+#, php-format
+msgid "Invalid data received from Google Search Console API: %s"
+msgstr "Ungültige Daten von der Google Search Console API empfangen: %s"
+
+#: inc/Google_API.php:302 inc/Google_API.php:314
+#, php-format
+msgid "Processed %1$s records. Current keyword: \"%2$s\" (%3$s)"
+msgstr "Verarbeitete Datensätze: %1$s. Aktuelles Stichwort: „%2$s“ (%3$s)"
+
+#: inc/Google_API.php:316 inc/Google_API.php:328
+#: seo-booster-seobooster2.php:286 seo-booster.php:1696
+msgid "Import complete!"
+msgstr "Import vollständig!"
+
+#: inc/Google_API.php:338
+msgid "Error fetching query keywords: "
+msgstr "Fehler beim Abrufen der Suchbegriffe: "
+
+#: inc/Google_API.php:433 views/404-pages.php:44 views/autolink-pages.php:162
+#: views/gsc-pages.php:147
+msgid "Search"
+msgstr "Suche"
+
+#: inc/Google_API.php:435 inc/SB_SEO_Metabox.php:192 inc/SB_SEO_Metabox.php:507
+msgid "Loading..."
+msgstr "Lade..."
+
+#: inc/Google_API.php:436 inc/SB_GSC_List_Table.php:80
+#: inc/SB_GSC_Metaboxes.php:243 seo-booster.php:396
+msgid "Query"
+msgstr "Abfrage"
+
+#: inc/Google_API.php:437 inc/SB_GSC_Ajax.php:414 inc/SB_GSC_Ajax.php:641
+#: seo-booster.php:401
+msgid "Used"
+msgstr "Benutzt"
+
+#: inc/Google_API.php:438 seo-booster-settings.php:66
+msgid "Stats"
+msgstr "Statistiken"
+
+#: inc/Google_API.php:439
+msgid "Avg. position"
+msgstr "Durchschnittliche Position"
+
+#: inc/Google_API.php:440
+msgid "Not found"
+msgstr "Nicht gefunden"
+
+#: inc/Google_API.php:441 inc/SB_GSC_List_Table.php:82
+#: inc/SB_GSC_Metaboxes.php:169 inc/SB_GSC_Metaboxes.php:248
+#: seo-booster-seobooster2.php:735 seo-booster.php:398 seo-booster.php:1715
+#: seo-booster.php:1821
+msgid "Clicks"
+msgstr "Klicks"
+
+#: inc/Google_API.php:442 inc/SB_GSC_List_Table.php:83
+#: inc/SB_GSC_Metaboxes.php:165 inc/SB_GSC_Metaboxes.php:249
+#: seo-booster.php:397 seo-booster.php:1716 seo-booster.php:1822
+msgid "Impressions"
+msgstr "Impressionen"
+
+#: inc/Google_API.php:443 inc/SB_GSC_Metaboxes.php:250 seo-booster.php:399
+#: seo-booster.php:1717 seo-booster.php:1823
+msgid "CTR"
+msgstr "CTR"
+
+#: inc/Google_API.php:444
+msgid "Avg. pos"
+msgstr "Durchschnittliche Position"
+
+#: inc/Google_API.php:682
+#, php-format
+msgid "Empty content for post ID: %d"
+msgstr "Leerer Inhalt für Beitrag-ID: %d"
+
+#. translators: %d is the post ID
+#: inc/Google_API.php:692
+#, php-format
+msgid "Invalid content type for post ID: %d"
+msgstr "Ungültiger Inhaltstyp für Beitrag-ID: %d"
+
+#: inc/Google_API.php:700
+#, php-format
+msgid "Failed to parse HTML content for post ID: %d"
+msgstr "HTML-Inhalt für Beitrag-ID: %d konnte nicht analysiert werden."
+
+#: inc/Google_API.php:719
+msgid "Href attribute"
+msgstr "Href-Attribut"
+
+#: inc/Google_API.php:729
+msgid "In a link"
+msgstr "In einem Link"
+
+#: inc/Google_API.php:744
+msgid "Headline"
+msgstr "Überschrift"
+
+#: inc/Google_API.php:759
+msgid "Img alt= attribute"
+msgstr "Img alt= Attribut"
+
+#: inc/Google_API.php:772
+msgid "Title tag"
+msgstr "Titel-Schlagwort"
+
+#: inc/Google_API.php:782
+msgid "Meta description"
+msgstr "Meta-Beschreibung"
+
+#: inc/Google_API.php:793
+msgid "Content"
+msgstr "Inhalt"
+
+#: inc/Google_API.php:851
+msgid "Unauthorized user"
+msgstr "Nicht autorisierter Benutzer"
+
+#: inc/Google_API.php:901
+msgid "No data found"
+msgstr "Keine Daten gefunden"
+
+#: inc/Google_API.php:1017
+msgid "Table Name"
+msgstr "Tabellen-Name"
+
+#: inc/Google_API.php:1017
+msgid "Number of Records"
+msgstr "Anzahl der Datensätze"
+
+#: inc/Google_API.php:1017
+msgid "Size (MB)"
+msgstr "Größe (MB)"
+
+#: inc/Google_API.php:1036
+msgid "Total"
+msgstr "Gesamt"
+
+#: inc/Google_API.php:1036
+msgid "of total db size"
+msgstr "der gesamten Datenbankgröße"
+
+#: inc/Google_API.php:1078
+#, php-format
+msgid "Failed to update keyword entry: %s"
+msgstr "Aktualisierung des Stichworts fehlgeschlagen: %s"
+
+#: inc/Google_API.php:1099
+#, php-format
+msgid "Failed to insert new keyword entry: %s"
+msgstr "Einfügen eines neuen Stichworts fehlgeschlagen: %s"
+
+#: inc/Google_API.php:1133
+#, php-format
+msgid "Failed to update history entry: %s"
+msgstr "Aktualisierung des Verlaufseintrags fehlgeschlagen: %s"
+
+#: inc/Google_API.php:1148
+#, php-format
+msgid "Failed to insert new history entry: %s"
+msgstr "Einfügen eines neuen Verlaufseintrags fehlgeschlagen: %s"
+
+#: inc/Google_API.php:1156
+#, php-format
+msgid "Finished batch_add_or_update_keyword_entries in %s seconds"
+msgstr "Fertiggestellt: batch_add_or_update_keyword_entries in %s Sekunden"
+
+#. translators: 1: site URL, 2: number of days
+#: inc/Google_API.php:1173
+#, php-format
+msgid "Fetching query keywords for %1$s for the past %2$d days"
+msgstr "Abrufen von Suchbegriffen für %1$s für die letzten %2$d Tage"
+
+#: inc/Google_API.php:1177
+msgid "User does not have permission to fetch query keywords"
+msgstr "Der Benutzer hat keine Berechtigung, Suchbegriffe abzurufen."
+
+#. translators: %1$s: error message from access token
+#: inc/Google_API.php:1299
+#, php-format
+msgid "Error fetching query keywords: %1$s"
+msgstr "Fehler beim Abrufen der Suchbegriffe: %1$s"
+
+#: inc/Google_API.php:1309
+#, php-format
+msgid "Token expired, attempting refresh (attempt %d of %d)"
+msgstr "Token abgelaufen, Aktualisierung wird versucht (Versuch %d von %d)"
+
+#: inc/Google_API.php:1334
+msgid ""
+"Token expired or invalid after retry attempts. Please try to re-authenticate "
+"with Google"
+msgstr ""
+"Das Token ist nach mehreren Wiederholungsversuchen abgelaufen oder ungültig. "
+"Bitte versuchen Sie, sich erneut bei Google zu authentifizieren."
+
+#. translators: %s: formatted row number
+#: inc/Google_API.php:1370
+#, php-format
+msgid "More than %d results found, fetching more keywords starting from row %s"
+msgstr "Mehr als %d Ergebnisse gefunden, weitere Keywords ab Zeile %s abrufen"
+
+#. translators: %s: error message from access token
+#: inc/Google_API.php:1397 inc/Google_API.php:1416
+#, php-format
+msgid "Error fetching query keywords: %s"
+msgstr "Fehler beim Abrufen der Suchbegriffe: %s"
+
+#. translators: 1: formatted number of records, 2: site URL
+#: inc/Google_API.php:1402
+#, php-format
+msgid "Processed %1$s records from %2$s"
+msgstr "Verarbeitet %1$s Datensätze aus %2$s"
+
+#: inc/Google_API.php:1413
+msgid "Scheduled keyword analysis for all pages"
+msgstr "Geplante Keyword-Analyse für alle Seiten"
+
+#: inc/Google_API.php:1664
+msgid "Invalid grant detected - resetting authentication"
+msgstr "Ungültige Berechtigung erkannt – Authentifizierung zurücksetzen"
+
+#: inc/Google_API.php:1666
+msgid "Authentication expired. Please re-authenticate with Google."
+msgstr ""
+"Die Authentifizierung ist abgelaufen. Bitte authentifizieren Sie sich erneut "
+"bei Google."
+
+#: inc/Google_API.php:1774
+#, php-format
+msgid "Token updated, will expire in %0.2f minutes"
+msgstr "Token aktualisiert, läuft in %0.2f Minuten ab"
+
+#: inc/Google_API.php:1813
+#, php-format
+msgid "Token expires in %0.2f minutes, proactively refreshing"
+msgstr "Token läuft in %0.2f Minuten ab, proaktive Aktualisierung"
+
+#: inc/Google_API.php:1836
+msgid "No install ID found"
+msgstr "Keine Installations-ID gefunden"
+
+#: inc/Google_API.php:1849
+msgid "No access token available"
+msgstr "Kein Zugriffstoken verfügbar"
+
+#: inc/Google_API.php:1891
+msgid ""
+"Your Google authentication has expired or is invalid. Please re-authenticate "
+"with Google."
+msgstr ""
+"Ihre Google-Authentifizierung ist abgelaufen oder ungültig. Bitte "
+"authentifizieren Sie sich erneut bei Google."
+
+#: inc/Google_API.php:1898
+msgid "Error decoding JSON response"
+msgstr "Fehler beim Dekodieren der JSON-Antwort"
+
+#: inc/Google_API.php:1975
+msgid "Authentication settings have been completely reset."
+msgstr "Die Authentifizierungseinstellungen wurden vollständig zurückgesetzt."
+
+#: inc/Google_API.php:1993
+msgid "Resetting authentication settings."
+msgstr "Zurücksetzen der Authentifizierungseinstellungen."
+
+#: inc/Google_API.php:2078
+msgid "Used by Bonjour/mDNS for local network service discovery"
+msgstr ""
+"Wird von Bonjour/mDNS für die Erkennung lokaler Netzwerkdienste verwendet."
+
+#: inc/Google_API.php:2079
+msgid "Reserved domain for localhost usage"
+msgstr "Reservierte Domain für die Verwendung durch localhost"
+
+#: inc/Google_API.php:2080
+msgid "Reserved domain for testing environments"
+msgstr "Reservierte Domain für Testumgebungen"
+
+#: inc/Google_API.php:2081
+msgid "Now owned by Google, used for development environments"
+msgstr "Jetzt im Besitz von Google, wird für Entwicklungsumgebungen verwendet"
+
+#: inc/Google_API.php:2082
+msgid "Reserved domain for examples"
+msgstr "Reservierte Domain für Beispiele"
+
+#: inc/Google_API.php:2083
+msgid "Reserved domain that will never resolve"
+msgstr "Reservierte Domain, die niemals aufgelöst wird"
+
+#: inc/Google_API.php:2084
+msgid "Standard hostname for the local machine"
+msgstr "Standard-Hostname für den lokalen Rechner"
+
+#: inc/Google_API.php:2085
+msgid "Loopback IP address"
+msgstr "Loopback-IP-Adresse"
+
+#: inc/Google_API.php:2090
+msgid ""
+"You are attempting to authenticate with Google from a local development "
+"domain. OAuth providers typically reject authentication callbacks to local "
+"domains for security reasons:"
+msgstr ""
+"Sie versuchen, sich über Google von einer lokalen Entwicklungsdomain aus zu "
+"authentifizieren. OAuth-Anbieter lehnen aus Sicherheitsgründen in der Regel "
+"Authentifizierungs-Callbacks an lokale Domains ab:"
+
+#: inc/Google_API.php:2092
+msgid "Authentication may still work in some cases."
+msgstr "Die Authentifizierung kann in einigen Fällen weiterhin funktionieren."
+
+#: inc/Google_API.php:2094
+msgid ""
+"Please note that HTTP websites will always fail authentication. Only SSL "
+"links are allowed for security reasons."
+msgstr ""
+"Bitte beachten Sie, dass HTTP-Websites die Authentifizierung immer ablehnen. "
+"Aus Sicherheitsgründen sind nur SSL-Verbindungen zulässig."
+
+#: inc/Google_API.php:2096
+msgid "Problematic domains include:"
+msgstr "Zu den problematischen Bereichen gehören:"
+
+#: inc/Google_API.php:2104
+msgid "Learn more about authentication with local domains"
+msgstr "Erfahren Sie mehr über die Authentifizierung mit lokalen Domänen."
+
+#: inc/Google_API.php:2195
+msgid "Loading GSC keywords..."
+msgstr "GSC-Schlüsselwörter werden geladen..."
+
+#: inc/Google_API.php:2196
+msgid "Error loading GSC keywords"
+msgstr "Fehler beim Laden der GSC-Schlüsselwörter"
+
+#: inc/Google_API.php:2197
+msgid "No GSC keywords found for this page"
+msgstr "Für diese Seite wurden keine GSC-Keywords gefunden."
+
+#: inc/Google_API.php:2227
+#, php-format
+msgid "Token validation skipped. Next check in %s hours."
+msgstr "Token-Validierung übersprungen. Nächste Überprüfung in %s Stunden."
+
+#: inc/Google_API.php:2274
+msgid "Token refreshed successfully after access token error"
+msgstr "Token nach Zugriffstokenfehler erfolgreich aktualisiert"
+
+#: inc/Google_API.php:2355
+msgid "Token refreshed successfully after network error"
+msgstr "Token nach Netzwerkfehler erfolgreich aktualisiert"
+
+#: inc/Google_API.php:2406
+#, php-format
+msgid "Token refreshed successfully. New token expires in %s hours."
+msgstr "Token erfolgreich aktualisiert. Das neue Token läuft in %s Stunden ab."
+
+#: inc/Google_API.php:2424
+#, php-format
+msgid "Token is valid. Expires in %s hours."
+msgstr "Das Token ist gültig. Es läuft in %s Stunden ab."
+
+#: inc/Google_API.php:2430
+msgid "Token validation failed"
+msgstr "Token-Validierung fehlgeschlagen"
+
+#: inc/Google_API.php:2479
+msgid "Token refreshed successfully after validation failure"
+msgstr "Token nach Validierungsfehler erfolgreich aktualisiert"
+
+#: inc/Google_API.php:2520 inc/Utils.php:773
+msgid "Security check failed"
+msgstr "Sicherheitsprüfung fehlgeschlagen"
+
+#: inc/Google_API.php:2525 inc/Utils.php:778
+msgid "Insufficient permissions"
+msgstr "Ungenügende Rechte"
+
+#: inc/Google_API.php:2658
+msgid "URL and site URL are required."
+msgstr "URL und Website-URL sind erforderlich."
+
+#: inc/Google_API.php:2666
+msgid "Access token is not set or invalid."
+msgstr "Der Zugriffstoken ist nicht festgelegt oder ungültig."
+
+#: inc/Google_API.php:2745
+#, php-format
+msgid "API request failed with status code: %d"
+msgstr "API-Anfrage fehlgeschlagen mit Statuscode: %d"
+
+#: inc/Google_API.php:2756
+msgid "Invalid response from Google Search Console API."
+msgstr "Ungültige Antwort von der Google Search Console API."
+
+#: inc/Google_API.php:2787
+msgid "Invalid URLs array."
+msgstr "Ungültiges URL-Array."
+
+#: inc/Google_API.php:2796
+msgid "Site URL is required."
+msgstr "Die Website-URL ist erforderlich."
+
+#: inc/Google_API.php:2820
+#, php-format
+msgid "Daily quota limit reached (%d/%d). Please try again tomorrow."
+msgstr ""
+"Tägliches Kontingent erreicht (%d/%d). Bitte versuchen Sie es morgen erneut."
+
+#: inc/LLM_Content_Condenser.php:54
+msgid "Unable to retrieve content for condensation"
+msgstr "Inhalt für Kondensation kann nicht abgerufen werden"
+
+#: inc/LLM_Content_Condenser.php:61
+msgid "Unable to convert content to text"
+msgstr "Inhalt kann nicht in Text umgewandelt werden"
+
+#: inc/LLM_DeepSeek_Service.php:39
+msgid "DeepSeek API key is not configured."
+msgstr "Der DeepSeek-API-Schlüssel ist nicht konfiguriert."
+
+#: inc/LLM_DeepSeek_Service.php:68
+msgid "DeepSeek API request failed: "
+msgstr "DeepSeek-API-Anfrage fehlgeschlagen: "
+
+#: inc/LLM_DeepSeek_Service.php:76
+msgid "Unknown API error"
+msgstr "Unbekannter API Fehler"
+
+#: inc/LLM_DeepSeek_Service.php:78
+msgid "DeepSeek API error: "
+msgstr "DeepSeek-API-Fehler: "
+
+#: inc/LLM_DeepSeek_Service.php:87
+msgid "Invalid JSON response from DeepSeek API."
+msgstr "Ungültige JSON-Antwort von der DeepSeek-API."
+
+#: inc/LLM_DeepSeek_Service.php:92
+msgid "DeepSeek API: Missing titles or descriptions in response."
+msgstr "DeepSeek-API: Fehlende Titel oder Beschreibungen in der Antwort."
+
+#: inc/LLM_DeepSeek_Service.php:111
+#, php-format
+msgid "DeepSeek API error: %s"
+msgstr "DeepSeek-API-Fehler: %s"
+
+#: inc/LLM_OpenAI_Service.php:44
+msgid "OpenAI settings not configured"
+msgstr "OpenAI-Einstellungen nicht konfiguriert"
+
+#: inc/LLM_OpenAI_Service.php:266
+#, php-format
+msgid "OpenAI API request failed: %s"
+msgstr "OpenAI-API-Anfrage fehlgeschlagen: %s"
+
+#: inc/LLM_OpenAI_Service.php:276
+#, php-format
+msgid "OpenAI API request failed with code: %d"
+msgstr "OpenAI-API-Anfrage fehlgeschlagen mit Code: %d"
+
+#: inc/LLM_OpenAI_Service.php:284
+msgid "Invalid JSON response from OpenAI API"
+msgstr "Ungültige JSON-Antwort von der OpenAI-API"
+
+#: inc/LLM_OpenAI_Service.php:302
+msgid "Invalid response format from OpenAI API"
+msgstr "Ungültiges Antwortformat von der OpenAI-API"
+
+#: inc/LLM_OpenAI_Service.php:310
+msgid "Unable to parse OpenAI response content"
+msgstr "OpenAI-Antwortinhalt kann nicht analysiert werden"
+
+#: inc/LLM_OpenAI_Service.php:320 inc/LLM_SEO_Service.php:500
+msgid "Invalid response: missing titles or descriptions"
+msgstr "Ungültige Antwort: fehlende Titel oder Beschreibungen"
+
+#: inc/LLM_SEO_Service.php:44 inc/LLM_SEO_Service.php:619
+msgid "License validation failed"
+msgstr "Lizenzvalidierung fehlgeschlagen"
+
+#: inc/LLM_SEO_Service.php:434
+#, php-format
+msgid "API request failed: %s"
+msgstr "API-Anfrage fehlgeschlagen: %s"
+
+#: inc/LLM_SEO_Service.php:445
+#, php-format
+msgid "API request failed with code: %d"
+msgstr "API-Anfrage fehlgeschlagen mit Code: %d"
+
+#: inc/LLM_SEO_Service.php:453
+msgid "Invalid JSON response from API"
+msgstr "Ungültige JSON-Antwort von der API"
+
+#: inc/LLM_SEO_Service.php:492
+msgid "Unable to parse API response"
+msgstr "API-Antwort kann nicht analysiert werden"
+
+#: inc/Media/AI_Image_Generator.php:50 inc/Media/AI_Image_Generator.php:78
+#: inc/Media/AI_Image_Generator.php:106
+msgid "Invalid attachment ID"
+msgstr "Ungültige Anhang-ID"
+
+#: inc/Media/AI_Image_Generator.php:163
+msgid "Invalid attachment"
+msgstr "Ungültiger Anhang"
+
+#: inc/Media/AI_Image_Generator.php:168
+msgid "This feature is only available for images"
+msgstr "Diese Funktion ist nur für Bilder verfügbar."
+
+#: inc/Media/AI_Image_Generator.php:175
+msgid ""
+"Image description generation is only available with OpenAI. DeepSeek does "
+"not support vision capabilities."
+msgstr ""
+"Die Generierung von Bildbeschreibungen ist nur mit OpenAI verfügbar. "
+"DeepSeek unterstützt keine Bildverarbeitungsfunktionen."
+
+#: inc/Media/AI_Image_Generator.php:184
+msgid "Could not get image URL. Make sure the image is publicly accessible."
+msgstr ""
+"Die Bild-URL konnte nicht abgerufen werden. Stellen Sie sicher, dass das "
+"Bild öffentlich zugänglich ist."
+
+#: inc/Media/AI_Image_Generator.php:399
+msgid "OpenAI request failed"
+msgstr "OpenAI-Anfrage fehlgeschlagen"
+
+#: inc/Media/AI_Image_Generator.php:413
+msgid "Invalid JSON response from OpenAI"
+msgstr "Ungültige JSON-Antwort von OpenAI"
+
+#: inc/Media/AI_Image_Generator.php:418
+msgid "OpenAI response missing required fields"
+msgstr "OpenAI-Antwort fehlt erforderliche Felder"
+
+#: inc/Media/AI_Image_Generator.php:469
+msgid "No previous content to restore"
+msgstr "Keine früheren Inhalte zum Wiederherstellen"
+
+#: inc/Media/Media_Library_Enhancements.php:59
+#: inc/Media/Media_Library_Enhancements.php:65
+msgid "Alt Text"
+msgstr "Alt-Text"
+
+#: inc/Media/Media_Library_Enhancements.php:106
+msgid "AI Image Metadata"
+msgstr "KI-Bild-Metadaten"
+
+#: inc/Media/Media_Library_Enhancements.php:238
+msgid "Attachment not found"
+msgstr "Anhang nicht gefunden"
+
+#: inc/Media/Media_Library_Enhancements.php:244
+msgid "Not an image"
+msgstr "Kein Bild"
+
+#: inc/Media/Media_Library_Enhancements.php:294
+msgid "Image processed and saved successfully"
+msgstr "Bild erfolgreich verarbeitet und gespeichert"
+
+#: inc/Media/Media_Library_Enhancements.php:512
+#, php-format
+msgid "Cancelled %d pending job(s)"
+msgstr "Storniert %d ausstehende Aufträge"
+
+#: inc/Media/Media_Library_Enhancements.php:620
+#, php-format
+msgid "Processing %d of %d images..."
+msgstr "Verarbeitung von %d von %d Bildern..."
+
+#: inc/Media/Media_Library_Enhancements.php:621
+#, php-format
+msgid "Completed: %d processed successfully"
+msgstr "Abgeschlossen: %d erfolgreich verarbeitet"
+
+#: inc/Media/Media_Library_Enhancements.php:628
+msgid "Action Scheduler is not available. Bulk generation cannot be processed."
+msgstr ""
+"Der Aktionsplaner ist nicht verfügbar. Die Massen-Generierung kann nicht "
+"verarbeitet werden."
+
+#: inc/Media/Media_Library_Enhancements.php:629
+msgid ""
+"OpenAI is not configured. Please configure OpenAI in SEO Booster settings to "
+"use bulk generation."
+msgstr ""
+"OpenAI ist nicht konfiguriert. Bitte konfigurieren Sie OpenAI in den SEO "
+"Booster-Einstellungen, um die Massen-Generierung zu verwenden."
+
+#: inc/Media/Media_Library_Enhancements.php:630
+msgid "No images were selected for generation."
+msgstr "Es wurden keine Bilder für die Generierung ausgewählt."
+
+#: inc/Media/Media_Library_Enhancements.php:631
+msgid "An error occurred while processing bulk generation."
+msgstr ""
+"Bei der Verarbeitung der Massen-Generierung ist ein Fehler aufgetreten."
+
+#: inc/SB_Autolink_Columns.php:63 inc/SB_GSC_Metaboxes.php:252
+msgid "Autolink"
+msgstr "Autolink"
+
+#: inc/SB_Autolink_Columns.php:82
+msgid "Autolink feature is disabled globally"
+msgstr "Die Autolink-Funktion ist global deaktiviert."
+
+#: inc/SB_Autolink_Columns.php:82 inc/SB_Autolink_Columns.php:100
+#: inc/SB_Autolink_Columns.php:235 seo-booster-settings.php:780
+msgid "Disabled"
+msgstr "Deaktiviert"
+
+#: inc/SB_Autolink_Columns.php:99
+msgid "Click to toggle autolink status"
+msgstr ""
+"Klicken Sie hier, um den Status der automatischen Verlinkung umzuschalten."
+
+#: inc/SB_Autolink_Columns.php:100 inc/SB_Autolink_Columns.php:235
+msgid "Enabled"
+msgstr "Aktiviert"
+
+#: inc/SB_Autolink_Columns.php:137
+msgid "Enable Autolink (SEO Booster)"
+msgstr "Autolink aktivieren (SEO-Booster)"
+
+#: inc/SB_Autolink_Columns.php:181
+msgid "Autolink settings updated successfully."
+msgstr "Autolink-Einstellungen erfolgreich aktualisiert."
+
+#: inc/SB_Autolink_Columns.php:182
+msgid "Error updating autolink settings."
+msgstr "Fehler beim Aktualisieren der Autolink-Einstellungen."
+
+#: inc/SB_Autolink_Columns.php:183
+msgid "Autolink is enabled for this post"
+msgstr "Autolink ist für diesen Beitrag aktiviert."
+
+#: inc/SB_Autolink_Columns.php:184
+msgid "Autolink is disabled for this post"
+msgstr "Autolink ist für diesen Beitrag deaktiviert."
+
+#: inc/SB_Autolink_Columns.php:215
+msgid "Invalid post ID."
+msgstr "Ungültige Beitrags-ID."
+
+#: inc/SB_Autolink_Columns.php:220
+msgid "Permission denied for this post."
+msgstr "Die Berechtigung für diesen Beitrag wurde verweigert."
+
+#. translators: %s: post title
+#: inc/SB_Autolink_Columns.php:230
+#, php-format
+msgid "Autolink %s for \"%s\""
+msgstr "Autolink %s für „%s“"
+
+#: inc/SB_Autolink_Columns.php:231
+msgid "enabled"
+msgstr "aktiviert"
+
+#: inc/SB_Autolink_Columns.php:231
+msgid "disabled"
+msgstr "deaktiviert"
+
+#: inc/SB_Autolink_Columns.php:238
+msgid "Failed to update autolink setting."
+msgstr ""
+"Die Einstellung für die automatische Verlinkung konnte nicht aktualisiert "
+"werden."
+
+#: inc/SB_Autolink_List_Table.php:26
+msgid "No keyword to links made."
+msgstr "Keine Schlüsselwörter für Links erstellt."
+
+#: inc/SB_Autolink_List_Table.php:75
+msgctxt "Column label"
+msgid "Keyword"
+msgstr "Suchbegriff"
+
+#: inc/SB_Autolink_List_Table.php:77
+msgctxt "Column label"
+msgid "Target URL"
+msgstr "Ziel-URL"
+
+#: inc/SB_Autolink_List_Table.php:78
+msgctxt "Column label"
+msgid "Last Used On"
+msgstr "Zuletzt verwendet am"
+
+#: inc/SB_Autolink_List_Table.php:196 inc/SB_FOF_List_Table.php:198
+msgctxt "List table row action"
+msgid "Delete"
+msgstr "Löschen"
+
+#: inc/SB_Autolink_List_Table.php:213 inc/SB_FOF_List_Table.php:224
+msgctxt "List table bulk action"
+msgid "Delete"
+msgstr "Löschen"
+
+#: inc/SB_Autolink_List_Table.php:237 inc/SB_Autolink_List_Table.php:243
+msgid "Nope! Security check failed!"
+msgstr "Upps, Sicherheitsprüfung fehlgeschlagen!"
+
+#: inc/SB_FOF_List_Table.php:46 inc/SB_GSC_List_Table.php:52
+msgid "Nothing found."
+msgstr "Nichts gefunden."
+
+#: inc/SB_FOF_List_Table.php:63
+msgctxt "Column label"
+msgid "Code"
+msgstr "Code"
+
+#: inc/SB_FOF_List_Table.php:64
+msgctxt "Column label"
+msgid "Landing Page"
+msgstr "Landingpage"
+
+#: inc/SB_FOF_List_Table.php:65
+msgctxt "Column label"
+msgid "Visitors"
+msgstr "Besucher"
+
+#: inc/SB_FOF_List_Table.php:66
+msgctxt "Column label"
+msgid "Latest Visit"
+msgstr "Letzter Besuch"
+
+#: inc/SB_FOF_List_Table.php:67
+msgctxt "Column label"
+msgid "Referrer"
+msgstr "Referrer"
+
+#: inc/SB_FOF_List_Table.php:251
+msgid "Resetting 404 Errors"
+msgstr "Zurücksetzen von 404-Fehlern"
+
+#: inc/SB_GSC_Ajax.php:51 inc/SB_GSC_Ajax.php:323 inc/SB_GSC_Ajax.php:572
+#: inc/SB_GSC_Ajax.php:784
+msgid "You do not have permission to view the keywords."
+msgstr "Sie haben keine Berechtigung, die Schlüsselwörter anzuzeigen."
+
+#: inc/SB_GSC_Ajax.php:327
+msgid "No URL provided."
+msgstr "Keine URL angegeben."
+
+#: inc/SB_GSC_Ajax.php:344 inc/SB_GSC_Ajax.php:589
+msgid "Invalid post URL."
+msgstr "Ungültige Post-URL."
+
+#: inc/SB_GSC_Ajax.php:353 inc/SB_GSC_Ajax.php:598
+msgid "Could not determine the permalink for the given post ID."
+msgstr ""
+"Der Permalink für die angegebene Beitrags-ID konnte nicht ermittelt werden."
+
+#: inc/SB_GSC_Ajax.php:356 inc/SB_GSC_Ajax.php:601
+msgid "Could not determine the post ID from the given URL."
+msgstr "Die Post-ID konnte anhand der angegebenen URL nicht ermittelt werden."
+
+#: inc/SB_GSC_Ajax.php:392 inc/SB_GSC_Ajax.php:621
+msgid "No keywords found for this URL."
+msgstr "Für diese URL wurden keine Schlüsselwörter gefunden."
+
+#: inc/SB_GSC_Ajax.php:417 inc/SB_GSC_Ajax.php:641
+msgid "Not used"
+msgstr "Nicht verwendet"
+
+#: inc/SB_GSC_Ajax.php:420
+msgid "Not analyzed yet"
+msgstr "Noch nicht analysiert"
+
+#: inc/SB_GSC_Ajax.php:431
+msgid "Create internal links to this keyword with one click"
+msgstr "Erstellen Sie mit einem Klick interne Links zu diesem Schlüsselwort."
+
+#: inc/SB_GSC_Ajax.php:431
+msgid "Pro"
+msgstr "Pro"
+
+#: inc/SB_GSC_Ajax.php:526
+msgid "This keyword links to the current page"
+msgstr "Dieses Schlüsselwort verlinkt zur aktuellen Seite."
+
+#: inc/SB_GSC_Ajax.php:526
+msgid "Links here"
+msgstr "Links hier"
+
+#: inc/SB_GSC_Ajax.php:538
+msgid "This keyword is linked to another page"
+msgstr "Dieses Schlüsselwort ist mit einer anderen Seite verknüpft."
+
+#: inc/SB_GSC_Ajax.php:538
+msgid "Linked to other page"
+msgstr "Mit einer anderen Seite verknüpft"
+
+#: inc/SB_GSC_Ajax.php:542
+msgid "Create links"
+msgstr "Create links"
+
+#: inc/SB_GSC_Ajax.php:640
+msgid "Used in content"
+msgstr "In Inhalten verwendet"
+
+#: inc/SB_GSC_Ajax.php:640
+msgid "Not used in content"
+msgstr "Nicht im Inhalt verwendet"
+
+#: inc/SB_GSC_Ajax.php:705
+msgid "No page URL provided."
+msgstr "Keine Seiten-URL angegeben."
+
+#: inc/SB_GSC_Ajax.php:733
+msgid "No GSC keywords found for this page."
+msgstr "Für diese Seite wurden keine GSC-Keywords gefunden."
+
+#: inc/SB_GSC_List_Table.php:81
+msgid "Page"
+msgstr "Seite"
+
+#: inc/SB_GSC_List_Table.php:86 inc/SB_GSC_Metaboxes.php:275
+msgid "Trends"
+msgstr "Trends"
+
+#: inc/SB_GSC_List_Table.php:233
+#, fuzzy
+msgid "This keyword is used in the content"
+msgstr "Dieses Schlüsselwort wird im Inhalt verwendet."
+
+#: inc/SB_GSC_List_Table.php:234
+msgid "In use"
+msgstr "In Verwendung"
+
+#: inc/SB_GSC_List_Table.php:309
+#, fuzzy
+msgid "Hover to load chart"
+msgstr "Zum Laden der Grafik mit der Maus darüberfahren"
+
+#: inc/SB_GSC_List_Table.php:341 inc/SEO_Issues_List_Table.php:350
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: inc/SB_GSC_List_Table.php:341 inc/SB_GSC_List_Table.php:344
+#: inc/SEO_Issues_List_Table.php:353
+msgid "View"
+msgstr "Anzeigen"
+
+#: inc/SB_GSC_Metaboxes.php:81
+#, fuzzy
+msgid "SEO Booster Keyword Analysis"
+msgstr "SEO-Booster-Keyword-Analyse"
+
+#: inc/SB_GSC_Metaboxes.php:131
+#, fuzzy
+msgid "Detected SEO plugin: "
+msgstr "Erkanntes SEO-Plugin: "
+
+#: inc/SB_GSC_Metaboxes.php:137
+#, fuzzy
+msgid "Focus keyword(s)"
+msgstr "Fokus-Keyword(s)"
+
+#: inc/SB_GSC_Metaboxes.php:142
+#, fuzzy
+msgid "No focus keyword found."
+msgstr "Kein Fokus-Keyword gefunden."
+
+#: inc/SB_GSC_Metaboxes.php:150
+#, fuzzy
+msgid "SEO booster Keyword Analysis"
+msgstr "SEO-Booster Keyword-Analyse"
+
+#: inc/SB_GSC_Metaboxes.php:156 inc/SB_GSC_Metaboxes.php:281
+#, fuzzy
+msgid "Load Keyword Analysis Data"
+msgstr "Schlüsselwortanalysedaten laden"
+
+#: inc/SB_GSC_Metaboxes.php:158
+#, fuzzy
+msgid ""
+"Click to load the keyword analysis data and charts. This will load "
+"additional resources."
+msgstr ""
+"Klicken Sie hier, um die Daten und Diagramme zur Keyword-Analyse zu laden. "
+"Dadurch werden zusätzliche Ressourcen geladen."
+
+#: inc/SB_GSC_Metaboxes.php:173 inc/SB_GSC_Metaboxes.php:251
+#: seo-booster.php:400
+msgid "Position"
+msgstr "Position"
+
+#: inc/SB_GSC_Metaboxes.php:233
+#, fuzzy
+msgid "Hover to see the chart"
+msgstr "Bewegen Sie den Mauszeiger über das Diagramm, um es anzuzeigen."
+
+#: inc/SB_GSC_Metaboxes.php:234
+msgid "Loading ..."
+msgstr "Wird geladen …"
+
+#: inc/SB_GSC_Metaboxes.php:235
+#, fuzzy
+msgid "Reanalyze"
+msgstr "Neu analysieren"
+
+#: inc/SB_GSC_Metaboxes.php:236
+#, fuzzy
+msgid "GSC Metabox script loaded"
+msgstr "GSC Metabox-Skript geladen"
+
+#: inc/SB_GSC_Metaboxes.php:237 seo-booster.php:403
+msgid "Search..."
+msgstr "Suche..."
+
+#: inc/SB_GSC_Metaboxes.php:238 views/gsc-pages.php:105
+msgid "All Keywords"
+msgstr "Alle Schlüsselwörter"
+
+#: inc/SB_GSC_Metaboxes.php:239
+#, fuzzy
+msgid "Keywords with no clicks"
+msgstr "Keywords ohne Klicks"
+
+#: inc/SB_GSC_Metaboxes.php:240
+#, fuzzy
+msgid "Keywords not used in content"
+msgstr "Schlüsselwörter, die nicht im Inhalt verwendet werden"
+
+#: inc/SB_GSC_Metaboxes.php:241
+#, fuzzy
+msgid "Keywords used in content"
+msgstr "In den Inhalten verwendete Schlüsselwörter"
+
+#: inc/SB_GSC_Metaboxes.php:242
+msgid "Reset Filters"
+msgstr "Filter Zurücksetzen"
+
+#: inc/SB_GSC_Metaboxes.php:244
+#, fuzzy
+msgid "First Seen"
+msgstr "Erstmals gesehen"
+
+#: inc/SB_GSC_Metaboxes.php:245
+msgid "Last Seen"
+msgstr "Zuletzt gesehen"
+
+#: inc/SB_GSC_Metaboxes.php:246
+msgid "Showing"
+msgstr "Anzeigen"
+
+#: inc/SB_GSC_Metaboxes.php:247
+#, fuzzy
+msgid "Seen in content?"
+msgstr "Im Inhalt gesehen?"
+
+#: inc/SB_GSC_Metaboxes.php:253
+#, fuzzy
+msgid "Hide Column"
+msgstr "Spalte ausblenden"
+
+#: inc/SB_GSC_Metaboxes.php:254
+#, fuzzy
+msgid "Show All Columns"
+msgstr "Alle Spalten anzeigen"
+
+#: inc/SB_GSC_Metaboxes.php:255
+msgid "Time"
+msgstr "Zeit"
+
+#: inc/SB_GSC_Metaboxes.php:256
+msgid "Total Keywords"
+msgstr "Schlüsselwörter insgesamt"
+
+#: inc/SB_GSC_Metaboxes.php:257
+#, fuzzy
+msgid "No keywords found"
+msgstr "Keine Stichwörter gefunden"
+
+#: inc/SB_GSC_Metaboxes.php:258
+#, fuzzy
+msgid ""
+"This page doesn't have any keywords with search data yet. This could be "
+"because:"
+msgstr ""
+"Diese Seite enthält noch keine Keywords mit Suchdaten. Dies könnte folgende "
+"Gründe haben:"
+
+#: inc/SB_GSC_Metaboxes.php:259
+#, fuzzy
+msgid "The page is new and hasn't been indexed yet"
+msgstr "Die Seite ist neu und wurde noch nicht indexiert."
+
+#: inc/SB_GSC_Metaboxes.php:260
+#, fuzzy
+msgid "The page doesn't rank for any keywords in Google Search Console data"
+msgstr ""
+"Die Seite wird in den Daten der Google Search Console für keine Keywords "
+"gerankt."
+
+#: inc/SB_GSC_Metaboxes.php:261
+#, fuzzy
+msgid "Check URL"
+msgstr "URL überprüfen"
+
+#: inc/SB_GSC_Metaboxes.php:262
+msgid "Current URL"
+msgstr "Aktuelle URL"
+
+#: inc/SB_GSC_Metaboxes.php:263
+#, fuzzy
+msgid ""
+"Verify this URL matches what's in Google Search Console. If different, "
+"update the URL in your content."
+msgstr ""
+"Überprüfen Sie, ob diese URL mit den Angaben in der Google Search Console "
+"übereinstimmt. Wenn sie abweicht, aktualisieren Sie die URL in Ihren "
+"Inhalten."
+
+#: inc/SB_GSC_Metaboxes.php:265
+#, fuzzy
+msgid "Copy Selected"
+msgstr "Auswahl kopieren"
+
+#: inc/SB_GSC_Metaboxes.php:266
+msgid "Copied to clipboard"
+msgstr "In Zwischenablage kopiert"
+
+#: inc/SB_GSC_Metaboxes.php:267
+#, fuzzy
+msgid "Show/Hide Columns"
+msgstr "Spalten ein-/ausblenden"
+
+#: inc/SB_GSC_Metaboxes.php:268 seo-booster-log.php:21 seo-booster.php:1714
+#: seo-booster.php:1820
+msgid "Refresh"
+msgstr "Aktualisieren"
+
+#: inc/SB_GSC_Metaboxes.php:269
+#, fuzzy
+msgid "Refresh Keywords"
+msgstr "Schlüsselwörter aktualisieren"
+
+#: inc/SB_GSC_Metaboxes.php:270
+msgid "Copy All"
+msgstr "Alle kopieren"
+
+#: inc/SB_GSC_Metaboxes.php:271 seo-booster.php:1827
+#, fuzzy
+msgid "Refresh Keyword Analysis"
+msgstr "Schlüsselwortanalyse aktualisieren"
+
+#: inc/SB_GSC_Metaboxes.php:272 seo-booster.php:1828
+#, fuzzy
+msgid "Error deleting transients"
+msgstr "Fehler beim Löschen von Transienten"
+
+#: inc/SB_GSC_Metaboxes.php:273
+#, fuzzy
+msgid "No chart data available"
+msgstr "Keine Diagrammdaten verfügbar"
+
+#: inc/SB_GSC_Metaboxes.php:274
+#, fuzzy
+msgid "Not enough data points"
+msgstr "Nicht genügend Datenpunkte"
+
+#: inc/SB_GSC_Metaboxes.php:276
+#, fuzzy
+msgid "Clicks/Impressions trend"
+msgstr "Klick-/Impressionstrend"
+
+#: inc/SB_GSC_Metaboxes.php:277
+#, fuzzy
+msgid ""
+"Analysis reset and running - please allow up to 1-2 minutes on busy sites "
+"and/or if lots of keywords to process. You can use the refresh button to "
+"update the results"
+msgstr ""
+"Analyse wird zurückgesetzt und ausgeführt – bitte warten Sie 1–2 Minuten, "
+"wenn die Website stark frequentiert ist und/oder viele Keywords verarbeitet "
+"werden müssen. Mit der Schaltfläche „Aktualisieren“ können Sie die "
+"Ergebnisse aktualisieren."
+
+#: inc/SB_GSC_Metaboxes.php:278
+#, fuzzy
+msgid "Trend chart legend"
+msgstr "Legende zum Trenddiagramm"
+
+#: inc/SB_GSC_Metaboxes.php:279 inc/SB_SEO_Metabox.php:508 seo-booster.php:1917
+msgid "Analyzing..."
+msgstr "Analysiere..."
+
+#: inc/SB_GSC_Metaboxes.php:280
+#, fuzzy
+msgid "Refresh Analysis"
+msgstr "Analyse aktualisieren"
+
+#: inc/SB_GSC_Metaboxes.php:282
+msgid "Loading data..."
+msgstr "Lade Daten..."
+
+#: inc/SB_GSC_Metaboxes.php:296 inc/SB_GSC_Metaboxes.php:331
+msgid "You do not have permission to perform this action"
+msgstr "Du hast keine Berechtigung, diese Aktion durchzuführen"
+
+#: inc/SB_GSC_Metaboxes.php:313
+#, fuzzy
+msgid "Libraries loaded successfully"
+msgstr "Bibliotheken erfolgreich geladen"
+
+#: inc/SB_GSC_Metaboxes.php:339
+#, fuzzy
+msgid "Invalid ID or URL"
+msgstr "Ungültige ID oder URL"
+
+#: inc/SB_GSC_Metaboxes.php:353
+#, fuzzy
+msgid "Failed to delete transients"
+msgstr "Transienten konnten nicht gelöscht werden"
+
+#: inc/SB_GSC_Metaboxes.php:377
+#, fuzzy
+msgid "Failed to get URL for the item"
+msgstr "URL für das Element konnte nicht abgerufen werden"
+
+#: inc/SB_GSC_Metaboxes.php:384
+#, fuzzy, php-format
+msgid "Successfully scheduled %2$d jobs for %3$s. Reloading in 4 seconds..."
+msgstr ""
+"%2$d Aufträge für %3$s erfolgreich geplant. Wird in 4 Sekunden neu geladen..."
+
+#: inc/SB_GSC_Metaboxes.php:387
+msgid "term"
+msgstr "Begriff"
+
+#: inc/SB_GSC_Metaboxes.php:387
+msgid "post"
+msgstr "Beitrag"
+
+#: inc/SB_GSC_Metaboxes.php:445
+#, fuzzy
+msgid "Empty URL provided for keyword processing"
+msgstr "Leere URL für die Schlüsselwortverarbeitung angegeben"
+
+#: inc/SB_GSC_Metaboxes.php:465
+#, fuzzy
+msgid ""
+"Action Scheduler not available - could not schedule keyword processing for: "
+msgstr ""
+"Action Scheduler nicht verfügbar – Keyword-Verarbeitung konnte nicht geplant "
+"werden für: "
+
+#: inc/SB_GSC_Metaboxes.php:501
+#, fuzzy
+msgid "Failed to schedule keyword processing for URL: "
+msgstr "Die Keyword-Verarbeitung für die URL konnte nicht geplant werden: "
+
+#: inc/SB_GSC_Processor.php:85
+#, fuzzy
+msgid "Error checking keyword occurrences"
+msgstr "Fehlerprüfung beim Auftreten von Schlüsselwörtern"
+
+#: inc/SB_GSC_Processor.php:182
+#, fuzzy
+msgid "Scheduled keyword processing for all pages"
+msgstr "Geplante Keyword-Verarbeitung für alle Seiten"
+
+#: inc/SB_GSC_Processor.php:188
+#, fuzzy
+msgid "Failed to get URL for post ID: "
+msgstr "URL für Post-ID konnte nicht abgerufen werden: "
+
+#: inc/SB_GSC_Processor.php:219
+#, fuzzy
+msgid "Scheduled keyword analysis for post ID: "
+msgstr "Geplante Keyword-Analyse für Post-ID: "
+
+#. Plugin Name of the plugin/theme
+#: inc/SB_SEO_Metabox.php:63 inc/SB_SEO_Metabox.php:83 seo-booster.php:807
+#: seo-booster.php:2365 seo-booster.php:2366
+#, fuzzy
+msgid "SEO Booster"
+msgstr "SEO-Booster"
+
+#: inc/SB_SEO_Metabox.php:143 inc/SB_SEO_Metabox.php:1091
+#, fuzzy
+msgid "This page is automatically excluded (private page)"
+msgstr "Diese Seite wird automatisch ausgeschlossen (private Seite)"
+
+#: inc/SB_SEO_Metabox.php:145 inc/SB_SEO_Metabox.php:1093
+msgid "Cart"
+msgstr "Warenkorb"
+
+#: inc/SB_SEO_Metabox.php:145 inc/SB_SEO_Metabox.php:1093
+msgid "Checkout"
+msgstr "Kasse"
+
+#: inc/SB_SEO_Metabox.php:145 inc/SB_SEO_Metabox.php:1093
+msgid "My Account"
+msgstr "Mein Konto"
+
+#: inc/SB_SEO_Metabox.php:145 inc/SB_SEO_Metabox.php:1093
+msgid "Shop"
+msgstr "Shop"
+
+#: inc/SB_SEO_Metabox.php:149 inc/SB_SEO_Metabox.php:1097
+#, fuzzy, php-format
+msgid "This page is automatically excluded (WooCommerce %s page)"
+msgstr "Diese Seite wird automatisch ausgeschlossen (WooCommerce %s-Seite)"
+
+#: inc/SB_SEO_Metabox.php:163
+#, fuzzy
+msgid "Exclude from SEO Analysis"
+msgstr "Von der SEO-Analyse ausschließen"
+
+#: inc/SB_SEO_Metabox.php:171
+#, fuzzy
+msgid ""
+"When checked, this page will not appear in SEO analysis results and will be "
+"excluded from the global SEO possibilities page."
+msgstr ""
+"Wenn diese Option aktiviert ist, wird diese Seite nicht in den SEO-"
+"Analyseergebnissen angezeigt und aus der Seite mit den globalen SEO-"
+"Möglichkeiten ausgeschlossen."
+
+#: inc/SB_SEO_Metabox.php:181 inc/SEO_Issues_List_Table.php:43
+msgid "SEO Score"
+msgstr "SEO Wertung"
+
+#: inc/SB_SEO_Metabox.php:200
+#, fuzzy
+msgid "Google Search Console Issues Detected"
+msgstr "Probleme in der Google Search Console erkannt"
+
+#: inc/SB_SEO_Metabox.php:202
+#, fuzzy, php-format
+msgid ""
+"This page has %d GSC issue(s). They are included in the issues list above."
+msgstr ""
+"Diese Seite enthält %d GSC-Probleme. Diese sind in der obenstehenden "
+"Problemliste aufgeführt."
+
+#: inc/SB_SEO_Metabox.php:205
+#, fuzzy
+msgid "View All GSC Issues"
+msgstr "Alle GSC-Ausgaben anzeigen"
+
+#: inc/SB_SEO_Metabox.php:217
+#, fuzzy
+msgid "SEO review entire page"
+msgstr "SEO-Überprüfung der gesamten Seite"
+
+#: inc/SB_SEO_Metabox.php:225
+#, php-format
+msgid "Last downloaded: %s"
+msgstr "Zuletzt heruntergeladen: %s"
+
+#: inc/SB_SEO_Metabox.php:234
+#, fuzzy
+msgid ""
+"We analyze the full page output including widgets, footer, and theme "
+"elements."
+msgstr ""
+"Wir analysieren die gesamte Seitenausgabe einschließlich Widgets, Fußzeile "
+"und Designelemente."
+
+#: inc/SB_SEO_Metabox.php:236
+msgid "Learn more"
+msgstr "Mehr erfahren"
+
+#: inc/SB_SEO_Metabox.php:244
+#, fuzzy
+msgid "AI-Powered SEO Assistance"
+msgstr "KI-gestützte SEO-Unterstützung"
+
+#: inc/SB_SEO_Metabox.php:262
+#, fuzzy
+msgid "Generate AI SEO Suggestions"
+msgstr "AI-SEO-Vorschläge generieren"
+
+#: inc/SB_SEO_Metabox.php:265
+#, fuzzy
+msgid "What this does:"
+msgstr "Was dies bewirkt:"
+
+#: inc/SB_SEO_Metabox.php:266
+#, fuzzy
+msgid ""
+"The AI will analyze your content and generate 5 optimized SEO title "
+"suggestions and 5 meta description suggestions. If you have set a focus "
+"keyword, it will be included in the suggestions following SEO best practices."
+msgstr ""
+"Die KI analysiert Ihre Inhalte und generiert 5 optimierte SEO-"
+"Titelvorschläge und 5 Meta-Beschreibungsvorschläge. Wenn Sie ein Fokus-"
+"Keyword festgelegt haben, wird dieses gemäß den SEO-Best-Practices in die "
+"Vorschläge aufgenommen."
+
+#: inc/SB_SEO_Metabox.php:277
+#, fuzzy
+msgid "Preparing request..."
+msgstr "Anfrage wird vorbereitet..."
+
+#: inc/SB_SEO_Metabox.php:336
+#, fuzzy
+msgid "AI Image Description Generator"
+msgstr "KI-Bildbeschreibungsgenerator"
+
+#: inc/SB_SEO_Metabox.php:341
+#, fuzzy
+msgid "AI features are disabled. Please configure OpenAI in"
+msgstr "Die KI-Funktionen sind deaktiviert. Bitte konfigurieren Sie OpenAI in"
+
+#: inc/SB_SEO_Metabox.php:342 inc/SB_SEO_Metabox.php:351
+#, fuzzy
+msgid "SEO Booster Settings"
+msgstr "SEO-Booster-Einstellungen"
+
+#: inc/SB_SEO_Metabox.php:343
+#, fuzzy
+msgid ""
+"Note: Image description generation requires OpenAI (ChatGPT) as it supports "
+"vision capabilities. DeepSeek does not support image analysis."
+msgstr ""
+"Hinweis: Die Erstellung von Bildbeschreibungen erfordert OpenAI (ChatGPT), "
+"da es Bildverarbeitungsfunktionen unterstützt. DeepSeek unterstützt keine "
+"Bildanalyse."
+
+#: inc/SB_SEO_Metabox.php:349
+#, fuzzy
+msgid "Image description generation requires OpenAI"
+msgstr "Die Generierung von Bildbeschreibungen erfordert OpenAI."
+
+#: inc/SB_SEO_Metabox.php:350
+#, fuzzy
+msgid ""
+"DeepSeek does not support vision capabilities and cannot analyze images. "
+"Please switch to OpenAI in"
+msgstr ""
+"DeepSeek unterstützt keine Bildverarbeitungsfunktionen und kann keine Bilder "
+"analysieren. Bitte wechseln Sie zu OpenAI in"
+
+#: inc/SB_SEO_Metabox.php:351
+msgid "to use this feature."
+msgstr "um dieses Feature zu nutzen."
+
+#: inc/SB_SEO_Metabox.php:356
+#, fuzzy
+msgid ""
+"Generate title, ALT text, caption, and description for this image using AI. "
+"The AI will analyze the image and any related post content to create "
+"accurate descriptions."
+msgstr ""
+"Erstellen Sie mithilfe von KI einen Titel, ALT-Text, eine Bildunterschrift "
+"und eine Beschreibung für dieses Bild. Die KI analysiert das Bild und alle "
+"zugehörigen Beiträge, um genaue Beschreibungen zu erstellen."
+
+#: inc/SB_SEO_Metabox.php:360
+#, fuzzy
+msgid "Generate Title, ALT, Caption & Description"
+msgstr "Titel, ALT, Bildunterschrift und Beschreibung generieren"
+
+#: inc/SB_SEO_Metabox.php:371
+#, fuzzy
+msgid "Previously Generated Content"
+msgstr "Zuvor generierte Inhalte"
+
+#: inc/SB_SEO_Metabox.php:384 inc/SB_SEO_Metabox.php:417
+msgid "Title:"
+msgstr "Titel:"
+
+#: inc/SB_SEO_Metabox.php:390 inc/SB_SEO_Metabox.php:424
+#, fuzzy
+msgid "ALT Text:"
+msgstr "ALT-Text:"
+
+#: inc/SB_SEO_Metabox.php:396 inc/SB_SEO_Metabox.php:431
+msgid "Caption:"
+msgstr "Beschriftung:"
+
+#: inc/SB_SEO_Metabox.php:402 inc/SB_SEO_Metabox.php:438
+msgid "Description:"
+msgstr "Beschreibung:"
+
+#: inc/SB_SEO_Metabox.php:412
+#, fuzzy
+msgid "Generated Content"
+msgstr "Generierte Inhalte"
+
+#: inc/SB_SEO_Metabox.php:445
+#, fuzzy
+msgid "Apply to Image"
+msgstr "Auf Bild anwenden"
+
+#: inc/SB_SEO_Metabox.php:449
+#, fuzzy
+msgid "Restore Previous"
+msgstr "Vorherige wiederherstellen"
+
+#: inc/SB_SEO_Metabox.php:501
+#, fuzzy
+msgid "Error loading suggestions"
+msgstr "Fehler beim Laden der Vorschläge"
+
+#: inc/SB_SEO_Metabox.php:502
+#, fuzzy
+msgid "No keyword traffic from GSC found for this URL"
+msgstr "Für diese URL wurde kein Keyword-Traffic von GSC gefunden."
+
+#: inc/SB_SEO_Metabox.php:503
+#, fuzzy
+msgid "Successfully imported SEO data"
+msgstr "SEO-Daten erfolgreich importiert"
+
+#: inc/SB_SEO_Metabox.php:504
+#, fuzzy
+msgid "Error importing SEO data"
+msgstr "Fehler beim Importieren von SEO-Daten"
+
+#: inc/SB_SEO_Metabox.php:505
+#, fuzzy
+msgid "AI writing completed"
+msgstr "KI-Text fertiggestellt"
+
+#: inc/SB_SEO_Metabox.php:506
+#, fuzzy
+msgid "Error with AI writing"
+msgstr "Fehler beim KI-Schreiben"
+
+#: inc/SB_SEO_Metabox.php:509 inc/SB_SEO_Metabox.php:686
+#, fuzzy
+msgid "Analysis failed"
+msgstr "Analyse fehlgeschlagen"
+
+#: inc/SB_SEO_Metabox.php:510
+msgid "Downloading..."
+msgstr "Wird heruntergeladen…"
+
+#: inc/SB_SEO_Metabox.php:511
+#, fuzzy
+msgid "Downloading and analyzing full page..."
+msgstr "Herunterladen und Analysieren der gesamten Seite..."
+
+#: inc/SB_SEO_Metabox.php:512
+#, fuzzy
+msgid "Download and analysis failed"
+msgstr "Download und Analyse fehlgeschlagen"
+
+#: inc/SB_SEO_Metabox.php:513
+msgid "Last downloaded"
+msgstr "Zuletzt heruntergeladen"
+
+#: inc/SB_SEO_Metabox.php:514 inc/SEO_Issues_List_Table.php:44
+#, fuzzy
+msgid "Possibilities"
+msgstr "Möglichkeiten"
+
+#: inc/SB_SEO_Metabox.php:515
+msgid "Improvements"
+msgstr "Verbesserungen"
+
+#: inc/SB_SEO_Metabox.php:516
+msgid "Good"
+msgstr "Gut"
+
+#: inc/SB_SEO_Metabox.php:517
+#, fuzzy
+msgid "No analysis results available"
+msgstr "Keine Analyseergebnisse verfügbar"
+
+#: inc/SB_SEO_Metabox.php:518
+#, fuzzy
+msgid "Analysis complete! No possibilities found."
+msgstr "Analyse abgeschlossen! Keine Möglichkeiten gefunden."
+
+#: inc/SB_SEO_Metabox.php:519
+#, fuzzy
+msgid "Not Analyzed Yet"
+msgstr "Noch nicht analysiert"
+
+#: inc/SB_SEO_Metabox.php:520
+#, fuzzy
+msgid ""
+"This page has not been analyzed yet. Click the button below to download and "
+"analyze the full page."
+msgstr ""
+"Diese Seite wurde noch nicht analysiert. Klicken Sie auf die Schaltfläche "
+"unten, um die gesamte Seite herunterzuladen und zu analysieren."
+
+#: inc/SB_SEO_Metabox.php:561
+#, fuzzy
+msgid "No keyword data available for this URL"
+msgstr "Für diese URL sind keine Keyword-Daten verfügbar."
+
+#: inc/SB_SEO_Metabox.php:632
+#, fuzzy
+msgid "AI writing assistance is available in SEO Booster Pro"
+msgstr "AI-Schreibunterstützung ist in SEO Booster Pro verfügbar."
+
+#: inc/SB_SEO_Metabox.php:674 inc/SB_SEO_Metabox.php:709
+#: inc/SB_SEO_Metabox.php:759
+msgid "Invalid object ID"
+msgstr "Ungültiges Objekt-ID"
+
+#: inc/SB_SEO_Metabox.php:715 inc/SB_SEO_Metabox.php:770
+#, fuzzy
+msgid "This page is excluded from SEO analysis"
+msgstr "Diese Seite ist von der SEO-Analyse ausgeschlossen."
+
+#: inc/SB_SEO_Metabox.php:732
+#, fuzzy
+msgid "Download and analysis failed: "
+msgstr "Download und Analyse fehlgeschlagen: "
+
+#: inc/SB_SEO_Metabox.php:814
+#, fuzzy
+msgid "Failed to get analysis"
+msgstr "Analyse konnte nicht abgerufen werden"
+
+#: inc/SEO_AI_Optimizer.php:72
+msgid "Processing your request..."
+msgstr "Ich prüfe Ihre Anfrage..."
+
+#: inc/SEO_AI_Optimizer.php:73
+#, fuzzy
+msgid "Optimization completed!"
+msgstr "Optimierung abgeschlossen!"
+
+#: inc/SEO_AI_Optimizer.php:74 js/sb-gsc-metabox.js:509
+msgid "An error occurred. Please try again."
+msgstr "Ein Fehler ist aufgetreten. Bitte versuche es noch einmal."
+
+#: inc/SEO_AI_Optimizer.php:75
+#, fuzzy
+msgid "Request timed out. Please try again."
+msgstr "Zeitüberschreitung bei der Anfrage. Bitte versuchen Sie es erneut."
+
+#: inc/SEO_AI_Optimizer.php:76
+#, fuzzy
+msgid "Insufficient credits. Please upgrade your plan."
+msgstr "Nicht genügend Credits. Bitte aktualisieren Sie Ihren Tarif."
+
+#: inc/SEO_AI_Optimizer.php:77
+#, fuzzy
+msgid "Invalid license key. Please check your license."
+msgstr "Ungültiger Lizenzschlüssel. Bitte überprüfen Sie Ihre Lizenz."
+
+#: inc/SEO_Analysis.php:413
+#, fuzzy
+msgid "No title has been set."
+msgstr "Es wurde kein Titel festgelegt."
+
+#: inc/SEO_Analysis.php:418
+#, fuzzy, php-format
+msgid "The focus keyword \"%s\" does not appear in the title."
+msgstr "Das Fokus-Keyword „%s“ kommt im Titel nicht vor."
+
+#: inc/SEO_Analysis.php:420
+#, fuzzy, php-format
+msgid "The focus keyword \"%s\" appears in the title."
+msgstr "Das Fokus-Keyword „%s“ erscheint im Titel."
+
+#: inc/SEO_Analysis.php:455
+#, fuzzy
+msgid "No meta description has been set."
+msgstr "Es wurde keine Meta-Beschreibung festgelegt."
+
+#: inc/SEO_Analysis.php:460
+#, fuzzy, php-format
+msgid "The focus keyword \"%s\" does not appear in the meta description."
+msgstr "Das Fokus-Keyword „%s“ erscheint nicht in der Meta-Beschreibung."
+
+#: inc/SEO_Analysis.php:462
+#, fuzzy, php-format
+msgid "The focus keyword \"%s\" appears in the meta description."
+msgstr "Das Fokus-Keyword „%s“ erscheint in der Meta-Beschreibung."
+
+#: inc/SEO_Analysis.php:477
+#, fuzzy
+msgid "Consider setting a focus keyword to help with SEO targeting."
+msgstr ""
+"Erwägen Sie die Festlegung eines Fokus-Keywords, um die SEO-Ausrichtung zu "
+"verbessern."
+
+#: inc/SEO_Analysis.php:481
+#, fuzzy
+msgid "A focus keyword has been set."
+msgstr "Ein Fokus-Keyword wurde festgelegt."
+
+#: inc/SEO_Analysis.php:495
+#, fuzzy
+msgid "This page is set to noindex. Search engines will not index this page."
+msgstr ""
+"Diese Seite ist auf „noindex“ gesetzt. Suchmaschinen werden diese Seite "
+"nicht indexieren."
+
+#: inc/SEO_Analysis.php:497
+#, fuzzy
+msgid "This page is set to be indexed by search engines."
+msgstr "Diese Seite ist für die Indizierung durch Suchmaschinen vorgesehen."
+
+#: inc/SEO_Analysis.php:512
+#, fuzzy
+msgid "The content is too short. Aim for at least 300 words."
+msgstr "Der Inhalt ist zu kurz. Streben Sie mindestens 300 Wörter an."
+
+#: inc/SEO_Analysis.php:514
+#, fuzzy
+msgid "The content is quite long. Consider breaking it into multiple sections."
+msgstr ""
+"Der Inhalt ist ziemlich lang. Erwägen Sie, ihn in mehrere Abschnitte zu "
+"unterteilen."
+
+#: inc/SEO_Analysis.php:516
+#, fuzzy
+msgid "The content has a good length."
+msgstr "Der Inhalt hat eine gute Länge."
+
+#: inc/SEO_Analysis.php:567 inc/SEO_Analysis.php:575
+#, fuzzy, php-format
+msgid "Good H1 heading structure. Found: \"%s\""
+msgstr "Gute H1-Überschriftenstruktur. Gefunden: „%s“"
+
+#: inc/SEO_Analysis.php:569
+#, fuzzy
+msgid "No H1 heading found. Add an H1 heading to your content."
+msgstr ""
+"Keine H1-Überschrift gefunden. Fügen Sie Ihrem Inhalt eine H1-Überschrift "
+"hinzu."
+
+#: inc/SEO_Analysis.php:572
+#, fuzzy
+msgid "Multiple H1 headings found. Use only one H1 per page."
+msgstr ""
+"Es wurden mehrere H1-Überschriften gefunden. Verwenden Sie nur eine H1-"
+"Überschrift pro Seite."
+
+#: inc/SEO_Analysis.php:579
+#, fuzzy
+msgid "Consider adding H2 headings to structure your content."
+msgstr ""
+"Erwägen Sie, H2-Überschriften hinzuzufügen, um Ihren Inhalt zu strukturieren."
+
+#: inc/SEO_Analysis.php:581
+#, fuzzy, php-format
+msgid "Found %d H2 heading(s) for good content structure."
+msgstr "%d H2-Überschriften für eine gute Inhaltsstruktur gefunden."
+
+#: inc/SEO_Analysis.php:617
+#, fuzzy, php-format
+msgid ""
+"All %d images have alt text issues: %d missing alt attributes and %d with "
+"empty alt text (alt=\"\"). Add meaningful alt text to your images."
+msgstr ""
+"Alle %d Bilder weisen Probleme mit dem Alt-Text auf: %d fehlende Alt-"
+"Attribute und %d leerer Alt-Text (alt=\"\"). Fügen Sie Ihren Bildern "
+"aussagekräftigen Alt-Text hinzu."
+
+#: inc/SEO_Analysis.php:619
+#, fuzzy, php-format
+msgid ""
+"All %d images have empty alt text (alt=\"\"). Add meaningful alt text to "
+"your images."
+msgstr ""
+"Alle %d Bilder haben leeren Alt-Text (alt=\"\"). Fügen Sie Ihren Bildern "
+"aussagekräftigen Alt-Text hinzu."
+
+#: inc/SEO_Analysis.php:621
+#, fuzzy
+msgid "All images are missing alt text. Add alt text to your images."
+msgstr ""
+"Allen Bildern fehlt der Alt-Text. Fügen Sie Ihren Bildern Alt-Text hinzu."
+
+#: inc/SEO_Analysis.php:625
+#, fuzzy, php-format
+msgid ""
+"%d out of %d images have alt text issues: %d missing alt attributes and %d "
+"with empty alt text (alt=\"\")."
+msgstr ""
+"%d von %d Bildern weisen Probleme mit dem Alt-Text auf: %d fehlende Alt-"
+"Attribute und %d mit leerem Alt-Text (alt=\"\")."
+
+#: inc/SEO_Analysis.php:627
+#, fuzzy, php-format
+msgid ""
+"%d out of %d images have empty alt text (alt=\"\"). Add meaningful alt text "
+"to these images."
+msgstr ""
+"%d von %d Bildern haben leeren Alt-Text (alt=\"\"). Fügen Sie diesen Bildern "
+"einen aussagekräftigen Alt-Text hinzu."
+
+#: inc/SEO_Analysis.php:629
+#, fuzzy, php-format
+msgid "%d out of %d images are missing alt text."
+msgstr "Bei %d von %d Bildern fehlt der Alt-Text."
+
+#: inc/SEO_Analysis.php:632
+#, fuzzy
+msgid "All images have meaningful alt text."
+msgstr "Alle Bilder haben aussagekräftigen Alternativtext."
+
+#: inc/SEO_Analysis.php:656
+#, fuzzy
+msgid "Consider adding internal links to other relevant pages."
+msgstr "Erwägen Sie, interne Links zu anderen relevanten Seiten hinzuzufügen."
+
+#: inc/SEO_Analysis.php:658
+#, fuzzy, php-format
+msgid "Found %d internal link(s)."
+msgstr "%d interne(n) Link(s) gefunden."
+
+#: inc/SEO_Analysis.php:681 inc/SEO_Analysis.php:1265
+#, fuzzy, php-format
+msgid "Found %d external link(s)."
+msgstr "%d externe(n) Link(s) gefunden."
+
+#: inc/SEO_Analysis.php:707
+#, fuzzy
+msgid "The focus keyword density is too low. Consider using it more often."
+msgstr ""
+"Die Dichte des Fokus-Keywords ist zu gering. Erwägen Sie, es häufiger zu "
+"verwenden."
+
+#: inc/SEO_Analysis.php:709
+#, fuzzy
+msgid "The focus keyword density is too high. Consider reducing it."
+msgstr ""
+"Die Dichte des Fokus-Keywords ist zu hoch. Erwägen Sie, sie zu reduzieren."
+
+#: inc/SEO_Analysis.php:711
+#, fuzzy
+msgid "The focus keyword density is good."
+msgstr "Die Dichte der Fokus-Keywords ist gut."
+
+#: inc/SEO_Analysis.php:734
+#, fuzzy
+msgid "Consider using shorter sentences for better readability."
+msgstr "Verwenden Sie kürzere Sätze, um die Lesbarkeit zu verbessern."
+
+#: inc/SEO_Analysis.php:736
+#, fuzzy
+msgid "Good sentence length for readability."
+msgstr "Gute Satzlänge für gute Lesbarkeit."
+
+#: inc/SEO_Analysis.php:754
+#, fuzzy
+msgid "Content is very short. This might be considered duplicate content."
+msgstr ""
+"Der Inhalt ist sehr kurz. Dies könnte als doppelter Inhalt angesehen werden."
+
+#: inc/SEO_Analysis.php:756
+#, fuzzy
+msgid "Content appears to be substantial and unique."
+msgstr "Der Inhalt scheint umfangreich und einzigartig zu sein."
+
+#: inc/SEO_Analysis.php:782
+#, fuzzy
+msgid ""
+"No structured data found. Consider adding JSON-LD, microdata, or RDFa markup."
+msgstr ""
+"Es wurden keine strukturierten Daten gefunden. Erwägen Sie das Hinzufügen "
+"von JSON-LD-, Mikrodaten- oder RDFa-Markup."
+
+#: inc/SEO_Analysis.php:784
+#, fuzzy, php-format
+msgid "Found %d structured data element(s)."
+msgstr "%d strukturierte Datenelemente gefunden."
+
+#: inc/SEO_Analysis.php:818
+#, fuzzy
+msgid ""
+"No Open Graph meta tags found. Add og:title, og:description, og:image, "
+"og:url, and og:type."
+msgstr ""
+"Keine Open Graph-Meta-Tags gefunden. Fügen Sie og:title, og:description, "
+"og:image, og:url und og:type hinzu."
+
+#: inc/SEO_Analysis.php:820
+#, fuzzy, php-format
+msgid "Missing Open Graph tags: %s"
+msgstr "Fehlende Open-Graph-Tags: %s"
+
+#: inc/SEO_Analysis.php:822
+#, fuzzy
+msgid "All essential Open Graph meta tags are present."
+msgstr "Alle wesentlichen Open-Graph-Meta-Tags sind vorhanden."
+
+#: inc/SEO_Analysis.php:855
+#, fuzzy
+msgid ""
+"No Twitter Card meta tags found. Consider adding twitter:card, "
+"twitter:title, twitter:description, and twitter:image."
+msgstr ""
+"Es wurden keine Twitter Card-Meta-Tags gefunden. Fügen Sie gegebenenfalls "
+"twitter:card, twitter:title, twitter:description und twitter:image hinzu."
+
+#: inc/SEO_Analysis.php:857
+#, fuzzy, php-format
+msgid "Missing Twitter Card tags: %s"
+msgstr "Fehlende Twitter-Card-Tags: %s"
+
+#: inc/SEO_Analysis.php:859
+#, fuzzy
+msgid "All essential Twitter Card meta tags are present."
+msgstr "Alle wesentlichen Twitter Card-Meta-Tags sind vorhanden."
+
+#: inc/SEO_Analysis.php:875
+#, fuzzy
+msgid "Canonical URL is properly set."
+msgstr "Die kanonische URL ist korrekt eingestellt."
+
+#: inc/SEO_Analysis.php:877
+#, fuzzy, php-format
+msgid ""
+"No canonical URL found. Consider adding a canonical link tag pointing to: %s"
+msgstr ""
+"Keine kanonische URL gefunden. Fügen Sie einen kanonischen Link-Tag hinzu, "
+"der auf %s verweist."
+
+#: inc/SEO_Analysis.php:892
+#, fuzzy
+msgid "Robots meta tag is present."
+msgstr "Robots-Meta-Tag ist vorhanden."
+
+#: inc/SEO_Analysis.php:894
+#, fuzzy
+msgid ""
+"No robots meta tag found. Consider adding one to control search engine "
+"crawling."
+msgstr ""
+"Kein Robots-Meta-Tag gefunden. Fügen Sie einen hinzu, um das Crawling durch "
+"Suchmaschinen zu steuern."
+
+#: inc/SEO_Analysis.php:920
+#, fuzzy, php-format
+msgid ""
+"%d image(s) without width/height attributes. Add dimensions to prevent "
+"layout shift."
+msgstr ""
+"%d Bild(er) ohne Breiten-/Höhenattribute. Fügen Sie Abmessungen hinzu, um "
+"Layoutverschiebungen zu vermeiden."
+
+#: inc/SEO_Analysis.php:926
+#, fuzzy, php-format
+msgid "%d inline style blocks found. Consider moving CSS to external files."
+msgstr ""
+"%d Inline-Stilblöcke gefunden. Erwägen Sie, CSS in externe Dateien zu "
+"verschieben."
+
+#: inc/SEO_Analysis.php:945
+#, fuzzy, php-format
+msgid ""
+"%d external CSS files found. Consider combining or using fewer external "
+"resources."
+msgstr ""
+"%d externe CSS-Dateien gefunden. Erwägen Sie, externe Ressourcen zu "
+"kombinieren oder weniger davon zu verwenden."
+
+#: inc/SEO_Analysis.php:949
+#, fuzzy, php-format
+msgid ""
+"%d external JavaScript files found. Consider combining or using fewer "
+"external resources."
+msgstr ""
+"%d externe JavaScript-Dateien gefunden. Erwägen Sie, externe Ressourcen zu "
+"kombinieren oder weniger davon zu verwenden."
+
+#: inc/SEO_Analysis.php:954
+#, fuzzy
+msgid "Good page speed indicators. No major performance issues detected."
+msgstr ""
+"Gute Indikatoren für die Seitengeschwindigkeit. Keine größeren "
+"Leistungsprobleme festgestellt."
+
+#: inc/SEO_Analysis.php:972
+#, fuzzy
+msgid ""
+"No rel=\"author\" links found. Consider adding author attribution links to "
+"improve E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness)."
+msgstr ""
+"Es wurden keine rel=\"author\"-Links gefunden. Erwägen Sie das Hinzufügen "
+"von Autorenattributionslinks, um E-E-A-T (Erfahrung, Fachwissen, Autorität, "
+"Vertrauenswürdigkeit) zu verbessern."
+
+#: inc/SEO_Analysis.php:974
+#, fuzzy, php-format
+msgid ""
+"Found %d rel=\"author\" link(s). This helps establish content authorship and "
+"improves E-E-A-T."
+msgstr ""
+"%d rel=\"author\"-Link(s) gefunden. Dies hilft dabei, die Urheberschaft von "
+"Inhalten festzustellen und verbessert E-E-A-T."
+
+#: inc/SEO_Analysis.php:1005
+#, fuzzy
+msgid ""
+"No contact information found. Consider adding contact details to improve "
+"trustworthiness and E-E-A-T."
+msgstr ""
+"Keine Kontaktinformationen gefunden. Erwägen Sie, Kontaktdaten hinzuzufügen, "
+"um die Vertrauenswürdigkeit und E-E-A-T zu verbessern."
+
+#: inc/SEO_Analysis.php:1007
+#, fuzzy, php-format
+msgid ""
+"Found contact information (%d type(s)). This improves trustworthiness and E-"
+"E-A-T."
+msgstr ""
+"Kontaktinformationen gefunden (%d Typ(en)). Dies verbessert die "
+"Vertrauenswürdigkeit und E-E-A-T."
+
+#: inc/SEO_Analysis.php:1092
+#, fuzzy, php-format
+msgid ""
+"This SEO title is already used by %d other post(s) or term(s). Consider "
+"making it unique."
+msgstr ""
+"Dieser SEO-Titel wird bereits von %d anderen Beiträgen oder Begriffen "
+"verwendet. Erwägen Sie, ihn einzigartig zu gestalten."
+
+#: inc/SEO_Analysis.php:1097
+#, fuzzy
+msgid "This title is unique across your site."
+msgstr "Dieser Titel ist auf Ihrer Website einzigartig."
+
+#: inc/SEO_Analysis.php:1166
+#, fuzzy, php-format
+msgid ""
+"This meta description is already used by %d other post(s) or term(s). "
+"Consider making it unique."
+msgstr ""
+"Diese Meta-Beschreibung wird bereits von %d anderen Beiträgen oder Begriffen "
+"verwendet. Erwägen Sie, sie einzigartig zu gestalten."
+
+#: inc/SEO_Analysis.php:1171
+#, fuzzy
+msgid "This meta description is unique across your site."
+msgstr "Diese Meta-Beschreibung ist auf Ihrer Website einzigartig."
+
+#: inc/SEO_Analysis.php:1218
+#, fuzzy, php-format
+msgid "%d broken image(s) found. Check and fix the image URLs."
+msgstr ""
+"%d defekte Bilder gefunden. Überprüfen und korrigieren Sie die Bild-URLs."
+
+#: inc/SEO_Analysis.php:1222
+#, fuzzy, php-format
+msgid ""
+"%d external image(s) found. Consider hosting images locally for better "
+"performance and reliability."
+msgstr ""
+"%d externe Bilder gefunden. Für eine bessere Leistung und Zuverlässigkeit "
+"sollten Sie Bilder lokal hosten."
+
+#: inc/SEO_Analysis.php:1226
+#, fuzzy
+msgid "All images appear to be working correctly."
+msgstr "Alle Bilder scheinen korrekt zu funktionieren."
+
+#: inc/SEO_Analysis.php:1268
+#, fuzzy, php-format
+msgid ""
+"%d link(s) use URL shorteners. Consider using direct links for better SEO."
+msgstr ""
+"%d Link(s) verwenden URL-Kürzer. Verwenden Sie für eine bessere "
+"Suchmaschinenoptimierung (SEO) direkte Links."
+
+#: inc/SEO_Analysis.php:1318
+#, fuzzy, php-format
+msgid ""
+"%d broken external link(s) found. These links return errors and should be "
+"fixed or removed."
+msgstr ""
+"%d defekte externe Links gefunden. Diese Links führen zu Fehlern und sollten "
+"repariert oder entfernt werden."
+
+#: inc/SEO_Analysis.php:1329
+#, fuzzy, php-format
+msgid ""
+"%d redirected external link(s) found. Consider updating these links to point "
+"directly to the final destination."
+msgstr ""
+"%d Umgeleitete externe Links gefunden. Bitte aktualisieren Sie diese Links, "
+"damit sie direkt zum endgültigen Ziel führen."
+
+#: inc/SEO_Analysis.php:1339
+#, fuzzy, php-format
+msgid "All %d checked external link(s) are working correctly."
+msgstr "Alle %d überprüften externen Links funktionieren ordnungsgemäß."
+
+#: inc/SEO_Analysis.php:1398
+#, fuzzy, php-format
+msgid ""
+"%d broken internal link(s) found. These links return errors and should be "
+"fixed or removed."
+msgstr ""
+"%d defekte interne Links gefunden. Diese Links führen zu Fehlern und sollten "
+"repariert oder entfernt werden."
+
+#: inc/SEO_Analysis.php:1409
+#, fuzzy, php-format
+msgid ""
+"%d redirected internal link(s) found. Consider updating these links to point "
+"directly to the final destination."
+msgstr ""
+"%d Umgeleitete interne Links gefunden. Bitte aktualisieren Sie diese Links, "
+"damit sie direkt zum endgültigen Ziel führen."
+
+#: inc/SEO_Analysis.php:1419
+#, fuzzy, php-format
+msgid "All %d checked internal link(s) are working correctly."
+msgstr "Alle %d überprüften internen Links funktionieren ordnungsgemäß."
+
+#: inc/SEO_Analysis.php:1463
+#, fuzzy, php-format
+msgid "HTTP %d error"
+msgstr "HTTP %d Fehler"
+
+#: inc/SEO_Analysis.php:1597
+#, fuzzy
+msgid "Meta viewport tag found. Good for mobile-friendliness."
+msgstr "Meta-Viewport-Tag gefunden. Gut für die Mobilfreundlichkeit."
+
+#: inc/SEO_Analysis.php:1599
+#, fuzzy
+msgid "Consider adding a meta viewport tag for mobile-friendliness."
+msgstr ""
+"Erwägen Sie das Hinzufügen eines Meta-Viewport-Tags für die "
+"Mobilfreundlichkeit."
+
+#: inc/SEO_Analysis.php:1614
+#, fuzzy
+msgid "Favicon found. Good for branding."
+msgstr "Favicon gefunden. Gut für das Branding."
+
+#: inc/SEO_Analysis.php:1616
+#, fuzzy
+msgid "Consider adding a favicon for better branding."
+msgstr "Erwägen Sie das Hinzufügen eines Favicons für ein besseres Branding."
+
+#: inc/SEO_Analysis.php:1631
+#, fuzzy
+msgid "Language declaration found. Good for international SEO."
+msgstr ""
+"Sprachdeklaration gefunden. Gut für internationale Suchmaschinenoptimierung."
+
+#: inc/SEO_Analysis.php:1633
+#, fuzzy
+msgid "Consider adding a lang attribute to the HTML tag for international SEO."
+msgstr ""
+"Erwägen Sie, für internationale Suchmaschinenoptimierung ein lang-Attribut "
+"zum HTML-Tag hinzuzufügen."
+
+#: inc/SEO_Analysis.php:1658
+#, fuzzy
+msgid "All images have alt text. Good for accessibility."
+msgstr "Alle Bilder haben Alternativtext. Gut für die Barrierefreiheit."
+
+#: inc/SEO_Analysis.php:1660
+#, fuzzy, php-format
+msgid ""
+"%d images are missing alt text. Consider adding alt attributes for "
+"accessibility."
+msgstr ""
+"%d Bildern fehlt der Alt-Text. Fügen Sie zur Barrierefreiheit Alt-Attribute "
+"hinzu."
+
+#: inc/SEO_Analysis.php:1676
+#, fuzzy, php-format
+msgid ""
+"%d form inputs may be missing labels. Consider adding labels or aria-label "
+"attributes."
+msgstr ""
+"%d Formularfeldern fehlen möglicherweise Beschriftungen. Erwägen Sie das "
+"Hinzufügen von Beschriftungen oder aria-label-Attributen."
+
+#: inc/SEO_Analysis.php:1678
+#, fuzzy
+msgid "Form inputs appear to have proper labels. Good for accessibility."
+msgstr ""
+"Die Formulareingaben scheinen über korrekte Beschriftungen zu verfügen. Gut "
+"für die Barrierefreiheit."
+
+#: inc/SEO_Analysis.php:1723
+#, fuzzy
+msgid "Good sentence length. Easy to read."
+msgstr "Gute Satzlänge. Leicht zu lesen."
+
+#: inc/SEO_Analysis.php:1725
+#, fuzzy
+msgid "Consider shortening some sentences for better readability."
+msgstr "Erwägen Sie, einige Sätze zu kürzen, um die Lesbarkeit zu verbessern."
+
+#: inc/SEO_Analysis.php:1727
+#, fuzzy
+msgid ""
+"Some sentences are quite long. Consider breaking them up for better "
+"readability."
+msgstr ""
+"Einige Sätze sind ziemlich lang. Erwägen Sie, sie für eine bessere "
+"Lesbarkeit aufzuteilen."
+
+#: inc/SEO_Analysis.php:1743
+#, fuzzy
+msgid "Good paragraph length. Easy to read."
+msgstr "Gute Absatzlänge. Leicht zu lesen."
+
+#: inc/SEO_Analysis.php:1745
+#, fuzzy, php-format
+msgid ""
+"%d paragraphs are quite long. Consider breaking them up for better "
+"readability."
+msgstr ""
+"%d Die Absätze sind ziemlich lang. Um die Lesbarkeit zu verbessern, sollten "
+"Sie sie möglicherweise aufteilen."
+
+#: inc/SEO_Analysis.php:1778
+#, fuzzy
+msgid "Starting analysis..."
+msgstr "Analyse wird gestartet..."
+
+#: inc/SEO_Analysis.php:1784
+#, fuzzy
+msgid "Downloading page content..."
+msgstr "Laden der Seiteninhalte..."
+
+#: inc/SEO_Analysis.php:1792
+#, fuzzy
+msgid "Analyzing headers..."
+msgstr "Header werden analysiert..."
+
+#: inc/SEO_Analysis.php:1799
+#, fuzzy
+msgid "Checking links..."
+msgstr "Links überprüfen..."
+
+#: inc/SEO_Analysis.php:1811
+#, fuzzy
+msgid "Analyzing content..."
+msgstr "Inhalt wird analysiert..."
+
+#: inc/SEO_Analysis.php:1818
+#, fuzzy
+msgid "Caching results..."
+msgstr "Ergebnisse werden zwischengespeichert..."
+
+#: inc/SEO_Issues_Ajax.php:73
+#, fuzzy
+msgid "All content has been analyzed!"
+msgstr "Alle Inhalte wurden analysiert!"
+
+#: inc/SEO_Issues_Ajax.php:131
+#, fuzzy, php-format
+msgid "Directly analyzed %d URLs. %d remaining."
+msgstr "Direkt analysierte %d URLs. %d verbleibend."
+
+#: inc/SEO_Issues_Ajax.php:281
+msgid "Invalid status"
+msgstr "Ungültiger Status"
+
+#: inc/SEO_Issues_Ajax.php:289
+#, fuzzy
+msgid "Possibility status updated successfully"
+msgstr "Status der Möglichkeit erfolgreich aktualisiert"
+
+#: inc/SEO_Issues_Ajax.php:291
+#, fuzzy
+msgid "Failed to update possibility status"
+msgstr "Aktualisierung des Status „Möglichkeit“ fehlgeschlagen"
+
+#: inc/SEO_Issues_Ajax.php:313
+#, fuzzy
+msgid "No possibilities selected or invalid action"
+msgstr "Keine Optionen ausgewählt oder ungültige Aktion"
+
+#: inc/SEO_Issues_Ajax.php:324
+#, fuzzy
+msgid "Invalid bulk action"
+msgstr "Ungültige Massenaktion"
+
+#: inc/SEO_Issues_Ajax.php:333
+#, fuzzy, php-format
+msgid "%d possibility(ies) updated successfully"
+msgstr "%d Möglichkeit(en) erfolgreich aktualisiert"
+
+#: inc/SEO_Issues_Ajax.php:336
+#, fuzzy
+msgid "Failed to update possibilities"
+msgstr "Aktualisierung der Möglichkeiten fehlgeschlagen"
+
+#: inc/SEO_Issues_Ajax.php:405
+#, fuzzy, php-format
+msgid "Analysis stopped. %d pending actions cancelled."
+msgstr "Analyse gestoppt. %d ausstehende Aktionen abgebrochen."
+
+#: inc/SEO_Issues_Ajax.php:409
+#, fuzzy
+msgid "Action Scheduler not available"
+msgstr "Aktionsplaner nicht verfügbar"
+
+#: inc/SEO_Issues_Ajax.php:489
+#, fuzzy
+msgid "Invalid URL ID"
+msgstr "Ungültige URL-ID"
+
+#: inc/SEO_Issues_Ajax.php:523
+#, fuzzy
+msgid "Failed to save sitewide analysis results"
+msgstr "Speichern der siteweiten Analyseergebnisse fehlgeschlagen"
+
+#: inc/SEO_Issues_Ajax.php:530
+#, fuzzy
+msgid "Sitewide SEO analysis completed successfully"
+msgstr "SEO-Analyse der gesamten Website erfolgreich abgeschlossen"
+
+#: inc/SEO_Issues_Ajax.php:537
+#, fuzzy
+msgid "Sitewide analysis failed: "
+msgstr "Die siteweite Analyse ist fehlgeschlagen: "
+
+#: inc/SEO_Issues_Ajax.php:562
+#, fuzzy
+msgid "No site URL configured"
+msgstr "Keine Website-URL konfiguriert"
+
+#: inc/SEO_Issues_Ajax.php:567
+#, fuzzy
+msgid "GSC Issues Processor not available"
+msgstr "GSC-Ausgabenprozessor nicht verfügbar"
+
+#: inc/SEO_Issues_Ajax.php:575
+#, fuzzy
+msgid ""
+"GSC issues sync started. Inspections will be processed in the background."
+msgstr ""
+"Die Synchronisierung der GSC-Ausgaben wurde gestartet. Die Überprüfungen "
+"werden im Hintergrund durchgeführt."
+
+#: inc/SEO_Issues_Ajax.php:579
+#, fuzzy
+msgid "Sync failed: "
+msgstr "Synchronisierung fehlgeschlagen: "
+
+#: inc/SEO_Issues_List_Table.php:42
+msgid "URL"
+msgstr "URL"
+
+#: inc/SEO_Issues_List_Table.php:45
+msgid "Actions"
+msgstr "Aktionen"
+
+#: inc/SEO_Issues_List_Table.php:122
+msgid "Mark as Fixed"
+msgstr "Als behoben markieren"
+
+#: inc/SEO_Issues_List_Table.php:123
+#, fuzzy
+msgid "Ignore Temporarily"
+msgstr "Vorübergehend ignorieren"
+
+#: inc/SEO_Issues_List_Table.php:124
+#, fuzzy
+msgid "Ignore Permanently"
+msgstr "Dauerhaft ignorieren"
+
+#: inc/SEO_Issues_List_Table.php:125
+msgid "Mark as Active"
+msgstr "Als aktiv markieren"
+
+#: inc/SEO_Issues_List_Table.php:372
+#, fuzzy
+msgid "Indexing Issue"
+msgstr "Indexierungsproblem"
+
+#: inc/SEO_Issues_List_Table.php:388
+#, fuzzy, php-format
+msgid "%d possibility"
+msgid_plural "%d possibilities"
+msgstr[0] "%d Möglichkeit"
+msgstr[1] "%d Möglichkeiten"
+
+#: inc/SEO_Issues_List_Table.php:454
+#, fuzzy
+msgid "Google Search Console issues detected"
+msgstr "Probleme in der Google Search Console erkannt"
+
+#: inc/SEO_Issues_List_Table.php:555
+msgid "View Issues"
+msgstr "Fälle ansehen"
+
+#: inc/SEO_Issues_List_Table.php:763
+#, fuzzy
+msgid "All Possibility Types"
+msgstr "Alle Möglichkeitstypen"
+
+#: inc/SEO_Issues_List_Table.php:788 inc/SEO_Issues_List_Table.php:849
+msgid "Filter"
+msgstr "Filter"
+
+#: inc/SEO_Issues_List_Table.php:796
+#, fuzzy
+msgid "No SEO issues found."
+msgstr "Keine SEO-Probleme gefunden."
+
+#: inc/SEO_Issues_List_Table.php:816
+#, fuzzy
+msgid "All Severities"
+msgstr "Alle Schweregrade"
+
+#: inc/SEO_Issues_List_Table.php:818 inc/email_status.php:389
+#: seo-booster-seobooster2.php:784
+msgid "Critical"
+msgstr "Kritisch"
+
+#: inc/SEO_Issues_List_Table.php:819 inc/email_status.php:391
+msgid "High"
+msgstr "Hoch"
+
+#: inc/SEO_Issues_List_Table.php:820 inc/email_status.php:393
+msgid "Medium"
+msgstr "Mittel"
+
+#: inc/SEO_Issues_List_Table.php:821 inc/email_status.php:394
+msgid "Low"
+msgstr "Niedrig"
+
+#: inc/SEO_Issues_List_Table.php:830
+msgid "All Statuses"
+msgstr "Alle Stati"
+
+#: inc/SEO_Issues_List_Table.php:832 seo-booster-settings.php:1234
+msgid "Active"
+msgstr "Aktiv"
+
+#: inc/SEO_Issues_List_Table.php:833
+msgid "Fixed"
+msgstr "Fixiert"
+
+#: inc/SEO_Issues_List_Table.php:834
+#, fuzzy
+msgid "Ignored (Temp)"
+msgstr "Ignoriert (Temp)"
+
+#: inc/SEO_Issues_List_Table.php:835
+#, fuzzy
+msgid "Ignored (Perm)"
+msgstr "Ignoriert (dauerhaft)"
+
+#: inc/SEO_Issues_List_Table.php:846
+#, fuzzy
+msgid "Search issues, URLs..."
+msgstr "Suchprobleme, URLs..."
+
+#: inc/SEO_Issues_List_Table.php:854
+msgid "Clear Filters"
+msgstr "Filter löschen"
+
+#: inc/SEO_Issues_Manager.php:1281
+#, fuzzy
+msgid "Homepage (Sitewide)"
+msgstr "Startseite (gesamte Website)"
+
+#: inc/SEO_Issues_Manager.php:1701
+#, php-format
+msgid "%s: %s"
+msgstr "%s: %s"
+
+#: inc/SEO_Issues_Manager.php:1762
+#, fuzzy
+msgid "Page is set to not be indexed"
+msgstr "Die Seite ist so eingestellt, dass sie nicht indexiert wird."
+
+#: inc/SEO_Issues_Manager.php:1763
+#, fuzzy
+msgid "Page is blocked by robots.txt"
+msgstr "Seite wird durch robots.txt blockiert"
+
+#: inc/SEO_Issues_Manager.php:1764
+#, fuzzy
+msgid "Page not found (404 error)"
+msgstr "Seite nicht gefunden (404-Fehler)"
+
+#: inc/SEO_Issues_Manager.php:1765
+#, fuzzy
+msgid "Indexing is allowed"
+msgstr "Indizierung ist erlaubt"
+
+#: inc/SEO_Issues_Manager.php:1766
+#, fuzzy
+msgid "Google can't index this page"
+msgstr "Google kann diese Seite nicht indexieren."
+
+#: inc/SEO_Issues_Manager.php:1767
+#, fuzzy
+msgid "Page is indexed"
+msgstr "Seite ist indexiert"
+
+#: inc/SEO_Issues_Manager.php:1768
+#, fuzzy
+msgid "Page is excluded from indexing"
+msgstr "Seite ist von der Indizierung ausgeschlossen"
+
+#: inc/SEO_Issues_Manager.php:1769
+#, fuzzy
+msgid "Page fetch successful"
+msgstr "Seite erfolgreich abgerufen"
+
+#: inc/SEO_Issues_Manager.php:1770
+#, fuzzy
+msgid "Page fetch blocked"
+msgstr "Seitenabruf blockiert"
+
+#: inc/SEO_Issues_Manager.php:1771
+#, fuzzy
+msgid "Allowed by robots.txt"
+msgstr "Durch robots.txt zugelassen"
+
+#: inc/SEO_Issues_Manager.php:1772
+#, fuzzy
+msgid "Disallowed by robots.txt"
+msgstr "Durch robots.txt gesperrt"
+
+#: inc/SEO_Issues_Manager.php:1813
+#, fuzzy
+msgid "Detected by both GSC and Local Analysis"
+msgstr "Sowohl durch GSC als auch durch lokale Analyse erkannt"
+
+#: inc/SEO_Plugin_Integration.php:118
+#, fuzzy
+msgid ""
+"No compatible SEO plugin detected. Please install Yoast SEO, Rank Math, "
+"SEOPress, All in One SEO, or The SEO Framework."
+msgstr ""
+"Es wurde kein kompatibles SEO-Plugin gefunden. Bitte installieren Sie Yoast "
+"SEO, Rank Math, SEOPress, All in One SEO oder The SEO Framework."
+
+#: inc/SEO_Plugin_Integration.php:127
+#, fuzzy, php-format
+msgid "Field type \"%s\" not supported for %s."
+msgstr "Feldtyp „%s“ wird für %s nicht unterstützt."
+
+#: inc/SEO_Plugin_Integration.php:137
+#, fuzzy, php-format
+msgid "Suggestion will be applied to %s field in %s."
+msgstr "Der Vorschlag wird auf das Feld %s in %s angewendet."
+
+#: inc/SEO_Sitewide_Analysis.php:124
+#, fuzzy
+msgid "Site is not using HTTPS. SSL is important for SEO and security."
+msgstr ""
+"Die Website verwendet kein HTTPS. SSL ist wichtig für SEO und Sicherheit."
+
+#: inc/SEO_Sitewide_Analysis.php:126
+#, fuzzy
+msgid "Site is using HTTPS."
+msgstr "Die Website verwendet HTTPS."
+
+#: inc/SEO_Sitewide_Analysis.php:145
+#, fuzzy
+msgid "robots.txt file is not accessible."
+msgstr "Die Datei robots.txt ist nicht zugänglich."
+
+#: inc/SEO_Sitewide_Analysis.php:151
+#, fuzzy
+msgid "robots.txt file is not accessible (HTTP "
+msgstr "Die Datei robots.txt ist nicht zugänglich (HTTP "
+
+#: inc/SEO_Sitewide_Analysis.php:159
+#, fuzzy
+msgid "robots.txt file exists but is empty. Consider adding crawl directives."
+msgstr ""
+"Die Datei „robots.txt“ ist vorhanden, aber leer. Fügen Sie gegebenenfalls "
+"Crawling-Anweisungen hinzu."
+
+#: inc/SEO_Sitewide_Analysis.php:161
+#, fuzzy
+msgid "robots.txt file is accessible and configured."
+msgstr "Die Datei „robots.txt“ ist zugänglich und konfiguriert."
+
+#: inc/SEO_Sitewide_Analysis.php:199
+#, fuzzy, php-format
+msgid "XML sitemap found at: %s"
+msgstr "XML-Sitemap gefunden unter: %s"
+
+#: inc/SEO_Sitewide_Analysis.php:206
+#, fuzzy
+msgid ""
+"XML sitemap not found. Sitemaps help search engines discover and index your "
+"content."
+msgstr ""
+"XML-Sitemap nicht gefunden. Sitemaps helfen Suchmaschinen dabei, Ihre "
+"Inhalte zu finden und zu indexieren."
+
+#: inc/SEO_Sitewide_Analysis.php:261
+#, fuzzy
+msgid "Favicon is present."
+msgstr "Favicon ist vorhanden."
+
+#: inc/SEO_Sitewide_Analysis.php:263
+#, fuzzy
+msgid "Favicon is missing. Add a favicon to improve brand recognition."
+msgstr ""
+"Favicon fehlt. Fügen Sie ein Favicon hinzu, um die Markenbekanntheit zu "
+"verbessern."
+
+#: inc/SEO_Sitewide_Analysis.php:281
+#, fuzzy
+msgid "Mobile viewport meta tag is present."
+msgstr "Der Meta-Tag für den mobilen Viewport ist vorhanden."
+
+#: inc/SEO_Sitewide_Analysis.php:283
+#, fuzzy
+msgid "Mobile viewport meta tag is missing. This is essential for mobile SEO."
+msgstr ""
+"Der Meta-Tag für den mobilen Viewport fehlt. Dieser ist für die mobile "
+"Suchmaschinenoptimierung unerlässlich."
+
+#: inc/SEO_Sitewide_Analysis.php:302
+#, fuzzy, php-format
+msgid "Language is declared: %s"
+msgstr "Sprache wird deklariert: %s"
+
+#: inc/SEO_Sitewide_Analysis.php:304
+#, fuzzy
+msgid ""
+"HTML lang attribute is missing. Declaring the language helps search engines "
+"understand your content."
+msgstr ""
+"Das HTML-Attribut „lang“ fehlt. Durch die Angabe der Sprache können "
+"Suchmaschinen Ihren Inhalt besser verstehen."
+
+#: inc/Utils.php:117 seo-booster.php:457
+msgid "Nonce verification failed."
+msgstr "Nonce-Verifikation fehlgeschlagen."
+
+#: inc/Utils.php:123
+#, fuzzy
+msgid "You do not have permission to create auto links."
+msgstr "Sie haben keine Berechtigung, automatische Links zu erstellen."
+
+#: inc/Utils.php:132
+#, fuzzy
+msgid "Post ID or Query ID is missing."
+msgstr "Post-ID oder Abfrage-ID fehlt."
+
+#: inc/Utils.php:147
+msgid "Linked"
+msgstr "Verlinkt"
+
+#: inc/Utils.php:153
+#, fuzzy
+msgid "Link creation failed."
+msgstr "Link-Erstellung fehlgeschlagen."
+
+#: inc/Utils.php:518
+#, fuzzy
+msgid "Updated database tables"
+msgstr "Aktualisierte Datenbanktabellen"
+
+#: inc/Utils.php:722
+msgid "Documentation"
+msgstr "Dokumentation"
+
+#: inc/Utils.php:724
+msgid "Roadmap"
+msgstr "Straßenkarte"
+
+#: inc/Utils.php:726
+msgid "Support"
+msgstr "Support"
+
+#: inc/Utils.php:784
+msgid "No email address provided"
+msgstr "Keine eMail Adresse vorhanden"
+
+#: inc/Utils.php:795
+#, fuzzy
+msgid "No valid email addresses provided"
+msgstr "Keine gültige E-Mail-Adresse angegeben"
+
+#. translators: %s: Email recipient(s)
+#: inc/Utils.php:806
+#, fuzzy, php-format
+msgid "Weekly email signup processed successfully for: %s"
+msgstr ""
+"Die wöchentliche E-Mail-Anmeldung wurde erfolgreich verarbeitet für: %s"
+
+#: inc/email_status.php:282
+msgid "Summary"
+msgstr "Zusammenfassung"
+
+#: inc/email_status.php:288
+#, fuzzy, php-format
+msgid "Impressions: %s (%s%%)"
+msgstr "Eindrücke: %s (%s%%)"
+
+#: inc/email_status.php:293
+#, fuzzy, php-format
+msgid "Clicks: %s (%s%%)"
+msgstr "Klicks: %s (%s%%)"
+
+#: inc/email_status.php:298
+#, fuzzy, php-format
+msgid "Avg Position: %s (%s%%)"
+msgstr "Durchschnittliche Position: %s (%s% %)"
+
+#: inc/email_status.php:299
+msgid "improved"
+msgstr "verbessert"
+
+#: inc/email_status.php:299
+#, fuzzy
+msgid "worsened"
+msgstr "verschlechtert"
+
+#: inc/email_status.php:303
+#, fuzzy, php-format
+msgid "CTR: %s%% (%s%%)"
+msgstr "CTR: %s% % (%s% %)"
+
+#: inc/email_status.php:311
+#, fuzzy, php-format
+msgid "%s new keywords discovered in the past 7 days"
+msgstr "%s neue Schlüsselwörter, die in den letzten 7 Tagen entdeckt wurden"
+
+#: inc/email_status.php:316
+msgid "critical"
+msgstr "kritisch"
+
+#: inc/email_status.php:319
+msgid "errors"
+msgstr "Fehler"
+
+#: inc/email_status.php:322
+msgid "high"
+msgstr "hoch"
+
+#: inc/email_status.php:325
+#, fuzzy, php-format
+msgid "%s SEO possibilities found%s"
+msgstr "%s SEO-Möglichkeiten gefunden%s"
+
+#: inc/email_status.php:369
+#, fuzzy, php-format
+msgid "GSC: %s new issues, %s resolved, %s structured data errors"
+msgstr "GSC: %s neue Probleme, %s behoben, %s strukturierte Datenfehler"
+
+#: inc/email_status.php:385
+#, fuzzy
+msgid "Top SEO Possibilities"
+msgstr "Top-SEO-Möglichkeiten"
+
+#: inc/email_status.php:386
+#, fuzzy, php-format
+msgid "Here are the top %d SEO possibilities to address:"
+msgstr ""
+"Hier sind die wichtigsten %d SEO-Möglichkeiten, die es zu berücksichtigen "
+"gilt:"
+
+#: inc/email_status.php:392 seo-booster-seobooster2.php:787 seo-booster.php:579
+msgid "Warning"
+msgstr "Warnung"
+
+#: inc/email_status.php:404
+#, fuzzy
+msgid "SEO issue detected"
+msgstr "SEO-Problem erkannt"
+
+#: inc/email_status.php:408
+#, fuzzy, php-format
+msgid "%d page affected"
+msgid_plural "%d pages affected"
+msgstr[0] "%d betroffene Seite"
+msgstr[1] "%d betroffene Seiten"
+
+#: inc/email_status.php:412
+#, fuzzy
+msgid "View All SEO Possibilities"
+msgstr "Alle SEO-Möglichkeiten anzeigen"
+
+#: inc/email_status.php:416
+#, fuzzy
+msgid "New Keywords"
+msgstr "Neue Schlüsselwörter"
+
+#: inc/email_status.php:418
+#, fuzzy
+msgid "Top keywords discovered in the past 7 days:"
+msgstr "Die wichtigsten Keywords der letzten 7 Tage:"
+
+#: inc/email_status.php:429
+msgid "Position:"
+msgstr "Position:"
+
+#: inc/email_status.php:430
+msgid "Clicks:"
+msgstr "Klicks:"
+
+#: inc/email_status.php:431
+#, fuzzy
+msgid "Impressions:"
+msgstr "Eindrücke:"
+
+#: inc/email_status.php:434
+#, fuzzy, php-format
+msgid "View all %s new keywords"
+msgstr "Alle %s neuen Stichwörter anzeigen"
+
+#: inc/email_status.php:437
+#, fuzzy
+msgid "No new keywords found in the past 7 days."
+msgstr "In den letzten 7 Tagen wurden keine neuen Keywords gefunden."
+
+#: inc/email_status.php:442
+#, fuzzy, php-format
+msgid "Your Weekly SEO Update - %s - %s"
+msgstr "Ihr wöchentliches SEO-Update – %s – %s"
+
+#: inc/email_status.php:443
+#, fuzzy
+msgid "SEO Update from SEO Booster"
+msgstr "SEO-Update von SEO Booster"
+
+#: inc/email_status.php:444
+#, fuzzy
+msgid "SEO Booster Dashboard"
+msgstr "SEO-Booster-Dashboard"
+
+#: inc/email_status.php:446
+#, fuzzy
+msgid "Here's your weekly SEO update with key insights and opportunities."
+msgstr ""
+"Hier ist Ihr wöchentliches SEO-Update mit wichtigen Erkenntnissen und "
+"Chancen."
+
+#: inc/email_status.php:447
+#, fuzzy
+msgid ""
+"Data is based on Google Search Console and does not represent your full "
+"website traffic."
+msgstr ""
+"Die Daten basieren auf der Google Search Console und geben nicht den "
+"gesamten Traffic Ihrer Website wieder."
+
+#: inc/email_status.php:470
+#, fuzzy
+msgid "Email template file not found"
+msgstr "E-Mail-Vorlagendatei nicht gefunden"
+
+#: inc/email_status.php:480
+#, fuzzy
+msgid "No valid email recipients found for status email"
+msgstr "Keine gültigen E-Mail-Empfänger für Status-E-Mail gefunden"
+
+#. translators: 1: Invalid email address
+#: inc/email_status.php:488
+#, fuzzy, php-format
+msgid "Invalid email address: %1$s"
+msgstr "Ungültige E-Mail-Adresse: %1$s"
+
+#. translators: 1: Email address of the recipient
+#: inc/email_status.php:498
+#, fuzzy, php-format
+msgid "Status email was sent to %1$s"
+msgstr "Status-E-Mail wurde an %1$s gesendet."
+
+#. translators: 1: Email address of the recipient
+#: inc/email_status.php:504
+#, fuzzy, php-format
+msgid "Status email was not sent to %1$s"
+msgstr "Status-E-Mail wurde nicht an %1$s gesendet."
+
+#: js/sb-gsc-metabox.js:302
+msgid "per page"
+msgstr "pro Seite"
+
+#: js/sb-gsc-metabox.js:494
+#, fuzzy
+msgid ""
+"Are you sure you want to create internal links using this keyword on other "
+"pages, linking to this page?"
+msgstr ""
+"Sind Sie sicher, dass Sie interne Links mit diesem Schlüsselwort auf anderen "
+"Seiten erstellen möchten, die auf diese Seite verweisen?"
+
+#: js/sb-gsc-metabox.js:506
+msgid "Error:"
+msgstr "Fehler:"
+
+#: seo-booster-issues.php:63 seo-booster-seobooster2.php:767
+#: seo-booster-seobooster2.php:903 seo-booster-settings.php:55
+#: seo-booster.php:2399 seo-booster.php:2400
+#, fuzzy
+msgid "SEO Possibilities"
+msgstr "SEO-Möglichkeiten"
+
+#: seo-booster-issues.php:234
+#, fuzzy
+msgid "Sitewide SEO Checks"
+msgstr "SEO-Prüfungen für die gesamte Website"
+
+#: seo-booster-issues.php:235
+#, fuzzy
+msgid ""
+"These checks analyze your entire site by examining the homepage and common "
+"sitewide elements."
+msgstr ""
+"Diese Überprüfungen analysieren Ihre gesamte Website, indem sie die "
+"Startseite und allgemeine websiteweite Elemente untersuchen."
+
+#: seo-booster-issues.php:240
+#, fuzzy
+msgid "Sitewide Stats:"
+msgstr "Website-weite Statistiken:"
+
+#: seo-booster-issues.php:242
+#, fuzzy, php-format
+msgid "%d total issues (%d errors, %d warnings, %d good practices)"
+msgstr ""
+"%d Gesamtzahl der Probleme (%d Fehler, %d Warnungen, %d bewährte Verfahren)"
+
+#: seo-booster-issues.php:253
+#, fuzzy
+msgid "Run Sitewide Analysis"
+msgstr "Standortweite Analyse durchführen"
+
+#: seo-booster-issues.php:259
+#, fuzzy
+msgid ""
+"No sitewide analysis has been run yet. Click \"Run Sitewide Analysis\" to "
+"check your site."
+msgstr ""
+"Es wurde noch keine siteweite Analyse durchgeführt. Klicken Sie auf "
+"„Siteweite Analyse durchführen“, um Ihre Website zu überprüfen."
+
+#: seo-booster-issues.php:264
+msgid "Severity"
+msgstr "Schweregrad"
+
+#: seo-booster-issues.php:265
+msgid "Issue"
+msgstr "Problem"
+
+#: seo-booster-issues.php:292
+msgid "Quick Stats:"
+msgstr "Kurzstatistiken:"
+
+#: seo-booster-issues.php:294
+#, fuzzy, php-format
+msgid ""
+"%d total possibilities (%d critical, %d high, %d medium) • %d/%d URLs "
+"analyzed"
+msgstr ""
+"%d Gesamtmöglichkeiten (%d kritisch, %d hoch, %d mittel) • %d/%d analysierte "
+"URLs"
+
+#: seo-booster-issues.php:308
+#, fuzzy
+msgid "Analyze Remaining"
+msgstr "Verbleibende analysieren"
+
+#: seo-booster-issues.php:311
+#, fuzzy
+msgid "Stop Analysis"
+msgstr "Analyse beenden"
+
+#: seo-booster-issues.php:341
+#, fuzzy
+msgid "Analyzing Content"
+msgstr "Inhalte analysieren"
+
+#: seo-booster-issues.php:355
+#, fuzzy
+msgid "Analyzed:"
+msgstr "Analysiert:"
+
+#: seo-booster-issues.php:359
+msgid "Remaining:"
+msgstr "Restwert:"
+
+#: seo-booster-issues.php:363
+#, fuzzy
+msgid "Possibilities Found:"
+msgstr "Gefundene Möglichkeiten:"
+
+#: seo-booster-issues.php:402
+#, fuzzy
+msgid "No possibilities selected."
+msgstr "Keine Optionen ausgewählt."
+
+#: seo-booster-issues.php:415
+msgid "Invalid action."
+msgstr "Aktion ungültig."
+
+#: seo-booster-issues.php:427
+#, fuzzy, php-format
+msgid "%d possibility(ies) updated successfully."
+msgstr "%d Möglichkeit(en) erfolgreich aktualisiert."
+
+#: seo-booster-issues.php:431
+#, fuzzy
+msgid "Failed to update possibilities."
+msgstr "Aktualisierung der Möglichkeiten fehlgeschlagen."
+
+#: seo-booster-log.php:11 seo-booster.php:2429 seo-booster.php:2430
+msgid "Debug Log"
+msgstr "Debug Log (Fehlerprotokoll)"
+
+#: seo-booster-log.php:16
+msgid "Search Pages"
+msgstr "Seiten durchsuchen"
+
+#: seo-booster-log.php:18
+msgid "Search Logs"
+msgstr "Protokolle suchen"
+
+#: seo-booster-seobooster2.php:12 seo-booster-settings.php:14
+#, fuzzy
+msgid "You are not allowed to update plugins on this blog."
+msgstr "Sie dürfen keine Plugins auf diesem Blog aktualisieren."
+
+#. translators:
+#: seo-booster-seobooster2.php:32
+#, fuzzy, php-format
+msgid "Database table %1$s is missing."
+msgstr "Die Datenbanktabelle %1$s fehlt."
+
+#. translators:
+#: seo-booster-seobooster2.php:39
+#, fuzzy, php-format
+msgid "Database out of date %1$s vs. current %2$s"
+msgstr "Datenbank veraltet %1$s vs. aktuell %2$s"
+
+#: seo-booster-seobooster2.php:47
+#, fuzzy
+msgid "Database tables needs updating"
+msgstr "Datenbanktabellen müssen aktualisiert werden"
+
+#: seo-booster-seobooster2.php:64
+#, fuzzy
+msgid "Click here to fix"
+msgstr "Hier klicken, um das Problem zu beheben"
+
+#: seo-booster-seobooster2.php:75 seo-booster.php:2365
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: seo-booster-seobooster2.php:141 seo-booster-seobooster2.php:142
+msgid "N/A"
+msgstr "N/A"
+
+#. translators: 1: number of keywords, 2: number of pages
+#: seo-booster-seobooster2.php:148
+#, fuzzy, php-format
+msgid ""
+"A total of <span>%1$s</span> different keyword terms have been used to find "
+"<span>%2$s</span> different pages on your website."
+msgstr ""
+"Insgesamt wurden <span>%1$s</span> verschiedene Suchbegriffe verwendet, um "
+"<span>%2$s</span> verschiedene Seiten auf Ihrer Website zu finden."
+
+#: seo-booster-seobooster2.php:157
+#, fuzzy, php-format
+msgid ""
+"There is data from Google Search Console for <span>%1$s</span> unique day, "
+"from <span>%2$s</span> to <span>%3$s</span>."
+msgid_plural ""
+"There is data from Google Search Console for <span>%1$s</span> unique days, "
+"from <span>%2$s</span> to <span>%3$s</span>."
+msgstr[0] ""
+"Es gibt Daten aus der Google Search Console für <span>%1$s</span> eindeutige "
+"Tage, von <span>%2$s</span> bis <span>%3$s</span>."
+msgstr[1] ""
+"Es gibt Daten aus der Google Search Console für <span>%1$s</span> einzelne "
+"Tage, von <span>%2$s</span> bis <span>%3$s</span>."
+
+#: seo-booster-seobooster2.php:240
+#, fuzzy, php-format
+msgid ""
+"In the last 30 days, your content was shown <strong>%s times</strong> in "
+"search results %s and received <strong>%s clicks</strong> %s."
+msgstr ""
+"In den letzten 30 Tagen wurde Ihr Inhalt <strong>%s Mal</strong> in "
+"Suchergebnissen %s angezeigt und erhielt <strong>%s Klicks</strong> %s."
+
+#: seo-booster-seobooster2.php:263
+#, fuzzy, php-format
+msgid ""
+"Technical metrics: Average Position: <strong>%1$s</strong> (%2$s%3$s, "
+"%4$s%%) • CTR: <strong>%5$s%%</strong> (%6$s%7$s%%)"
+msgstr ""
+"Technische Kennzahlen: Durchschnittliche Position: <strong>%1$s</strong> "
+"(%2$s%3$s, %4$s%%) • Klickrate: <strong>%5$s%%</strong> (%6$s%7$s%%)"
+
+#: seo-booster-seobooster2.php:277
+#, fuzzy
+msgid ""
+"The data is based on the data collected from Google Search Console. It does "
+"not represent a full picture of your website's traffic."
+msgstr ""
+"Die Daten basieren auf den von der Google Search Console gesammelten Daten. "
+"Sie geben kein vollständiges Bild des Traffics Ihrer Website wieder."
+
+#: seo-booster-seobooster2.php:289
+#, fuzzy
+msgid "Get your personalized weekly SEO insights!"
+msgstr "Erhalten Sie Ihre personalisierten wöchentlichen SEO-Einblicke!"
+
+#: seo-booster-seobooster2.php:291
+#, fuzzy
+msgid "Stay informed and ahead of the competition"
+msgstr "Bleiben Sie informiert und der Konkurrenz voraus"
+
+#: seo-booster-seobooster2.php:305
+#, fuzzy
+msgid ""
+"Confirm or change your email to receive your personalized weekly report:"
+msgstr ""
+"Bestätigen oder ändern Sie Ihre E-Mail-Adresse, um Ihren personalisierten "
+"Wochenbericht zu erhalten:"
+
+#: seo-booster-seobooster2.php:309
+msgid "email@example.com"
+msgstr "email@example.com"
+
+#: seo-booster-seobooster2.php:316
+#, fuzzy
+msgid "Confirm Email for Weekly Reports"
+msgstr "E-Mail für wöchentliche Berichte bestätigen"
+
+#: seo-booster-seobooster2.php:320
+#, fuzzy
+msgid "You can add multiple email addresses, separated by commas"
+msgstr "Sie können mehrere E-Mail-Adressen hinzufügen, getrennt durch Kommas."
+
+#: seo-booster-seobooster2.php:324
+#, fuzzy
+msgid "You can modify your report preferences anytime in the plugin settings"
+msgstr ""
+"Sie können Ihre Berichtseinstellungen jederzeit in den Plugin-Einstellungen "
+"ändern."
+
+#: seo-booster-seobooster2.php:334
+#, fuzzy
+msgid ""
+"Receive a tailored weekly report to help you monitor performance, address "
+"issues promptly, and capitalize on new opportunities to boost your traffic!"
+msgstr ""
+"Erhalten Sie einen maßgeschneiderten wöchentlichen Bericht, mit dem Sie die "
+"Leistung überwachen, Probleme umgehend beheben und neue Möglichkeiten zur "
+"Steigerung Ihrer Besucherzahlen nutzen können!"
+
+#: seo-booster-seobooster2.php:337
+#, fuzzy
+msgid "Your weekly report includes:"
+msgstr "Ihr wöchentlicher Bericht umfasst:"
+
+#: seo-booster-seobooster2.php:341
+#, fuzzy
+msgid "Your top-performing keywords driving traffic"
+msgstr "Ihre leistungsstärksten Keywords, die Traffic generieren"
+
+#: seo-booster-seobooster2.php:344
+#, fuzzy
+msgid "Emerging keyword opportunities specific to your site"
+msgstr "Neue Keyword-Möglichkeiten speziell für Ihre Website"
+
+#: seo-booster-seobooster2.php:347
+#, fuzzy
+msgid "Significant changes in your rankings"
+msgstr "Wesentliche Änderungen Ihrer Platzierungen"
+
+#: seo-booster-seobooster2.php:350
+#, fuzzy
+msgid "Content areas requiring your attention"
+msgstr "Inhaltsbereiche, die Ihre Aufmerksamkeit erfordern"
+
+#: seo-booster-seobooster2.php:353
+#, fuzzy
+msgid "404 errors - content that is not found"
+msgstr "404-Fehler – Inhalt nicht gefunden"
+
+#: seo-booster-seobooster2.php:358
+#, fuzzy
+msgid ""
+"Your data privacy is our priority. All information is processed locally on "
+"your server and sent to your email address from your own server — we never "
+"access your data."
+msgstr ""
+"Der Schutz Ihrer Daten hat für uns oberste Priorität. Alle Informationen "
+"werden lokal auf Ihrem Server verarbeitet und von Ihrem eigenen Server an "
+"Ihre E-Mail-Adresse gesendet – wir greifen niemals auf Ihre Daten zu."
+
+#: seo-booster-seobooster2.php:391
+msgid "Quick Overview"
+msgstr "Produktbeschreibung"
+
+#: seo-booster-seobooster2.php:401
+#, fuzzy
+msgid "Authentication Issue Detected"
+msgstr "Authentifizierungsproblem erkannt"
+
+#: seo-booster-seobooster2.php:402
+#, fuzzy
+msgid ""
+"Your Google Search Console access token appears to be invalid or expired. "
+"This can happen if:"
+msgstr ""
+"Ihr Google Search Console-Zugriffstoken scheint ungültig oder abgelaufen zu "
+"sein. Dies kann in folgenden Fällen passieren:"
+
+#: seo-booster-seobooster2.php:404
+#, fuzzy
+msgid "The token has expired (tokens typically last 1 hour)"
+msgstr ""
+"Das Token ist abgelaufen (Tokens sind in der Regel 1 Stunde lang gültig)."
+
+#: seo-booster-seobooster2.php:405
+#, fuzzy
+msgid "Google has revoked access to your account"
+msgstr "Google hat den Zugriff auf Ihr Konto gesperrt."
+
+#: seo-booster-seobooster2.php:406
+#, fuzzy
+msgid "There was a network connectivity issue"
+msgstr "Es gab ein Problem mit der Netzwerkverbindung."
+
+#: seo-booster-seobooster2.php:411
+#, fuzzy
+msgid "Connected Account:"
+msgstr "Verbundener Account:"
+
+#: seo-booster-seobooster2.php:422 seo-booster-seobooster2.php:460
+msgid "Try Again"
+msgstr "Noch einmal versuchen"
+
+#: seo-booster-seobooster2.php:427 seo-booster-seobooster2.php:506
+#: seo-booster-seobooster2.php:1039 seo-booster-settings.php:576
+#, fuzzy
+msgid "Re-authenticate with Google"
+msgstr "Erneute Authentifizierung mit Google"
+
+#: seo-booster-seobooster2.php:437
+msgid "Validating..."
+msgstr "Überprüfung..."
+
+#: seo-booster-seobooster2.php:438
+#, fuzzy
+msgid "Checking token validity..."
+msgstr "Überprüfung der Gültigkeit des Tokens..."
+
+#: seo-booster-seobooster2.php:448
+#, fuzzy
+msgid "Token is valid! Refreshing page..."
+msgstr "Token ist gültig! Seite wird aktualisiert..."
+
+#: seo-booster-seobooster2.php:457
+#, fuzzy
+msgid "Error checking token"
+msgstr "Fehlerprüfungs-Token"
+
+#: seo-booster-seobooster2.php:512 seo-booster-seobooster2.php:1045
+#, fuzzy
+msgid ""
+"No sites found in your Google Search Console account. Make sure you have "
+"added and verified at least one site in Google Search Console."
+msgstr ""
+"In Ihrem Google Search Console-Konto wurden keine Websites gefunden. Stellen "
+"Sie sicher, dass Sie mindestens eine Website in Google Search Console "
+"hinzugefügt und verifiziert haben."
+
+#: seo-booster-seobooster2.php:514 seo-booster-seobooster2.php:1047
+#, fuzzy
+msgid "Open Google Search Console"
+msgstr "Google Search Console öffnen"
+
+#: seo-booster-seobooster2.php:520 seo-booster-seobooster2.php:1053
+#, fuzzy
+msgid "Select Google Search Console Site"
+msgstr "Google Search Console-Website auswählen"
+
+#: seo-booster-seobooster2.php:524 seo-booster-seobooster2.php:1057
+#, fuzzy, php-format
+msgid "Great, you have now connected your Google account (%s)."
+msgstr "Großartig, Sie haben nun Ihr Google-Konto (%s) verbunden."
+
+#: seo-booster-seobooster2.php:536 seo-booster-seobooster2.php:1069
+#, fuzzy
+msgid "Please select a site to continue"
+msgstr "Bitte wählen Sie eine Website aus, um fortzufahren."
+
+#: seo-booster-seobooster2.php:584 seo-booster-seobooster2.php:611
+#: seo-booster-seobooster2.php:1117 seo-booster-seobooster2.php:1144
+#: seo-booster.php:2310 seo-booster.php:2334
+#, fuzzy
+msgid "(domain verified)"
+msgstr "(Domain verifiziert)"
+
+#: seo-booster-seobooster2.php:598 seo-booster-seobooster2.php:1131
+msgid "Insufficient Permissions"
+msgstr "Ungenügende Berechtigung"
+
+#: seo-booster-seobooster2.php:632 seo-booster-seobooster2.php:1165
+#, fuzzy
+msgid "Get keyword data"
+msgstr "Keyword-Daten abrufen"
+
+#: seo-booster-seobooster2.php:651 seo-booster-seobooster2.php:952
+#, fuzzy
+msgid "Reauthenticate with Google"
+msgstr "Erneute Authentifizierung mit Google"
+
+#: seo-booster-seobooster2.php:653 seo-booster-seobooster2.php:954
+msgid "Authenticate with Google"
+msgstr "Mit Google authentifizieren"
+
+#: seo-booster-seobooster2.php:661 seo-booster-seobooster2.php:962
+#, fuzzy
+msgid "You need to connect your Google account to use this feature."
+msgstr ""
+"Sie müssen Ihr Google-Konto verbinden, um diese Funktion nutzen zu können."
+
+#: seo-booster-seobooster2.php:672 seo-booster-seobooster2.php:973
+#, fuzzy
+msgid "Start Authentication"
+msgstr "Authentifizierung starten"
+
+#: seo-booster-seobooster2.php:675 seo-booster-seobooster2.php:976
+#, fuzzy
+msgid "You will be taken to Google to authorize your account."
+msgstr "Sie werden zu Google weitergeleitet, um Ihr Konto zu autorisieren."
+
+#: seo-booster-seobooster2.php:676 seo-booster-seobooster2.php:977
+#, fuzzy
+msgid "Connect to the API to gather data from GSC via seoboosterauth.com."
+msgstr ""
+"Verbinden Sie sich mit der API, um Daten von GSC über seoboosterauth.com zu "
+"sammeln."
+
+#: seo-booster-seobooster2.php:683 seo-booster-seobooster2.php:984
+#, fuzzy
+msgid "Warning: Local Development Domain Detected"
+msgstr "Warnung: Lokale Entwicklungsdomäne erkannt"
+
+#: seo-booster-seobooster2.php:684 seo-booster-seobooster2.php:985
+#, fuzzy
+msgid ""
+"Authentication with Google may fail because you are using a local "
+"development domain. OAuth services typically reject callbacks to non-public "
+"domains for security reasons."
+msgstr ""
+"Die Authentifizierung mit Google kann fehlschlagen, weil Sie eine lokale "
+"Entwicklungsdomain verwenden. OAuth-Dienste lehnen aus Sicherheitsgründen in "
+"der Regel Rückrufe an nicht öffentliche Domains ab."
+
+#: seo-booster-seobooster2.php:685 seo-booster-seobooster2.php:986
+#: seo-booster.php:1730 seo-booster.php:1797 seo-booster.php:1839
+msgid "Show More Information"
+msgstr "Weitere Informationen anzeigen"
+
+#: seo-booster-seobooster2.php:730
+#, fuzzy
+msgid "Top 7 Keywords (Past 30 Days)"
+msgstr "Top 7 Keywords (letzte 30 Tage)"
+
+#: seo-booster-seobooster2.php:733 views/autolink-pages.php:33
+msgid "Keyword"
+msgstr "Suchbegriff"
+
+#: seo-booster-seobooster2.php:734
+msgid "Views"
+msgstr "Ansichten"
+
+#: seo-booster-seobooster2.php:748
+#, fuzzy
+msgid "No keyword data available for the past 30 days."
+msgstr "Für die letzten 30 Tage sind keine Keyword-Daten verfügbar."
+
+#: seo-booster-seobooster2.php:773
+#, fuzzy, php-format
+msgid ""
+"We've detected %1$s SEO possibilities across your site. Here are the most "
+"impactful ones to address:"
+msgstr ""
+"Wir haben %1$s SEO-Möglichkeiten auf Ihrer Website entdeckt. Hier sind die "
+"wichtigsten, die Sie angehen sollten:"
+
+#: seo-booster-seobooster2.php:786
+msgid "High Priority"
+msgstr "Hohe Priorität"
+
+#: seo-booster-seobooster2.php:788
+#, fuzzy
+msgid "Medium Priority"
+msgstr "Mittlere Priorität"
+
+#: seo-booster-seobooster2.php:789
+msgid "Low Priority"
+msgstr "Niedrige Priorität"
+
+#: seo-booster-seobooster2.php:831
+#, fuzzy, php-format
+msgid "Affects %1$s page"
+msgid_plural "Affects %1$s pages"
+msgstr[0] "Betrifft %1$s Seite"
+msgstr[1] "Betrifft %1$s Seiten"
+
+#: seo-booster-seobooster2.php:848
+#, fuzzy
+msgid "View All Possibilities"
+msgstr "Alle Möglichkeiten anzeigen"
+
+#: seo-booster-seobooster2.php:852
+#, fuzzy
+msgid ""
+"No specific possibilities detected yet. Run an analysis to discover SEO "
+"opportunities."
+msgstr ""
+"Es wurden noch keine spezifischen Möglichkeiten erkannt. Führen Sie eine "
+"Analyse durch, um SEO-Möglichkeiten zu entdecken."
+
+#: seo-booster-seobooster2.php:855
+#, fuzzy
+msgid "Go to SEO Possibilities"
+msgstr "Zu den SEO-Möglichkeiten gehen"
+
+#: seo-booster-seobooster2.php:871
+#, fuzzy
+msgid "Keywords Overview"
+msgstr "Schlüsselwörter Übersicht"
+
+#: seo-booster-seobooster2.php:875
+#, fuzzy
+msgid ""
+"Get a combined overview of all the keywords that have been used to find your "
+"website."
+msgstr ""
+"Verschaffen Sie sich einen kombinierten Überblick über alle Keywords, die "
+"zur Suche nach Ihrer Website verwendet wurden."
+
+#: seo-booster-seobooster2.php:880
+#, fuzzy
+msgid "Go to the keyword overview page"
+msgstr "Zur Seite mit der Übersicht der Stichwörter gehen"
+
+#: seo-booster-seobooster2.php:887
+#, fuzzy
+msgid "Keywords used to find your front page"
+msgstr "Schlüsselwörter, die zum Auffinden Ihrer Startseite verwendet werden"
+
+#: seo-booster-seobooster2.php:891
+#, fuzzy
+msgid ""
+"All keyword details for each page are available a few clicks away in the "
+"admin bar."
+msgstr ""
+"Alle Keyword-Details für jede Seite sind mit wenigen Klicks in der Admin-"
+"Leiste verfügbar."
+
+#: seo-booster-seobooster2.php:896
+#, fuzzy
+msgid "Open the front page"
+msgstr "Öffnen Sie die Startseite."
+
+#: seo-booster-seobooster2.php:907
+#, fuzzy
+msgid "Discover SEO opportunities and insights to improve your website."
+msgstr ""
+"Entdecken Sie SEO-Möglichkeiten und Erkenntnisse, um Ihre Website zu "
+"verbessern."
+
+#: seo-booster-seobooster2.php:912
+#, fuzzy
+msgid "Open SEO Possibilities"
+msgstr "Offene SEO-Möglichkeiten"
+
+#: seo-booster-seobooster2.php:1184
+#, fuzzy
+msgid "No data collected yet - import data"
+msgstr "Noch keine Daten erfasst – Daten importieren"
+
+#: seo-booster-seobooster2.php:1188
+#, fuzzy
+msgid "It looks like no data has been collected yet. To get started:"
+msgstr ""
+"Es sieht so aus, als wären noch keine Daten erfasst worden. Um zu beginnen:"
+
+#: seo-booster-seobooster2.php:1192 seo-booster-seobooster2.php:1207
+#, fuzzy
+msgid "Go to the Settings page"
+msgstr "Gehen Sie zur Seite „Einstellungen“."
+
+#: seo-booster-seobooster2.php:1195
+#, fuzzy
+msgid "Find the \"Reimport\" function"
+msgstr "Finden Sie die Funktion „Reimportieren“"
+
+#: seo-booster-seobooster2.php:1198
+#, fuzzy
+msgid "Use it to import your Google Search Console data"
+msgstr "Verwenden Sie es, um Ihre Google Search Console-Daten zu importieren."
+
+#: seo-booster-seobooster2.php:1202
+#, fuzzy
+msgid "This will populate your dashboard with valuable SEO insights."
+msgstr "Dadurch wird Ihr Dashboard mit wertvollen SEO-Erkenntnissen gefüllt."
+
+#: seo-booster-seobooster2.php:1218
+msgid "No Data Available"
+msgstr "Keine Daten verfügbar"
+
+#: seo-booster-seobooster2.php:1219
+#, fuzzy
+msgid ""
+"You are authenticated and have selected a site, but no data has been "
+"imported yet."
+msgstr ""
+"Sie sind authentifiziert und haben eine Website ausgewählt, aber es wurden "
+"noch keine Daten importiert."
+
+#: seo-booster-seobooster2.php:1220
+#, fuzzy
+msgid "Import Data from Settings"
+msgstr "Daten aus Einstellungen importieren"
+
+#: seo-booster-seobooster2.php:1236
+msgid "Chart"
+msgstr "Diagramm"
+
+#: seo-booster-seobooster2.php:1243
+#, fuzzy
+msgid ""
+"The chart is based on the data collected from Google Search Console. It does "
+"not represent a full picture of your website's traffic."
+msgstr ""
+"Das Diagramm basiert auf den Daten, die von der Google Search Console "
+"erfasst wurden. Es gibt keinen vollständigen Überblick über den Traffic "
+"Ihrer Website."
+
+#. translators: %1$s: timestamp, %2$s: time difference
+#: seo-booster-seobooster2.php:1260
+#, fuzzy
+msgid "Next scheduled update:"
+msgstr "Nächstes geplantes Update:"
+
+#: seo-booster-seobooster2.php:1260 seo-booster-settings.php:108
+#: seo-booster-settings.php:715
+#, php-format
+msgid "in %s"
+msgstr "in %s"
+
+#. translators: %s: Google Search Console site URL
+#: seo-booster-seobooster2.php:1263
+#, fuzzy, php-format
+msgid "You are connected to the GSC site %s"
+msgstr "Sie sind mit der GSC-Website verbunden %s"
+
+#: seo-booster-settings.php:35 seo-booster.php:2421 seo-booster.php:2422
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: seo-booster-settings.php:46 seo-booster-settings.php:148
+#: seo-booster.php:2391 seo-booster.php:2392 seo-booster.php:2598
+msgid "Automatic Links"
+msgstr "Automatische Links"
+
+#: seo-booster-settings.php:49
+msgid "Email"
+msgstr "E-Mail"
+
+#: seo-booster-settings.php:52
+msgid "Google Search Console"
+msgstr "Google Search Console"
+
+#: seo-booster-settings.php:59
+#, fuzzy
+msgid "AI/LLM"
+msgstr "KI/LLM"
+
+#: seo-booster-settings.php:62
+msgid "Tools"
+msgstr "Werkzeuge"
+
+#: seo-booster-settings.php:81
+#, fuzzy
+msgid "Weekly Email Reports"
+msgstr "Wöchentliche E-Mail-Berichte"
+
+#: seo-booster-settings.php:86 seo-booster-settings.php:154
+#: seo-booster-settings.php:396 seo-booster-settings.php:694
+msgid "Enable/Disable"
+msgstr "Aktivieren/Deaktivieren"
+
+#: seo-booster-settings.php:98
+#, fuzzy
+msgid "Send a weekly email with new information from the past week."
+msgstr ""
+"Versenden Sie wöchentlich eine E-Mail mit neuen Informationen aus der "
+"vergangenen Woche."
+
+#. translators: %s: time difference until the next scheduled email
+#: seo-booster-settings.php:108
+#, fuzzy
+msgid "Next scheduled email"
+msgstr "Nächste geplante E-Mail"
+
+#: seo-booster-settings.php:116
+msgid "Recipient(s)"
+msgstr "Empfänger"
+
+#: seo-booster-settings.php:124
+#, fuzzy
+msgid ""
+"Email recipient. To add multiple recipients, separate each email address "
+"with a comma."
+msgstr ""
+"E-Mail-Empfänger. Um mehrere Empfänger hinzuzufügen, trennen Sie die E-Mail-"
+"Adressen durch Kommas."
+
+#: seo-booster-settings.php:131
+msgid "Send Email Now"
+msgstr "Senden"
+
+#: seo-booster-settings.php:134
+#, fuzzy
+msgid "Send Weekly Email"
+msgstr "Wöchentliche E-Mail senden"
+
+#: seo-booster-settings.php:135
+#, fuzzy
+msgid "Manually send the weekly email update now."
+msgstr "Senden Sie jetzt manuell die wöchentliche E-Mail-Aktualisierung."
+
+#: seo-booster-settings.php:161 seo-booster-settings.php:172
+#, fuzzy
+msgid "Change keywords in text to links to relevant pages on your site."
+msgstr ""
+"Ändern Sie Schlüsselwörter im Text in Links zu relevanten Seiten Ihrer "
+"Website."
+
+#: seo-booster-settings.php:181
+#, fuzzy
+msgid "Repeat Keywords"
+msgstr "Schlüsselwörter wiederholen"
+
+#: seo-booster-settings.php:188
+#, fuzzy
+msgid ""
+"If the same word is used multiple times, only the first occurence will be "
+"replaced by a link."
+msgstr ""
+"Wenn dasselbe Wort mehrfach verwendet wird, wird nur das erste Vorkommen "
+"durch einen Link ersetzt."
+
+#: seo-booster-settings.php:199
+#, fuzzy
+msgid ""
+"This will allow the same keyword and URL to be used repeatedly. Usually, if "
+"the same word is used multiple times, only the first occurence will be "
+"replaced by a link."
+msgstr ""
+"Dadurch können dasselbe Schlüsselwort und dieselbe URL wiederholt verwendet "
+"werden. Normalerweise wird bei mehrfacher Verwendung desselben Wortes nur "
+"das erste Vorkommen durch einen Link ersetzt."
+
+#: seo-booster-settings.php:209
+#, fuzzy
+msgid "Match Capitalization"
+msgstr "Großschreibung bei Übereinstimmungen"
+
+#: seo-booster-settings.php:216 seo-booster-settings.php:227
+#, fuzzy
+msgid "Only inject links matching keyword capitalization."
+msgstr ""
+"Nur Links einfügen, die der Großschreibung des Schlüsselworts entsprechen."
+
+#: seo-booster-settings.php:249
+#, fuzzy
+msgid "Maximum Replacements"
+msgstr "Maximale Ersetzungen"
+
+#: seo-booster-settings.php:258
+#, fuzzy
+msgid ""
+"Maximum number of links created per post. It does not include current links "
+"in the content."
+msgstr ""
+"Maximale Anzahl der pro Beitrag erstellten Links. Aktuelle Links im Inhalt "
+"sind darin nicht enthalten."
+
+#: seo-booster-settings.php:267
+#, fuzzy
+msgid "Excluded Elements"
+msgstr "Ausgeschlossene Elemente"
+
+#: seo-booster-settings.php:282
+msgid "Heading 1 (H1)"
+msgstr "H1"
+
+#: seo-booster-settings.php:283
+msgid "Heading 2 (H2)"
+msgstr "H2"
+
+#: seo-booster-settings.php:284
+msgid "Heading 3 (H3)"
+msgstr "H3"
+
+#: seo-booster-settings.php:285
+msgid "Heading 4 (H4)"
+msgstr "Überschrift 4 (H4)"
+
+#: seo-booster-settings.php:286
+msgid "Heading 5 (H5)"
+msgstr "H5"
+
+#: seo-booster-settings.php:287
+msgid "Heading 6 (H6)"
+msgstr "H6"
+
+#: seo-booster-settings.php:288
+#, fuzzy
+msgid "Unordered Lists (UL)"
+msgstr "Ungeordnete Listen (UL)"
+
+#: seo-booster-settings.php:289
+#, fuzzy
+msgid "Ordered Lists (OL)"
+msgstr "Geordnete Listen (OL)"
+
+#: seo-booster-settings.php:290
+#, fuzzy
+msgid "Definition Lists (DL)"
+msgstr "Definitionslisten (DL)"
+
+#: seo-booster-settings.php:291
+msgid "Blockquotes"
+msgstr "Blockzitate"
+
+#: seo-booster-settings.php:306
+#, fuzzy
+msgid "Always excluded (cannot be changed):"
+msgstr "Immer ausgeschlossen (kann nicht geändert werden):"
+
+#: seo-booster-settings.php:315
+#, fuzzy
+msgid "Links (A)"
+msgstr "Links (A)"
+
+#: seo-booster-settings.php:318
+msgid "Scripts"
+msgstr "Skripte"
+
+#: seo-booster-settings.php:321
+#, fuzzy
+msgid "Style tags"
+msgstr "Stil-Tags"
+
+#: seo-booster-settings.php:324
+msgid "Head"
+msgstr "Kopf"
+
+#: seo-booster-settings.php:340
+#, fuzzy
+msgid ""
+"Select which HTML elements should be excluded from automatic linking. Text "
+"inside these elements will not receive automatic links."
+msgstr ""
+"Wählen Sie aus, welche HTML-Elemente von der automatischen Verlinkung "
+"ausgeschlossen werden sollen. Text innerhalb dieser Elemente erhält keine "
+"automatischen Links."
+
+#: seo-booster-settings.php:342
+#, fuzzy
+msgid "Learn more about excluded elements"
+msgstr "Erfahren Sie mehr über ausgeschlossene Elemente"
+
+#: seo-booster-settings.php:358
+#, fuzzy
+msgid "Upgrade to SEO Booster Pro to unlock this feature."
+msgstr "Upgrade auf SEO Booster Pro, um diese Funktion freizuschalten."
+
+#: seo-booster-settings.php:410
+#, fuzzy
+msgid "Enable 404 error monitoring"
+msgstr "404-Fehlerüberwachung aktivieren"
+
+#: seo-booster-settings.php:418
+#, fuzzy
+msgid "Monitor and track 404 errors on your website."
+msgstr "Überwachen und verfolgen Sie 404-Fehler auf Ihrer Website."
+
+#: seo-booster-settings.php:429
+#, fuzzy
+msgid "Ignore links"
+msgstr "Links ignorieren"
+
+#: seo-booster-settings.php:433 views/404-pages.php:49
+#, fuzzy
+msgid "SEO Booster ignores a range of common URLs."
+msgstr "SEO Booster ignoriert eine Reihe gängiger URLs."
+
+#: seo-booster-settings.php:438
+#, fuzzy
+msgid "Read more here on how to manipulate the ignore list"
+msgstr ""
+"Lesen Sie hier mehr darüber, wie Sie die Ignorierliste bearbeiten können."
+
+#: seo-booster-settings.php:442
+#, fuzzy
+msgid "Customizing the List of Ignored URLs"
+msgstr "Anpassen der Liste ignorierter URLs"
+
+#: seo-booster-settings.php:461
+#, fuzzy
+msgid "Google Search Console Integration"
+msgstr "Google Search Console-Integration"
+
+#: seo-booster-settings.php:466
+#, fuzzy
+msgid "GSC Connection Status"
+msgstr "GSC-Verbindungsstatus"
+
+#: seo-booster-settings.php:473
+msgid "Connected"
+msgstr "Verbunden"
+
+#: seo-booster-settings.php:475
+msgid "Not Connected"
+msgstr "Nicht verbunden"
+
+#: seo-booster-settings.php:479
+#, fuzzy
+msgid "Connect to Google Search Console to import keyword data."
+msgstr ""
+"Verbinden Sie sich mit der Google Search Console, um Keyword-Daten zu "
+"importieren."
+
+#: seo-booster-settings.php:485
+#, fuzzy
+msgid "Selected GSC Site"
+msgstr "Ausgewählte GSC-Website"
+
+#: seo-booster-settings.php:494
+#, fuzzy, php-format
+msgid "Google Email: %s"
+msgstr "Google E-Mail: %s"
+
+#: seo-booster-settings.php:497
+msgid "No site selected"
+msgstr "Kein Fluggebiet ausgewählt"
+
+#: seo-booster-settings.php:501
+#, fuzzy
+msgid "The Google Search Console site currently selected for data import."
+msgstr ""
+"Die derzeit für den Datenimport ausgewählte Website der Google Search "
+"Console."
+
+#: seo-booster-settings.php:507
+msgid "Import Actions"
+msgstr "Importaktionen"
+
+#: seo-booster-settings.php:512
+msgid "Time Range:"
+msgstr "Zeitsraum:"
+
+#: seo-booster-settings.php:514
+msgid "Last 7 days"
+msgstr "Letzte 7 Tage"
+
+#: seo-booster-settings.php:515
+msgid "Last 30 days"
+msgstr "Letzte 30 Tage"
+
+#: seo-booster-settings.php:516
+msgid "Last 90 days"
+msgstr "Letzte 90 Tage"
+
+#: seo-booster-settings.php:521 seo-booster.php:2467
+#, fuzzy
+msgid "Import GSC Data"
+msgstr "GSC-Daten importieren"
+
+#: seo-booster-settings.php:524
+#, fuzzy
+msgid "Change GSC Site"
+msgstr "GSC-Website ändern"
+
+#: seo-booster-settings.php:587
+#, fuzzy
+msgid ""
+"Import keyword data from Google Search Console for the selected time range."
+msgstr ""
+"Importieren Sie Keyword-Daten aus der Google Search Console für den "
+"ausgewählten Zeitraum."
+
+#: seo-booster-settings.php:594 views/gsc-pages.php:38
+#, fuzzy
+msgid "GSC Issues Sync"
+msgstr "GSC-Ausgaben synchronisieren"
+
+#: seo-booster-settings.php:599
+#, fuzzy
+msgid "Enable GSC Issues Sync"
+msgstr "GSC-Probleme synchronisieren aktivieren"
+
+#: seo-booster-settings.php:614
+#, fuzzy
+msgid ""
+"Enable automatic syncing of GSC URL inspection data for pages with traffic."
+msgstr ""
+"Aktivieren Sie die automatische Synchronisierung von GSC-URL-Prüfdaten für "
+"Seiten mit Traffic."
+
+#: seo-booster-settings.php:617
+#, fuzzy
+msgid ""
+"When enabled, the plugin will automatically inspect URLs from Google Search "
+"Console to detect indexing and structured data issues."
+msgstr ""
+"Wenn diese Option aktiviert ist, überprüft das Plugin automatisch URLs aus "
+"der Google Search Console, um Probleme mit der Indizierung und "
+"strukturierten Daten zu erkennen."
+
+#: seo-booster-settings.php:623
+msgid "Sync Frequency"
+msgstr "Synchronisierungs-Intervall"
+
+#: seo-booster-settings.php:630
+#, fuzzy
+msgid "Manual Only"
+msgstr "Nur Handbuch"
+
+#: seo-booster-settings.php:631
+msgid "Daily"
+msgstr "Täglich"
+
+#: seo-booster-settings.php:632
+msgid "Weekly"
+msgstr "Wöchentlich"
+
+#: seo-booster-settings.php:635
+#, fuzzy
+msgid ""
+"How often to automatically sync GSC issues. Manual mode requires you to "
+"trigger sync from the GSC Overview page."
+msgstr ""
+"Wie oft sollen GSC-Probleme automatisch synchronisiert werden? Im manuellen "
+"Modus müssen Sie die Synchronisierung über die GSC-Übersichtsseite auslösen."
+
+#: seo-booster-settings.php:641
+#, fuzzy
+msgid "Data Retention Period"
+msgstr "Aufbewahrungsfrist für Daten"
+
+#: seo-booster-settings.php:648
+msgid "days"
+msgstr "Tage"
+
+#: seo-booster-settings.php:650
+#, fuzzy
+msgid ""
+"How long to keep GSC inspection data. Older inspections will be "
+"automatically pruned, but the latest inspection per URL is always kept."
+msgstr ""
+"Wie lange werden GSC-Inspektionsdaten aufbewahrt? Ältere Inspektionen werden "
+"automatisch gelöscht, aber die letzte Inspektion pro URL wird immer "
+"aufbewahrt."
+
+#: seo-booster-settings.php:656
+#, fuzzy
+msgid "Show Informational Issues"
+msgstr "Informationsprobleme anzeigen"
+
+#: seo-booster-settings.php:671
+#, fuzzy
+msgid ""
+"Display informational GSC issues (e.g., canonical tags) in the issues list."
+msgstr ""
+"Zeigen Sie informative GSC-Probleme (z. B. kanonische Tags) in der "
+"Problemliste an."
+
+#: seo-booster-settings.php:674
+#, fuzzy
+msgid ""
+"Informational issues are notifications from Google that don't require action "
+"but are worth reviewing."
+msgstr ""
+"Informationsprobleme sind Benachrichtigungen von Google, die keine Maßnahmen "
+"erfordern, aber überprüft werden sollten."
+
+#: seo-booster-settings.php:688
+#, fuzzy
+msgid "SEO Possibilities Auto-Scan"
+msgstr "SEO-Möglichkeiten Auto-Scan"
+
+#: seo-booster-settings.php:689
+#, fuzzy
+msgid "Configure automatic scanning for SEO opportunities and insights."
+msgstr ""
+"Konfigurieren Sie automatische Scans für SEO-Möglichkeiten und Erkenntnisse."
+
+#: seo-booster-settings.php:706
+#, fuzzy
+msgid "Enable automatic scanning for SEO possibilities."
+msgstr "Aktivieren Sie das automatische Scannen nach SEO-Möglichkeiten."
+
+#: seo-booster-settings.php:715
+#, fuzzy
+msgid "Next scheduled scan"
+msgstr "Nächster geplanter Scan"
+
+#: seo-booster-settings.php:723
+msgid "Scan Frequency"
+msgstr "Scan Frequenz"
+
+#: seo-booster-settings.php:727
+msgid "Every minute"
+msgstr "Jede Minute"
+
+#: seo-booster-settings.php:728
+msgid "Every 5 minutes"
+msgstr "Alle 5 Minuten"
+
+#: seo-booster-settings.php:729
+msgid "Every 15 minutes"
+msgstr "Alle 15 Minuten"
+
+#: seo-booster-settings.php:730
+msgid "Every 30 minutes"
+msgstr "Alle 30 Minuten"
+
+#: seo-booster-settings.php:731
+msgid "Hourly"
+msgstr "Stündlich"
+
+#: seo-booster-settings.php:734
+#, fuzzy
+msgid ""
+"How often the system checks for URLs that need analysis. Scans only run if "
+"no other analysis is currently in progress."
+msgstr ""
+"Wie oft das System nach URLs sucht, die analysiert werden müssen. Scans "
+"werden nur ausgeführt, wenn derzeit keine andere Analyse läuft."
+
+#: seo-booster-settings.php:740
+msgid "Batch Size"
+msgstr "Batch Größe"
+
+#: seo-booster-settings.php:744
+#, fuzzy
+msgid "1 URL per batch"
+msgstr "1 URL pro Stapel"
+
+#: seo-booster-settings.php:745
+#, fuzzy
+msgid "2 URLs per batch"
+msgstr "2 URLs pro Stapel"
+
+#: seo-booster-settings.php:746
+#, fuzzy
+msgid "3 URLs per batch"
+msgstr "3 URLs pro Stapel"
+
+#: seo-booster-settings.php:747
+#, fuzzy
+msgid "4 URLs per batch"
+msgstr "4 URLs pro Stapel"
+
+#: seo-booster-settings.php:748
+#, fuzzy
+msgid "5 URLs per batch"
+msgstr "5 URLs pro Stapel"
+
+#: seo-booster-settings.php:751
+#, fuzzy
+msgid ""
+"Number of URLs to analyze per batch. Lower values reduce server load. "
+"Default: 1"
+msgstr ""
+"Anzahl der zu analysierenden URLs pro Stapel. Niedrigere Werte reduzieren "
+"die Serverlast. Standard: 1"
+
+#: seo-booster-settings.php:765
+#, fuzzy
+msgid "AI/LLM Settings"
+msgstr "KI/LLM-Einstellungen"
+
+#: seo-booster-settings.php:766
+#, fuzzy
+msgid "Configure AI-powered SEO suggestions for your content."
+msgstr "Konfigurieren Sie KI-gestützte SEO-Vorschläge für Ihre Inhalte."
+
+#: seo-booster-settings.php:771
+msgid "AI Provider"
+msgstr "KI-Anbieter"
+
+#: seo-booster-settings.php:784
+#, fuzzy
+msgid "OpenAI (Your API Key)"
+msgstr "OpenAI (Ihr API-Schlüssel)"
+
+#: seo-booster-settings.php:788
+#, fuzzy
+msgid "DeepSeek (Your API Key)"
+msgstr "DeepSeek (Ihr API-Schlüssel)"
+
+#: seo-booster-settings.php:792
+#, fuzzy
+msgid "SEO Booster Credits"
+msgstr "SEO-Booster-Credits"
+
+#: seo-booster-settings.php:795
+#, fuzzy
+msgid "Choose how to generate AI-powered SEO suggestions."
+msgstr ""
+"Wählen Sie aus, wie KI-gestützte SEO-Vorschläge generiert werden sollen."
+
+#: seo-booster-settings.php:802
+msgid "OpenAI API Key"
+msgstr "OpenAI API-Schlüssel"
+
+#: seo-booster-settings.php:811
+#, fuzzy
+msgid "Enter your OpenAI API key"
+msgstr "Geben Sie Ihren OpenAI-API-Schlüssel ein."
+
+#: seo-booster-settings.php:813
+#, fuzzy
+msgid "Your OpenAI API key. Get one from "
+msgstr "Ihr OpenAI-API-Schlüssel. Beziehen Sie einen von "
+
+#: seo-booster-settings.php:814
+#, fuzzy
+msgid "OpenAI Platform"
+msgstr "OpenAI-Plattform"
+
+#: seo-booster-settings.php:820
+msgid "OpenAI Model"
+msgstr "OpenAI-Modell"
+
+#: seo-booster-settings.php:827
+#, fuzzy
+msgid "GPT-4o Mini (Recommended)"
+msgstr "GPT-4o Mini (empfohlen)"
+
+#: seo-booster-settings.php:828
+msgid "GPT-4o"
+msgstr "GPT-4o"
+
+#: seo-booster-settings.php:829
+#, fuzzy
+msgid "GPT-4.1 Mini"
+msgstr "GPT-4.1 Mini"
+
+#: seo-booster-settings.php:830
+#, fuzzy
+msgid "GPT-3.5 Turbo"
+msgstr "GPT-3.5 Turbo"
+
+#: seo-booster-settings.php:833
+#, fuzzy
+msgid "OpenAI Model Comparison"
+msgstr "OpenAI-Modellvergleich"
+
+#: seo-booster-settings.php:835
+#, fuzzy
+msgid "GPT-4o Mini (Recommended):"
+msgstr "GPT-4o Mini (empfohlen):"
+
+#: seo-booster-settings.php:835
+#, fuzzy
+msgid ""
+"Fast, cost-effective, and highly capable. Best balance of speed, accuracy, "
+"and cost for SEO content generation. ~$0.15/1M input tokens."
+msgstr ""
+"Schnell, kostengünstig und leistungsstark. Optimales Gleichgewicht zwischen "
+"Geschwindigkeit, Genauigkeit und Kosten für die Erstellung von SEO-Inhalten. "
+"~0,15 $/1 Mio. Eingabetoken."
+
+#: seo-booster-settings.php:836
+#, fuzzy
+msgid "GPT-4o:"
+msgstr "GPT-4o:"
+
+#: seo-booster-settings.php:836
+#, fuzzy
+msgid ""
+"Most advanced model with highest accuracy. Slower and more expensive, but "
+"produces the most sophisticated SEO suggestions. ~$2.50/1M input tokens."
+msgstr ""
+"Das fortschrittlichste Modell mit der höchsten Genauigkeit. Langsamer und "
+"teurer, liefert jedoch die ausgefeiltesten SEO-Vorschläge. ~2,50 $/1 Million "
+"Eingabetoken."
+
+#: seo-booster-settings.php:837
+#, fuzzy
+msgid "GPT-4.1 Mini:"
+msgstr "GPT-4.1 Mini:"
+
+#: seo-booster-settings.php:837
+#, fuzzy
+msgid ""
+"Latest model with 1M token context. Excellent for complex SEO analysis. "
+"~$0.40/1M input tokens."
+msgstr ""
+"Neuestes Modell mit 1 Million Token-Kontext. Hervorragend geeignet für "
+"komplexe SEO-Analysen. ~0,40 $/1 Million Eingabetoken."
+
+#: seo-booster-settings.php:838
+#, fuzzy
+msgid "GPT-3.5 Turbo:"
+msgstr "GPT-3.5 Turbo:"
+
+#: seo-booster-settings.php:838
+#, fuzzy
+msgid ""
+"Fastest and cheapest option. Good for basic SEO suggestions but may lack the "
+"nuance of newer models. ~$0.50/1M input tokens."
+msgstr ""
+"Die schnellste und günstigste Option. Gut für grundlegende SEO-Vorschläge, "
+"aber möglicherweise ohne die Nuancen neuerer Modelle. ~0,50 $/1 Million "
+"Eingabetoken."
+
+#: seo-booster-settings.php:841
+#, fuzzy
+msgid ""
+"Choose the OpenAI model to use for generating suggestions. GPT-4o Mini "
+"offers the best balance of quality and cost."
+msgstr ""
+"Wählen Sie das OpenAI-Modell, das für die Generierung von Vorschlägen "
+"verwendet werden soll. GPT-4o Mini bietet das beste Verhältnis zwischen "
+"Qualität und Kosten."
+
+#: seo-booster-settings.php:848
+#, fuzzy
+msgid "DeepSeek API Key"
+msgstr "DeepSeek-API-Schlüssel"
+
+#: seo-booster-settings.php:857
+#, fuzzy
+msgid "Enter your DeepSeek API key"
+msgstr "Geben Sie Ihren DeepSeek-API-Schlüssel ein."
+
+#: seo-booster-settings.php:859
+#, fuzzy
+msgid "Your DeepSeek API key. Get one from "
+msgstr "Ihr DeepSeek-API-Schlüssel. Beziehen Sie einen von "
+
+#: seo-booster-settings.php:860
+#, fuzzy
+msgid "DeepSeek Platform"
+msgstr "DeepSeek-Plattform"
+
+#: seo-booster-settings.php:868
+#, fuzzy
+msgid "Credits System"
+msgstr "Kreditpunktesystem"
+
+#: seo-booster-settings.php:872
+#, fuzzy
+msgid "🚀 Coming Soon - Simple & Fast AI Credits!"
+msgstr "🚀 Demnächst verfügbar – Einfache und schnelle KI-Credits!"
+
+#: seo-booster-settings.php:874
+#, fuzzy
+msgid ""
+"Want a fast, simple way to get AI suggestions without creating accounts or "
+"monthly subscriptions?"
+msgstr ""
+"Möchten Sie schnell und einfach KI-Vorschläge erhalten, ohne Konten "
+"erstellen oder monatliche Abonnements abschließen zu müssen?"
+
+#: seo-booster-settings.php:877
+#, fuzzy
+msgid ""
+"Our credit system will let you buy AI suggestions on-demand - no "
+"commitments, no recurring fees, just pay for what you use."
+msgstr ""
+"Mit unserem Kreditsystem können Sie KI-Vorschläge nach Bedarf kaufen – ohne "
+"Verpflichtungen, ohne wiederkehrende Gebühren, Sie zahlen nur für das, was "
+"Sie nutzen."
+
+#: seo-booster-settings.php:880
+#, fuzzy
+msgid "Interested in early access?"
+msgstr "Interessiert an einem frühen Zugang?"
+
+#: seo-booster-settings.php:881
+msgid "Contact us at "
+msgstr "Kontaktieren Sie uns unter "
+
+#: seo-booster-settings.php:881
+#, fuzzy
+msgid "to be notified when this feature launches!"
+msgstr "Benachrichtigt werden, wenn diese Funktion verfügbar ist!"
+
+#: seo-booster-settings.php:896
+msgid "Database Update"
+msgstr "Aktualisierung der Datenbank"
+
+#: seo-booster-settings.php:899
+#, fuzzy
+msgid "Run Update Database"
+msgstr "Datenbank aktualisieren"
+
+#: seo-booster-settings.php:900
+#, fuzzy
+msgid ""
+"If you need to manually run the database updates. No need to use unless "
+"directed by support."
+msgstr ""
+"Wenn Sie die Datenbankaktualisierungen manuell ausführen müssen. Nicht "
+"erforderlich, sofern nicht vom Support angeordnet."
+
+#: seo-booster-settings.php:905 seo-booster-settings.php:908
+#, fuzzy
+msgid "Restart Keyword Scanning"
+msgstr "Neustart der Stichwortsuche"
+
+#: seo-booster-settings.php:909
+#, fuzzy
+msgid "Manually restart the keyword scanning process for all pages."
+msgstr "Starten Sie den Keyword-Scan-Prozess für alle Seiten manuell neu."
+
+#: seo-booster-settings.php:914 seo-booster-settings.php:917
+#, fuzzy
+msgid "Reset the log"
+msgstr "Das Protokoll zurücksetzen"
+
+#: seo-booster-settings.php:918
+#, fuzzy
+msgid "Clear the debug log."
+msgstr "Löschen Sie das Debug-Protokoll."
+
+#: seo-booster-settings.php:923 seo-booster-settings.php:926
+#, fuzzy
+msgid "Reset keyword data"
+msgstr "Keyword-Daten zurücksetzen"
+
+#: seo-booster-settings.php:927
+#, fuzzy
+msgid "Clear all keyword data and reset the database."
+msgstr "Alle Keyword-Daten löschen und die Datenbank zurücksetzen."
+
+#: seo-booster-settings.php:934
+#, fuzzy
+msgid "Delete Data on Deactivate"
+msgstr "Daten löschen bei Deaktivierung"
+
+#: seo-booster-settings.php:943
+#, fuzzy
+msgid ""
+"Turn this on to delete all data when deactivating the plugin. This cannot be "
+"undone."
+msgstr ""
+"Aktivieren Sie diese Option, um beim Deaktivieren des Plugins alle Daten zu "
+"löschen. Dieser Vorgang kann nicht rückgängig gemacht werden."
+
+#: seo-booster-settings.php:946
+#, fuzzy
+msgid ""
+"WordPress Multisite users: Careful! Turning this on and deactivating the "
+"plugin deletes ALL SEO Booster database tables on ALL sites."
+msgstr ""
+"WordPress Multisite-Benutzer: Achtung! Wenn Sie diese Option aktivieren und "
+"das Plugin deaktivieren, werden ALLE SEO Booster-Datenbanktabellen auf ALLEN "
+"Websites gelöscht."
+
+#: seo-booster-settings.php:952
+#, fuzzy
+msgid "Clear Database and Reset Options"
+msgstr "Datenbank löschen und Optionen zurücksetzen"
+
+#: seo-booster-settings.php:956
+#, fuzzy
+msgid ""
+"Removes all keyword data and the history of keyword positions and clicks."
+msgstr ""
+"Entfernt alle Keyword-Daten und den Verlauf der Keyword-Positionen und "
+"Klicks."
+
+#: seo-booster-settings.php:957
+#, fuzzy
+msgid "Resets the debug log."
+msgstr "Setzt das Debug-Protokoll zurück."
+
+#: seo-booster-settings.php:958
+#, fuzzy
+msgid "Clears all 404 error records."
+msgstr "Löscht alle 404-Fehlerdatensätze."
+
+#: seo-booster-settings.php:959
+#, fuzzy
+msgid "Deletes cached content pages used for keyword research."
+msgstr ""
+"Löscht zwischengespeicherte Inhaltsseiten, die für die Keyword-Recherche "
+"verwendet werden."
+
+#: seo-booster-settings.php:960
+#, fuzzy
+msgid "Purges all keyword analysis results for a fresh start."
+msgstr "Löscht alle Ergebnisse der Keyword-Analyse für einen Neuanfang."
+
+#: seo-booster-settings.php:961
+#, fuzzy
+msgid ""
+"Cancels and removes all scheduled Action Scheduler jobs related to SEO "
+"Booster."
+msgstr ""
+"Alle geplanten Action Scheduler-Jobs im Zusammenhang mit SEO Booster werden "
+"abgebrochen und entfernt."
+
+#: seo-booster-settings.php:962
+#, fuzzy
+msgid "Clears all AI bot visits tracking data."
+msgstr "Löscht alle Tracking-Daten zu Besuchen von KI-Bots."
+
+#: seo-booster-settings.php:963
+#, fuzzy
+msgid ""
+"Removes all GSC options, including authentication, keyword data, and "
+"selected site."
+msgstr ""
+"Entfernt alle GSC-Optionen, einschließlich Authentifizierung, Keyword-Daten "
+"und ausgewählte Website."
+
+#: seo-booster-settings.php:965
+#, fuzzy
+msgid "Keywords to links you've created will remain intact."
+msgstr ""
+"Die Schlüsselwörter zu den von Ihnen erstellten Links bleiben unverändert."
+
+#: seo-booster-settings.php:966
+#, fuzzy
+msgid "Clear All Data and Options"
+msgstr "Alle Daten und Optionen löschen"
+
+#: seo-booster-settings.php:967
+#, fuzzy
+msgid ""
+"Warning: This will permanently change your database. Proceed with care—"
+"there's no going back!"
+msgstr ""
+"Warnung: Dies führt zu einer dauerhaften Änderung Ihrer Datenbank. Gehen Sie "
+"vorsichtig vor – es gibt kein Zurück!"
+
+#: seo-booster-settings.php:981
+#, fuzzy
+msgid "Database Statistics"
+msgstr "Datenbankstatistik"
+
+#: seo-booster-settings.php:991
+#, fuzzy
+msgid "Cron Jobs Status"
+msgstr "Status der Cron-Jobs"
+
+#: seo-booster-settings.php:1019
+msgid "Hook"
+msgstr "Hook"
+
+#: seo-booster-settings.php:1019
+msgid "Next Execution"
+msgstr "Nächste Ausführung"
+
+#: seo-booster-settings.php:1019
+msgid "Schedule"
+msgstr "Zeitplan"
+
+#: seo-booster-settings.php:1019
+#, fuzzy
+msgid "Time Until Next"
+msgstr "Zeit bis zum nächsten Mal"
+
+#: seo-booster-settings.php:1025
+msgid "Once"
+msgstr "Einmal"
+
+#: seo-booster-settings.php:1037
+#, fuzzy
+msgid "No SEO Booster cron jobs found."
+msgstr "Keine SEO Booster-Cron-Jobs gefunden."
+
+#: seo-booster-settings.php:1044
+#, fuzzy
+msgid "Scheduled Actions Statistics"
+msgstr "Statistik zu geplanten Aktionen"
+
+#: seo-booster-settings.php:1105
+msgid "Status"
+msgstr "Status"
+
+#: seo-booster-settings.php:1105
+msgid "Count"
+msgstr "Anzahl"
+
+#: seo-booster-settings.php:1143
+#, fuzzy
+msgid "Action Scheduler is not available."
+msgstr "Der Aktionsplaner ist nicht verfügbar."
+
+#: seo-booster-settings.php:1152
+msgid "Cache Management"
+msgstr "Cache-Verwaltung"
+
+#: seo-booster-settings.php:1153
+#, fuzzy
+msgid "Manage the SEO Booster cache files used for full page analysis."
+msgstr ""
+"Verwalten Sie die SEO Booster-Cache-Dateien, die für die vollständige "
+"Seitenanalyse verwendet werden."
+
+#: seo-booster-settings.php:1197
+msgid "Cache Information"
+msgstr "Cache-Informationen"
+
+#: seo-booster-settings.php:1198 seo-booster.php:1720 seo-booster.php:1826
+msgid "Value"
+msgstr "Wert"
+
+#: seo-booster-settings.php:1203
+msgid "Cache Directory"
+msgstr "Cache-Verzeichnis"
+
+#: seo-booster-settings.php:1207
+msgid "Total Files"
+msgstr "Dateien gesamt"
+
+#: seo-booster-settings.php:1211
+msgid "Total Size"
+msgstr "Gesamtgröße"
+
+#: seo-booster-settings.php:1216
+msgid "Oldest File"
+msgstr "Älteste Datei"
+
+#: seo-booster-settings.php:1218 seo-booster-settings.php:1226
+msgid "ago"
+msgstr "vor"
+
+#: seo-booster-settings.php:1224
+#, fuzzy
+msgid "Newest File"
+msgstr "Neueste Datei"
+
+#: seo-booster-settings.php:1231
+msgid "Cache Status"
+msgstr "Cachestatus"
+
+#: seo-booster-settings.php:1236
+msgid "Empty"
+msgstr "Leer"
+
+#: seo-booster-settings.php:1245
+msgid ""
+"Are you sure you want to clear all cache files? This action cannot be undone."
+msgstr ""
+"Möchten Sie wirklich alle Cache-Dateien löschen? Diese Aktion kann nicht "
+"rückgängig gemacht werden."
+
+#: seo-booster-settings.php:1247
+msgid "Clear All Cache"
+msgstr "Alle Caches löschen"
+
+#: seo-booster-settings.php:1251
+#, fuzzy
+msgid ""
+"Clearing the cache will remove all stored page content. New analysis will re-"
+"download pages as needed."
+msgstr ""
+"Durch das Löschen des Caches werden alle gespeicherten Seiteninhalte "
+"entfernt. Bei einer neuen Analyse werden die Seiten bei Bedarf erneut "
+"heruntergeladen."
+
+#: seo-booster-settings.php:1269
+msgid "Save Changes"
+msgstr "Änderungen speichern"
+
+#: seo-booster-settings.php:1271
+#, fuzzy
+msgid "Save all settings across all tabs."
+msgstr "Speichern Sie alle Einstellungen auf allen Registerkarten."
+
+#: seo-booster.php:576
+msgid "Normal"
+msgstr "Normal"
+
+#: seo-booster.php:577
+msgid "Debug"
+msgstr "Debug"
+
+#: seo-booster.php:580
+msgid "Info"
+msgstr "Info"
+
+#: seo-booster.php:581
+msgid "Success"
+msgstr "Erfolg"
+
+#: seo-booster.php:584
+msgid "Unknown"
+msgstr "Unbekannt"
+
+#: seo-booster.php:633
+#, fuzzy
+msgid "Missing something."
+msgstr "Etwas fehlt."
+
+#: seo-booster.php:739
+#, fuzzy
+msgid "You do not have permission to add keywords."
+msgstr "Sie haben keine Berechtigung, Schlüsselwörter hinzuzufügen."
+
+#: seo-booster.php:750
+#, fuzzy, php-format
+msgid "Error - Keyword <code>%s</code> is already used."
+msgstr "Fehler – Das Schlüsselwort <code>%s</code> wird bereits verwendet."
+
+#: seo-booster.php:759
+#, fuzzy, php-format
+msgid "Error - <code>%s</code> is not a valid URL."
+msgstr "Fehler – <code>%s</code> ist keine gültige URL."
+
+#: seo-booster.php:778
+#, fuzzy, php-format
+msgid "Success! <code>%1$s</code> now links to <code>%2$s</code>."
+msgstr "Erfolg! <code>%1$s</code> ist jetzt mit <code>%2$s</code> verknüpft."
+
+#: seo-booster.php:841
+msgid "Automatic Linking"
+msgstr "Automatische Verknüpfung"
+
+#: seo-booster.php:853
+#, fuzzy
+msgid "Change keywords on this page to links."
+msgstr "Ändern Sie die Schlüsselwörter auf dieser Seite in Links."
+
+#: seo-booster.php:862
+#, fuzzy
+msgid "Feature is disabled. Enable in SEO Booster settings."
+msgstr ""
+"Die Funktion ist deaktiviert. Aktivieren Sie sie in den SEO Booster-"
+"Einstellungen."
+
+#. translators: 1: opening link tag, 2: closing link tag
+#: seo-booster.php:872
+#, fuzzy, php-format
+msgid "Change keywords and links in %1$sAutolink%2$s"
+msgstr "Ändern Sie Schlüsselwörter und Links in %1$sAutolink%2$s"
+
+#. translators:
+#: seo-booster.php:1583
+#, fuzzy, php-format
+msgid "New 404 - %1$s Referer: %2$s"
+msgstr "Neue 404 – %1$s Referrer: %2$s"
+
+#. translators:
+#: seo-booster.php:1593
+#, fuzzy, php-format
+msgid "New 404 - %1$s"
+msgstr "Neue 404 – %1$s"
+
+#: seo-booster.php:1687
+#, fuzzy
+msgid "Please select a site"
+msgstr "Bitte wählen Sie eine Website aus."
+
+#: seo-booster.php:1688
+msgid "Are you sure you want to do this?"
+msgstr "Sind Sie sicher, dass Sie das tun möchten?"
+
+#: seo-booster.php:1689
+msgid "Please wait"
+msgstr "Bitte warten"
+
+#: seo-booster.php:1690 seo-booster.php:1802
+#, fuzzy
+msgid "Unique keywords imported"
+msgstr "Eingeführte eindeutige Schlüsselwörter"
+
+#: seo-booster.php:1691 seo-booster.php:1803
+#, fuzzy
+msgid "Total entries processed"
+msgstr "Gesamtzahl der bearbeiteten Einträge"
+
+#: seo-booster.php:1692
+#, fuzzy
+msgid "Last import keyword"
+msgstr "Letztes Import-Schlüsselwort"
+
+#: seo-booster.php:1693 seo-booster.php:1805
+#, fuzzy
+msgid "Last batch"
+msgstr "Letzte Charge"
+
+#: seo-booster.php:1694 seo-booster.php:1806 seo-booster.php:1829
+msgid "seconds"
+msgstr "Sekunden"
+
+#: seo-booster.php:1697
+msgid "Total time"
+msgstr "Gesamtzeit"
+
+#: seo-booster.php:1698 seo-booster.php:1809
+msgid "Go to Dashboard"
+msgstr "Gehe zum Dashboard"
+
+#: seo-booster.php:1699 seo-booster.php:1810 seo-booster.php:2464
+msgid "Retry"
+msgstr "Wiederholen"
+
+#: seo-booster.php:1700 seo-booster.php:2466
+#, fuzzy
+msgid "An error occurred while processing the request."
+msgstr "Bei der Bearbeitung der Anfrage ist ein Fehler aufgetreten."
+
+#: seo-booster.php:1701
+#, fuzzy
+msgid "Saving site and loading data. This can take several minutes."
+msgstr ""
+"Speichern der Website und Laden der Daten. Dies kann einige Minuten dauern."
+
+#: seo-booster.php:1702 seo-booster.php:1813
+msgid "Elapsed time"
+msgstr "Verstrichene Zeit"
+
+#: seo-booster.php:1703 seo-booster.php:1799
+msgid "Please wait..."
+msgstr "Bitte warten..."
+
+#: seo-booster.php:1704 seo-booster.php:1800
+msgid "Show more"
+msgstr "Mehr anzeigen"
+
+#: seo-booster.php:1705 seo-booster.php:1801
+msgid "Show less"
+msgstr "Weniger anzeigen"
+
+#: seo-booster.php:1706 seo-booster.php:1804
+#, fuzzy
+msgid "Last imported keyword"
+msgstr "Zuletzt importiertes Schlüsselwort"
+
+#: seo-booster.php:1707 seo-booster.php:1808
+msgid "Import complete"
+msgstr "Import vollständig"
+
+#: seo-booster.php:1708 seo-booster.php:1812
+msgid "Error processing request"
+msgstr "Bei der Verarbeitung der Anfrage ist ein Fehler aufgetreten"
+
+#: seo-booster.php:1709 seo-booster.php:1815
+msgid "Last 28 days"
+msgstr "Letzte 28 Tage"
+
+#: seo-booster.php:1710 seo-booster.php:1816
+msgid "Last 3 months"
+msgstr "Letzte 3 Monate"
+
+#: seo-booster.php:1711 seo-booster.php:1817
+msgid "Last 6 months"
+msgstr "Die letzten 6 Monate"
+
+#: seo-booster.php:1712 seo-booster.php:1818
+msgid "Last 12 months"
+msgstr "Letzte 12 Monate"
+
+#: seo-booster.php:1713 seo-booster.php:1819
+msgid "All time"
+msgstr "Gesamter Zeitraum"
+
+#: seo-booster.php:1718 seo-booster.php:1824
+#, fuzzy
+msgid "SEO Booster Data Visualization"
+msgstr "SEO-Booster-Datenvisualisierung"
+
+#: seo-booster.php:1719 seo-booster.php:1825
+msgid "Date"
+msgstr "Datum"
+
+#: seo-booster.php:1721 seo-booster.php:1830
+#, fuzzy
+msgid "Error fetching data"
+msgstr "Fehler beim Abrufen der Daten"
+
+#: seo-booster.php:1722 seo-booster.php:1831
+msgid "Please try again later."
+msgstr "Bitte versuchen Sie es später erneut."
+
+#: seo-booster.php:1723 seo-booster.php:1832
+msgid "Visit our"
+msgstr "Besuchen Sie unser"
+
+#: seo-booster.php:1724 seo-booster.php:1833
+msgid "Troubleshooting Guide"
+msgstr "Leitfaden zur Fehlerbehebung"
+
+#: seo-booster.php:1725 seo-booster.php:1772 seo-booster.php:1834
+msgid "Timestamp"
+msgstr "Zeitstempel"
+
+#: seo-booster.php:1726 seo-booster.php:1773 seo-booster.php:1835
+msgid "Priority"
+msgstr "Priorität"
+
+#: seo-booster.php:1727 seo-booster.php:1774 seo-booster.php:1836
+msgid "Log Entry"
+msgstr "Protokoll-Eintrag bearbeiten"
+
+#: seo-booster.php:1728 seo-booster.php:1775 seo-booster.php:1837
+#, fuzzy
+msgid "Tabulator library is not loaded."
+msgstr "Die Tabulator-Bibliothek ist nicht geladen."
+
+#: seo-booster.php:1729 seo-booster.php:1838
+#, fuzzy
+msgid "Unique Keywords"
+msgstr "Eindeutige Schlüsselwörter"
+
+#: seo-booster.php:1731 seo-booster.php:1798 seo-booster.php:1840
+#, fuzzy
+msgid "Hide Information"
+msgstr "Informationen ausblenden"
+
+#: seo-booster.php:1811
+#, fuzzy
+msgid "Please enter at least one email address."
+msgstr "Bitte geben Sie mindestens eine E-Mail-Adresse ein."
+
+#: seo-booster.php:1814
+#, fuzzy
+msgid "Saving site and loading data"
+msgstr "Speichern der Website und Laden der Daten"
+
+#: seo-booster.php:1916
+#, fuzzy
+msgid "No recent analysis"
+msgstr "Keine aktuelle Analyse"
+
+#: seo-booster.php:1918
+msgid "Analysis completed"
+msgstr "Analyse abgeschlossen"
+
+#: seo-booster.php:1919
+msgid "An error occurred"
+msgstr "Ein Fehler ist aufgetreten"
+
+#: seo-booster.php:1941
+msgid "Every 6 Hours"
+msgstr "Alle 6 Stunden"
+
+#. translators:
+#: seo-booster.php:2044
+#, fuzzy, php-format
+msgid "Created database tables on blog id <code>%s</code>."
+msgstr "Datenbanktabellen für Blog-ID <code>%s</code> erstellt."
+
+#: seo-booster.php:2065
+msgid "Newsletter"
+msgstr "Newsletter"
+
+#: seo-booster.php:2066
+#, fuzzy
+msgid "You are added to our newsletter. Unsubscribe anytime."
+msgstr ""
+"Sie werden zu unserem Newsletter hinzugefügt. Sie können sich jederzeit "
+"wieder abmelden."
+
+#: seo-booster.php:2230
+#, fuzzy
+msgid "Selected site was reset and keyword history erased."
+msgstr ""
+"Die ausgewählte Website wurde zurückgesetzt und der Suchbegriffverlauf "
+"gelöscht."
+
+#: seo-booster.php:2247
+#, fuzzy
+msgid "Site selected successfully."
+msgstr "Standort erfolgreich ausgewählt."
+
+#: seo-booster.php:2255
+#, fuzzy
+msgid "Select Site:"
+msgstr "Standort auswählen:"
+
+#: seo-booster.php:2259
+#, fuzzy
+msgid "Please select a site to continue."
+msgstr "Bitte wählen Sie eine Website aus, um fortzufahren."
+
+#: seo-booster.php:2339
+#, fuzzy
+msgid "insufficient permissions"
+msgstr "unzureichende Berechtigungen"
+
+#: seo-booster.php:2347
+msgid "Save Site"
+msgstr "Seite speichern"
+
+#: seo-booster.php:2350
+#, fuzzy
+msgid "Go to SEO Booster Dashboard"
+msgstr "Zum SEO Booster-Dashboard gehen"
+
+#: seo-booster.php:2383 seo-booster.php:2384 seo-booster.php:2589
+#, fuzzy
+msgid "GSC Overview"
+msgstr "GSC-Übersicht"
+
+#: seo-booster.php:2410
+#, fuzzy
+msgid "404s"
+msgstr "404er"
+
+#: seo-booster.php:2411
+#, fuzzy
+msgid "404 & Redirects"
+msgstr "404 & Weiterleitungen"
+
+#: seo-booster.php:2458
+#, fuzzy
+msgid "Flushing..."
+msgstr "Flushing..."
+
+#: seo-booster.php:2459
+msgid "Flushed!"
+msgstr "Erneuert!"
+
+#: seo-booster.php:2460
+msgid "Error!"
+msgstr "Fehler!"
+
+#: seo-booster.php:2461
+msgid "Importing..."
+msgstr "Importiere..."
+
+#: seo-booster.php:2462
+#, fuzzy
+msgid "Import completed successfully!"
+msgstr "Import erfolgreich abgeschlossen!"
+
+#: seo-booster.php:2463
+msgid "Import completed!"
+msgstr "Import abgeschlossen!"
+
+#: seo-booster.php:2465
+#, fuzzy
+msgid "No GSC site selected. Please select a site first."
+msgstr ""
+"Keine GSC-Website ausgewählt. Bitte wählen Sie zuerst eine Website aus."
+
+#: seo-booster.php:2541
+msgid "Hide Details"
+msgstr "Details ausblenden"
+
+#: seo-booster.php:2542
+msgid "Show Details"
+msgstr "Details anzeigen"
+
+#: seo-booster.php:2561
+#, fuzzy
+msgid "Disable Keyword Highlighting"
+msgstr "Keyword-Hervorhebung deaktivieren"
+
+#: seo-booster.php:2562
+#, fuzzy
+msgid "Highlight Automatic Links"
+msgstr "Automatische Links hervorheben"
+
+#: seo-booster.php:2575
+#, fuzzy
+msgid "Disable GSC Keyword Highlighting"
+msgstr "GSC-Keyword-Hervorhebung deaktivieren"
+
+#: seo-booster.php:2576
+#, fuzzy
+msgid "Highlight GSC Keywords"
+msgstr "GSC-Schlüsselwörter hervorheben"
+
+#: seo-booster.php:2662 views/autolink-pages.php:11
+msgid "You do not have sufficient permissions to access this page."
+msgstr ""
+"Du hast nicht die erforderlichen Rechte, um auf diese Seite zuzugreifen."
+
+#. translators: %1$s is the source URL, %2$s is the destination URL, %3$d is the status code
+#: seo-booster.php:3086
+#, fuzzy, php-format
+msgid "New redirect %1$s → %2$s (%3$d)"
+msgstr "Neue Weiterleitung %1$s → %2$s (%3$d)"
+
+#: views/404-pages.php:30
+#, fuzzy
+msgid "404 Error monitoring is turned off."
+msgstr "Die Überwachung von 404-Fehlern ist deaktiviert."
+
+#: views/404-pages.php:34
+#, fuzzy
+msgid "Turn on in the settings"
+msgstr "In den Einstellungen aktivieren"
+
+#: views/404-pages.php:54
+#, fuzzy
+msgid "Currently ignored URLs:"
+msgstr "Derzeit ignorierte URLs:"
+
+#: views/404-pages.php:65
+#, fuzzy
+msgid "Reset 404 Errors"
+msgstr "404-Fehler zurücksetzen"
+
+#: views/404-pages.php:74
+#, fuzzy
+msgid "Upgrade to SEO Booster Pro"
+msgstr "Upgrade auf SEO Booster Pro"
+
+#: views/404-pages.php:76
+#, fuzzy
+msgid "Unlock powerful SEO features:"
+msgstr "Entsperren Sie leistungsstarke SEO-Funktionen:"
+
+#: views/404-pages.php:78
+#, fuzzy
+msgid "Monitor and analyze 404 errors"
+msgstr "404-Fehler überwachen und analysieren"
+
+#: views/404-pages.php:79
+#, fuzzy
+msgid "Improve user experience and SEO performance"
+msgstr "Verbessern Sie die Benutzererfahrung und die SEO-Leistung"
+
+#: views/404-pages.php:80
+#, fuzzy
+msgid "Advanced reporting and insights"
+msgstr "Erweiterte Berichterstellung und Einblicke"
+
+#: views/404-pages.php:81
+#, fuzzy
+msgid "Comprehensive keyword analysis"
+msgstr "Umfassende Keyword-Analyse"
+
+#: views/404-pages.php:83
+#, fuzzy
+msgid "Take your website to the next level with SEO Booster Pro!"
+msgstr "Bringen Sie Ihre Website mit SEO Booster Pro auf die nächste Stufe!"
+
+#: views/404-pages.php:86
+msgid "Upgrade Now"
+msgstr "Jetzt upgraden"
+
+#: views/autolink-pages.php:16
+#, fuzzy
+msgid "Automatic keywords to links"
+msgstr "Automatische Schlüsselwörter zu Links"
+
+#: views/autolink-pages.php:22
+msgid "Add new link"
+msgstr "Neuen Link hinzufügen"
+
+#: views/autolink-pages.php:26
+#, fuzzy
+msgid ""
+"Enter keyword and which URL the keyword should link to. Works with internal "
+"and external links."
+msgstr ""
+"Geben Sie ein Stichwort und die URL ein, mit der das Stichwort verknüpft "
+"werden soll. Funktioniert mit internen und externen Links."
+
+#: views/autolink-pages.php:35
+msgid "Enter keyword"
+msgstr "Suchbegriff eingeben"
+
+#: views/autolink-pages.php:40
+msgid "Target URL"
+msgstr "Ziel-URL"
+
+#: views/autolink-pages.php:46
+msgid "Add Keyword"
+msgstr "Keyword hinzufügen"
+
+#: views/autolink-pages.php:88
+#, fuzzy
+msgid "Add keywords or phrases that should be changed in your posts to links."
+msgstr ""
+"Fügen Sie Schlüsselwörter oder Ausdrücke, die in Ihren Beiträgen geändert "
+"werden sollen, zu Links hinzu."
+
+#. translators:
+#: views/autolink-pages.php:115
+#, fuzzy, php-format
+msgid "<code>%s</code> duplicate keyword links were removed automatically. "
+msgstr "<code>%s</code> Doppelte Keyword-Links wurden automatisch entfernt. "
+
+#: views/autolink-pages.php:118
+#, fuzzy
+msgid "Click to reload page"
+msgstr "Klicken Sie hier, um die Seite neu zu laden."
+
+#: views/autolink-pages.php:134
+#, fuzzy
+msgid ""
+"Automatic Linking is turned off! Turn on the option in the settings page."
+msgstr ""
+"Die automatische Verknüpfung ist deaktiviert! Aktivieren Sie die Option auf "
+"der Einstellungsseite."
+
+#: views/gsc-pages.php:39
+#, fuzzy
+msgid ""
+"Sync URL inspection data from Google Search Console for pages with traffic "
+"data."
+msgstr ""
+"Synchronisieren Sie URL-Prüfdaten aus der Google Search Console für Seiten "
+"mit Traffic-Daten."
+
+#: views/gsc-pages.php:41 views/gsc-pages.php:69 views/gsc-pages.php:73
+#, fuzzy
+msgid "Sync GSC Issues"
+msgstr "GSC-Probleme synchronisieren"
+
+#: views/gsc-pages.php:52
+msgid "Syncing..."
+msgstr "Synchronisierung..."
+
+#: views/gsc-pages.php:53
+#, fuzzy
+msgid "Scheduling inspections..."
+msgstr "Inspektionen planen..."
+
+#: views/gsc-pages.php:65
+#, fuzzy
+msgid "Sync started successfully"
+msgstr "Synchronisierung erfolgreich gestartet"
+
+#: views/gsc-pages.php:67
+msgid "Sync failed"
+msgstr "Synchronisation fehlgeschlagen"
+
+#: views/gsc-pages.php:72
+msgid "Error occurred"
+msgstr "Ein Fehler ist aufgetreten"
+
+#: views/gsc-pages.php:95
+#, fuzzy
+msgid "Search keywords, pages, or dates..."
+msgstr "Suchbegriffe, Seiten oder Daten suchen..."
+
+#: views/gsc-pages.php:102
+msgid "Filter:"
+msgstr "Filter:"
+
+#: views/gsc-pages.php:107
+msgid "New Keywords (Past 30 Days)"
+msgstr "Neue Keywords (letzte 30 Tage)"
+
+#: views/gsc-pages.php:110
+msgid "Keywords Not Seen (Over 30 Days)"
+msgstr "Nicht angezeigte Keywords (über 30 Tage)"
+
+#: views/gsc-pages.php:113
+#, fuzzy
+msgid "Keywords Found in Content"
+msgstr "Inhaltliche Schlüsselwörter"
+
+#: views/gsc-pages.php:116
+#, fuzzy
+msgid "Keywords Not Used in Content"
+msgstr "Nicht im Inhalt verwendete Schlüsselwörter"
+
+#: views/gsc-pages.php:119
+#, fuzzy
+msgid "High Average Position (1-10)"
+msgstr "Hohe durchschnittliche Position (1-10)"
+
+#: views/gsc-pages.php:122
+#, fuzzy
+msgid "Medium Average Position (11-50)"
+msgstr "Mittlere durchschnittliche Position (11–50)"
+
+#: views/gsc-pages.php:125
+#, fuzzy
+msgid "Low Average Position (50+)"
+msgstr "Niedrige durchschnittliche Position (50+)"
+
+#: views/gsc-pages.php:134
+msgid "Exact Match"
+msgstr "Genaue Übereinstimmung"
+
+#: views/gsc-pages.php:135
+#, fuzzy
+msgid "Search for exact keyword matches only"
+msgstr "Nur nach exakten Keyword-Übereinstimmungen suchen"
+
+#: views/gsc-pages.php:140
+msgid "Recent Activity"
+msgstr "Letzte Aktivität"
+
+#: views/gsc-pages.php:141
+#, fuzzy
+msgid "Show only keywords with traffic in the past 30 days"
+msgstr "Nur Keywords mit Traffic in den letzten 30 Tagen anzeigen"
+
+#. Plugin URI of the plugin/theme
+#. Author URI of the plugin/theme
+#, fuzzy
+msgid "https://seoboosterpro.com/"
+msgstr "https://seoboosterpro.com/"
+
+#. Description of the plugin/theme
+#, fuzzy
+msgid ""
+"SEO Booster integrates with Google Search Console data - bringing the data "
+"to life on your website like never before. Optimize keywords and content, "
+"track your rankings, and get actionable insights to improve your SEO."
+msgstr ""
+"SEO Booster lässt sich mit den Daten der Google Search Console integrieren "
+"und erweckt die Daten auf Ihrer Website zu neuem Leben. Optimieren Sie "
+"Keywords und Inhalte, verfolgen Sie Ihre Rankings und erhalten Sie "
+"umsetzbare Erkenntnisse zur Verbesserung Ihrer SEO."
+
+#. Author of the plugin/theme
+#, fuzzy
+msgid "seoboosterpro.com"
+msgstr "seoboosterpro.com"

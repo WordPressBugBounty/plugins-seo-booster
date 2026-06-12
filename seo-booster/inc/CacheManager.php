@@ -14,7 +14,7 @@ class CacheManager {
     private static $cache_dir;
 
     /** @var int $default_cache_duration Default cache duration in seconds. */
-    private static $default_cache_duration = 86400; // 24 hours in seconds
+    private static $default_cache_duration = 3 * DAY_IN_SECONDS;
 
     /** @var \WP_Filesystem_Base $filesystem WordPress filesystem object. */
     private static $filesystem;
@@ -35,11 +35,34 @@ class CacheManager {
         // Ensure the cache and seo-booster directories exist
         self::initialize_cache_directory();
 
-        // Register cron event if not already scheduled
-        if (!wp_next_scheduled('seobooster_cache_cleanup')) {
-            wp_schedule_event(time(), 'daily', 'seobooster_cache_cleanup');
-        }
+        // Register the cron action hook
         add_action('seobooster_cache_cleanup', array(__CLASS__, 'cleanup_old_cache_files'));
+    }
+
+    /**
+     * Schedules the cache cleanup cron job.
+     * This should be called during plugin activation or when needed.
+     *
+     * @return void
+     */
+    public static function schedule_cache_cleanup() {
+        // Only schedule if not already scheduled
+        if (!wp_next_scheduled('seobooster_cache_cleanup')) {
+            wp_schedule_event(time(), 'hourly', 'seobooster_cache_cleanup');
+        }
+    }
+
+    /**
+     * Unschedules the cache cleanup cron job.
+     * This should be called during plugin deactivation.
+     *
+     * @return void
+     */
+    public static function unschedule_cache_cleanup() {
+        $timestamp = wp_next_scheduled('seobooster_cache_cleanup');
+        if ($timestamp) {
+            wp_unschedule_event($timestamp, 'seobooster_cache_cleanup');
+        }
     }
 
     /**
@@ -52,7 +75,7 @@ class CacheManager {
         if (empty($wp_filesystem)) {
             require_once(ABSPATH . '/wp-admin/includes/file.php');
             if (!WP_Filesystem()) {
-                Utils::log(__("Failed to initialize WP_Filesystem", 'seo-booster'), 2);
+                Utils::log('Failed to initialize WP_Filesystem', 2);
                 return false;
             }
         }
@@ -69,20 +92,20 @@ class CacheManager {
         $cache_base_dir = WP_CONTENT_DIR . '/cache/';
         if (!self::$filesystem->is_dir($cache_base_dir)) {
             if (!self::$filesystem->mkdir($cache_base_dir, FS_CHMOD_DIR)) {
-                Utils::log(__("Failed to create base cache directory", 'seo-booster'), 2);
+                Utils::log('Failed to create base cache directory', 2);
                 return false;
             }
             if (!self::$filesystem->put_contents($cache_base_dir . 'index.php', '<?php // Silence is golden', FS_CHMOD_FILE)) {
-                Utils::log(__("Failed to create index.php in base cache directory", 'seo-booster'), 2);
+                Utils::log('Failed to create index.php in base cache directory', 2);
             }
         }
         if (!self::$filesystem->is_dir(self::$cache_dir)) {
             if (!self::$filesystem->mkdir(self::$cache_dir, FS_CHMOD_DIR)) {
-                Utils::log(__("Failed to create seo-booster cache directory", 'seo-booster'), 2);
+                Utils::log('Failed to create cache directory', 2);
                 return false;
             }
             if (!self::$filesystem->put_contents(self::$cache_dir . 'index.php', '<?php // Silence is golden', FS_CHMOD_FILE)) {
-                Utils::log(__("Failed to create index.php in seo-booster cache directory", 'seo-booster'), 2);
+                Utils::log('Failed to create index.php in cache directory', 2);
             }
         }
         return true;
@@ -98,26 +121,68 @@ class CacheManager {
     public static function fetch_and_cache_url_content(string $url, array $args = []): array
     {
         $post_id = isset($args['post_id']) ? $args['post_id'] : false;
+        $content_type = isset($args['content_type']) ? $args['content_type'] : 'post';
+        $item_id = isset($args['item_id']) ? $args['item_id'] : 0;
 
         if (!wp_http_validate_url($url)) {
-            // translators: %s: URL that failed validation
-            Utils::log(sprintf(__("Invalid URL: %s", 'seo-booster'), $url), 2);
+            Utils::log('Invalid URL provided', 2);
             return array('error' => __('Invalid URL', 'seo-booster'), 'cached' => false);
         }
         // Start the timer
         Utils::timerstart('fetch_url');
 
         // Generate a cache key
-        $post_modified_time = isset($args['post_id']) ? get_post_modified_time('U', false, $args['post_id']) : time();
-        $cache_key = self::generate_cache_key($url, $post_modified_time);
+        $modified_time = time();
+        
+        // If we have a post ID, use the post's modified time
+        if ($post_id) {
+            $modified_time = get_post_modified_time('U', false, $post_id);
+        } 
+        // If we have an item ID and content type, try to get the modified time based on content type
+        elseif ($item_id && $content_type) {
+            if ($content_type === 'term') {
+                $term = get_term($item_id);
+                if ($term && !is_wp_error($term)) {
+                    // For terms, we can use the term's last update time if available
+                    $modified_time = isset($term->term_id) ? get_term_meta($term->term_id, '_term_modified_time', true) : time();
+                    if (empty($modified_time)) {
+                        $modified_time = time();
+                    }
+                }
+            }
+        }
+        
+        $cache_key = self::generate_cache_key($url, $modified_time);
         $cache_file = self::$cache_dir . $cache_key;
 
         // Check if cache exists and is valid
         if (self::$filesystem->exists($cache_file)) {
-            $post_id = url_to_postid($url);
-            $post_modified_time = get_post_modified_time('U', false, $post_id);
+            // For posts, check if the post has been modified
+            if ($post_id) {
+                $post_modified_time = get_post_modified_time('U', false, $post_id);
+                if (self::check_cache_validity($cache_file, $post_modified_time)) {
+                    // Get and decompress cached content
+                    $cached_content = self::$filesystem->get_contents($cache_file);
+                    $decoded_content = base64_decode($cached_content);
+                    
+                    // Try to decompress if it's compressed
+                    $decompressed_content = @gzdecode($decoded_content);
+                    if ($decompressed_content !== false) {
+                        $decoded_content = $decompressed_content;
+                    }
 
-            if (self::check_cache_validity($cache_file, $post_modified_time)) {
+                    $time_taken = Utils::timerstop('fetch_url', 5);
+                    
+                    return array(
+                        'content' => $decoded_content,
+                        'cached'  => true,
+                        'time'    => filemtime($cache_file),
+                        'duration' => $time_taken,
+                    );
+                }
+            } 
+            // For terms or other content types, use a standard cache validity check
+            else {
                 // Get and decompress cached content
                 $cached_content = self::$filesystem->get_contents($cache_file);
                 $decoded_content = base64_decode($cached_content);
@@ -158,7 +223,7 @@ class CacheManager {
             $parsed_url = wp_parse_url($url);
             $stripped_url = isset($parsed_url['path']) ? $parsed_url['path'] : '';
             // translators: 1: URL that failed to fetch, 2: error message
-            Utils::log(sprintf(__('Failed to fetch URL: %1$s. Error: %2$s', 'seo-booster'), $stripped_url, $response->get_error_message()), 2);
+            Utils::log(sprintf('Failed to fetch URL: %1$s. Error: %2$s', $stripped_url, $response->get_error_message()), 2);
             return array(
                 'error' => $response->get_error_message(),
                 'cached' => false,
@@ -167,7 +232,7 @@ class CacheManager {
         }
 
         $content = wp_remote_retrieve_body($response);
-        self::create_cache_file($cache_file, $content);
+        self::create_cache_file($cache_file, $content, $url);
 
         $time_taken = Utils::timerstop('fetch_url', 5);
         $parsed_url = wp_parse_url($url);
@@ -227,12 +292,23 @@ class CacheManager {
      *
      * @param string $file_path Path where the cache file should be created.
      * @param string $content Content to be cached.
+     * @param string $url The original URL being cached (for cleanup purposes).
      * @return void
      */
-    private static function create_cache_file($file_path, $content) {
-        // Delete any existing versions of this cache file
-        $pattern = self::$cache_dir . hash('sha256', wp_parse_url($file_path, PHP_URL_PATH)) . '_*.txt';
-        array_map('unlink', glob($pattern));
+    private static function create_cache_file($file_path, $content, $url = '') {
+        // Delete any existing versions of this cache file for the same URL
+        if (!empty($url)) {
+            $url_hash = hash('sha256', $url);
+            $pattern = self::$cache_dir . $url_hash . '_*.txt';
+            $old_files = glob($pattern);
+            if ($old_files) {
+                foreach ($old_files as $old_file) {
+                    if (is_file($old_file)) {
+                        unlink($old_file);
+                    }
+                }
+            }
+        }
 
         // Compress the content using gzip
         $compressed_content = gzencode($content, 9);
@@ -245,7 +321,7 @@ class CacheManager {
         $result = self::$filesystem->put_contents($file_path, $encoded_content, FS_CHMOD_FILE);
         
         if ($result === false) {
-            Utils::log(sprintf(__("Failed to create cache file: %s", 'seo-booster'), $file_path), 2);
+            Utils::log(sprintf('Failed to create cache file: %s', $file_path), 2);
         }
     }
 
@@ -306,7 +382,7 @@ class CacheManager {
                     number_format_i18n($deleted_count),
                     number_format_i18n($deleted_size / (1024 * 1024), 2)
                 ),
-                5
+                10
             );
         }
     }
@@ -317,9 +393,7 @@ class CacheManager {
      * @return void
      */
     public static function cleanup_on_deactivate() {
-        wp_clear_scheduled_hook('seobooster_cache_cleanup');
+        self::unschedule_cache_cleanup();
         self::cleanup_old_cache_files(true);
     }
 }
-
-CacheManager::init();

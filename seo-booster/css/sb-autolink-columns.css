@@ -1,0 +1,161 @@
+/**
+ * SEO Booster Autolink Columns CSS
+ *
+ * Styles for the autolink column in WordPress admin
+ *
+ * @package Cleverplugins\SEOBooster
+ * @since 6.1.22
+ */
+
+/* Autolink column styling */
+.column-sb_autolink {
+    width: 100px;
+    text-align: center;
+}
+
+/* Toggle switch styling */
+.sb-autolink-toggle-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.sb-autolink-toggle {
+    position: absolute !important;
+    left: -9999px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    clip: rect(0, 0, 0, 0) !important;
+}
+
+.sb-autolink-toggle-label {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border: 1px solid #999;
+}
+
+.sb-autolink-toggle-label:before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.sb-autolink-toggle:checked + .sb-autolink-toggle-label {
+    background-color: #46b450;
+    border-color: #46b450;
+}
+
+.sb-autolink-toggle:checked + .sb-autolink-toggle-label:before {
+    transform: translateX(20px);
+}
+
+.sb-autolink-toggle:disabled + .sb-autolink-toggle-label {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.sb-autolink-status-text {
+    font-size: 11px;
+    font-weight: 500;
+    color: #666;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Disabled state styling */
+.sb-autolink-disabled {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: #f1f1f1;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    color: #666;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Quick edit styling */
+.quick-edit-row .inline-edit-col-right .inline-edit-col {
+    width: 100%;
+}
+
+.quick-edit-row .inline-edit-group {
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+}
+
+.quick-edit-row .inline-edit-group input[type="checkbox"] {
+    margin: 0 8px 0 0;
+}
+
+.quick-edit-row .checkbox-title {
+    font-weight: 500;
+    color: #23282d;
+}
+
+/* Notice styling */
+.sb-autolink-notice {
+    margin: 5px 0 15px 0;
+}
+
+.sb-autolink-notice p {
+    margin: 0;
+    padding: 0;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 782px) {
+    .column-sb_autolink {
+        width: auto;
+    }
+    
+    .sb-autolink-toggle-label {
+        width: 36px;
+        height: 18px;
+    }
+    
+    .sb-autolink-toggle-label:before {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .sb-autolink-toggle:checked + .sb-autolink-toggle-label:before {
+        transform: translateX(18px);
+    }
+}
+
+/* Screen options compatibility */
+.column-sb_autolink.hidden {
+    display: none;
+}
+
+/* Hover effects */
+.sb-autolink-toggle-label:hover:not(:disabled) {
+    opacity: 0.8;
+}
+
+/* Accessibility improvements */
+.sb-autolink-toggle:focus + .sb-autolink-toggle-label {
+    outline: 2px solid #0073aa;
+    outline-offset: 2px;
+} 

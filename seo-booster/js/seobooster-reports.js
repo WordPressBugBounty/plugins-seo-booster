@@ -1,4 +1,4 @@
-/* global jQuery, Tabulator, sbReportData */
+/* global jQuery, Tabulator, sbReportData, ajaxurl */
 jQuery(document).ready(function($) {
     const $navbar = $('#scroll-navbar');
     const $navbarInner = $navbar.find('.scroll-navbar-inner');
@@ -19,11 +19,6 @@ jQuery(document).ready(function($) {
                 .val($heading.attr('id'))
                 .text(headingText);
             $sectionSelect.append($option);
-        } else {
-            console.warn(`No valid heading found for section ${index}`, {
-                section: this,
-                heading: $heading
-            });
         }
     });
 
@@ -59,7 +54,6 @@ jQuery(document).ready(function($) {
                 scrollTop: offsetTop
             }, 600);
         } else {
-            console.error(`Section with ID "${$(this).val()}" not found.`);
         }
     });
 
@@ -73,7 +67,6 @@ jQuery(document).ready(function($) {
     // New table conversion code
     function convertWPListTables(container = null) {
         if (typeof Tabulator === 'undefined') {
-            console.error('Tabulator library is not loaded.');
             return;
         }
 
@@ -101,6 +94,12 @@ jQuery(document).ready(function($) {
                         class: 'search-input regular-text',
                         placeholder: 'Search...',
                         style: 'margin-right: 10px;'
+                    }),
+                    $('<button>', {
+                        type: 'button',
+                        class: 'button export-csv-button',
+                        text: 'Export to CSV',
+                        style: 'margin-right: 10px;'
                     })
                 ),
                 $('<div>', { 
@@ -127,15 +126,37 @@ jQuery(document).ready(function($) {
                     headerSort: true
                 };
 
+                // Special handling for URL and referrer columns
+                if (field ==='url' || field === 'referrer' || field === 'page' || field ==='lp' || field === 'side') {
+                    columnConfig.formatter = function(cell) {
+                        var value = cell.getValue();
+                        if (!value) return '';
+                        
+                        // Get the current site's domain
+                        var currentDomain = window.location.hostname;
+                        
+                        try {
+                            var url = new URL(value);
+                            // If it's the same domain, show only the path
+                            if (url.hostname === currentDomain) {
+                                return '<a href="' + value + '" target="_blank">' + url.pathname + '</a>';
+                            }
+                            // For external links, show full URL
+                            return '<a href="' + value + '" target="_blank">' + value + '</a>';
+                        } catch(e) {
+                            // If URL parsing fails, return original value
+                            return value;
+                        }
+                    };
+                }
                 // Special handling for competing pages column
-                if (field === 'competing_pages') {
+                else if (field === 'competing_pages') {
                     columnConfig.formatter = function(cell) {
                         var pages = cell.getValue();
                         if (!Array.isArray(pages)) {
                             try {
                                 pages = JSON.parse(pages);
                             } catch(e) {
-                                console.error('Failed to parse competing pages:', e);
                                 return '';
                             }
                         }
@@ -144,11 +165,22 @@ jQuery(document).ready(function($) {
                             var inactiveText = page.days_inactive > 30 ? 
                                 '<br><span class="inactive-warning">Inactive for ' + page.days_inactive + ' days</span>' : 
                                 '';
+                            
+                            // Format last visit information
+                            var lastVisitText = '';
+                            if (page.last_visit_date) {
+                                var lastVisitDate = new Date(page.last_visit_date);
+                                var daysSinceLastVisit = page.days_since_last_visit || 0;
+                                lastVisitText = '<br><span class="last-visit-info">Last visit: ' + 
+                                    lastVisitDate.toLocaleDateString() + 
+                                    ' (' + daysSinceLastVisit + ' days ago)</span>';
+                            }
                                 
                             return '<div class="competing-page">' +
                                 '<a href="' + page.url + '" target="_blank">' + page.url + '</a>' +
                                 '<br>Position: ' + parseFloat(page.position).toFixed(1) +
                                 '<br>Clicks: ' + parseInt(page.clicks).toLocaleString() +
+                                lastVisitText +
                                 inactiveText +
                                 '</div>';
                         }).join('<hr class="page-separator">');
@@ -197,16 +229,9 @@ jQuery(document).ready(function($) {
                         const field = columns[index].field;
                         let value = $(this).html().trim();
                         
-                        // Special handling for 404 pages data
-                        if (container.dataset.tableId === '404-missing-pages') {
-                            if (field === 'count') {
-                                value = parseInt(value, 10) || 0;
-                            } else if (field === 'last_seen' || field === 'first_seen') {
-                                const date = new Date(value);
-                                if (!isNaN(date)) {
-                                    value = date.toLocaleString();
-                                }
-                            }
+                        // Special handling for competing_pages - decode HTML entities
+                        if (field === 'competing_pages') {
+                            value = $('<div/>').html(value).text();
                         }
                         
                         rowData[field] = value;
@@ -219,7 +244,7 @@ jQuery(document).ready(function($) {
             const table = new Tabulator(`#${tableId}`, {
                 data: data,
                 columns: columns,
-                layout: "fitColumns",
+                layout: "fitData",
                 height: "auto",
                 responsiveLayout: "collapse",
                 variableHeight: true,
@@ -234,7 +259,7 @@ jQuery(document).ready(function($) {
                     $controls.find('.tabulator-results').text(
                         `Showing ${totalRows.toLocaleString()} total results`
                     );
-                    this.redraw(true);
+                    // this.redraw(true);
                 }
             });
 
@@ -249,6 +274,183 @@ jQuery(document).ready(function($) {
                         return cellValue.includes(searchTerm);
                     });
                 });
+            });
+
+            // Add CSV export functionality
+            const $exportButton = $controls.find('.export-csv-button');
+            $exportButton.on('click', function() {
+                // Get current filtered data
+                const currentData = table.getData('active');
+                
+                // Ensure we have data to export
+                if (!currentData || !currentData.length) {
+                    alert('No data to export.');
+                    return;
+                }
+                
+                // Create CSV content
+                let csv = '';
+                
+                // Get report name/title from section
+                let reportName = 'SEO Report';
+                const $section = $wrapper.closest('.report-section');
+                if ($section.length) {
+                    const sectionTitle = $section.find('.title h2').first().text().trim();
+                    if (sectionTitle) {
+                        reportName = sectionTitle;
+                    }
+                }
+                
+                // Add branding information at the top of the CSV
+                const siteName = sbReportData.siteName || document.title.split('-')[0].trim();
+                const siteURL = sbReportData.siteURL || window.location.hostname;
+                const currentDate = new Date().toLocaleDateString();
+                
+                // Add branding header to CSV with proper formatting
+                // Using empty cells for all columns except first to maintain CSV structure
+                const emptyColumns = Array(columns.length - 1).fill('""').join(',');
+                
+                csv += `"SEO Booster Report - ${siteName}"` + (columns.length > 1 ? `,${emptyColumns}` : '') + '\n';
+                csv += `"Report Type: ${reportName}"` + (columns.length > 1 ? `,${emptyColumns}` : '') + '\n';
+                csv += `"Website: ${siteURL}"` + (columns.length > 1 ? `,${emptyColumns}` : '') + '\n';
+                csv += `"Generated: ${currentDate}"` + (columns.length > 1 ? `,${emptyColumns}` : '') + '\n';
+                csv += `"https://seoboosterpro.com"` + (columns.length > 1 ? `,${emptyColumns}` : '') + '\n';
+                csv += (columns.length > 0 ? '"",'.repeat(columns.length).slice(0, -1) : '') + '\n'; // Empty line as separator
+                
+                // Add headers
+                const headers = columns.map(column => '"' + column.title.replace(/"/g, '""') + '"');
+                csv += headers.join(',') + '\n';
+                
+                // Add data rows
+                currentData.forEach(row => {
+                    // Check if this is competing pages data (keyword cannibalization)
+                    const hasCompetingPages = row.competing_pages && (
+                        typeof row.competing_pages === 'string' ||
+                        Array.isArray(row.competing_pages)
+                    );
+                    
+                    if (hasCompetingPages) {
+                        // Handle competing pages - expand each page to a separate row
+                        let pages = row.competing_pages;
+                        
+                        // Parse if it's a string
+                        if (typeof pages === 'string') {
+                            try {
+                                pages = JSON.parse(pages);
+                            } catch(e) {
+                                // If parsing fails, handle as a regular row
+                                pages = [];
+                            }
+                        }
+                        
+                        // If we have valid pages data, create a row for each page
+                        if (Array.isArray(pages) && pages.length > 0) {
+                            // For each competing page, create a new row
+                            pages.forEach((page, index) => {
+                                // Create a copy of the original row data without using spread operator
+                                const pageRow = {};
+                                for (let key in row) {
+                                    if (row.hasOwnProperty(key) && key !== 'competing_pages') {
+                                        pageRow[key] = row[key];
+                                    }
+                                }
+                                
+                                // Add individual page data as separate columns
+                                pageRow.page_url = page.url || '';
+                                pageRow.page_position = page.position || '';
+                                pageRow.page_clicks = page.clicks || '';
+                                pageRow.page_days_inactive = page.days_inactive || '';
+                                
+                                // Create the CSV row
+                                const csvRow = columns.map(column => {
+                                    let value;
+                                    
+                                    // Handle the special columns we've added
+                                    if (column.field === 'competing_pages') {
+                                        value = page.url || '';
+                                    } else if (pageRow[column.field] !== undefined) {
+                                        value = pageRow[column.field];
+                                    } else {
+                                        value = '';
+                                    }
+                                    
+                                    // Remove HTML tags if present
+                                    if (typeof value === 'string' && value.includes('<')) {
+                                        const temp = document.createElement('div');
+                                        temp.innerHTML = value;
+                                        value = temp.textContent || temp.innerText || '';
+                                    }
+                                    
+                                    // Format values as needed
+                                    if (value === null || value === undefined) {
+                                        value = '';
+                                    }
+                                    
+                                    // Escape quotes and wrap in quotes
+                                    return '"' + String(value).replace(/"/g, '""') + '"';
+                                });
+                                
+                                csv += csvRow.join(',') + '\n';
+                            });
+                        } else {
+                            // Fallback to standard row handling if pages data isn't valid
+                            const csvRow = formatRowForCSV(row, columns);
+                            csv += csvRow.join(',') + '\n';
+                        }
+                    } else {
+                        // Standard row handling for non-competing pages data
+                        const csvRow = formatRowForCSV(row, columns);
+                        csv += csvRow.join(',') + '\n';
+                    }
+                });
+                
+                // Helper function to format row data for CSV
+                function formatRowForCSV(row, columns) {
+                    return columns.map(column => {
+                        let value = row[column.field];
+                        
+                        // Remove HTML tags if present
+                        if (typeof value === 'string' && value.includes('<')) {
+                            const temp = document.createElement('div');
+                            temp.innerHTML = value;
+                            value = temp.textContent || temp.innerText || '';
+                        }
+                        
+                        // Format values as needed
+                        if (value === null || value === undefined) {
+                            value = '';
+                        }
+                        
+                        // Escape quotes and wrap in quotes
+                        return '"' + String(value).replace(/"/g, '""') + '"';
+                    });
+                }
+                
+                // Create download link
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                
+                // Create a link element to trigger the download
+                const link = document.createElement('a');
+                link.href = url;
+                
+                // Get table title or use default
+                let fileName = 'seobooster-table-export';
+                if (reportName !== 'SEO Report') {
+                    fileName = reportName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                }
+                
+                // Add domain name and date to filename
+                const domain = sbReportData.siteURL || window.location.hostname.replace(/^www\./, '');
+                const dateStr = new Date().toISOString().split('T')[0];
+                
+                // Create branded filename
+                fileName = `seobooster-${domain}-${fileName}-${dateStr}`;
+                
+                link.setAttribute('download', `${fileName}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             });
 
             // Only remove original table after Tabulator is fully initialized
@@ -379,7 +581,6 @@ jQuery(document).ready(function($) {
                             ${sbReportData.strings.loadError}<br>
                             <small>${textStatus}: ${errorThrown}</small>
                         </p>`;
-                    console.error('AJAX Error:', textStatus, errorThrown);
                 },
                 complete: () => {
                     // Remove from running array and process next in queue
@@ -426,5 +627,67 @@ jQuery(document).ready(function($) {
     // Initialize lazy loading when document is ready
     $(document).ready(function() {
         initializeLazyLoading();
+        
+        // Handle cache clear button
+        $('#clear-cache-btn').on('click', function() {
+            const button = $(this);
+            const originalText = button.html();
+            
+            // Disable button and show loading state
+            button.prop('disabled', true);
+            button.html('<span class="dashicons dashicons-update" style="margin-right: 5px; animation: spin 1s linear infinite;"></span>Clearing caches...');
+            
+            jQuery.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'sb_clear_report_cache',
+                    nonce: sbReportData.nonce
+                },
+                success: (response) => {
+                    if (response.success) {
+                        // Show success message
+                        button.removeClass('button-secondary').addClass('button-primary');
+                        button.html('<span class="dashicons dashicons-yes" style="margin-right: 5px;"></span>Cache Cleared!');
+                        
+                        // Show notification
+                        if (response.data && response.data.message) {
+                            alert(response.data.message);
+                        }
+                        
+                        // Reset button after 3 seconds
+                        setTimeout(() => {
+                            button.prop('disabled', false);
+                            button.removeClass('button-primary').addClass('button-secondary');
+                            button.html(originalText);
+                        }, 3000);
+                        
+                    } else {
+                        // Show error
+                        button.html('<span class="dashicons dashicons-no" style="margin-right: 5px;"></span>Error');
+                        if (response.data && response.data.message) {
+                            alert('Error: ' + response.data.message);
+                        }
+                        
+                        // Reset button after 3 seconds
+                        setTimeout(() => {
+                            button.prop('disabled', false);
+                            button.html(originalText);
+                        }, 3000);
+                    }
+                },
+                error: (jqXHR, textStatus, errorThrown) => {
+                    // Show error
+                    button.html('<span class="dashicons dashicons-no" style="margin-right: 5px;"></span>Error');
+                    alert('Error clearing cache: ' + textStatus);
+                    
+                    // Reset button after 3 seconds
+                    setTimeout(() => {
+                        button.prop('disabled', false);
+                        button.html(originalText);
+                    }, 3000);
+                }
+            });
+        });
     });
 });

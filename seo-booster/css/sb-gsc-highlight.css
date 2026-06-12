@@ -1,0 +1,258 @@
+/**
+ * SEO Booster GSC Keyword Highlighting Styles
+ * 
+ * @package SEO_Booster
+ * @version 1.0.0
+ */
+
+/* GSC Keyword Highlighting */
+.seo-booster-gsc-highlight {
+    background: linear-gradient(120deg, #ffd700 0%, #ffed4e 100%);
+    color: #333;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+    display: inline-block;
+    margin: 0 1px;
+}
+
+.seo-booster-gsc-highlight:hover {
+    background: linear-gradient(120deg, #ffed4e 0%, #ffd700 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.seo-booster-gsc-highlight:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Active state for clicked keywords */
+.seo-booster-gsc-highlight-active {
+    background: linear-gradient(120deg, #0073aa 0%, #005a87 100%) !important;
+    color: #fff !important;
+    border-color: rgba(0, 115, 170, 0.5) !important;
+    box-shadow: 0 2px 8px rgba(0, 115, 170, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+.seo-booster-gsc-highlight-active:hover {
+    background: linear-gradient(120deg, #005a87 0%, #004466 100%) !important;
+    box-shadow: 0 3px 10px rgba(0, 115, 170, 0.4) !important;
+}
+
+/* Tooltip styles */
+.seo-booster-gsc-tooltip {
+    position: fixed;
+    display: none;
+    background: rgba(0, 0, 0, 0.95);
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.4;
+    z-index: 999999;
+    pointer-events: none;
+    max-width: 300px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+    animation: seobooster-tooltip-fade-in 0.2s ease-out;
+}
+
+.seo-booster-gsc-tooltip strong {
+    color: #ffd700;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.seo-booster-gsc-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.95);
+}
+
+/* Tooltip animation */
+@keyframes seobooster-tooltip-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Focus styles for accessibility */
+.seo-booster-gsc-highlight:focus {
+    outline: 2px solid #0073aa;
+    outline-offset: 2px;
+}
+
+.seo-booster-gsc-highlight:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .seo-booster-gsc-highlight {
+        background: #ffff00;
+        color: #000;
+        border: 2px solid #000;
+    }
+    
+    .seo-booster-gsc-highlight-active {
+        background: #0000ff !important;
+        color: #fff !important;
+        border: 2px solid #000 !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .seo-booster-gsc-highlight {
+        transition: none;
+    }
+    
+    .seo-booster-gsc-highlight:hover {
+        transform: none;
+    }
+    
+    .seo-booster-gsc-tooltip {
+        animation: none;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .seo-booster-gsc-highlight {
+        background: linear-gradient(120deg, #ffd700 0%, #ffed4e 100%);
+        color: #000;
+        border-color: rgba(255, 215, 0, 0.5);
+    }
+    
+    .seo-booster-gsc-highlight:hover {
+        background: linear-gradient(120deg, #ffed4e 0%, #ffd700 100%);
+    }
+    
+    .seo-booster-gsc-highlight-active {
+        background: linear-gradient(120deg, #4a9eff 0%, #0073aa 100%) !important;
+        color: #fff !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .seo-booster-gsc-highlight {
+        background: transparent !important;
+        color: inherit !important;
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    
+    .seo-booster-gsc-highlight-active {
+        background: #f0f0f0 !important;
+        color: #000 !important;
+        border: 2px solid #000 !important;
+    }
+    
+    .seo-booster-gsc-tooltip {
+        display: none !important;
+    }
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .seo-booster-gsc-highlight {
+        padding: 1px 3px;
+        font-size: 0.95em;
+        margin: 0 0.5px;
+    }
+    
+    .seo-booster-gsc-tooltip {
+        max-width: 250px;
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+    
+    .seo-booster-gsc-tooltip strong {
+        font-size: 13px;
+    }
+}
+
+/* Small screen adjustments */
+@media (max-width: 480px) {
+    .seo-booster-gsc-highlight {
+        padding: 1px 2px;
+        font-size: 0.9em;
+        border-radius: 2px;
+    }
+    
+    .seo-booster-gsc-tooltip {
+        max-width: 200px;
+        font-size: 11px;
+        padding: 8px 12px;
+    }
+}
+
+/* Ensure highlights don't break text flow */
+.seo-booster-gsc-highlight {
+    white-space: nowrap;
+    word-break: keep-all;
+}
+
+/* Prevent highlighting in specific contexts */
+.seo-booster-gsc-highlight .seo-booster-gsc-highlight {
+    background: none !important;
+    color: inherit !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    cursor: inherit !important;
+}
+
+/* Loading state */
+.seo-booster-gsc-loading {
+    position: relative;
+}
+
+.seo-booster-gsc-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.seo-booster-gsc-loading::before {
+    content: 'Loading GSC keywords...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    z-index: 1001;
+} 

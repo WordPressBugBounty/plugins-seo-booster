@@ -121,8 +121,8 @@
     <table style="display:none!important;">
         <tr>
             <td>
-                <div style="overflow:hidden;display:none;font-size:1px;color:#ffffff;line-height:1px;font-family:Arial;maxheight:0px;max-width:0px;opacity:0;">
-                    SEO Booster report for <span style="color: #2473b1;">%%websitedomain%%</span>
+                <div style="overflow:hidden;display:none;font-size:1px;color:#ffffff;line-height:1px;font-family:Arial;max-height:0px;max-width:0px;opacity:0;">
+                    SEO Booster update for <span style="color: #2473b1;">%%websitedomain%%</span>
                 </div>
             </td>
         </tr>
@@ -153,7 +153,7 @@
                         <td style="color: #343434; font-size: 24px; font-family: helvetica, arial, sans-serif; font-weight:700; line-height: 35px;" class="main-header">
                             <!-- section text ======-->
                             <div style="line-height: 35px">
-                                SEO Booster report for <span style="color: #2473b1;">%%websitedomain%%</span>
+                                SEO Booster Update for <span style="color: #2473b1;">%%websitedomain%%</span>
                             </div>
                         </td>
                     </tr>

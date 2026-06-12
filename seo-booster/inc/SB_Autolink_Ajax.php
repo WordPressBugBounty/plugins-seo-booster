@@ -12,13 +12,13 @@ class SB_Autolink_Ajax {
 
 
     public static function ajax_update_keyword() {
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Permission denied');
-        }
-
         $nonce = isset($_POST['nonce']) ? sanitize_text_field($_POST['nonce']) : '';
         if (!wp_verify_nonce($nonce, 'add-keyword-nonce')) {
             wp_send_json_error('Invalid nonce');
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Permission denied');
         }
 
         global $wpdb;

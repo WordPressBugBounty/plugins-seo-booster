@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInite1f501f5c8d8e34975596e8145b49414
+class ComposerStaticInit00167ce1f2b9002a7a4bc8af5fdf2c25
 {
     public static $files = array (
         'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
@@ -17,17 +17,17 @@ class ComposerStaticInite1f501f5c8d8e34975596e8145b49414
     );
 
     public static $prefixLengthsPsr4 = array (
-        'v' => 
+        'v' =>
         array (
             'voku\\helper\\' => 12,
             'voku\\' => 5,
         ),
-        'T' => 
+        'T' =>
         array (
             'TypistTech\\Imposter\\Plugin\\' => 27,
             'TypistTech\\Imposter\\' => 20,
         ),
-        'S' => 
+        'S' =>
         array (
             'Symfony\\Polyfill\\Php80\\' => 23,
             'Symfony\\Polyfill\\Mbstring\\' => 26,
@@ -35,12 +35,13 @@ class ComposerStaticInite1f501f5c8d8e34975596e8145b49414
             'Symfony\\Polyfill\\Intl\\Grapheme\\' => 31,
             'Symfony\\Polyfill\\Iconv\\' => 23,
             'Symfony\\Component\\CssSelector\\' => 30,
+            'Soundasleep\\' => 12,
         ),
-        'L' => 
+        'L' =>
         array (
             'League\\Plates\\' => 14,
         ),
-        'C' => 
+        'C' =>
         array (
             'Composer\\Installers\\' => 20,
             'Cleverplugins\\SEOBooster\\Reports\\' => 33,
@@ -49,60 +50,64 @@ class ComposerStaticInite1f501f5c8d8e34975596e8145b49414
     );
 
     public static $prefixDirsPsr4 = array (
-        'voku\\helper\\' => 
+        'voku\\helper\\' =>
         array (
             0 => __DIR__ . '/..' . '/voku/simple_html_dom/src/voku/helper',
         ),
-        'voku\\' => 
+        'voku\\' =>
         array (
             0 => __DIR__ . '/..' . '/voku/portable-utf8/src/voku',
             1 => __DIR__ . '/..' . '/voku/portable-ascii/src/voku',
         ),
-        'TypistTech\\Imposter\\Plugin\\' => 
+        'TypistTech\\Imposter\\Plugin\\' =>
         array (
             0 => __DIR__ . '/..' . '/typisttech/imposter-plugin/src',
         ),
-        'TypistTech\\Imposter\\' => 
+        'TypistTech\\Imposter\\' =>
         array (
             0 => __DIR__ . '/..' . '/typisttech/imposter/src',
         ),
-        'Symfony\\Polyfill\\Php80\\' => 
+        'Symfony\\Polyfill\\Php80\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-php80',
         ),
-        'Symfony\\Polyfill\\Mbstring\\' => 
+        'Symfony\\Polyfill\\Mbstring\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
         ),
-        'Symfony\\Polyfill\\Intl\\Normalizer\\' => 
+        'Symfony\\Polyfill\\Intl\\Normalizer\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer',
         ),
-        'Symfony\\Polyfill\\Intl\\Grapheme\\' => 
+        'Symfony\\Polyfill\\Intl\\Grapheme\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-intl-grapheme',
         ),
-        'Symfony\\Polyfill\\Iconv\\' => 
+        'Symfony\\Polyfill\\Iconv\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-iconv',
         ),
-        'Symfony\\Component\\CssSelector\\' => 
+        'Symfony\\Component\\CssSelector\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/css-selector',
         ),
-        'League\\Plates\\' => 
+        'Soundasleep\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/soundasleep/html2text/src',
+        ),
+        'League\\Plates\\' =>
         array (
             0 => __DIR__ . '/..' . '/league/plates/src',
         ),
-        'Composer\\Installers\\' => 
+        'Composer\\Installers\\' =>
         array (
             0 => __DIR__ . '/..' . '/composer/installers/src/Composer/Installers',
         ),
-        'Cleverplugins\\SEOBooster\\Reports\\' => 
+        'Cleverplugins\\SEOBooster\\Reports\\' =>
         array (
             0 => __DIR__ . '/../..' . '/inc/Reports',
         ),
-        'Cleverplugins\\SEOBooster\\' => 
+        'Cleverplugins\\SEOBooster\\' =>
         array (
             0 => __DIR__ . '/../..' . '/inc',
         ),
@@ -110,24 +115,43 @@ class ComposerStaticInite1f501f5c8d8e34975596e8145b49414
 
     public static $classMap = array (
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
+        'Cleverplugins\\SEOBooster\\AI_Requests_Manager' => __DIR__ . '/../..' . '/inc/AI_Requests_Manager.php',
+        'Cleverplugins\\SEOBooster\\AI_Writing_Outline' => __DIR__ . '/../..' . '/inc/AI_Writing_Outline.php',
+        'Cleverplugins\\SEOBooster\\Admin_Columns' => __DIR__ . '/../..' . '/inc/Admin_Columns.php',
+        'Cleverplugins\\SEOBooster\\Bulk_SEO_Analysis' => __DIR__ . '/../..' . '/inc/Bulk_SEO_Analysis.php',
         'Cleverplugins\\SEOBooster\\CacheManager' => __DIR__ . '/../..' . '/inc/CacheManager.php',
+        'Cleverplugins\\SEOBooster\\ContentProcessing' => __DIR__ . '/../..' . '/inc/ContentProcessing.php',
+        'Cleverplugins\\SEOBooster\\Credits_REST_Controller' => __DIR__ . '/../..' . '/inc/Credits_REST_Controller.php',
+        'Cleverplugins\\SEOBooster\\Credits_Service' => __DIR__ . '/../..' . '/inc/Credits_Service.php',
+        'Cleverplugins\\SEOBooster\\Form_Processor' => __DIR__ . '/../..' . '/inc/Form_Processor.php',
         'Cleverplugins\\SEOBooster\\Google_API' => __DIR__ . '/../..' . '/inc/Google_API.php',
+        'Cleverplugins\\SEOBooster\\LLM_Content_Condenser' => __DIR__ . '/../..' . '/inc/LLM_Content_Condenser.php',
+        'Cleverplugins\\SEOBooster\\LLM_Helper' => __DIR__ . '/../..' . '/inc/LLM_Helper.php',
+        'Cleverplugins\\SEOBooster\\LLM_WP_Connector_Service' => __DIR__ . '/../..' . '/inc/LLM_WP_Connector_Service.php',
         'Cleverplugins\\SEOBooster\\Reports' => __DIR__ . '/../..' . '/inc/Reports.php',
-        'Cleverplugins\\SEOBooster\\Reports\\CTRImprovement' => __DIR__ . '/../..' . '/inc/Reports/CTRImprovement.php',
-        'Cleverplugins\\SEOBooster\\Reports\\DecliningKeywords' => __DIR__ . '/../..' . '/inc/Reports/DecliningKeywords.php',
-        'Cleverplugins\\SEOBooster\\Reports\\KeywordCannibalization' => __DIR__ . '/../..' . '/inc/Reports/KeywordCannibalization.php',
-        'Cleverplugins\\SEOBooster\\Reports\\LongTailKeywords' => __DIR__ . '/../..' . '/inc/Reports/LongTailKeywords.php',
-        'Cleverplugins\\SEOBooster\\Reports\\Missing404Pages' => __DIR__ . '/../..' . '/inc/Reports/Missing404Pages.php',
-        'Cleverplugins\\SEOBooster\\Reports\\QuestionQueries' => __DIR__ . '/../..' . '/inc/Reports/QuestionQueries.php',
-        'Cleverplugins\\SEOBooster\\Reports\\TopPages' => __DIR__ . '/../..' . '/inc/Reports/TopPages.php',
-        'Cleverplugins\\SEOBooster\\Reports\\TopPerformingKeywords' => __DIR__ . '/../..' . '/inc/Reports/TopPerformingKeywords.php',
         'Cleverplugins\\SEOBooster\\SB404_Errors' => __DIR__ . '/../..' . '/inc/SB404_Errors.php',
+        'Cleverplugins\\SEOBooster\\SB_Autolink_Ajax' => __DIR__ . '/../..' . '/inc/SB_Autolink_Ajax.php',
+        'Cleverplugins\\SEOBooster\\SB_Autolink_Columns' => __DIR__ . '/../..' . '/inc/SB_Autolink_Columns.php',
         'Cleverplugins\\SEOBooster\\SB_Autolink_List_Table' => __DIR__ . '/../..' . '/inc/SB_Autolink_List_Table.php',
         'Cleverplugins\\SEOBooster\\SB_FOF_List_Table' => __DIR__ . '/../..' . '/inc/SB_FOF_List_Table.php',
         'Cleverplugins\\SEOBooster\\SB_GSC_Ajax' => __DIR__ . '/../..' . '/inc/SB_GSC_Ajax.php',
+        'Cleverplugins\\SEOBooster\\SB_GSC_Issues_Processor' => __DIR__ . '/../..' . '/inc/SB_GSC_Issues_Processor.php',
         'Cleverplugins\\SEOBooster\\SB_GSC_List_Table' => __DIR__ . '/../..' . '/inc/SB_GSC_List_Table.php',
         'Cleverplugins\\SEOBooster\\SB_GSC_Metaboxes' => __DIR__ . '/../..' . '/inc/SB_GSC_Metaboxes.php',
         'Cleverplugins\\SEOBooster\\SB_GSC_Processor' => __DIR__ . '/../..' . '/inc/SB_GSC_Processor.php',
+        'Cleverplugins\\SEOBooster\\SB_SEO_Metabox' => __DIR__ . '/../..' . '/inc/SB_SEO_Metabox.php',
+        'Cleverplugins\\SEOBooster\\SEO_AI_Config' => __DIR__ . '/../..' . '/inc/SEO_AI_Config.php',
+        'Cleverplugins\\SEOBooster\\SEO_Analysis' => __DIR__ . '/../..' . '/inc/SEO_Analysis.php',
+        'Cleverplugins\\SEOBooster\\SEO_Issues_Ajax' => __DIR__ . '/../..' . '/inc/SEO_Issues_Ajax.php',
+        'Cleverplugins\\SEOBooster\\SEO_Issues_List_Table' => __DIR__ . '/../..' . '/inc/SEO_Issues_List_Table.php',
+        'Cleverplugins\\SEOBooster\\SEO_Issues_Manager' => __DIR__ . '/../..' . '/inc/SEO_Issues_Manager.php',
+        'Cleverplugins\\SEOBooster\\SEO_Output' => __DIR__ . '/../..' . '/inc/SEO_Output.php',
+        'Cleverplugins\\SEOBooster\\SEO_Plugin_Integration' => __DIR__ . '/../..' . '/inc/SEO_Plugin_Integration.php',
+        'Cleverplugins\\SEOBooster\\SEO_Sitewide_Analysis' => __DIR__ . '/../..' . '/inc/SEO_Sitewide_Analysis.php',
+        'Cleverplugins\\SEOBooster\\Settings_Utils' => __DIR__ . '/../..' . '/inc/Settings_Utils.php',
+        'Cleverplugins\\SEOBooster\\Tools\\Tools_Image_Batch' => __DIR__ . '/../..' . '/inc/Tools/Tools_Image_Batch.php',
+        'Cleverplugins\\SEOBooster\\Tools\\Tools_Image_Scanner' => __DIR__ . '/../..' . '/inc/Tools/Tools_Image_Scanner.php',
+        'Cleverplugins\\SEOBooster\\Tools\\Tools_Page' => __DIR__ . '/../..' . '/inc/Tools/Tools_Page.php',
         'Cleverplugins\\SEOBooster\\Utils' => __DIR__ . '/../..' . '/inc/Utils.php',
         'Cleverplugins\\SEOBooster\\email_status' => __DIR__ . '/../..' . '/inc/email_status.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
@@ -250,6 +274,8 @@ class ComposerStaticInite1f501f5c8d8e34975596e8145b49414
         'League\\Plates\\Template\\Theme' => __DIR__ . '/..' . '/league/plates/src/Template/Theme.php',
         'Normalizer' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
         'PhpToken' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/PhpToken.php',
+        'Soundasleep\\Html2Text' => __DIR__ . '/..' . '/soundasleep/html2text/src/Html2Text.php',
+        'Soundasleep\\Html2TextException' => __DIR__ . '/..' . '/soundasleep/html2text/src/Html2TextException.php',
         'Stringable' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Stringable.php',
         'Symfony\\Component\\CssSelector\\CssSelectorConverter' => __DIR__ . '/..' . '/symfony/css-selector/CssSelectorConverter.php',
         'Symfony\\Component\\CssSelector\\Exception\\ExceptionInterface' => __DIR__ . '/..' . '/symfony/css-selector/Exception/ExceptionInterface.php',
@@ -359,9 +385,9 @@ class ComposerStaticInite1f501f5c8d8e34975596e8145b49414
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInite1f501f5c8d8e34975596e8145b49414::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInite1f501f5c8d8e34975596e8145b49414::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInite1f501f5c8d8e34975596e8145b49414::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit00167ce1f2b9002a7a4bc8af5fdf2c25::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit00167ce1f2b9002a7a4bc8af5fdf2c25::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit00167ce1f2b9002a7a4bc8af5fdf2c25::$classMap;
 
         }, null, ClassLoader::class);
     }

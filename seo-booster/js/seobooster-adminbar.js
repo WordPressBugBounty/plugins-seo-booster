@@ -1,4 +1,9 @@
-/* global seobooster_adminbar:true, WinBox:true, jQuery:true, Tabulator:true */
+/* global seobooster_adminbar:true, WinBox:true, jQuery:true, Tabulator:true, uPlot */
+
+// Create a single global tooltip element that will be reused across all charts
+const globalTooltip = document.createElement('div');
+globalTooltip.className = 'sb-uplot-tooltip';
+document.body.appendChild(globalTooltip);
 
 function getUrlParameter(name) {
 	name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
@@ -21,7 +26,6 @@ function open_floating_window() {
 		
 		const adminBarHeight = jQuery('#wpadminbar').height() || 0;
 		
-
 		winboxInstance = new WinBox({
 			title: "SEO Booster",
 			class: ["modern", "no-full", "no-max"],
@@ -36,13 +40,17 @@ function open_floating_window() {
 			modal: false,
 			autosize: false,
 			root: document.body,
-			onbeforeclose: function() {
-				return true;
+			onclose: function() {
+				// Remove the seobooster_showdetails parameter from URL and reload
+				var currentUrl = window.location.href;
+				var url = new URL(currentUrl);
+				url.searchParams.delete('seobooster_showdetails');
+				window.location.href = url.toString();
 			},
 			onresize: function(width, height) {
 				this.window.style.transform = 'translate3d(0,0,0)';
 			},
-			index:9999999,
+			index:999999,
 			html: '<div id="seobooster-keywords-table"><div class="sb-loading"><div class="sb-spinner"></div></div></div>'
 		});
 
@@ -51,6 +59,20 @@ function open_floating_window() {
 			winboxInstance.focus();
 			// Remove from current parent and re-append to body
 			document.body.appendChild(winboxInstance.window);
+			
+			// Add a manual close handler as fallback
+			var closeButton = winboxInstance.window.querySelector('.wb-close');
+			if (closeButton) {
+				closeButton.addEventListener('click', function() {
+					setTimeout(function() {
+						// Remove the seobooster_showdetails parameter from URL and reload
+						var currentUrl = window.location.href;
+						var url = new URL(currentUrl);
+						url.searchParams.delete('seobooster_showdetails');
+						window.location.href = url.toString();
+					}, 100);
+				});
+			}
 		}
 
 		jQuery.ajax({
@@ -58,11 +80,12 @@ function open_floating_window() {
 			type: 'POST',
 			data: {
 				action: 'sb_gsc_get_keywords',
-				post_url: seobooster_adminbar.post_url,
+				public_url: seobooster_adminbar.public_url,
+				content_type: seobooster_adminbar.content_type,
+				item_id: seobooster_adminbar.item_id,
 				security: seobooster_adminbar.security
 			},
 			success: function(response) {
-				// console.log('AJAX response received:', response);
 				jQuery('.sb-loading').remove();
 				
 				if (response && response.success === true) {
@@ -95,7 +118,6 @@ function open_floating_window() {
 				}
 			},
 			error: function(xhr, status, error) {
-				console.error('AJAX failed:', status, error);
 				jQuery('.sb-loading').remove();
 				jQuery('.winbox .wb-body').html(`<div class="keyword-details">${seobooster_adminbar.text.error}: ${error}</div>`);
 			}
@@ -120,7 +142,6 @@ function initializeKeywordsTable(data) {
 		)
 	);
 
-	// Debug: Log before adding to DOM
 	
 	jQuery('#seobooster-keywords-table').before($controls);
 
@@ -131,6 +152,171 @@ function initializeKeywordsTable(data) {
 			window.keywordsTable.setFilter("query", "like", this.value);
 		}
 	});
+
+	// Add uPlot chart formatter
+	const curvesFormatter = function(cell, formatterParams, onRendered) {
+		// Create a container for the chart
+		const container = document.createElement('div');
+		container.className = 'sb-uplot-container';
+		
+		// Get data from the row
+		const rowData = cell.getRow().getData();
+		
+		// We'll use onRendered callback to make sure the DOM element exists before creating the chart
+		onRendered(function() {
+			// Structure data for uPlot (time series format)
+			if (!rowData.history || rowData.history.length === 0) {
+				container.innerHTML = '<div class="sb-no-data">' + (seobooster_adminbar.text.noDataAvailable || 'No data available') + '</div>';
+				return;
+			}
+			
+			// If we just have a single data point, display its information instead of a chart
+			if (rowData.history.length === 1) {
+				const singlePoint = rowData.history[0];
+				const date = new Date(singlePoint.date).toLocaleDateString();
+				container.innerHTML = `
+					<div class="sb-single-data-point">
+						<div class="sb-data-date">${date}</div>
+						<div class="sb-data-metrics">
+							<span class="sb-clicks" title="${seobooster_adminbar.text.clicks || 'Clicks'}">
+								<span class="dashicons dashicons-visibility"></span> ${singlePoint.clicks}
+							</span>
+							<span class="sb-impressions" title="${seobooster_adminbar.text.impressions || 'Impressions'}">
+								<span class="dashicons dashicons-yes-alt"></span> ${singlePoint.impressions}
+							</span>
+							<span class="sb-position" title="${seobooster_adminbar.text.position || 'Position'}">
+								<span class="dashicons dashicons-arrow-up-alt"></span> ${parseFloat(singlePoint.position).toFixed(1)}
+							</span>
+						</div>
+					</div>
+				`;
+				return;
+			}
+			
+			try {
+				// Extract dates and values from history
+				const timestamps = rowData.history.map(item => new Date(item.date).getTime() / 1000); // Convert to timestamps 
+				const impressions = rowData.history.map(item => parseInt(item.impressions, 10) || 0);
+				const clicks = rowData.history.map(item => parseInt(item.clicks, 10) || 0);
+				const positions = rowData.history.map(item => parseFloat(item.position) || 0);
+				
+				// Only show the chart if we have valid data
+				if (timestamps.length < 2) {
+					container.innerHTML = '<div class="sb-no-data">' + (seobooster_adminbar.text.insufficientData || 'Not enough data points') + '</div>';
+					return;
+				}
+
+				// Data format for uPlot
+				const data = [
+					timestamps,       // x-values (timestamps)
+					impressions,      // y-values (series 1 - impressions)
+					clicks,           // y-values (series 2 - clicks) 
+					positions         // y-values (series 3 - positions)
+				];
+			
+				// Create interactive chart options (with points)
+				const interactiveOpts = {
+					width: container.clientWidth || 220,  // Use container width or fallback to 220px
+					height: 60,       // height in pixels
+					padding: [5, 0, 0, 0], // [top, right, bottom, left]
+					cursor: {
+						show: true,
+						points: {
+							show: true,
+							size: 6
+						},
+						lock: false,
+						focus: {
+							prox: 30
+						}
+					},
+					select: {
+						show: false
+					},
+					legend: {
+						show: false
+					},
+					axes: [
+						{
+							show: false
+						},
+						{
+							show: false
+						}
+					],
+					scales: {
+						x: {
+							time: true,
+							auto: true,
+							range: (u, min, max) => [min, max]
+						},
+						y: {
+							auto: true,
+							range: (u, min, max) => {
+								const padding = (max - min) * 0.1;
+								return [min - padding, max + padding];
+							}
+						},
+						position: {
+							auto: true,
+							range: (u, min, max) => {
+								// Invert position scale (lower position = better)
+								const padding = (max - min) * 0.1;
+								return [max + padding, min - padding];
+							}
+						}
+					},
+					series: [
+						{},
+						{
+							stroke: "rgba(24, 119, 242, 0.8)",  // blue for impressions
+							width: 1,
+							fill: "rgba(24, 119, 242, 0.1)",
+							paths: impressions.some(v => v > 0) ? undefined : u => null,
+							points: {
+								show: true,
+								size: 4,
+								stroke: "rgba(24, 119, 242, 1)",
+								fill: "rgba(24, 119, 242, 0.8)"
+							}
+						},
+						{
+							stroke: "rgba(45, 196, 78, 0.8)",   // green for clicks
+							width: 1,
+							fill: "rgba(45, 196, 78, 0.1)",
+							paths: clicks.some(v => v > 0) ? undefined : u => null,
+							points: {
+								show: true,
+								size: 4,
+								stroke: "rgba(45, 196, 78, 1)",
+								fill: "rgba(45, 196, 78, 0.8)"
+							}
+						},
+						{
+							stroke: "rgba(242, 120, 24, 0.8)",  // orange for position
+							width: 1.5,
+							scale: "position",
+							points: {
+								show: true,
+								size: 4,
+								stroke: "rgba(242, 120, 24, 1)",
+								fill: "rgba(242, 120, 24, 0.8)"
+							}
+						}
+					]
+				};
+				
+				// Create the chart immediately
+				var interactiveChart = new uPlot(interactiveOpts, data, container);
+				window.currentChart = interactiveChart;
+				
+			} catch (error) {
+				container.innerHTML = '<div class="sb-no-data">' + (seobooster_adminbar.text.chartError || 'Error creating chart') + '</div>';
+			}
+		});
+		
+		return container;
+	};
 
 	// Update column definitions
 	const columns = [
@@ -189,6 +375,15 @@ function initializeKeywordsTable(data) {
 				return cell.getValue();
 			},
 			width: 120
+		},
+		{
+			title: seobooster_adminbar.text.trends || "Trends",
+			field: "curves",
+			formatter: curvesFormatter, 
+			headerSort: false,
+			hozAlign: "center",
+			width: 300,
+			resizable: true
 		}
 	];
 
@@ -210,7 +405,9 @@ function initializeKeywordsTable(data) {
 				sorter: col.sorter,
 				width: col.width,
 				widthGrow: col.widthGrow,
-				responsive: col.field === "query" ? 0 : 1
+				responsive: col.field === "query" ? 0 : 1,
+				headerSort: col.headerSort !== undefined ? col.headerSort : true,
+				resizable: col.resizable || false
 			};
 		})
 	});
@@ -249,16 +446,11 @@ jQuery(document).ready(function () {
 		});
 	}
 
-	// Check if the GET parameter "seobooster_showdetails" is set to "1"
-if (getUrlParameter('seobooster_showdetails') === '1') {
-	open_floating_window();
-}
-
-	// Toggle floating div and fetch keyword details
-	jQuery(document).on('click', '.seobooster-details a', function (e) {
-		e.preventDefault();
+	// Check if the GET parameter "seobooster_showdetails" is set to "true" or "1"
+	var showDetailsParam = getUrlParameter('seobooster_showdetails');
+	if (showDetailsParam === 'true' || showDetailsParam === '1') {
 		open_floating_window();
-	});
+	}
 
 	// Close button functionality
 	jQuery(document).on('click', '.seobooster-close', function () {

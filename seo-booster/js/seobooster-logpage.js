@@ -21,9 +21,10 @@ jQuery(document).ready(function($) {
                 movableColumns: true,
                 columns: [
                     {title: sblogdata.strings.timestamp, field: "logtime", sorter: "date", headerSort: true},
-                    {title: sblogdata.strings.priority, field: "prio_text", headerSort: false},
                     {title: sblogdata.strings.logEntry, field: "log", headerSort: false, formatter: function(cell) {
                         const value = cell.getValue();
+                        const rowData = cell.getRow().getData();
+                        const prioText = rowData.prio_text || '';
                         
                         // Replace potentially dangerous characters first
                         const escaped = value
@@ -34,7 +35,7 @@ jQuery(document).ready(function($) {
                             .replace(/'/g, '&#039;');
                             
                         // Only allow specific HTML patterns with limited attributes
-                        return escaped
+                        let formatted = escaped
                             // Allow <code> tags
                             .replace(/&lt;code&gt;(.*?)&lt;\/code&gt;/g, '<code>$1</code>')
                             // Allow <span class="..."> tags
@@ -45,6 +46,14 @@ jQuery(document).ready(function($) {
                             .replace(/&lt;strong&gt;(.*?)&lt;\/strong&gt;/g, '<strong>$1</strong>')
                             // Allow <em> tags
                             .replace(/&lt;em&gt;(.*?)&lt;\/em&gt;/g, '<em>$1</em>');
+                        
+                        // Append status label if priority text exists
+                        if (prioText) {
+                            const prioClass = 'prio-' + (rowData.prio || 0);
+                            formatted += ' <span class="status-label ' + prioClass + '">' + prioText + '</span>';
+                        }
+                        
+                        return formatted;
                     }
                 }
                 ],
@@ -81,7 +90,6 @@ jQuery(document).ready(function($) {
                 table.setData();
             });
         } else {
-            console.error(sblogdata.strings.tabulatorNotLoaded);
         }
     }
 });

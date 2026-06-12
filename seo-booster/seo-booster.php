@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name: SEO Booster
- * Version: 6.1.8
+ * Version: 7.2
  * Plugin URI: https://seoboosterpro.com/
  * Description: SEO Booster integrates with Google Search Console data - bringing the data to life on your website like never before. Optimize keywords and content, track your rankings, and get actionable insights to improve your SEO.
  * Author: seoboosterpro.com
@@ -12,12 +12,13 @@
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  *
+ *
  * This plugin uses the following 3rd party MIT licensed projects - Thank you for making other developer lives easier :-)
- * 
+ *
  * Jose Solorzano (https://sourceforge.net/projects/php-html/) for the Simple HTML DOM parser.
- * 
+ *
  * The email template (heavily modified by us) is brought to you by EmailOctopus https://emailoctopus.com/ - email marketing for less, via Amazon SES. MIT License
- *  
+ *
  * Copyright 2008-2025 cleverplugins.com and seoboosterpro.com
  *
  * This program is free software; you can redistribute it and/or modify
@@ -39,62 +40,89 @@ namespace Cleverplugins\SEOBooster;
 use Cleverplugins\SEOBooster\Utils;
 use Cleverplugins\SEOBooster\SB_GSC_Metaboxes;
 use Cleverplugins\SEOBooster\Google_API;
+use Cleverplugins\SEOBooster\SB_Autolink_Ajax;
 // don't load directly
 if ( !defined( 'ABSPATH' ) ) {
     exit;
 }
 require_once __DIR__ . '/vendor/autoload.php';
-// require_once __DIR__ . '/vendor/woocommerce/action-scheduler/action-scheduler.php';
-if ( function_exists( 'seobooster_fs' ) ) {
-    seobooster_fs()->set_basename( false, __FILE__ );
-    return;
+// Function to load ActionScheduler only when needed
+if ( !class_exists( 'ActionScheduler_Versions' ) ) {
+    require_once __DIR__ . '/vendor/woocommerce/action-scheduler/action-scheduler.php';
 }
 define( 'SEOBOOSTER_PLUGINPATH', plugin_dir_path( __FILE__ ) );
 define( 'SEOBOOSTER_PLUGINURL', plugin_dir_url( __FILE__ ) );
-define( 'SEOBOOSTER_DB_VERSION', '6.0' );
-// Last time database was updated
+define( 'SEOBOOSTER_DB_VERSION', '7.2.0' );
 if ( function_exists( 'seobooster_fs' ) ) {
-    seobooster_fs()->set_basename( false, __FILE__ );
+    $fs_instance = seobooster_fs();
+    if ( $fs_instance && is_object( $fs_instance ) ) {
+        $fs_instance->set_basename( false, __FILE__ );
+    }
 } else {
     if ( !function_exists( 'seobooster_fs' ) ) {
         // Create a helper function for easy SDK access.
         function seobooster_fs() {
             global $seobooster_fs;
             if ( !isset( $seobooster_fs ) ) {
-                // Include Freemius SDK.
-                include_once __DIR__ . '/vendor/freemius/wordpress-sdk/start.php';
-                $seobooster_fs = fs_dynamic_init( array(
-                    'id'              => '987',
-                    'slug'            => 'seo-booster',
-                    'type'            => 'plugin',
-                    'public_key'      => 'pk_a58b7605ac6e9e90cd7bd9458cfbc',
-                    'is_premium'      => false,
-                    'premium_suffix'  => 'Premium',
-                    'has_addons'      => false,
-                    'has_paid_plans'  => true,
-                    'trial'           => array(
-                        'days'               => 30,
-                        'is_require_payment' => true,
-                    ),
-                    'has_affiliation' => 'all',
-                    'menu'            => array(
-                        'slug'       => 'sb2_dashboard',
-                        'first-path' => 'admin.php?page=sb2_dashboard&welcome=true',
-                        'support'    => false,
-                    ),
-                    'is_live'         => true,
-                ) );
+                try {
+                    // Include Freemius SDK.
+                    include_once __DIR__ . '/vendor/freemius/wordpress-sdk/start.php';
+                    // Check if fs_dynamic_init function exists
+                    if ( !function_exists( 'fs_dynamic_init' ) ) {
+                        return false;
+                    }
+                    $seobooster_fs = fs_dynamic_init( array(
+                        'id'               => '987',
+                        'slug'             => 'seo-booster',
+                        'type'             => 'plugin',
+                        'public_key'       => 'pk_a58b7605ac6e9e90cd7bd9458cfbc',
+                        'is_premium'       => false,
+                        'premium_suffix'   => 'Premium',
+                        'has_addons'       => false,
+                        'has_paid_plans'   => true,
+                        'trial'            => array(
+                            'days'               => 30,
+                            'is_require_payment' => true,
+                        ),
+                        'has_affiliation'  => false,
+                        'menu'             => array(
+                            'slug'         => 'sb2_dashboard',
+                            'first-path'   => 'admin.php?page=sb2_dashboard',
+                            'support'      => false,
+                            'contact'      => false,
+                            'is_top_level' => true,
+                        ),
+                        'is_live'          => true,
+                        'is_org_compliant' => true,
+                    ) );
+                } catch ( \Exception $e ) {
+                    $seobooster_fs = false;
+                }
             }
             return $seobooster_fs;
         }
 
-        // Init Freemius.
-        seobooster_fs();
-        // Signal that SDK was initiated.
-        do_action( 'seobooster_fs_loaded' );
+        // Init Freemius with error handling.
+        try {
+            $fs_instance = seobooster_fs();
+            if ( $fs_instance && is_object( $fs_instance ) ) {
+                // Signal that SDK was initiated.
+                do_action( 'seobooster_fs_loaded' );
+            }
+        } catch ( \Exception $e ) {
+            // Freemius initialization failed; plugin continues without SDK.
+        }
     }
-    seobooster_fs()->add_filter( 'handle_gdpr_admin_notice', '__return_true' );
-    seobooster_fs()->add_action( 'after_uninstall', 'seobooster_do_after_uninstall' );
+    // Add Freemius filters with safety checks
+    try {
+        $fs_instance = seobooster_fs();
+        if ( $fs_instance && is_object( $fs_instance ) ) {
+            $fs_instance->add_filter( 'handle_gdpr_admin_notice', '__return_true' );
+            $fs_instance->add_filter( 'after_uninstall', array(__NAMESPACE__ . '\\Seobooster2', 'seobooster_do_after_uninstall') );
+        }
+    } catch ( \Exception $e ) {
+        // Freemius filter registration failed; plugin continues without SDK filters.
+    }
     // Prevent cannot redeclare
     if ( !function_exists( 'seobooster_do_after_uninstall' ) ) {
         function seobooster_do_after_uninstall() {
@@ -109,10 +137,27 @@ if ( function_exists( 'seobooster_fs' ) ) {
     }
     // loads persistent admin notices
     require_once SEOBOOSTER_PLUGINPATH . 'inc/Google_API.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/SB_GSC_Ajax.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/SB_GSC_Metaboxes.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/SB_GSC_Processor.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/email_status.php';
-    require_once SEOBOOSTER_PLUGINPATH . 'inc/class-page-builder-filters.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/SB_SEO_Metabox.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/SEO_Output.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/SEO_Plugin_Integration.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/AI_Writing_Outline.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/Admin_Columns.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/Form_Processor.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/Media/AI_Image_Generator.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/Media/Media_Library_Enhancements.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/Credits_Service.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/Credits_REST_Controller.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/Bulk_SEO_Analysis.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/Tools/Tools_Image_Scanner.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/Tools/Tools_Image_Batch.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/Tools/Tools_Page.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/SEO_Issues_Manager.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/SEO_Issues_Ajax.php';
+    require_once SEOBOOSTER_PLUGINPATH . 'inc/SB_GSC_Issues_Processor.php';
     if ( !class_exists( 'seobooster2' ) ) {
         class Seobooster2 {
             /**
@@ -122,9 +167,8 @@ if ( function_exists( 'seobooster_fs' ) ) {
              */
             public static $version = null;
 
-            private static $processed_keywords = [];
-
-            private static $search_replace_arr = [];
+            // Only use this variable for database update tracking
+            private static $replaced_keywords_tracking = array();
 
             /**
              * Plugin version
@@ -133,107 +177,164 @@ if ( function_exists( 'seobooster_fs' ) ) {
              */
             public function __construct() {
                 include_once SEOBOOSTER_PLUGINPATH . 'inc/Utils.php';
-                add_action( 'init', ['\\Cleverplugins\\SEOBooster\\Page_Builder_Filters', 'init'] );
-                add_action( 'wp_ajax_sb_gsc_import_data', [Google_API::class, 'sb_gsc_import_data'] );
-                add_action( 'wp_ajax_sb_log_table', [__CLASS__, 'sb_log_table'] );
-                add_action( 'wp_ajax_sb_gsc_table', [__CLASS__, 'sb_gsc_table'] );
-                add_action( 'wp_ajax_weeklyemailsignup', [Utils::class, 'process_weekly_email_signup'] );
+                include_once SEOBOOSTER_PLUGINPATH . 'inc/CacheManager.php';
+                include_once SEOBOOSTER_PLUGINPATH . 'inc/SEO_Analysis.php';
+                add_action( 'init', array('\\Cleverplugins\\SEOBooster\\CacheManager', 'init') );
+                add_action( 'wp_ajax_seobooster_gsc_make_auto_link', array(Utils::class, 'gsc_make_auto_link') );
+                add_action( 'seobooster_gsc_data_fetch', array(Google_API::class, 'fetch_gsc_data_cron') );
+                add_action( 'seobooster_token_validation', array(Google_API::class, 'validate_token') );
+                add_action( 'wp_ajax_fetch_chart_data', array(Google_API::class, 'fetch_chart_data_ajax') );
+                add_action( 'wp_ajax_sb_gsc_import_data', array(Google_API::class, 'sb_gsc_import_data') );
+                add_action( 'wp_ajax_manual_token_refresh', array(Google_API::class, 'ajax_manual_token_refresh') );
+                add_action( 'wp_ajax_sb_log_table', array(__CLASS__, 'sb_log_table') );
+                add_action( 'wp_ajax_sb_gsc_table', array(__CLASS__, 'sb_gsc_table') );
+                add_action( 'wp_ajax_weeklyemailsignup', array(Utils::class, 'process_weekly_email_signup') );
+                add_action( 'wp_ajax_sb_seo_get_active_plugin', array(__CLASS__, 'ajax_get_active_seo_plugin') );
                 add_action( 'wp_head', array(__CLASS__, 'seo_booster_add_inline_css') );
                 add_action( 'add_meta_boxes', array(__CLASS__, 'do_custom_meta') );
-                // Adds helpscout permission to Freemius
-                if ( function_exists( 'seobooster_fs' ) ) {
-                    seobooster_fs()->add_filter( 'permission_list', array(__CLASS__, 'add_freemius_permission') );
+                // Initialize SEO Output
+                SEO_Output::init();
+                // Initialize AI Writing Outline
+                AI_Writing_Outline::init();
+                // Initialize AI Image Generator
+                AI_Image_Generator::init();
+                // Initialize Credits REST Controller
+                Credits_REST_Controller::init();
+                // Initialize Media Library Enhancements
+                Media_Library_Enhancements::init();
+                // Initialize Bulk SEO Analysis
+                Bulk_SEO_Analysis::init();
+                // Initialize Tools page
+                \Cleverplugins\SEOBooster\Tools\Tools_Page::init();
+                // Initialize Admin Columns (if enabled)
+                if ( get_option( 'seobooster_enable_admin_columns', 1 ) ) {
+                    Admin_Columns::init();
                 }
+                // Initialize SEO Possibilities AJAX
+                SEO_Issues_Ajax::init();
                 add_action( 'seobooster_email_update', array(email_status::class, 'send_email_update') );
-                add_action( 'admin_notices', array(__CLASS__, 'do_admin_notices') );
-                add_action( 'admin_init', array(Google_API::class, 'handle_manual_update') );
-                add_action( 'seobooster_gsc_data_fetch', array(Google_API::class, 'fetch_gsc_data_cron') );
-                add_action( 'wp_ajax_fetch_chart_data', array(Google_API::class, 'fetch_chart_data_ajax') );
-                add_action( 'wp_ajax_seobooster_gsc_make_auto_link', array(Utils::class, 'gsc_make_auto_link') );
                 add_action( 'seobooster_dailymaintenance', array(Utils::class, 'do_seobooster_dailymaintenance') );
+                add_action( 'admin_notices', array(__CLASS__, 'do_admin_notices') );
+                add_action( 'sb_analyze_seo_for_url', array(__CLASS__, 'process_seo_analysis_for_url') );
+                add_action( 'sb_seo_possibilities_auto_scan', array(__CLASS__, 'process_pending_seo_analysis') );
                 add_action( 'admin_init', array(__CLASS__, 'admin_init') );
                 add_action( 'admin_init', array(Google_API::class, 'handle_reset_authentication') );
                 add_action( 'admin_init', array(__CLASS__, 'handle_oauth_callback') );
                 add_action( 'init', array(__CLASS__, 'on_init') );
-                add_action( 'plugins_loaded', array(__CLASS__, 'do_plugins_loaded') );
                 add_action( 'wp', array(Utils::class, 'prefixsetupschedule') );
-                add_filter( 'the_content', array(__CLASS__, 'process_the_content'), 20 );
-                add_filter( 'the_excerpt', array(__CLASS__, 'process_the_excerpt'), 20 );
-                add_action( 'template_redirect', array(__CLASS__, 'template_redirect_action') );
-                // todo - test om vi kan bruge options her til at slå feature til eller fra.
                 add_action( 'save_post', array(__CLASS__, 'do_meta_save') );
-                add_action( 'wp_dashboard_setup', array(__CLASS__, 'add_dashboard_widget') );
+                add_action( 'edited_term', array(__CLASS__, 'do_term_save') );
                 add_action( 'admin_menu', array(__CLASS__, 'add_pages') );
                 add_action( 'admin_enqueue_scripts', array(__CLASS__, 'do_admin_enqueue_scripts') );
-                add_action( 'admin_enqueue_scripts', [SB_GSC_Metaboxes::class, 'enqueue_scripts'] );
-                add_action( 'init', [SB_Autolink_Ajax::class, 'init'] );
+                add_action( 'admin_enqueue_scripts', array(SB_GSC_Metaboxes::class, 'enqueue_scripts') );
+                add_action( 'init', array(SB_Autolink_Ajax::class, 'init') );
                 add_action( 'wp_ajax_ajax_add_keyword', array(__CLASS__, 'wp_ajax_ajax_add_keyword_callback') );
-                // Autolink - add new link AJAX
-                // Incoming Keywords table callback function
                 add_action( 'wpmu_drop_tables', array(__CLASS__, 'on_delete_blog') );
-                // On deactivation
-                // Adds links in the plugins page
-                add_filter(
-                    'plugin_action_links',
-                    array(Utils::class, 'add_settings_link'),
-                    10,
-                    5
-                );
                 register_activation_hook( __FILE__, array(__CLASS__, 'seobooster_activate') );
                 register_deactivation_hook( __FILE__, array(__CLASS__, 'seobooster_deactivate') );
-                add_action( 'admin_footer', array(__CLASS__, 'do_action_admin_footer') );
                 add_filter( 'fl_builder_ui_bar_buttons', array(__CLASS__, 'add_bb_diag_button') );
                 add_action( 'admin_bar_menu', array(__CLASS__, 'add_seobooster_admin_bar'), 999 );
                 add_action( 'admin_enqueue_scripts', array(__NAMESPACE__ . '\\Google_API', 'load_adminbar_js') );
                 add_action( 'wp_enqueue_scripts', array(__NAMESPACE__ . '\\Google_API', 'load_adminbar_js') );
-                // Initialize Reports class
-                add_action( 'init', ['\\Cleverplugins\\SEOBooster\\Reports', 'init'] );
-                add_action( 'init', ['\\Cleverplugins\\SEOBooster\\Page_Builder_Filters', 'init'] );
+                // Load GSC keyword highlighting scripts when feature is active
+                add_action( 'wp_enqueue_scripts', array(__NAMESPACE__ . '\\Google_API', 'load_gsc_highlight_scripts') );
+                // Automatic linking: full-page output buffer (ContentProcessing on final HTML).
+                if ( !is_admin() ) {
+                    add_action( 'template_redirect', array(__CLASS__, 'start_output_buffer'), 1 );
+                    add_action( 'shutdown', array(__CLASS__, 'end_output_buffer'), 0 );
+                }
+                // Add new action for Elementor editor
+                add_action( 'elementor/editor/before_enqueue_scripts', array($this, 'enqueue_elementor_editor_scripts') );
+                // Fix: Add conditional script loading
+                add_action( 'wp_enqueue_scripts', function () {
+                    // Only load frontend scripts when needed
+                    if ( !is_admin() && !is_admin_bar_showing() ) {
+                        return;
+                    }
+                    Google_API::load_adminbar_js();
+                }, 100 );
+                // Fix: Ensure admin scripts are loaded with proper priority
+                add_action( 'admin_enqueue_scripts', array(__CLASS__, 'do_admin_enqueue_scripts'), 100 );
+                // Add admin bar styles
+                add_action( 'wp_head', array(__CLASS__, 'add_admin_bar_styles') );
+                add_action( 'admin_head', array(__CLASS__, 'add_admin_bar_styles') );
+                // WordPress core action hooks
+                add_action( 'template_redirect', array(__CLASS__, 'template_redirect_action'), 1 );
             }
 
             /**
-             * process_the_content.
-             *
-             * @author  Unknown
-             * @since   v0.0.1
-             * @version v1.0.0    Tuesday, October 29th, 2024.
-             * @access  public static
-             * @param   mixed $content
-             * @return  string    The processed content
+             * Enqueue scripts only in Elementor editor
              */
-            public static function process_the_content( $content ) {
-                // Get post-specific setting
-                global $post;
-                if ( !isset( $post ) ) {
-                    return $content;
+            public function enqueue_elementor_editor_scripts() {
+                if ( !class_exists( '\\Elementor\\Plugin' ) ) {
+                    return;
                 }
-                // Check if internal linking is enabled globally
-                $seobooster_internal_linking = get_option( 'seobooster_internal_linking', false );
-                if ( !$seobooster_internal_linking ) {
-                    return $content;
-                }
-                // Check post-specific setting
-                $sbp_stored_meta = get_post_meta( $post->ID, '_sbp-autolink', true );
-                if ( $sbp_stored_meta !== 'yes' ) {
-                    return $content;
-                }
-                // Process content
-                return self::do_filter_the_content( $content );
-            }
-
-            /**
-             * process_the_excerpt.
-             *
-             * @author  Unknown
-             * @since   v0.0.1
-             * @version v1.0.0    Tuesday, October 29th, 2024.
-             * @access  public static
-             * @param   mixed $excerpt
-             * @return  mixed
-             */
-            public static function process_the_excerpt( $excerpt ) {
-                $new_excerpt = self::do_filter_the_content( $excerpt );
-                return $new_excerpt;
+                // First load WinBox library
+                wp_enqueue_script(
+                    'winbox',
+                    SEOBOOSTER_PLUGINURL . 'js/min/winbox.bundle.min.js',
+                    array('jquery'),
+                    filemtime( SEOBOOSTER_PLUGINPATH . 'js/min/winbox.bundle.min.js' ),
+                    true
+                );
+                // Load Tabulator library and styles
+                wp_enqueue_style(
+                    'tabulator',
+                    SEOBOOSTER_PLUGINURL . 'js/tabulator/dist/css/tabulator.min.css',
+                    array(),
+                    filemtime( SEOBOOSTER_PLUGINPATH . 'js/tabulator/dist/css/tabulator.min.css' ),
+                    'all'
+                );
+                wp_enqueue_script(
+                    'tabulator',
+                    SEOBOOSTER_PLUGINURL . 'js/tabulator/dist/js/tabulator.min.js',
+                    array('jquery'),
+                    filemtime( SEOBOOSTER_PLUGINPATH . 'js/tabulator/dist/js/tabulator.min.js' ),
+                    true
+                );
+                // Then load the adminbar script
+                wp_enqueue_script(
+                    'seobooster-adminbar',
+                    SEOBOOSTER_PLUGINURL . 'js/seobooster-adminbar.js',
+                    array('jquery', 'winbox', 'tabulator'),
+                    filemtime( SEOBOOSTER_PLUGINPATH . 'js/seobooster-adminbar.js' ),
+                    true
+                );
+                // Pass necessary data to adminbar script
+                wp_localize_script( 'seobooster-adminbar', 'seobooster_adminbar', array(
+                    'ajax_url' => admin_url( 'admin-ajax.php' ),
+                    'post_url' => get_permalink(),
+                    'security' => wp_create_nonce( 'sb_gsc_nonce' ),
+                    'text'     => array(
+                        'query'        => __( 'Query', 'seo-booster' ),
+                        'impressions'  => __( 'Impressions', 'seo-booster' ),
+                        'clicks'       => __( 'Clicks', 'seo-booster' ),
+                        'ctr'          => __( 'CTR', 'seo-booster' ),
+                        'avg_position' => __( 'Position', 'seo-booster' ),
+                        'used'         => __( 'Used', 'seo-booster' ),
+                        'error'        => __( 'Error', 'seo-booster' ),
+                        'search'       => __( 'Search...', 'seo-booster' ),
+                    ),
+                ) );
+                // Load the admin bar CSS file
+                wp_enqueue_style(
+                    'seobooster-adminbar',
+                    SEOBOOSTER_PLUGINURL . 'css/sb-adminbar.css',
+                    array(),
+                    filemtime( SEOBOOSTER_PLUGINPATH . 'css/sb-adminbar.css' )
+                );
+                // Finally load the Elementor editor script, with dependency on adminbar script
+                wp_enqueue_script(
+                    'seobooster-elementor-editor',
+                    SEOBOOSTER_PLUGINURL . 'js/seobooster-elementor-editor.js',
+                    array('jquery', 'seobooster-adminbar'),
+                    filemtime( SEOBOOSTER_PLUGINPATH . 'js/seobooster-elementor-editor.js' ),
+                    true
+                );
+                // Pass plugin icon URL to Elementor editor script
+                wp_localize_script( 'seobooster-elementor-editor', 'seoboosterData', array(
+                    'pluginIconUrl' => SEOBOOSTER_PLUGINURL . 'images/sblogo25.png',
+                ) );
             }
 
             /**
@@ -248,15 +349,15 @@ if ( function_exists( 'seobooster_fs' ) ) {
             public static function sb_gsc_table() {
                 // Check user capabilities
                 if ( !current_user_can( 'manage_options' ) ) {
-                    wp_send_json_error( [
+                    wp_send_json_error( array(
                         'message' => __( 'Permission denied.', 'seo-booster' ),
-                    ] );
+                    ) );
                 }
                 // Verify nonce
                 if ( !isset( $_GET['_nonce'] ) || !wp_verify_nonce( sanitize_text_field( $_GET['_nonce'] ), 'sb_gsc_nonce' ) ) {
-                    wp_send_json_error( [
+                    wp_send_json_error( array(
                         'message' => __( 'Nonce verification failed.', 'seo-booster' ),
-                    ] );
+                    ) );
                 }
                 global $wpdb;
                 // Set up pagination parameters
@@ -265,21 +366,21 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 $offset = ($page - 1) * $page_size;
                 // Set up sorting parameters
                 $orderby = ( isset( $_GET['sort_field'] ) ? sanitize_text_field( $_GET['sort_field'] ) : 'impressions' );
-                $order = ( isset( $_GET['sort_order'] ) && in_array( strtoupper( $_GET['sort_order'] ), ['ASC', 'DESC'], true ) ? strtoupper( sanitize_text_field( $_GET['sort_order'] ) ) : 'DESC' );
+                $order = ( isset( $_GET['sort_order'] ) && in_array( strtoupper( $_GET['sort_order'] ), array('ASC', 'DESC'), true ) ? strtoupper( sanitize_text_field( $_GET['sort_order'] ) ) : 'DESC' );
                 // Base query: Select all keywords
                 $query = "\n                SELECT \n                qk.id, \n                qk.query, \n                qk.page, \n                qk.first_seen_date, \n                qk.latest_date,\n                COALESCE(SUM(qkh.clicks), 0) as clicks,\n                COALESCE(SUM(qkh.impressions), 0) as impressions,\n                COALESCE(AVG(qkh.ctr), 0) as ctr,\n                COALESCE(AVG(qkh.position), 0) as position\n                FROM {$wpdb->prefix}sb2_query_keywords AS qk\n                LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh ON qk.id = qkh.query_keywords_id\n                WHERE 1=1";
                 // Conditionally append search clause
                 if ( !empty( $_GET['search'] ) ) {
                     $search = '%' . $wpdb->esc_like( sanitize_text_field( $_GET['search'] ) ) . '%';
-                    $query .= $wpdb->prepare( " AND (qk.query LIKE %s OR qk.page LIKE %s)", $search, $search );
+                    $query .= $wpdb->prepare( ' AND (qk.query LIKE %s OR qk.page LIKE %s)', $search, $search );
                 }
                 // Conditionally append filter clause
                 if ( !empty( $_GET['lp_filter'] ) ) {
                     $lp_filter = sanitize_text_field( $_GET['lp_filter'] );
-                    $query .= $wpdb->prepare( " AND qk.page = %s", $lp_filter );
+                    $query .= $wpdb->prepare( ' AND qk.page = %s', $lp_filter );
                 }
                 // Append group by, order by, and limit clauses
-                $query .= "\n\t\t\t\tGROUP BY qk.id, qk.page\n\t\t\t\tORDER BY {$orderby} {$order}\n\t\t\t\tLIMIT %d, %d";
+                $query .= "GROUP BY qk.id, qk.page ORDER BY {$orderby} {$order} LIMIT %d, %d";
                 // Execute query and get results
                 $logs = $wpdb->get_results( $wpdb->prepare( $query, $offset, $page_size ), ARRAY_A );
                 // Process logs to include additional data/formatting as needed
@@ -294,22 +395,22 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 // Prepare the count queries
                 $count_query = "FROM {$wpdb->prefix}sb2_query_keywords AS qk WHERE 1=1";
                 if ( !empty( $_GET['search'] ) ) {
-                    $count_query .= $wpdb->prepare( " AND (qk.query LIKE %s OR qk.page LIKE %s)", $search, $search );
+                    $count_query .= $wpdb->prepare( ' AND (qk.query LIKE %s OR qk.page LIKE %s)', $search, $search );
                 }
                 if ( !empty( $_GET['lp_filter'] ) ) {
-                    $count_query .= $wpdb->prepare( " AND qk.page = %s", $lp_filter );
+                    $count_query .= $wpdb->prepare( ' AND qk.page = %s', $lp_filter );
                 }
                 // Get the total filtered count
                 $total_count = $wpdb->get_var( "SELECT COUNT(DISTINCT qk.id) {$count_query}" );
                 // Get the total unfiltered count
                 $total_count_unfiltered = $wpdb->get_var( "SELECT COUNT(DISTINCT id) FROM {$wpdb->prefix}sb2_query_keywords" );
                 // Prepare response
-                $response = [
-                    "data"           => $logs,
-                    "last_page"      => ceil( $total_count / $page_size ),
-                    "total_filtered" => $total_count,
-                    "total"          => $total_count_unfiltered,
-                ];
+                $response = array(
+                    'data'           => $logs,
+                    'last_page'      => ceil( $total_count / $page_size ),
+                    'total_filtered' => $total_count,
+                    'total'          => $total_count_unfiltered,
+                );
                 // Send the logs along with the total count
                 wp_send_json_success( $response );
             }
@@ -326,15 +427,15 @@ if ( function_exists( 'seobooster_fs' ) ) {
             public static function sb_log_table() {
                 // Check user capabilities
                 if ( !current_user_can( 'manage_options' ) ) {
-                    wp_send_json_error( [
+                    wp_send_json_error( array(
                         'message' => 'Permission denied.',
-                    ] );
+                    ) );
                 }
                 // Verify nonce
                 if ( !isset( $_GET['_nonce'] ) || !wp_verify_nonce( sanitize_text_field( $_GET['_nonce'] ), 'sb_log_nonce' ) ) {
-                    wp_send_json_error( [
+                    wp_send_json_error( array(
                         'message' => 'Nonce verification failed.',
-                    ] );
+                    ) );
                 }
                 // Sanitize and process input
                 $page = ( isset( $_GET['page'] ) ? intval( $_GET['page'] ) : 1 );
@@ -344,53 +445,41 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 global $wpdb;
                 // Build the base query
                 $base_query = "FROM {$wpdb->prefix}sb2_log";
-                $where = "";
+                $where = '';
                 // If there's a search term, add it to the query
                 if ( !empty( $search ) ) {
-                    $where = $wpdb->prepare( " WHERE `log` LIKE %s", '%' . $wpdb->esc_like( $search ) . '%' );
+                    $where = $wpdb->prepare( ' WHERE `log` LIKE %s', '%' . $wpdb->esc_like( $search ) . '%' );
                 }
                 // Fetch total record count considering the search filter
                 $total_count = $wpdb->get_var( "SELECT COUNT(*) {$base_query} {$where}" );
                 $total_count_unfiltered = $wpdb->get_var( "SELECT COUNT(*) {$base_query}" );
                 // Fetch logs with pagination and search filtering
-                $logs = $wpdb->get_results( $wpdb->prepare( "\n\t\t\t\tSELECT `logtime`, `prio`, `log`\n\t\t\t\t{$base_query}\n\t\t\t\t{$where}\n\t\t\t\tORDER BY `ID` DESC\n\t\t\t\tLIMIT %d OFFSET %d;", $page_size, $offset ), ARRAY_A );
-                $priority_map = [
+                $logs = $wpdb->get_results( $wpdb->prepare( "SELECT `logtime`, `prio`, `log` {$base_query} {$where} ORDER BY `ID` DESC LIMIT %d OFFSET %d;", $page_size, $offset ), ARRAY_A );
+                $priority_map = array(
                     0  => __( 'Normal', 'seo-booster' ),
                     1  => __( 'Debug', 'seo-booster' ),
                     2  => __( 'Error', 'seo-booster' ),
                     3  => __( 'Warning', 'seo-booster' ),
                     5  => __( 'Info', 'seo-booster' ),
                     10 => __( 'Success', 'seo-booster' ),
-                ];
+                );
                 foreach ( $logs as &$log ) {
-                    $log['prio_text'] = $priority_map[$log['prio']] ?? __( 'Unknown', 'seo-booster' );
+                    // Ensure prio is a valid integer
+                    $prio = ( isset( $log['prio'] ) ? intval( $log['prio'] ) : 0 );
+                    // Get priority text from map, fallback to Unknown
+                    $log['prio_text'] = ( isset( $priority_map[$prio] ) ? $priority_map[$prio] : __( 'Unknown', 'seo-booster' ) );
+                    // Ensure prio is set correctly
+                    $log['prio'] = $prio;
                 }
-                $response = [
+                $response = array(
                     'status'         => 'success',
                     'data'           => $logs,
                     'last_page'      => (int) ceil( $total_count / $page_size ),
                     'total_filtered' => (int) $total_count,
                     'total'          => (int) $total_count_unfiltered,
-                ];
+                );
                 wp_send_json( $response );
                 exit;
-            }
-
-            /**
-             * Process category descriptions.
-             *
-             * @author  Lars Koudal
-             * @since   v0.0.1
-             * @version v1.0.0    Saturday, July 27th, 2024.
-             * @access  public static
-             * @param   mixed $desc
-             * @param   mixed $cat_id
-             * @return  mixed
-             */
-            public static function do_filter_cat_description( $desc, $cat_id ) {
-                // @todo - make it possible to turn this feature on or off.
-                $newcontent = self::do_filter_the_content( $desc );
-                return $newcontent;
             }
 
             /**
@@ -421,11 +510,6 @@ if ( function_exists( 'seobooster_fs' ) ) {
              * @return  void
              */
             public static function handle_oauth_callback() {
-                // Utils::log('OAuth callback received. GET params: ' . print_r($_GET, true));
-                // if (!isset($_GET['access_token'])) {
-                //     Utils::log('Missing access_token in OAuth callback');
-                //     wp_die(esc_html__('Missing access token in authentication response.', 'seo-booster'));
-                // }
                 if ( isset( $_GET['access_token'] ) ) {
                     // Validate and sanitize the access token
                     $access_token = sanitize_text_field( $_GET['access_token'] );
@@ -438,62 +522,29 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     // Get the list of sites
                     $sites = Google_API::fetch_sites( $access_token );
                     update_option( 'seobooster_gsc_sites', $sites, false );
+                    // Delete the reauth flag since authentication was successful
+                    delete_option( 'seobooster_needs_reauth' );
                     wp_redirect( admin_url( 'admin.php?page=sb2_dashboard' ) );
                     exit;
                 }
             }
 
             public static function seo_booster_add_inline_css() {
-                if ( isset( $_GET['seobooster_showlinks'] ) && $_GET['seobooster_showlinks'] == '1' ) {
-                    echo '<style>
-                .seo-booster-highlighted-links {
-                    background-color: #ffff99; /* Light yellow background */
-                    color: #333; /* Darker text color for contrast */
-                    transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effect */
-                }
-                .seo-booster-highlighted-links:hover {
-                    background-color: #ffd700; /* Gold background on hover */
-                    color: #000; /* Black text color on hover */
-                    text-decoration: underline; /* Underline text on hover */
-                }
-            </style>';
-                }
-            }
-
-            /**
-             * add_freemius_permission.
-             *
-             * @author  Unknown
-             * @since   v0.0.1
-             * @version v1.0.0  Wednesday, February 23rd, 2022.
-             * @access  public static
-             * @param   mixed $permissions
-             * @return  mixed
-             */
-            public static function add_freemius_permission( $permissions ) {
-                $permissions['newsletter'] = array(
-                    'icon-class' => 'dashicons dashicons-email-alt2',
-                    'label'      => __( 'Newsletter', 'seo-booster' ),
-                    'desc'       => __( 'Your email is added to the user newsletter.', 'seo-booster' ),
-                    'priority'   => 17,
-                );
-                return $permissions;
-            }
-
-            /**
-             * do_action_admin_footer.
-             *
-             * @author  Unknown
-             * @since   v0.0.1
-             * @version v1.0.0  Wednesday, February 23rd, 2022.
-             * @access  public static
-             * @return  void
-             */
-            public static function do_action_admin_footer() {
-                $is_sb2_admin_page = self::is_sb2_admin_page();
-                if ( !$is_sb2_admin_page ) {
-                    return;
-                }
+                echo '<style>
+                    /* Existing styles for highlighted links */
+                    .seo-booster-highlighted-links,
+                    a[data-sbfb="1"] {
+                        text-decoration:underline;
+                        background-color: #ffff99;
+                        color: #333;
+                        transition: background-color 0.3s, color 0.3s;
+                    }
+                    .seo-booster-highlighted-links:hover,
+                    a[data-sbfb="1"]:hover {
+                        background-color: #ffd700;
+                        color: #000;
+                    }
+                </style>';
             }
 
             /**
@@ -510,7 +561,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 $lookupkwlimit = 500;
                 $search_replace_arr = array();
                 // Debug the SQL query
-                $query = $wpdb->prepare( "SELECT keyword as kw, url as lp, id FROM {$wpdb->prefix}sb2_autolink ORDER BY kw DESC LIMIT %d;", $lookupkwlimit );
+                $query = $wpdb->prepare( "SELECT keyword as kw, url as lp, id FROM {$wpdb->prefix}sb2_autolink ORDER BY LENGTH(keyword) DESC, kw DESC LIMIT %d;", $lookupkwlimit );
                 $internalkeywords = $wpdb->get_results( $query );
                 if ( $internalkeywords ) {
                     $step_count = 0;
@@ -539,32 +590,10 @@ if ( function_exists( 'seobooster_fs' ) ) {
              * @return  void
              */
             public static function do_admin_notices() {
-                $is_sb2_admin_page = self::is_sb2_admin_page();
+                $is_sb2_admin_page = Utils::is_sb2_admin_page();
                 if ( !$is_sb2_admin_page ) {
                     return;
                 }
-            }
-
-            /**
-             * Fetch plugin version from plugin PHP header
-             *
-             * @author  Lars Koudal
-             * @author  Unknown
-             * @since   v0.0.1
-             * @version v1.0.0  Wednesday, January 13th, 2021.
-             * @version v1.0.1  Thursday, June 20th, 2024.
-             * @access  public static
-             * @return  mixed
-             */
-            public static function get_plugin_version() {
-                if ( null !== self::$version ) {
-                    return self::$version;
-                }
-                $plugin_data = get_file_data( __FILE__, array(
-                    'version' => 'Version',
-                ), 'plugin' );
-                self::$version = $plugin_data['version'];
-                return $plugin_data['version'];
             }
 
             /**
@@ -591,27 +620,27 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 $keyword_id = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}sb2_autolink WHERE keyword = %s", $keyword ) );
                 if ( $keyword_id ) {
                     wp_send_json( array(
-                        'answer' => sprintf( __( 'Error - Keyword <code>%s</code> is already used.', 'seo-booster' ), esc_attr( $keyword ) ),
+                        'answer' => sprintf( __( 'Error - Keyword <code>%s</code> is already used.', 'seo-booster' ), esc_html( $keyword ) ),
                         'error'  => 'kwused',
                     ) );
                 }
                 // Check URL is valid
-                if ( filter_var( sanitize_text_field( $_POST['targeturl'] ), FILTER_VALIDATE_URL ) === false ) {
+                if ( filter_var( $targeturl, FILTER_VALIDATE_URL ) === false ) {
                     wp_send_json( array(
-                        'answer' => sprintf( __( 'Error - <code>%s</code> is not a valid URL.', 'seo-booster' ), esc_attr( sanitize_text_field( $_POST['targeturl'] ) ) ),
+                        'answer' => sprintf( __( 'Error - <code>%s</code> is not a valid URL.', 'seo-booster' ), esc_html( $targeturl ) ),
                         'error'  => 'malurl',
                     ) );
                 }
                 // Insert the new keyword link
                 if ( $keyword && $targeturl ) {
                     $wpdb->insert( "{$wpdb->prefix}sb2_autolink", array(
-                        'keyword' => sanitize_text_field( $_POST['newkeyword'] ),
-                        'url'     => sanitize_text_field( $_POST['targeturl'] ),
+                        'keyword' => $keyword,
+                        'url'     => esc_url_raw( $targeturl ),
                     ), array('%s', '%s') );
                     $last_insert_id = $wpdb->insert_id;
                     if ( $last_insert_id ) {
                         wp_send_json( array(
-                            'answer'  => sprintf( __( 'Success! <code>%1$s</code> now links to <code>%2$s</code>.', 'seo-booster' ), $keyword, $targeturl ),
+                            'answer'  => sprintf( __( 'Success! <code>%1$s</code> now links to <code>%2$s</code>.', 'seo-booster' ), esc_html( $keyword ), esc_html( $targeturl ) ),
                             'success' => true,
                         ) );
                     }
@@ -667,43 +696,47 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     $sbp_stored_meta = 'yes';
                 }
                 ?>
-                <strong>
-                    <?php 
+				<strong>
+					<?php 
                 esc_html_e( 'Automatic Linking', 'seo-booster' );
                 ?>
-                </strong>
-                <p>
-                    <label for="sbp-autolink">
-                        <input type="checkbox" name="sbp-autolink" id="sbp-autolink" value="yes"
-                            <?php 
+				</strong>
+				<p>
+					<label for="sbp-autolink">
+						<input type="checkbox" name="sbp-autolink" id="sbp-autolink" value="yes"
+							<?php 
                 if ( isset( $sbp_stored_meta ) ) {
                     checked( $sbp_stored_meta, 'yes' );
                 }
                 ?> />
-                        <?php 
+						<?php 
                 esc_html_e( 'Change keywords on this page to links.', 'seo-booster' );
                 ?>
-                    </label>
-                    <?php 
+					</label>
+					<?php 
                 $seobooster_internal_linking = get_option( 'seobooster_internal_linking' );
                 if ( !$seobooster_internal_linking ) {
                     ?>
-                        <small><?php 
+						<small>
+							<?php 
                     esc_html_e( 'Feature is disabled. Enable in SEO Booster settings.', 'seo-booster' );
-                    ?></small>
-                    <?php 
+                    ?>
+						</small>
+					<?php 
                 } else {
                     $autolink_url = admin_url( 'admin.php?page=sb2_autolink' );
                     ?>
-                        <small><?php 
+						<small>
+							<?php 
                     // translators: 1: opening link tag, 2: closing link tag
                     printf( esc_html__( 'Change keywords and links in %1$sAutolink%2$s', 'seo-booster' ), '<a href="' . esc_url( $autolink_url ) . '" target="_blank">', '</a>' );
-                    ?></small>
-                    <?php 
+                    ?>
+						</small>
+					<?php 
                 }
                 ?>
-                </p>
-            <?php 
+				</p>
+			<?php 
             }
 
             /**
@@ -723,7 +756,6 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 }
                 if ( isset( $_POST['sbp-autolink'] ) ) {
                     update_post_meta( $post_id, '_sbp-autolink', 'yes' );
-                    // @todo - change logic so "yes" is implied unless "no" is set
                 } else {
                     update_post_meta( $post_id, '_sbp-autolink', 'no' );
                 }
@@ -732,6 +764,202 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     update_post_meta( $post_id, '_sbp-appendkeywords', 'yes' );
                 } else {
                     update_post_meta( $post_id, '_sbp-appendkeywords', 'no' );
+                }
+                // Mark SEO analysis as pending for reanalysis
+                if ( class_exists( '\\Cleverplugins\\SEOBooster\\SEO_Issues_Manager' ) ) {
+                    \Cleverplugins\SEOBooster\SEO_Issues_Manager::mark_as_pending( $post_id, 'post' );
+                }
+            }
+
+            /**
+             * Handle term save to mark SEO analysis as pending.
+             *
+             * @since 6.1.26
+             * @param int $term_id Term ID.
+             * @return void
+             */
+            public static function do_term_save( $term_id ) {
+                // Mark SEO analysis as pending for reanalysis
+                if ( class_exists( '\\Cleverplugins\\SEOBooster\\SEO_Issues_Manager' ) ) {
+                    \Cleverplugins\SEOBooster\SEO_Issues_Manager::mark_as_pending( $term_id, 'term' );
+                }
+            }
+
+            /**
+             * Process SEO analysis for a URL via Action Scheduler.
+             *
+             * @since 6.1.26
+             * @param string|array $url URL string, or full args array for backward compatibility.
+             * @param int|null      $object_id Optional object ID when $url is a string.
+             * @param string|null   $object_type Optional object type when $url is a string.
+             * @return void
+             */
+            public static function process_seo_analysis_for_url( $url = null, $object_id = null, $object_type = null ) {
+                // Action Scheduler passes array values as separate args; support legacy single-array call too.
+                if ( is_array( $url ) && array_key_exists( 'url', $url ) ) {
+                    $object_id = $url['object_id'] ?? null;
+                    $object_type = $url['object_type'] ?? null;
+                    $url = $url['url'] ?? '';
+                } else {
+                    $url = ( $url !== null ? trim( (string) $url ) : '' );
+                }
+                Utils::log( 'Starting SEO analysis for URL: ' . $url . ' (Object ID: ' . $object_id . ', Type: ' . $object_type . ')', 5 );
+                if ( empty( $url ) ) {
+                    Utils::log( 'SEO analysis: No URL provided', 2 );
+                    return;
+                }
+                // Exclude private posts and WooCommerce special pages
+                if ( $object_id && $object_type === 'post' && \Cleverplugins\SEOBooster\SEO_Issues_Manager::should_exclude_from_analysis( $object_id ) ) {
+                    Utils::log( "Skipping SEO analysis for excluded post ID: {$object_id}", 5 );
+                    return;
+                }
+                try {
+                    // Create analysis instance
+                    if ( $object_id && $object_type ) {
+                        $analysis = new \Cleverplugins\SEOBooster\SEO_Analysis($object_id, $object_type);
+                    } else {
+                        // URL-only analysis - create a temporary analysis
+                        $analysis = new \Cleverplugins\SEOBooster\SEO_Analysis(0, 'url');
+                    }
+                    // Run analysis with full page content
+                    $results = $analysis->analyze( true, false );
+                    Utils::log( sprintf( 'SEO analysis completed for URL: %s with %d possibilities', $url, count( $results['issues'] ?? [] ) ), 5 );
+                } catch ( \Exception $e ) {
+                    Utils::log( 'SEO analysis failed: ' . $e->getMessage(), 2 );
+                }
+            }
+
+            /**
+             * Process pending SEO analysis via Action Scheduler recurring action.
+             * Discovers URLs from imported GSC data and schedules analysis for URLs that haven't been analyzed yet.
+             * Only schedules new actions if auto-scan is enabled and no other analysis is running.
+             *
+             * @since 6.1.26
+             * @return void
+             */
+            public static function process_pending_seo_analysis() {
+                // Check if auto-scan is enabled
+                $enabled = get_option( 'seobooster_seo_possibilities_enabled', 'on' );
+                if ( $enabled !== 'on' ) {
+                    return;
+                }
+                if ( !class_exists( '\\Cleverplugins\\SEOBooster\\SEO_Issues_Manager' ) ) {
+                    return;
+                }
+                // Check if Action Scheduler functions are available
+                if ( !function_exists( 'as_has_scheduled_action' ) ) {
+                    return;
+                }
+                // Check if any sb_analyze_seo_for_url actions are pending or in-progress
+                global $wpdb;
+                $running_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}actionscheduler_actions a\n\t\t\t\t\t INNER JOIN {$wpdb->prefix}actionscheduler_groups g ON a.group_id = g.group_id\n\t\t\t\t\t WHERE a.hook = 'sb_analyze_seo_for_url' \n\t\t\t\t\t AND a.status IN ('pending', 'in-progress')\n\t\t\t\t\t AND g.slug = 'seo-booster'" );
+                // Only proceed if queue is idle
+                if ( $running_count > 0 ) {
+                    Utils::log( sprintf( 'Skipping SEO analysis scheduling - %d actions already in queue', $running_count ), 5 );
+                    return;
+                }
+                // Get batch size from settings
+                $batch_size = get_option( 'seobooster_seo_analysis_batch_size', 1 );
+                $batch_size = max( 1, min( 5, intval( $batch_size ) ) );
+                $query_keywords_table = $wpdb->prefix . 'sb2_query_keywords';
+                $urls_table = $wpdb->prefix . 'sb2_seo_urls';
+                $analysis_table = $wpdb->prefix . 'sb2_seo_analysis';
+                // Discover URLs from GSC data that haven't been analyzed yet
+                // Query finds unique URLs from sb2_query_keywords that don't have analysis records with status='analyzed'
+                // Handles both cases: URLs that don't exist in sb2_seo_urls yet, and URLs that exist but have no analyzed analysis
+                $query = $wpdb->prepare( "SELECT DISTINCT k.page as url\n\t\t\t\t\t FROM {$query_keywords_table} k\n\t\t\t\t\t LEFT JOIN {$urls_table} u ON u.url = k.page\n\t\t\t\t\t LEFT JOIN (\n\t\t\t\t\t\tSELECT DISTINCT url_id \n\t\t\t\t\t\tFROM {$analysis_table} \n\t\t\t\t\t\tWHERE status = 'analyzed'\n\t\t\t\t\t ) a ON u.id = a.url_id\n\t\t\t\t\t WHERE k.page IS NOT NULL \n\t\t\t\t\t AND k.page != ''\n\t\t\t\t\t AND (u.id IS NULL OR a.url_id IS NULL)\n\t\t\t\t\t LIMIT %d", $batch_size );
+                $discovered_urls = $wpdb->get_results( $query, OBJECT );
+                if ( empty( $discovered_urls ) ) {
+                    Utils::log( 'No URLs discovered from GSC data that need analysis', 5 );
+                    return;
+                }
+                Utils::log( sprintf( 'Discovered %d URLs from GSC data that need analysis', count( $discovered_urls ) ), 5 );
+                $scheduled_count = 0;
+                foreach ( $discovered_urls as $url_data ) {
+                    // Access URL from result object - the query uses 'url' as alias for 'k.page'
+                    // Try both 'url' (alias) and 'page' (original field) in case alias doesn't work
+                    $url = '';
+                    if ( is_object( $url_data ) ) {
+                        $url = ( isset( $url_data->url ) ? trim( $url_data->url ) : (( isset( $url_data->page ) ? trim( $url_data->page ) : '' )) );
+                    } elseif ( is_array( $url_data ) ) {
+                        $url = ( isset( $url_data['url'] ) ? trim( $url_data['url'] ) : (( isset( $url_data['page'] ) ? trim( $url_data['page'] ) : '' )) );
+                    }
+                    if ( empty( $url ) ) {
+                        $debug_info = ( is_object( $url_data ) ? 'Object keys: ' . implode( ', ', array_keys( get_object_vars( $url_data ) ) ) : (( is_array( $url_data ) ? 'Array keys: ' . implode( ', ', array_keys( $url_data ) ) : 'Unknown type' )) );
+                        Utils::log( sprintf(
+                            'Skipping empty URL in discovered URLs. Type: %s, %s, Full data: %s',
+                            gettype( $url_data ),
+                            $debug_info,
+                            wp_json_encode( $url_data )
+                        ), 3 );
+                        continue;
+                    }
+                    // Ensure URL is properly formatted (GSC URLs might be relative paths)
+                    // Convert relative URLs to absolute if needed
+                    if ( !preg_match( '/^https?:\\/\\//', $url ) ) {
+                        // It's a relative URL, make it absolute
+                        $url = home_url( $url );
+                    }
+                    // Final validation - don't proceed if URL is still empty
+                    if ( empty( $url ) ) {
+                        Utils::log( sprintf( 'Skipping - URL is empty after processing. Original data: %s', wp_json_encode( $url_data ) ), 3 );
+                        continue;
+                    }
+                    // Determine object_id and object_type from URL
+                    $object_id = null;
+                    $object_type = null;
+                    // Check if it's a post URL
+                    $post_id = url_to_postid( $url );
+                    if ( $post_id ) {
+                        $object_id = $post_id;
+                        $object_type = 'post';
+                    } else {
+                        // Check if it's a term URL
+                        $term = get_term_by( 'slug', basename( $url ) );
+                        if ( $term && !is_wp_error( $term ) ) {
+                            $object_id = $term->term_id;
+                            $object_type = 'term';
+                        }
+                    }
+                    // Check exclusion status for posts
+                    if ( $object_id && $object_type === 'post' ) {
+                        if ( \Cleverplugins\SEOBooster\SEO_Issues_Manager::should_exclude_from_analysis( $object_id ) ) {
+                            Utils::log( sprintf( 'Skipping excluded post ID: %d for URL: %s', $object_id, $url ), 5 );
+                            continue;
+                        }
+                    }
+                    // Note: We already checked if queue is idle at the top, so no need to check for individual URL actions here
+                    // Final check before scheduling - ensure URL is not empty
+                    if ( empty( $url ) ) {
+                        Utils::log( 'Attempted to schedule analysis with empty URL; skipping.', 2 );
+                        continue;
+                    }
+                    // Schedule individual analysis
+                    $action_id = as_schedule_single_action(
+                        time(),
+                        'sb_analyze_seo_for_url',
+                        [
+                            'url'         => $url,
+                            'object_id'   => $object_id,
+                            'object_type' => $object_type,
+                        ],
+                        'seo-booster'
+                    );
+                    if ( $action_id ) {
+                        Utils::log( sprintf(
+                            'Scheduled SEO analysis (Action ID: %d) for URL: %s (Object ID: %s, Type: %s)',
+                            $action_id,
+                            $url,
+                            $object_id ?? 'null',
+                            $object_type ?? 'null'
+                        ), 5 );
+                        $scheduled_count++;
+                    } else {
+                        Utils::log( sprintf( 'Failed to schedule SEO analysis for URL: %s', $url ), 2 );
+                    }
+                }
+                if ( $scheduled_count > 0 ) {
+                    Utils::log( sprintf( 'Scheduled %d new SEO analyses from GSC data (batch size: %d)', $scheduled_count, $batch_size ), 5 );
                 }
             }
 
@@ -753,330 +981,31 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     'utm_source'   => esc_attr( $utm_source ),
                     'utm_medium'   => 'plugin',
                     'utm_content'  => esc_attr( $placement ),
-                    'utm_campaign' => esc_attr( 'seobooster_v' . Seobooster2::get_plugin_version() ),
+                    'utm_campaign' => esc_attr( 'seobooster_v' . Utils::get_plugin_version() ),
                 ), $params );
                 $out = $base_url . $page . '?' . http_build_query( $parts, '', '&amp;' );
                 return $out;
             }
 
             /**
-             * from shkspr.mobi - https://shkspr.mobi/blog/2012/09/a-utf-8-aware-substr_replace-for-use-in-app-net/
+             * Track 404 errors on template_redirect hook
              *
-             * @var public  stati
-             */
-            public static function utf8_substr_replace(
-                $original,
-                $replacement,
-                $position,
-                $length
-            ) {
-                $start_string = mb_substr(
-                    $original,
-                    0,
-                    $position,
-                    'UTF-8'
-                );
-                $end_string = mb_substr(
-                    $original,
-                    $position + $length,
-                    mb_strlen( $original ),
-                    'UTF-8'
-                );
-                $out = $start_string . $replacement . $end_string;
-                return $out;
-            }
-
-            /**
-             * do_filter_the_content.
-             *
-             * @author  Unknown
-             * @since   v0.0.1
-             * @version v1.0.0  Tuesday, November 30th, 2021.
-             * @access  public static
-             * @param   mixed   $content
-             * @param   boolean $forced  Default: false
-             * @return  mixed
-             */
-            public static function do_filter_the_content( $content, $forced = false ) {
-                if ( empty( $content ) || !is_string( $content ) ) {
-                    return $content;
-                }
-                try {
-                    $html = \voku\helper\HtmlDomParser::str_get_html( $content );
-                    if ( !$html ) {
-                        return $content;
-                    }
-                    $replace_limit = intval( get_option( 'seobooster_replace_kw_limit', 5 ) );
-                    $replace_kw_multiple = get_option( 'seobooster_replace_kw_multiple', false );
-                    $replace_count = 0;
-                    // Use static property for Beaver Builder, local array for regular content
-                    $processed_keywords = ( $forced ? self::$processed_keywords : [] );
-                    // Get autolinks
-                    $autolinks = self::return_autolinks();
-                    if ( empty( $autolinks ) ) {
-                        return $content;
-                    }
-                    // Process text nodes
-                    foreach ( $html->find( 'text' ) as $text ) {
-                        $parent = $text->parent();
-                        if ( $parent && (preg_match( '/^h[1-6]$|^a$|^li$/', strtolower( $parent->tag ) ) || self::hasListAncestor( $parent )) ) {
-                            continue;
-                        }
-                        $current_text = $text->outertext;
-                        $replacements = [];
-                        $node_modified = false;
-                        // Process keywords
-                        foreach ( $autolinks as $found_kw ) {
-                            $keyword_hash = md5( $found_kw['kw'] . '-' . $found_kw['lp'] );
-                            if ( !$replace_kw_multiple && in_array( $keyword_hash, $processed_keywords, true ) ) {
-                                continue;
-                            }
-                            // Use word boundaries and case-insensitive matching
-                            $escaped_keyword = preg_quote( $found_kw['kw'], '/' );
-                            if ( preg_match_all(
-                                "/\\b{$escaped_keyword}\\b/ui",
-                                $current_text,
-                                $matches,
-                                PREG_OFFSET_CAPTURE
-                            ) ) {
-                                foreach ( $matches[0] as $match ) {
-                                    $replacements[] = [
-                                        'start'   => $match[1],
-                                        'length'  => strlen( $match[0] ),
-                                        'keyword' => $match[0],
-                                        'url'     => $found_kw['lp'],
-                                        'hash'    => $keyword_hash,
-                                    ];
-                                }
-                            }
-                            if ( !$replace_kw_multiple ) {
-                                if ( $forced ) {
-                                    self::$processed_keywords[] = $keyword_hash;
-                                } else {
-                                    $processed_keywords[] = $keyword_hash;
-                                }
-                            }
-                        }
-                        // Apply replacements if any found
-                        if ( !empty( $replacements ) ) {
-                            // Sort by position, descending to maintain offsets
-                            usort( $replacements, function ( $a, $b ) {
-                                return $b['start'] - $a['start'];
-                            } );
-                            foreach ( $replacements as $replacement ) {
-                                $class = ( isset( $_GET['seobooster_showlinks'] ) && $_GET['seobooster_showlinks'] === '1' ? ' class="seo-booster-highlighted-links"' : '' );
-                                $link = sprintf(
-                                    '<a href="%s"%s>%s</a>',
-                                    esc_url( $replacement['url'] ),
-                                    $class,
-                                    $replacement['keyword']
-                                );
-                                $current_text = substr_replace(
-                                    $current_text,
-                                    $link,
-                                    $replacement['start'],
-                                    $replacement['length']
-                                );
-                                $node_modified = true;
-                                $replace_count++;
-                                if ( $replace_count >= $replace_limit ) {
-                                    break 2;
-                                }
-                            }
-                        }
-                        // Update node if modified
-                        if ( $node_modified ) {
-                            $text->outertext = $current_text;
-                        }
-                    }
-                    // Return the processed content regardless of $modified flag
-                    $processed_content = $html->save();
-                    return $processed_content;
-                } catch ( \Exception $e ) {
-                    return $content;
-                } finally {
-                    if ( isset( $html ) ) {
-                        unset($html);
-                    }
-                }
-            }
-
-            /**
-             * hasListAncestor.
-             *
-             * @author	Unknown
-             * @since	v0.0.1
-             * @version	v1.0.0	Tuesday, January 28th, 2025.
-             * @access	private static
-             * @param	mixed	$node	
-             * @return	boolean
-             */
-            private static function hasListAncestor( $node ) {
-                while ( $node ) {
-                    if ( in_array( strtolower( $node->tag ), ['ul', 'ol'] ) ) {
-                        return true;
-                    }
-                    $node = $node->parent();
-                }
-                return false;
-            }
-
-            /**
-             * Load language files
-             *
-             * @author  Lars Koudal
-             * @since   v0.0.1
-             * @version v1.0.0  Friday, February 5th, 2021.
-             * @access  public static
-             * @return  void
-             */
-            public static function do_plugins_loaded() {
-                load_plugin_textdomain( 'seo-booster', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-            }
-
-            /**
-             * Runs on action "template_redirect" - 404 detection
-             *
-             * @author  Unknown
-             * @since   v0.0.1
-             * @version v1.0.0  Tuesday, November 30th, 2021.
+             * @author  Cleverplugins
+             * @since   v1.0.0
+             * @version v1.1.0
              * @access  public static
              * @return  void
              */
             public static function template_redirect_action() {
-                if ( empty( $_POST ) && defined( 'DOING_AJAX' ) || defined( 'DOING_CRON' ) || defined( 'XMLRPC_REQUEST' ) || defined( 'DOING_AUTOSAVE' ) || defined( 'REST_REQUEST' ) ) {
+                // Skip if doing AJAX, CRON, etc.
+                if ( defined( 'DOING_AJAX' ) || defined( 'DOING_CRON' ) || defined( 'XMLRPC_REQUEST' ) || defined( 'DOING_AUTOSAVE' ) || defined( 'REST_REQUEST' ) ) {
                     return;
                 }
-                $fof_monitoring = get_option( 'seobooster_fof_monitoring' );
-                if ( 'on' !== $fof_monitoring ) {
+                // Skip if it's a POST request
+                if ( !empty( $_POST ) ) {
                     return;
-                    // 404 error monitoring is turned off so ...
                 }
                 $currurl = Utils::seobooster_currenturl();
-                if ( isset( $currenturl ) ) {
-                    $currenturl = strtok( $currenturl, '?' );
-                    // Strips parameters
-                }
-                // List of args to ignore in query strings on 404 pages.
-                $ignore_args = array('wordfence_lh');
-                $ignored_parts = $ignore_args;
-                $parts = wp_parse_url( $currurl );
-                if ( isset( $parts['query'] ) ) {
-                    parse_str( $parts['query'], $query_parms );
-                }
-                // Extracting the part after the domain name to run matches against ignore 404 parts
-                $query = wp_parse_url( $currurl );
-                $extractedpath = '';
-                if ( isset( $query['path'] ) ) {
-                    $extractedpath .= $query['path'];
-                }
-                if ( isset( $query['query'] ) ) {
-                    $extractedpath .= $query['query'];
-                }
-                $extractedpath = strtolower( $extractedpath );
-                global $wpdb;
-                if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
-                    $parsedurl = wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) );
-                    $domain = $parsedurl['host'];
-                }
-                if ( is_404() ) {
-                    if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
-                        $referer = strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) );
-                    } else {
-                        $referer = '';
-                    }
-                    // Filtrer .css og .js filer fra
-                    $pathinfo = pathinfo( $currurl );
-                    if ( isset( $pathinfo['extension'] ) ) {
-                        $extension = strtolower( $pathinfo['extension'] );
-                        if ( in_array( $extension, array('css', 'js'), true ) ) {
-                            return;
-                            // filter out unwanted .js and .css
-                        }
-                    }
-                    $excistingentry = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}sb2_404 WHERE lp = %s", $currurl ) );
-                    $rightnow = gmdate( 'Y-m-d H:i:s' );
-                    if ( $excistingentry ) {
-                        $lastcount = $wpdb->get_var( $wpdb->prepare( "SELECT visits FROM {$wpdb->prefix}sb2_404 WHERE id = %d", $excistingentry ) );
-                        $rows_affected = $wpdb->query( $wpdb->prepare(
-                            "UPDATE {$wpdb->prefix}sb2_404 SET visits = %d, lastseen = %s WHERE id = %s",
-                            $lastcount + 1,
-                            $rightnow,
-                            $excistingentry
-                        ) );
-                    } else {
-                        $wpdb->insert( $wpdb->prefix . 'sb2_404', array(
-                            'lp'        => $currurl,
-                            'firstseen' => $rightnow,
-                            'lastseen'  => $rightnow,
-                            'visits'    => 1,
-                            'referer'   => $referer,
-                        ), array(
-                            '%s',
-                            '%s',
-                            '%s',
-                            '%d',
-                            '%s'
-                        ) );
-                        if ( isset( $referer ) && '' !== $referer ) {
-                            Utils::log( sprintf( 
-                                // translators:
-                                __( 'New 404 - %1$s Referer: %2$s', 'seo-booster' ),
-                                esc_url( $currurl ),
-                                esc_url( $referer )
-                             ), 3 );
-                        } else {
-                            // translators:
-                            Utils::log( sprintf( __( 'New 404 - %1$s', 'seo-booster' ), esc_url( $currurl ) ), 3 );
-                        }
-                    }
-                }
-            }
-
-            /**
-             * Returns true if $url is a local installation - Thanks EDD
-             *
-             * @author  Unknown
-             * @since   v0.0.1
-             * @version v1.0.0  Sunday, November 7th, 2021.
-             * @access  public static
-             * @param   string $url Default: ''
-             * @return  mixed
-             */
-            public static function is_local_url( $url = '' ) {
-                $is_local_url = false;
-                $url = strtolower( trim( $url ) );
-                if ( false === strpos( $url, 'http://' ) && false === strpos( $url, 'https://' ) ) {
-                    $url = 'http://' . $url;
-                }
-                $url_parts = wp_parse_url( $url );
-                $host = ( !empty( $url_parts['host'] ) ? $url_parts['host'] : false );
-                if ( !empty( $url ) && !empty( $host ) ) {
-                    if ( false !== ip2long( $host ) ) {
-                        if ( !filter_var( $host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
-                            $is_local_url = true;
-                        }
-                    } elseif ( 'localhost' === $host ) {
-                        $is_local_url = true;
-                    }
-                    $tlds_to_check = array('.dev', '.local', '.loc');
-                    foreach ( $tlds_to_check as $tld ) {
-                        if ( false !== strpos( $host, $tld ) ) {
-                            $is_local_url = true;
-                            continue;
-                        }
-                    }
-                    if ( substr_count( $host, '.' ) > 1 ) {
-                        $subdomains_to_check = array('dev.', 'staging.');
-                        foreach ( $subdomains_to_check as $subdomain ) {
-                            if ( 0 === strpos( $host, $subdomain ) ) {
-                                $is_local_url = true;
-                                continue;
-                            }
-                        }
-                    }
-                }
-                return $is_local_url;
             }
 
             /**
@@ -1109,14 +1038,6 @@ if ( function_exists( 'seobooster_fs' ) ) {
              * @access  public static
              * @return  boolean
              */
-            public static function is_sb2_admin_page() {
-                $screen = get_current_screen();
-                if ( is_object( $screen ) && 'toplevel_page_sb2_dashboard' === $screen->id || 'seo-booster_page_sb2_debug' === $screen->id || 'seo-booster_page_sb2_log' === $screen->id || 'seo-booster_page_sb2_settings' === $screen->id || 'seo-booster_page_sb2_gsc' === $screen->id || 'seo-booster_page_sb2_404' === $screen->id || 'seo-booster_page_sb2_reports' === $screen->id || 'seo-booster_page_sb2_autolink' === $screen->id || 'seo-sb2_dashboard' === $screen->id || 'admin_page_seo-booster-oauth2' === $screen->id ) {
-                    return $screen->id;
-                }
-                return false;
-            }
-
             /**
              * do_admin_enqueue_scripts.
              *
@@ -1128,7 +1049,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
              * @return  void
              */
             public static function do_admin_enqueue_scripts() {
-                $is_sb2_admin_page = self::is_sb2_admin_page();
+                $is_sb2_admin_page = Utils::is_sb2_admin_page();
                 if ( $is_sb2_admin_page ) {
                     wp_enqueue_script( 'jquery' );
                     wp_localize_script( 'jquery', 'sb_gsc_ajax', array(
@@ -1136,20 +1057,20 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         'security'      => wp_create_nonce( 'sb_gsc_nonce' ),
                         'dashboard_url' => admin_url( 'admin.php?page=sb2_dashboard&gsc_updated=1' ),
                     ) );
-                    // Indlæser specifikke data om bruger til Helpscout Beacon.
                     wp_register_script(
                         'seoboosterjs',
-                        plugins_url( '/js/min/seo-booster-min.js', __FILE__ ),
+                        plugins_url( '/js/seo-booster.js', __FILE__ ) . '?v=' . filemtime( plugin_dir_path( __FILE__ ) . 'js/seo-booster.js' ),
                         array('jquery', 'chart-js'),
-                        filemtime( plugin_dir_path( __FILE__ ) . 'js/min/seo-booster-min.js' ),
+                        filemtime( plugin_dir_path( __FILE__ ) . 'js/seo-booster.js' ),
                         true
                     );
                     $current_user = wp_get_current_user();
                     $usermail = $current_user->user_email;
                     $username = $current_user->display_name;
                     if ( function_exists( 'seobooster_fs' ) ) {
-                        if ( seobooster_fs()->is_registered() ) {
-                            $get_user = seobooster_fs()->get_user();
+                        $fs_instance = seobooster_fs();
+                        if ( $fs_instance && is_object( $fs_instance ) && $fs_instance->is_registered() ) {
+                            $get_user = $fs_instance->get_user();
                             $usermail = $get_user->email;
                             $username = $get_user->first . ' ' . $get_user->last;
                         }
@@ -1163,60 +1084,63 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         'enablecontact' => false,
                         'nonce'         => wp_create_nonce( 'seobooster-nonce' ),
                         'strings'       => array(
-                            'pleaseWait'                                   => __( 'Please wait', 'seo-booster' ),
-                            'uniqueKeywordsImported'                       => __( 'Unique keywords imported', 'seo-booster' ),
-                            'totalEntriesProcessed'                        => __( 'Total entries processed', 'seo-booster' ),
-                            'lastImportKeyword'                            => __( 'Last import keyword', 'seo-booster' ),
-                            'lastBatch'                                    => __( 'Last batch', 'seo-booster' ),
-                            'seconds'                                      => __( 'seconds', 'seo-booster' ),
-                            'completed'                                    => __( 'Completed', 'seo-booster' ),
-                            'importComplete'                               => __( 'Import complete!', 'seo-booster' ),
-                            'totalTime'                                    => __( 'Total time', 'seo-booster' ),
-                            'goToDashboard'                                => __( 'Go to Dashboard', 'seo-booster' ),
-                            'retry'                                        => __( 'Retry', 'seo-booster' ),
-                            'errorProcessingRequest'                       => __( 'An error occurred while processing the request.', 'seo-booster' ),
-                            'savingSiteAndLoadingData'                     => __( 'Saving site and loading data. This can take several minutes.', 'seo-booster' ),
-                            'elapsedTime'                                  => __( 'Elapsed time', 'seo-booster' ),
-                            'pleaseWait'                                   => __( 'Please wait...', 'seo-booster' ),
-                            'showMore'                                     => __( 'Show more', 'seo-booster' ),
-                            'showLess'                                     => __( 'Show less', 'seo-booster' ),
-                            'lastImportKeyword'                            => __( 'Last imported keyword', 'seo-booster' ),
-                            'importComplete'                               => __( 'Import complete', 'seo-booster' ),
-                            'errorProcessingRequest'                       => __( 'Error processing request', 'seo-booster' ),
-                            'last28Days'                                   => __( 'Last 28 days', 'seo-booster' ),
-                            'last3Months'                                  => __( 'Last 3 months', 'seo-booster' ),
-                            'last6Months'                                  => __( 'Last 6 months', 'seo-booster' ),
-                            'last12Months'                                 => __( 'Last 12 months', 'seo-booster' ),
-                            'allTime'                                      => __( 'All time', 'seo-booster' ),
-                            'refresh'                                      => __( 'Refresh', 'seo-booster' ),
-                            'clicks'                                       => __( 'Clicks', 'seo-booster' ),
-                            'impressions'                                  => __( 'Impressions', 'seo-booster' ),
-                            'ctr'                                          => __( 'CTR', 'seo-booster' ),
-                            'seoBoosterDataVisualization'                  => __( 'SEO Booster Data Visualization', 'seo-booster' ),
-                            'date'                                         => __( 'Date', 'seo-booster' ),
-                            'value'                                        => __( 'Value', 'seo-booster' ),
-                            'errorFetchingData'                            => __( 'Error fetching data', 'seo-booster' ),
-                            'tryAgainLater'                                => __( 'Please try again later.', 'seo-booster' ),
-                            'visitTroubleshootingGuide'                    => __( 'Visit our', 'seo-booster' ),
-                            'troubleshootingGuide'                         => __( 'Troubleshooting Guide', 'seo-booster' ),
-                            'youHaveToAllowHelpscoutBeaconToLoadToGetHelp' => __( 'You have to allow Helpscout Beacon to load to get help', 'seo-booster' ),
-                            'timestamp'                                    => __( 'Timestamp', 'seo-booster' ),
-                            'priority'                                     => __( 'Priority', 'seo-booster' ),
-                            'logEntry'                                     => __( 'Log Entry', 'seo-booster' ),
-                            'tabulatorNotLoaded'                           => __( 'Tabulator library is not loaded.', 'seo-booster' ),
-                            'uniqueKeywords'                               => __( 'Unique Keywords', 'seo-booster' ),
+                            'pleaseSelectSite'            => __( 'Please select a site', 'seo-booster' ),
+                            'areYouSure'                  => __( 'Are you sure you want to do this?', 'seo-booster' ),
+                            'pleaseWait'                  => __( 'Please wait', 'seo-booster' ),
+                            'uniqueKeywordsImported'      => __( 'Unique keywords imported', 'seo-booster' ),
+                            'totalEntriesProcessed'       => __( 'Total entries processed', 'seo-booster' ),
+                            'lastImportKeyword'           => __( 'Last import keyword', 'seo-booster' ),
+                            'lastBatch'                   => __( 'Last batch', 'seo-booster' ),
+                            'seconds'                     => __( 'seconds', 'seo-booster' ),
+                            'completed'                   => __( 'Completed', 'seo-booster' ),
+                            'importComplete'              => __( 'Import complete!', 'seo-booster' ),
+                            'totalTime'                   => __( 'Total time', 'seo-booster' ),
+                            'goToDashboard'               => __( 'Go to Dashboard', 'seo-booster' ),
+                            'retry'                       => __( 'Retry', 'seo-booster' ),
+                            'errorProcessingRequest'      => __( 'An error occurred while processing the request.', 'seo-booster' ),
+                            'savingSiteAndLoadingData'    => __( 'Saving site and loading data. This can take several minutes.', 'seo-booster' ),
+                            'elapsedTime'                 => __( 'Elapsed time', 'seo-booster' ),
+                            'pleaseWait'                  => __( 'Please wait...', 'seo-booster' ),
+                            'showMore'                    => __( 'Show more', 'seo-booster' ),
+                            'showLess'                    => __( 'Show less', 'seo-booster' ),
+                            'lastImportKeyword'           => __( 'Last imported keyword', 'seo-booster' ),
+                            'importComplete'              => __( 'Import complete', 'seo-booster' ),
+                            'errorProcessingRequest'      => __( 'Error processing request', 'seo-booster' ),
+                            'last28Days'                  => __( 'Last 28 days', 'seo-booster' ),
+                            'last3Months'                 => __( 'Last 3 months', 'seo-booster' ),
+                            'last6Months'                 => __( 'Last 6 months', 'seo-booster' ),
+                            'last12Months'                => __( 'Last 12 months', 'seo-booster' ),
+                            'allTime'                     => __( 'All time', 'seo-booster' ),
+                            'refresh'                     => __( 'Refresh', 'seo-booster' ),
+                            'clicks'                      => __( 'Clicks', 'seo-booster' ),
+                            'impressions'                 => __( 'Impressions', 'seo-booster' ),
+                            'ctr'                         => __( 'CTR', 'seo-booster' ),
+                            'seoBoosterDataVisualization' => __( 'SEO Booster Data Visualization', 'seo-booster' ),
+                            'date'                        => __( 'Date', 'seo-booster' ),
+                            'value'                       => __( 'Value', 'seo-booster' ),
+                            'errorFetchingData'           => __( 'Error fetching data', 'seo-booster' ),
+                            'tryAgainLater'               => __( 'Please try again later.', 'seo-booster' ),
+                            'visitTroubleshootingGuide'   => __( 'Visit our', 'seo-booster' ),
+                            'troubleshootingGuide'        => __( 'Troubleshooting Guide', 'seo-booster' ),
+                            'timestamp'                   => __( 'Timestamp', 'seo-booster' ),
+                            'priority'                    => __( 'Priority', 'seo-booster' ),
+                            'logEntry'                    => __( 'Log Entry', 'seo-booster' ),
+                            'tabulatorNotLoaded'          => __( 'Tabulator library is not loaded.', 'seo-booster' ),
+                            'uniqueKeywords'              => __( 'Unique Keywords', 'seo-booster' ),
+                            'show_info_text'              => __( 'Show More Information', 'seo-booster' ),
+                            'hide_info_text'              => __( 'Hide Information', 'seo-booster' ),
                         ),
                     );
                     // Do not load this on admin dashboard
                     wp_enqueue_script(
                         'chart-js',
                         SEOBOOSTER_PLUGINURL . '/js/chartjs/package/dist/chart.umd.js',
-                        ['jquery'],
-                        Seobooster2::get_plugin_version(),
-                        [
+                        array('jquery'),
+                        Utils::get_plugin_version(),
+                        array(
                             'strategy'  => 'defer',
                             'in_footer' => true,
-                        ]
+                        )
                     );
                     wp_enqueue_script( 'jquery' );
                     // Enqueue Tabulator CSS and JS
@@ -1224,19 +1148,19 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     wp_enqueue_script(
                         'tabulator',
                         SEOBOOSTER_PLUGINURL . 'js/tabulator/dist/js/tabulator.min.js',
-                        ['jquery'],
-                        Seobooster2::get_plugin_version(),
+                        array('jquery'),
+                        Utils::get_plugin_version(),
                         true
                     );
                     wp_register_script(
                         'seobooster-logpage',
-                        SEOBOOSTER_PLUGINURL . '/js/min/seobooster-logpage-min.js',
+                        SEOBOOSTER_PLUGINURL . '/js/seobooster-logpage.js',
                         array('jquery', 'tabulator'),
-                        filemtime( plugin_dir_path( __FILE__ ) . 'js/min/seobooster-logpage-min.js' ),
-                        [
+                        filemtime( plugin_dir_path( __FILE__ ) . 'js/seobooster-logpage.js' ),
+                        array(
                             'strategy'  => 'defer',
                             'in_footer' => true,
-                        ]
+                        )
                     );
                     wp_localize_script( 'seobooster-logpage', 'sblogdata', array(
                         'ajaxurl'  => admin_url( 'admin-ajax.php' ),
@@ -1251,97 +1175,131 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     wp_enqueue_script( 'seobooster-logpage' );
                     wp_register_script(
                         'seobooster-gscpage',
-                        SEOBOOSTER_PLUGINURL . '/js/min/seobooster-gsc-page-min.js',
+                        SEOBOOSTER_PLUGINURL . '/js/seobooster-gsc-page.js',
                         array('jquery', 'tabulator'),
-                        filemtime( plugin_dir_path( __FILE__ ) . 'js/min/seobooster-gsc-page-min.js' ),
-                        [
+                        filemtime( plugin_dir_path( __FILE__ ) . 'js/seobooster-gsc-page.js' ),
+                        array(
                             'strategy'  => 'defer',
                             'in_footer' => true,
-                        ]
+                        )
                     );
                     wp_localize_script( 'seobooster-gscpage', 'sbgscdata', array(
                         'ajaxurl'  => admin_url( 'admin-ajax.php' ),
                         'security' => wp_create_nonce( 'sb_gsc_nonce' ),
                         'strings'  => array(
-                            'pleaseWait'                                   => __( 'Please wait...', 'seo-booster' ),
-                            'showMore'                                     => __( 'Show more', 'seo-booster' ),
-                            'showLess'                                     => __( 'Show less', 'seo-booster' ),
-                            'uniqueKeywordsImported'                       => __( 'Unique keywords imported', 'seo-booster' ),
-                            'totalEntriesProcessed'                        => __( 'Total entries processed', 'seo-booster' ),
-                            'lastImportKeyword'                            => __( 'Last imported keyword', 'seo-booster' ),
-                            'lastBatch'                                    => __( 'Last batch', 'seo-booster' ),
-                            'seconds'                                      => __( 'seconds', 'seo-booster' ),
-                            'completed'                                    => __( 'Completed', 'seo-booster' ),
-                            'importComplete'                               => __( 'Import complete', 'seo-booster' ),
-                            'goToDashboard'                                => __( 'Go to Dashboard', 'seo-booster' ),
-                            'retry'                                        => __( 'Retry', 'seo-booster' ),
-                            'pleaseEnterAtLeastOneEmail'                   => __( 'Please enter at least one email address.', 'seo-booster' ),
-                            'errorProcessingRequest'                       => __( 'Error processing request', 'seo-booster' ),
-                            'elapsedTime'                                  => __( 'Elapsed time', 'seo-booster' ),
-                            'savingSiteAndLoadingData'                     => __( 'Saving site and loading data', 'seo-booster' ),
-                            'last28Days'                                   => __( 'Last 28 days', 'seo-booster' ),
-                            'last3Months'                                  => __( 'Last 3 months', 'seo-booster' ),
-                            'last6Months'                                  => __( 'Last 6 months', 'seo-booster' ),
-                            'last12Months'                                 => __( 'Last 12 months', 'seo-booster' ),
-                            'allTime'                                      => __( 'All time', 'seo-booster' ),
-                            'refresh'                                      => __( 'Refresh', 'seo-booster' ),
-                            'clicks'                                       => __( 'Clicks', 'seo-booster' ),
-                            'impressions'                                  => __( 'Impressions', 'seo-booster' ),
-                            'ctr'                                          => __( 'CTR', 'seo-booster' ),
-                            'seoBoosterDataVisualization'                  => __( 'SEO Booster Data Visualization', 'seo-booster' ),
-                            'date'                                         => __( 'Date', 'seo-booster' ),
-                            'value'                                        => __( 'Value', 'seo-booster' ),
-                            'refreshKeywordAnalysis'                       => __( 'Refresh Keyword Analysis', 'seo-booster' ),
-                            'errorDeletingTransients'                      => __( 'Error deleting transients', 'seo-booster' ),
-                            'seconds'                                      => __( 'seconds', 'seo-booster' ),
-                            'errorFetchingData'                            => __( 'Error fetching data', 'seo-booster' ),
-                            'tryAgainLater'                                => __( 'Please try again later.', 'seo-booster' ),
-                            'visitTroubleshootingGuide'                    => __( 'Visit our', 'seo-booster' ),
-                            'troubleshootingGuide'                         => __( 'Troubleshooting Guide', 'seo-booster' ),
-                            'youHaveToAllowHelpscoutBeaconToLoadToGetHelp' => __( 'You have to allow Helpscout Beacon to load to get help', 'seo-booster' ),
-                            'timestamp'                                    => __( 'Timestamp', 'seo-booster' ),
-                            'priority'                                     => __( 'Priority', 'seo-booster' ),
-                            'logEntry'                                     => __( 'Log Entry', 'seo-booster' ),
-                            'tabulatorNotLoaded'                           => __( 'Tabulator library is not loaded.', 'seo-booster' ),
+                            'show_info_text'              => esc_js( __( 'Show More Information', 'seo-booster' ) ),
+                            'hide_info_text'              => esc_js( __( 'Hide Information', 'seo-booster' ) ),
+                            'pleaseWait'                  => __( 'Please wait...', 'seo-booster' ),
+                            'showMore'                    => __( 'Show more', 'seo-booster' ),
+                            'showLess'                    => __( 'Show less', 'seo-booster' ),
+                            'uniqueKeywordsImported'      => __( 'Unique keywords imported', 'seo-booster' ),
+                            'totalEntriesProcessed'       => __( 'Total entries processed', 'seo-booster' ),
+                            'lastImportKeyword'           => __( 'Last imported keyword', 'seo-booster' ),
+                            'lastBatch'                   => __( 'Last batch', 'seo-booster' ),
+                            'seconds'                     => __( 'seconds', 'seo-booster' ),
+                            'completed'                   => __( 'Completed', 'seo-booster' ),
+                            'importComplete'              => __( 'Import complete', 'seo-booster' ),
+                            'goToDashboard'               => __( 'Go to Dashboard', 'seo-booster' ),
+                            'retry'                       => __( 'Retry', 'seo-booster' ),
+                            'pleaseEnterAtLeastOneEmail'  => __( 'Please enter at least one email address.', 'seo-booster' ),
+                            'errorProcessingRequest'      => __( 'Error processing request', 'seo-booster' ),
+                            'elapsedTime'                 => __( 'Elapsed time', 'seo-booster' ),
+                            'savingSiteAndLoadingData'    => __( 'Saving site and loading data', 'seo-booster' ),
+                            'last28Days'                  => __( 'Last 28 days', 'seo-booster' ),
+                            'last3Months'                 => __( 'Last 3 months', 'seo-booster' ),
+                            'last6Months'                 => __( 'Last 6 months', 'seo-booster' ),
+                            'last12Months'                => __( 'Last 12 months', 'seo-booster' ),
+                            'allTime'                     => __( 'All time', 'seo-booster' ),
+                            'refresh'                     => __( 'Refresh', 'seo-booster' ),
+                            'clicks'                      => __( 'Clicks', 'seo-booster' ),
+                            'impressions'                 => __( 'Impressions', 'seo-booster' ),
+                            'ctr'                         => __( 'CTR', 'seo-booster' ),
+                            'seoBoosterDataVisualization' => __( 'SEO Booster Data Visualization', 'seo-booster' ),
+                            'date'                        => __( 'Date', 'seo-booster' ),
+                            'value'                       => __( 'Value', 'seo-booster' ),
+                            'refreshKeywordAnalysis'      => __( 'Refresh Keyword Analysis', 'seo-booster' ),
+                            'errorDeletingTransients'     => __( 'Error deleting transients', 'seo-booster' ),
+                            'seconds'                     => __( 'seconds', 'seo-booster' ),
+                            'errorFetchingData'           => __( 'Error fetching data', 'seo-booster' ),
+                            'tryAgainLater'               => __( 'Please try again later.', 'seo-booster' ),
+                            'visitTroubleshootingGuide'   => __( 'Visit our', 'seo-booster' ),
+                            'troubleshootingGuide'        => __( 'Troubleshooting Guide', 'seo-booster' ),
+                            'timestamp'                   => __( 'Timestamp', 'seo-booster' ),
+                            'priority'                    => __( 'Priority', 'seo-booster' ),
+                            'logEntry'                    => __( 'Log Entry', 'seo-booster' ),
+                            'tabulatorNotLoaded'          => __( 'Tabulator library is not loaded.', 'seo-booster' ),
+                            'uniqueKeywords'              => __( 'Unique Keywords', 'seo-booster' ),
+                            'show_info_text'              => __( 'Show More Information', 'seo-booster' ),
+                            'hide_info_text'              => __( 'Hide Information', 'seo-booster' ),
                         ),
                     ) );
                     wp_enqueue_script( 'seobooster-gscpage' );
                     $current_screen = get_current_screen();
-                    if ( 'seo-booster_page_sb2_reports' === $current_screen->id ) {
-                        wp_enqueue_style(
-                            'sb-report-page',
-                            SEOBOOSTER_PLUGINURL . '/css/sb-report-page.css',
-                            array(),
-                            filemtime( plugin_dir_path( __FILE__ ) . 'css/sb-report-page.css' )
-                        );
+                    // Enqueue uPlot library specifically for GSC page
+                    if ( 'seo-booster_page_sb2_gsc' === $current_screen->id ) {
                         wp_enqueue_script(
-                            'seobooster-reports',
-                            SEOBOOSTER_PLUGINURL . '/js/min/seobooster-reports-min.js',
+                            'uplot',
+                            SEOBOOSTER_PLUGINURL . '/js/uPlot/uPlot.iife.min.js',
                             array('jquery'),
-                            filemtime( plugin_dir_path( __FILE__ ) . 'js/min/seobooster-reports-min.js' ),
-                            [
-                                'strategy'  => 'defer',
-                                'in_footer' => true,
-                            ]
+                            Utils::get_plugin_version(),
+                            true
                         );
-                        wp_localize_script( 'seobooster-reports', 'sbReportData', array(
-                            'nonce'   => wp_create_nonce( 'sb_report_nonce' ),
-                            'strings' => array(
-                                'loadError' => __( 'Error loading data', 'seo-booster' ),
-                                'noData'    => __( 'No data available', 'seo-booster' ),
-                                'loading'   => __( 'Loading...', 'seo-booster' ),
-                            ),
-                        ) );
+                        wp_enqueue_style(
+                            'uplot-css',
+                            SEOBOOSTER_PLUGINURL . '/js/uPlot/uPlot.min.css',
+                            array(),
+                            Utils::get_plugin_version()
+                        );
                     }
-                    // if ( 'dashboard' !== $screen->id ) {
                     wp_localize_script( 'seoboosterjs', 'sbdata', $sbdata_array );
                     wp_enqueue_script( 'seoboosterjs' );
                     wp_enqueue_style(
                         'seoboostercss',
-                        SEOBOOSTER_PLUGINURL . '/css/min/seo-booster-min.css',
+                        SEOBOOSTER_PLUGINURL . '/css/seo-booster.css',
                         array(),
-                        filemtime( plugin_dir_path( __FILE__ ) . 'css/min/seo-booster-min.css' )
+                        filemtime( plugin_dir_path( __FILE__ ) . 'css/seo-booster.css' )
                     );
+                }
+                // Enqueue SEO Possibilities scripts and styles
+                if ( isset( $_GET['page'] ) && $_GET['page'] === 'sb2_seo_issues' ) {
+                    wp_enqueue_script(
+                        'sb-seo-issues-js',
+                        SEOBOOSTER_PLUGINURL . 'js/sb-seo-issues.js',
+                        array('jquery'),
+                        filemtime( plugin_dir_path( __FILE__ ) . 'js/sb-seo-issues.js' ),
+                        true
+                    );
+                    wp_enqueue_script(
+                        'sb-seo-issues-ui-js',
+                        SEOBOOSTER_PLUGINURL . 'js/sb-seo-issues-ui.js',
+                        array('jquery', 'sb-seo-issues-js'),
+                        filemtime( plugin_dir_path( __FILE__ ) . 'js/sb-seo-issues-ui.js' ),
+                        true
+                    );
+                    // Load base styles first
+                    wp_enqueue_style(
+                        'seoboostercss',
+                        SEOBOOSTER_PLUGINURL . '/css/seo-booster.css',
+                        array(),
+                        filemtime( plugin_dir_path( __FILE__ ) . 'css/seo-booster.css' )
+                    );
+                    // Then load page-specific styles
+                    wp_enqueue_style(
+                        'sb-seo-issues-css',
+                        SEOBOOSTER_PLUGINURL . 'css/sb-seo-issues.css',
+                        array('seoboostercss'),
+                        filemtime( plugin_dir_path( __FILE__ ) . 'css/sb-seo-issues.css' )
+                    );
+                    wp_localize_script( 'sb-seo-issues-js', 'sb_seo_issues', array(
+                        'ajaxurl' => admin_url( 'admin-ajax.php' ),
+                        'nonce'   => wp_create_nonce( 'sb_seo_issues_nonce' ),
+                        'strings' => array(
+                            'no_recent' => __( 'No recent analysis', 'seo-booster' ),
+                            'analyzing' => __( 'Analyzing...', 'seo-booster' ),
+                            'completed' => __( 'Analysis completed', 'seo-booster' ),
+                            'error'     => __( 'An error occurred', 'seo-booster' ),
+                        ),
+                    ) );
                 }
             }
 
@@ -1355,17 +1313,21 @@ if ( function_exists( 'seobooster_fs' ) ) {
              * @return  void
              */
             public static function on_init() {
+                // Add custom cron schedule for token validation
+                add_filter( 'cron_schedules', function ( $schedules ) {
+                    $schedules['sixhours'] = array(
+                        'interval' => 6 * HOUR_IN_SECONDS,
+                        'display'  => __( 'Every 6 Hours', 'seo-booster' ),
+                    );
+                    return $schedules;
+                } );
                 // Registers data for Gutenberg - https://wordpress.org/gutenberg/handbook/block-api/attributes/#meta
                 register_meta( 'post', 'seo_booster_metabox', array(
                     'type'         => 'string',
                     'single'       => true,
                     'show_in_rest' => true,
                 ) );
-                // Adds extra permission to Freemius
-                if ( function_exists( '\\CleverPlugins\\Plugin\\seobooster_fs' ) ) {
-                    seobooster_fs()->add_filter( 'permission_list', array(__NAMESPACE__ . '\\Seobooster2', 'add_freemius_extra_permission') );
-                }
-                // TESTING AND FIXING DATABASE TABLES
+                // Database table maintenance and updates
                 if ( isset( $_POST['page'] ) && 'sb2_dashboard' === sanitize_text_field( $_POST['page'] ) ) {
                     $nonce = sanitize_text_field( $_REQUEST['_wpnonce'] );
                     if ( !wp_verify_nonce( $nonce, 'fixdbtables' ) ) {
@@ -1376,6 +1338,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         Utils::create_database_tables();
                     }
                 }
+                // Add reanalysis action handler
             }
 
             /**
@@ -1391,10 +1354,34 @@ if ( function_exists( 'seobooster_fs' ) ) {
             public static function seobooster_activate( $network_wide ) {
                 global $wpdb;
                 // Set default options
-                add_option( 'seobooster_internal_linking', '1' );
                 // Enable internal linking by default
                 if ( !wp_next_scheduled( 'seobooster_email_update' ) ) {
                     wp_schedule_event( time(), 'weekly', 'seobooster_email_update' );
+                }
+                // Schedule cache cleanup
+                \Cleverplugins\SEOBooster\CacheManager::schedule_cache_cleanup();
+                // Schedule daily maintenance
+                if ( !wp_next_scheduled( 'seobooster_dailymaintenance' ) ) {
+                    wp_schedule_event( time(), 'daily', 'seobooster_dailymaintenance' );
+                }
+                // Schedule SEO Possibilities auto-scan using Action Scheduler (if enabled)
+                if ( function_exists( 'as_schedule_recurring_action' ) ) {
+                    $enabled = get_option( 'seobooster_seo_possibilities_enabled', 'on' );
+                    $frequency = get_option( 'seobooster_seo_possibilities_frequency', 60 );
+                    if ( $enabled === 'on' ) {
+                        as_schedule_recurring_action(
+                            time(),
+                            $frequency,
+                            'sb_seo_possibilities_auto_scan',
+                            [],
+                            'seo-booster'
+                        );
+                    }
+                }
+                // Cancel any existing WordPress cron for SEO analysis processing
+                $wp_cron_timestamp = wp_next_scheduled( 'seobooster_seo_analysis_processing' );
+                if ( $wp_cron_timestamp ) {
+                    wp_unschedule_event( $wp_cron_timestamp, 'seobooster_seo_analysis_processing' );
                 }
                 // Multisite
                 if ( is_multisite() ) {
@@ -1406,12 +1393,11 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         }
                         $blog_id = $blog['blog_id'];
                         switch_to_blog( $blog_id );
-                        add_option( 'seobooster_internal_linking', '1' );
                         // Add for each blog
                         Utils::create_database_tables();
                         restore_current_blog();
                         // translators:
-                        Utils::log( sprintf( __( 'Created database tables on blog id <code>%s</code>.', 'seo-booster' ), $blog_id ) );
+                        Utils::log( sprintf( 'Created database tables on blog id %s.', $blog_id ), 10 );
                     }
                 } else {
                     Utils::create_database_tables();
@@ -1457,7 +1443,10 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         $wpdb->prefix . 'sb2_404',
                         $wpdb->prefix . 'sb2_log',
                         $wpdb->prefix . 'sb2_query_keywords',
-                        $wpdb->prefix . 'sb2_query_keywords_history'
+                        $wpdb->prefix . 'sb2_query_keywords_history',
+                        $wpdb->prefix . 'sb2_seo_analysis',
+                        $wpdb->prefix . 'sb2_seo_issues',
+                        $wpdb->prefix . 'sb2_improvements_tracking'
                     );
                     // Multisite
                     if ( is_multisite() ) {
@@ -1481,11 +1470,48 @@ if ( function_exists( 'seobooster_fs' ) ) {
                             if ( $timestamp ) {
                                 wp_unschedule_event( $timestamp, 'seobooster_gsc_data_fetch' );
                             }
+                            $timestamp = wp_next_scheduled( 'seobooster_cache_cleanup' );
+                            if ( $timestamp ) {
+                                wp_unschedule_event( $timestamp, 'seobooster_cache_cleanup' );
+                            }
+                            $timestamp = wp_next_scheduled( 'seobooster_dailymaintenance' );
+                            if ( $timestamp ) {
+                                wp_unschedule_event( $timestamp, 'seobooster_dailymaintenance' );
+                            }
+                            // Cancel Action Scheduler recurring action for SEO Possibilities
+                            if ( function_exists( 'as_unschedule_all_actions' ) ) {
+                                as_unschedule_all_actions( 'sb_seo_possibilities_auto_scan', [], 'seo-booster' );
+                                as_unschedule_all_actions( 'sb_gsc_schedule_traffic_pages', [], 'seo-booster' );
+                                as_unschedule_all_actions( 'sb_gsc_inspect_url', [], 'seo-booster' );
+                            }
                         }
                     } else {
                         // This is not multisite
                         foreach ( $table_array as $tablename ) {
                             $wpdb->query( "DROP TABLE IF EXISTS {$tablename}" );
+                        }
+                        // Clean up cron jobs for non-multisite
+                        $timestamp = wp_next_scheduled( 'seobooster_email_update' );
+                        if ( $timestamp ) {
+                            wp_unschedule_event( $timestamp, 'seobooster_email_update' );
+                        }
+                        $timestamp = wp_next_scheduled( 'seobooster_gsc_data_fetch' );
+                        if ( $timestamp ) {
+                            wp_unschedule_event( $timestamp, 'seobooster_gsc_data_fetch' );
+                        }
+                        $timestamp = wp_next_scheduled( 'seobooster_cache_cleanup' );
+                        if ( $timestamp ) {
+                            wp_unschedule_event( $timestamp, 'seobooster_cache_cleanup' );
+                        }
+                        $timestamp = wp_next_scheduled( 'seobooster_dailymaintenance' );
+                        if ( $timestamp ) {
+                            wp_unschedule_event( $timestamp, 'seobooster_dailymaintenance' );
+                        }
+                        // Cancel Action Scheduler recurring action for SEO Possibilities
+                        if ( function_exists( 'as_unschedule_all_actions' ) ) {
+                            as_unschedule_all_actions( 'sb_seo_possibilities_auto_scan', [], 'seo-booster' );
+                            as_unschedule_all_actions( 'sb_gsc_schedule_traffic_pages', [], 'seo-booster' );
+                            as_unschedule_all_actions( 'sb_gsc_inspect_url', [], 'seo-booster' );
                         }
                     }
                     delete_option( 'seobooster_delete_deactivate' );
@@ -1502,11 +1528,34 @@ if ( function_exists( 'seobooster_fs' ) ) {
              * @return  void
              */
             public static function admin_init() {
+                if ( current_user_can( 'manage_options' ) ) {
+                    $installed_db_version = get_option( 'SEOBOOSTER_INSTALLED_DB_VERSION', '0' );
+                    if ( version_compare( $installed_db_version, SEOBOOSTER_DB_VERSION, '<' ) ) {
+                        Utils::log( 'Auto-updating database tables', 10 );
+                        Utils::create_database_tables();
+                    }
+                }
+                // One-time migration: map legacy "openai" provider to "wordpress" (WP 7 Connectors)
+                if ( get_option( 'seobooster_ai_provider' ) === 'openai' ) {
+                    update_option( 'seobooster_ai_provider', 'wordpress' );
+                    delete_option( 'seobooster_ai_openai_key' );
+                    delete_option( 'seobooster_ai_openai_model' );
+                }
+                // Remove deprecated per-method automatic linking option (single pipeline only).
+                if ( false !== get_option( 'seobooster_link_processing_method', false ) ) {
+                    delete_option( 'seobooster_link_processing_method' );
+                }
+                // Load admin-only classes
+                if ( !class_exists( 'WP_List_Table' ) ) {
+                    require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+                }
+                require_once SEOBOOSTER_PLUGINPATH . 'inc/SEO_Issues_List_Table.php';
                 // register setting group @todo
                 register_setting( 'seobooster', 'seobooster_selected_site' );
                 register_setting( 'seobooster', 'seobooster_gsc_sites' );
                 register_setting( 'seobooster', 'seobooster_replace_kw_limit' );
                 register_setting( 'seobooster', 'seobooster_replace_kw_multiple' );
+                register_setting( 'seobooster', 'seobooster_match_capitalization' );
                 register_setting( 'seobooster', 'seobooster_showsearch_queries' );
                 register_setting( 'seobooster', 'seobooster_weekly_email' );
                 register_setting( 'seobooster', 'seobooster_weekly_email_recipient' );
@@ -1540,10 +1589,12 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         $wpdb->query( "TRUNCATE TABLE {$table}" );
                     }
                     CacheManager::cleanup_old_cache_files();
-                    Utils::log( esc_html__( 'Selected site was reset and keyword history erased.', 'seo-booster' ), 5 );
+                    Utils::log( 'Selected site was reset and keyword history erased.', 5 );
                     wp_redirect( admin_url( 'admin.php?page=sb2_dashboard' ) );
                     exit;
                 }
+                // Handle settings form processing
+                Form_Processor::process_settings_form();
             }
 
             public static function seo_booster_oauth2_page() {
@@ -1563,12 +1614,71 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     wp_nonce_field( 'seo_booster_oauth2_nonce' );
                     echo '<label for="selected_site">' . esc_html__( 'Select Site:', 'seo-booster' ) . '</label>';
                     echo '<select name="selected_site" id="selected_site">';
+                    // Add a non-selectable placeholder option
+                    echo '<option value="" disabled selected>' . esc_html__( 'Please select a site to continue.', 'seo-booster' ) . '</option>';
+                    // Group sites by permission level
+                    $available_sites = array();
+                    $unavailable_sites = array();
                     foreach ( $sites as $site ) {
-                        $label = esc_html( $site['siteUrl'] );
-                        if ( strpos( $site['siteUrl'], 'sc-domain:' ) === 0 ) {
-                            $label .= ' ' . esc_html__( '(domain verified)', 'seo-booster' );
+                        if ( empty( $site ) ) {
+                            continue;
                         }
-                        echo '<option value="' . esc_attr( $site['siteUrl'] ) . '">' . $label . '</option>';
+                        // Handle both array and string formats
+                        $site_data = array();
+                        $site_data['url'] = ( is_array( $site ) ? $site['siteUrl'] : $site );
+                        $site_data['permission'] = ( is_array( $site ) && isset( $site['permissionLevel'] ) ? $site['permissionLevel'] : '' );
+                        // Sites with siteUnverifiedUser permission don't have enough access
+                        if ( $site_data['permission'] === 'siteUnverifiedUser' ) {
+                            $unavailable_sites[] = $site_data;
+                        } else {
+                            $available_sites[] = $site_data;
+                        }
+                    }
+                    // Sort both arrays alphabetically
+                    usort( $available_sites, function ( $a, $b ) {
+                        $a_clean = str_replace( 'sc-domain:', '', $a['url'] );
+                        $b_clean = str_replace( 'sc-domain:', '', $b['url'] );
+                        return strcasecmp( $a_clean, $b_clean );
+                    } );
+                    usort( $unavailable_sites, function ( $a, $b ) {
+                        $a_clean = str_replace( 'sc-domain:', '', $a['url'] );
+                        $b_clean = str_replace( 'sc-domain:', '', $b['url'] );
+                        return strcasecmp( $a_clean, $b_clean );
+                    } );
+                    // Display available sites first
+                    foreach ( $available_sites as $site_data ) {
+                        $value = $site_data['url'];
+                        $permission = $site_data['permission'];
+                        // Create label
+                        $label = esc_html( $value );
+                        if ( strpos( $value, 'sc-domain:' ) === 0 ) {
+                            $label = str_replace( 'sc-domain:', '', $label ) . ' ' . esc_html__( '(domain verified)', 'seo-booster' );
+                        }
+                        // Add permission level if available
+                        if ( !empty( $permission ) ) {
+                            $label .= ' - ' . esc_html( $permission );
+                        }
+                        echo '<option value="' . esc_attr( $value ) . '">' . $label . '</option>';
+                    }
+                    // Only add divider and unavailable sites if there are any
+                    if ( !empty( $unavailable_sites ) ) {
+                        // Add a divider
+                        echo '<option disabled>───────────────────</option>';
+                        // Display unavailable sites
+                        foreach ( $unavailable_sites as $site_data ) {
+                            $value = $site_data['url'];
+                            $permission = $site_data['permission'];
+                            // Create label
+                            $label = esc_html( $value );
+                            if ( strpos( $value, 'sc-domain:' ) === 0 ) {
+                                $label = str_replace( 'sc-domain:', '', $label ) . ' ' . esc_html__( '(domain verified)', 'seo-booster' );
+                            }
+                            // Add permission level if available
+                            if ( !empty( $permission ) ) {
+                                $label .= ' - ' . esc_html( $permission ) . ' (' . esc_html__( 'insufficient permissions', 'seo-booster' ) . ')';
+                            }
+                            echo '<option value="' . esc_attr( $value ) . '">' . $label . '</option>';
+                        }
                     }
                     echo '</select>';
                     echo '<button type="submit" class="button button-primary">' . esc_html__( 'Save Site', 'seo-booster' ) . '</button>';
@@ -1622,22 +1732,20 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 );
                 add_submenu_page(
                     'sb2_dashboard',
-                    __( 'Reports', 'seo-booster' ),
-                    __( 'Keyword Reports', 'seo-booster' ),
-                    'manage_options',
-                    'sb2_reports',
-                    array(__CLASS__, 'add_seobooster2_reports')
+                    __( 'SEO Possibilities', 'seo-booster' ),
+                    __( 'SEO Possibilities', 'seo-booster' ),
+                    'edit_posts',
+                    'sb2_seo_issues',
+                    array(__CLASS__, 'render_seo_possibilities_page')
                 );
-                if ( seobooster_fs()->can_use_premium_code() ) {
-                    add_submenu_page(
-                        'sb2_dashboard',
-                        __( '404s', 'seo-booster' ),
-                        __( '404 Errors', 'seo-booster' ),
-                        'manage_options',
-                        'sb2_404',
-                        array(__CLASS__, 'add_seobooster2_404page__premium_only')
-                    );
-                }
+                add_submenu_page(
+                    'sb2_dashboard',
+                    __( 'Tools', 'seo-booster' ),
+                    __( 'Tools', 'seo-booster' ),
+                    'edit_posts',
+                    'sb2_tools',
+                    array('\\Cleverplugins\\SEOBooster\\Tools\\Tools_Page', 'render')
+                );
                 add_submenu_page(
                     'sb2_dashboard',
                     __( 'Settings', 'seo-booster' ),
@@ -1658,11 +1766,46 @@ if ( function_exists( 'seobooster_fs' ) ) {
             }
 
             public static function add_seobooster2_main() {
-                include SEOBOOSTER_PLUGINPATH . 'seo-booster-seobooster2.php';
+                include SEOBOOSTER_PLUGINPATH . 'views/dashboard.php';
             }
 
             public static function add_seobooster2_settings() {
-                include SEOBOOSTER_PLUGINPATH . 'seo-booster-settings.php';
+                // Enqueue styles and scripts for settings page
+                wp_enqueue_style(
+                    'seobooster-settings',
+                    plugin_dir_url( __FILE__ ) . 'css/sb-settings.css',
+                    array(),
+                    '7.2'
+                );
+                wp_enqueue_media();
+                // This is required for wp.media to work
+                wp_enqueue_script(
+                    'seobooster-settings',
+                    plugin_dir_url( __FILE__ ) . 'js/sb-settings.js',
+                    array('jquery', 'media-upload', 'thickbox'),
+                    '7.2',
+                    true
+                );
+                // Localize script with AJAX data
+                wp_localize_script( 'seobooster-settings', 'sbSettings', array(
+                    'ajaxurl'         => admin_url( 'admin-ajax.php' ),
+                    'flushNonce'      => wp_create_nonce( 'flush_rewrite_rules' ),
+                    'gscImportNonce'  => wp_create_nonce( 'sb_gsc_nonce' ),
+                    'gscSelectedSite' => get_option( 'seobooster_selected_site', '' ),
+                    'strings'         => array(
+                        'flushing'             => __( 'Flushing...', 'seo-booster' ),
+                        'flushed'              => __( 'Flushed!', 'seo-booster' ),
+                        'error'                => __( 'Error!', 'seo-booster' ),
+                        'importing'            => __( 'Importing...', 'seo-booster' ),
+                        'importCompleted'      => __( 'Import completed successfully!', 'seo-booster' ),
+                        'importCompletedShort' => __( 'Import completed!', 'seo-booster' ),
+                        'retry'                => __( 'Retry', 'seo-booster' ),
+                        'noGscSite'            => __( 'No GSC site selected. Please select a site first.', 'seo-booster' ),
+                        'importError'          => __( 'An error occurred while processing the request.', 'seo-booster' ),
+                        'importGscData'        => __( 'Import GSC Data', 'seo-booster' ),
+                    ),
+                ) );
+                include SEOBOOSTER_PLUGINPATH . 'views/settings.php';
             }
 
             public static function add_seobooster2_autolink() {
@@ -1678,8 +1821,9 @@ if ( function_exists( 'seobooster_fs' ) ) {
              * @access  public static
              * @return  void
              */
-            public static function add_seobooster2_reports() {
-                include SEOBOOSTER_PLUGINPATH . 'seo-booster-report-page.php';
+            public static function render_seo_possibilities_page() {
+                include SEOBOOSTER_PLUGINPATH . 'seo-booster-issues.php';
+                \Cleverplugins\SEOBooster\render_seo_issues_page();
             }
 
             public static function add_seobooster2_logpage() {
@@ -1691,46 +1835,15 @@ if ( function_exists( 'seobooster_fs' ) ) {
             }
 
             /**
-             * add_dashboard_widget.
+             * add_seobooster_admin_bar.
              *
-             * @author  Unknown
+             * @author  Lars Koudal
              * @since   v0.0.1
-             * @version v1.0.0  Wednesday, February 23rd, 2022.
+             * @version v1.0.0  Friday, April 18th, 2025.
              * @access  public static
-             * @return  void
+             * @param   mixed   $wp_admin_bar
+             * @return  boolean
              */
-            public static function add_dashboard_widget() {
-                wp_add_dashboard_widget( 'add_dashboard_widget', 'News from seoboosterpro.com', array(__CLASS__, 'dashboard_widget') );
-            }
-
-            /**
-             * dashboard_widget.
-             *
-             * @author  Unknown
-             * @since   v0.0.1
-             * @version v1.0.0  Sunday, December 19th, 2021.
-             * @version v1.0.1  Wednesday, February 23rd, 2022.
-             * @access  public static
-             * @return  void
-             */
-            public static function dashboard_widget() {
-                global $wpdb;
-                ?>
-                <div style="float:right;">
-                    <a href="https://seoboosterpro.com/" target="_blank"><img src="<?php 
-                echo esc_url( plugin_dir_url( __FILE__ ) . 'images/sblogo25.png' );
-                ?>" height="50" width="50" alt="seoboosterpro.com"></a></div>
-<?php 
-                $feeds = array(array(
-                    'url'          => 'https://seoboosterpro.com/feed/',
-                    'items'        => 2,
-                    'show_summary' => 1,
-                    'show_author'  => 0,
-                    'show_date'    => 0,
-                ));
-                wp_dashboard_primary_output( 'dw_dashboard_widget_news', $feeds );
-            }
-
             public static function add_seobooster_admin_bar( $wp_admin_bar ) {
                 if ( !current_user_can( 'manage_options' ) ) {
                     return;
@@ -1741,53 +1854,271 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     'title' => 'SEO Booster',
                     'href'  => admin_url( 'admin.php?page=sb2_dashboard' ),
                 ) );
-                // Show Details submenu
+                // Show Details submenu - toggles the seobooster_showdetails parameter
+                $current_url = home_url( $_SERVER['REQUEST_URI'] );
+                $is_show_details = isset( $_GET['seobooster_showdetails'] ) && ($_GET['seobooster_showdetails'] === 'true' || $_GET['seobooster_showdetails'] === '1');
                 $wp_admin_bar->add_node( array(
                     'parent' => 'seobooster',
                     'id'     => 'seobooster-details',
-                    'title'  => __( 'Show Details', 'seo-booster' ),
-                    'href'   => '#',
-                    'meta'   => array(
-                        'onclick' => 'open_floating_window(); return false;',
-                    ),
+                    'title'  => ( $is_show_details ? __( 'Hide Details', 'seo-booster' ) : __( 'Show Details', 'seo-booster' ) ),
+                    'href'   => ( $is_show_details ? remove_query_arg( 'seobooster_showdetails', $current_url ) : add_query_arg( 'seobooster_showdetails', '1', $current_url ) ),
                 ) );
-                // Show Internal Links submenu
+                if ( !is_admin() ) {
+                    // Get current URL and check if highlighting is active
+                    $current_url = home_url( $_SERVER['REQUEST_URI'] );
+                    $is_highlighting = isset( $_GET['seobooster_showlinks'] ) && $_GET['seobooster_showlinks'] === '1';
+                    $is_gsc_highlighting = isset( $_GET['seobooster_showgsc'] ) && $_GET['seobooster_showgsc'] === '1';
+                    // Show Internal Links submenu as a toggle
+                    $wp_admin_bar->add_node( array(
+                        'parent' => 'seobooster',
+                        'id'     => 'seobooster-show-links',
+                        'title'  => ( $is_highlighting ? __( 'Disable Keyword Highlighting', 'seo-booster' ) : __( 'Highlight Automatic Links', 'seo-booster' ) ),
+                        'href'   => ( $is_highlighting ? remove_query_arg( 'seobooster_showlinks', $current_url ) : add_query_arg( 'seobooster_showlinks', '1', $current_url ) ),
+                    ) );
+                    // Show GSC Keywords submenu as a toggle
+                    $wp_admin_bar->add_node( array(
+                        'parent' => 'seobooster',
+                        'id'     => 'seobooster-show-gsc',
+                        'title'  => ( $is_gsc_highlighting ? __( 'Disable GSC Keyword Highlighting', 'seo-booster' ) : __( 'Highlight GSC Keywords', 'seo-booster' ) ),
+                        'href'   => ( $is_gsc_highlighting ? remove_query_arg( 'seobooster_showgsc', $current_url ) : add_query_arg( 'seobooster_showgsc', '1', $current_url ) ),
+                    ) );
+                }
+                // Other menu items below
                 $wp_admin_bar->add_node( array(
                     'parent' => 'seobooster',
-                    'id'     => 'seobooster-show-links',
-                    'title'  => __( 'Show Internal Links', 'seo-booster' ),
-                    'href'   => add_query_arg( 'seobooster_showlinks', '1', get_permalink() ),
+                    'id'     => 'seobooster-gsc',
+                    'title'  => __( 'GSC Overview', 'seo-booster' ),
+                    'href'   => admin_url( 'admin.php?page=sb2_gsc' ),
                 ) );
-                // // Other menu items below
-                // $wp_admin_bar->add_node(array(
-                //     'parent' => 'seobooster',
-                //     'id'     => 'seobooster-gsc',
-                //     'title'  => __('GSC Overview', 'seo-booster'),
-                //     'href'   => admin_url('admin.php?page=sb2_gsc'),
-                // ));
-                // $wp_admin_bar->add_node(array(
-                //     'parent' => 'seobooster',
-                //     'id'     => 'seobooster-autolink',
-                //     'title'  => __('Automatic Links', 'seo-booster'),
-                //     'href'   => admin_url('admin.php?page=sb2_autolink'),
-                // ));
+                $wp_admin_bar->add_node( array(
+                    'parent' => 'seobooster',
+                    'id'     => 'seobooster-autolink',
+                    'title'  => __( 'Automatic Links', 'seo-booster' ),
+                    'href'   => admin_url( 'admin.php?page=sb2_autolink' ),
+                ) );
             }
 
-            public static function reset_processed_keywords() {
-                self::$processed_keywords = [];
+            /**
+             * Detect which page builder is being used
+             *
+             * @author  Lars Koudal
+             * @since   v0.0.1
+             * @version v1.0.0  Friday, March 28th, 2025.
+             * @version v1.0.1  Friday, March 28th, 2025.
+             * @access  private static
+             * @param   mixed   $post
+             * @return  string
+             */
+            /**
+             * Add admin bar styles
+             */
+            public static function add_admin_bar_styles() {
+                if ( !is_admin_bar_showing() ) {
+                    return;
+                }
+                ?>
+				<style>
+					.seobooster-debug-content {
+						background: #fff;
+						padding: 10px;
+						border: 1px solid #ccc;
+						border-radius: 4px;
+						margin: 5px 0;
+						font-size: 12px;
+						line-height: 1.5;
+						color: #333;
+						box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+						max-width: 300px;
+					}
+
+					.seobooster-debug-content strong {
+						color: #0073aa;
+						display: inline-block;
+						min-width: 140px;
+					}
+
+					#wpadminbar .seobooster-debug-info .ab-item:focus .seobooster-debug-content,
+					#wpadminbar .seobooster-debug-info:hover .seobooster-debug-content {
+						display: block;
+					}
+
+					#wpadminbar .seobooster-debug-info .seobooster-debug-content {
+						position: absolute;
+						right: 0;
+						margin-top: 6px;
+					}
+				</style>
+<?php 
             }
 
-            public static function get_processed_keywords() {
-                return self::$processed_keywords;
+            /**
+             * Update database with last usage information for keywords
+             *
+             * @param array $replaced_keywords Array of replaced keywords
+             * @param string $current_url Current page URL
+             */
+            public static function update_keywords_last_usage( $replaced_keywords, $current_url ) {
+                global $wpdb;
+                // Get the relative path from the full URL
+                $site_url = site_url();
+                $current_path = str_replace( $site_url, '', $current_url );
+                // Ensure it starts with a slash
+                if ( substr( $current_path, 0, 1 ) !== '/' ) {
+                    $current_path = '/' . $current_path;
+                }
+                foreach ( $replaced_keywords as $keyword_data ) {
+                    // Skip if keyword or URL is missing
+                    if ( empty( $keyword_data['keyword'] ) || empty( $keyword_data['url'] ) ) {
+                        continue;
+                    }
+                    // Get current value from lastseen
+                    $query = $wpdb->prepare( "SELECT id, lastseen FROM {$wpdb->prefix}sb2_autolink \n                         WHERE keyword = %s AND url = %s", $keyword_data['keyword'], $keyword_data['url'] );
+                    $row = $wpdb->get_row( $query );
+                    if ( $row ) {
+                        // Parse existing URLs or initialize new array
+                        $urls = array();
+                        if ( !empty( $row->lastseen ) ) {
+                            $unserialized = maybe_unserialize( $row->lastseen );
+                            if ( is_array( $unserialized ) ) {
+                                $urls = $unserialized;
+                            } else {
+                                // If not an array, it might be a single URL from previous version
+                                $urls = array($row->lastseen);
+                            }
+                        }
+                        // Remove current path if it exists (to move it to the beginning)
+                        $current_path_index = array_search( $current_path, $urls );
+                        if ( false !== $current_path_index ) {
+                            unset($urls[$current_path_index]);
+                        }
+                        // Add current URL to the beginning
+                        array_unshift( $urls, $current_path );
+                        // Reindex array
+                        $urls = array_values( $urls );
+                        // Keep only the last 5 unique URLs
+                        $urls = array_slice( $urls, 0, 5 );
+                        // Update the database
+                        $wpdb->update(
+                            $wpdb->prefix . 'sb2_autolink',
+                            array(
+                                'lastseen' => serialize( $urls ),
+                            ),
+                            array(
+                                'id' => $row->id,
+                            ),
+                            array('%s'),
+                            array('%d')
+                        );
+                    } else {
+                        // Insert new record with current URL as first in array
+                        $wpdb->insert( $wpdb->prefix . 'sb2_autolink', array(
+                            'keyword'  => $keyword_data['keyword'],
+                            'url'      => $keyword_data['url'],
+                            'lastseen' => serialize( array($current_path) ),
+                        ), array('%s', '%s', '%s') );
+                    }
+                }
             }
 
+            /**
+             * Start output buffering for automatic linking (full HTML via ContentProcessing).
+             *
+             * @since  6.1.15
+             * @access public static
+             * @return void
+             */
+            public static function start_output_buffer() {
+                // Don't buffer admin, ajax, etc
+                if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+                    return;
+                }
+                // Don't buffer feeds, sitemap, etc
+                if ( is_feed() || is_robots() || is_trackback() ) {
+                    return;
+                }
+                // Don't buffer if internal linking is disabled
+                $seobooster_internal_linking = get_option( 'seobooster_internal_linking', false );
+                if ( !$seobooster_internal_linking ) {
+                    return;
+                }
+                ob_start( array(__CLASS__, 'process_output_buffer') );
+            }
+
+            /**
+             * Process the buffered output and inject keyword links
+             *
+             * @since  6.1.15
+             * @access public static
+             * @param  string $buffer The buffered HTML output
+             * @return string         The processed HTML with keyword links
+             */
+            public static function process_output_buffer( $buffer ) {
+                if ( empty( $buffer ) ) {
+                    return $buffer;
+                }
+                // Skip if this is not HTML
+                if ( !preg_match( '/<html[^>]*>/i', $buffer ) ) {
+                    return $buffer;
+                }
+                // Skip admin, ajax, cron, and rest requests
+                if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+                    return $buffer;
+                }
+                // Get autolinks
+                $autolinks = self::return_autolinks();
+                if ( empty( $autolinks ) ) {
+                    return $buffer;
+                }
+                // Check current post settings
+                if ( is_singular() ) {
+                    global $post;
+                    $sbp_stored_meta = get_post_meta( $post->ID, '_sbp-autolink', true );
+                    if ( $sbp_stored_meta !== 'yes' ) {
+                        return $buffer;
+                    }
+                }
+                return ContentProcessing::process_content( $buffer );
+            }
+
+            /**
+             * End output buffering
+             *
+             * @since  6.1.15
+             * @access public static
+             * @return void
+             */
+            public static function end_output_buffer() {
+                // This is normally not needed as ob_start callback handles it
+                // But we include it for safety
+                if ( ob_get_level() > 0 && ob_get_length() > 0 ) {
+                    ob_end_flush();
+                }
+            }
+
+            /**
+             * AJAX handler for getting active SEO plugin information.
+             *
+             * @since 6.1.26
+             * @return void
+             */
+            public static function ajax_get_active_seo_plugin() {
+                check_ajax_referer( 'sb_seo_metabox_nonce', 'nonce' );
+                if ( !current_user_can( 'edit_posts' ) ) {
+                    wp_send_json_error( [
+                        'message' => __( 'Permission denied', 'seo-booster' ),
+                    ] );
+                }
+                $plugin_info = SEO_Plugin_Integration::get_active_seo_plugin();
+                wp_send_json_success( $plugin_info );
+            }
+
+            // end class seobooster2
         }
 
-        // end class seobooster2
+        global $seobooster2;
+        if ( class_exists( 'Cleverplugins\\SEOBooster\\seobooster2' ) && !$seobooster2 ) {
+            $seobooster2 = new seobooster2();
+        }
+        register_deactivation_hook( __FILE__, array('Cleverplugins\\SEOBooster\\CacheManager', 'cleanup_on_deactivate') );
     }
-    global $seobooster2;
-    if ( class_exists( 'Cleverplugins\\SEOBooster\\seobooster2' ) && !$seobooster2 ) {
-        $seobooster2 = new seobooster2();
-    }
-    register_deactivation_hook( __FILE__, array('Cleverplugins\\SEOBooster\\CacheManager', 'cleanup_on_deactivate') );
 }

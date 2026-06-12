@@ -10,7 +10,7 @@
 .tablenav.top {
   margin: 6px 0 10px;
   padding: 8px;
-  border: 1px solid #c3c4c7;
+  border: 0px solid #c3c4c7;
   background: #fff;
   display: flex;
   align-items: center;
@@ -20,6 +20,48 @@
 .search-input {
   min-width: 200px;
   padding: 4px 8px;
+}
+
+/* Export to CSV button */
+.export-csv-button {
+  display: inline-flex;
+  align-items: center;
+  background: #f6f7f7;
+  border: 1px solid #c3c4c7;
+  border-radius: 3px;
+  cursor: pointer;
+  height: 30px;
+  padding: 0 10px;
+  line-height: 1em !important;
+  vertical-align: middle;
+  transition: all 0.2s ease;
+}
+
+/* Add download icon before button text */
+.export-csv-button::before {
+  content: "\f316";  /* WordPress Dashicons download icon */
+  font-family: dashicons;
+  font-size: 16px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.export-csv-button:hover {
+  background: #f0f0f1;
+  border-color: #8c8f94;
+  color: #1d2327;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.export-csv-button:focus {
+  background: #f6f7f7;
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+  outline: 1px solid transparent;
+}
+
+.report .tabulator-pagination {
+  border-top:0px;
 }
 
 .tabulator-pagination {
@@ -150,37 +192,118 @@
   display: flex;
   flex-wrap: wrap;
   margin-bottom: 20px;
-  gap: 20px;
+  gap: 0px;
+  border-radius: 20px;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
 }
 
 .reportheader .reporttoc {
   flex: 1;
-  padding: 10px;
+  padding: 40px;
   box-sizing: border-box;
   background-color: #ffffff;
-  border: 1px solid #ccd0d4;
+  border: 0px solid #ccd0d4;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
 
 }
 
 .reportheader .reportintro {
   flex: 2;
-  padding: 10px;
+  padding: 40px;
   flex-direction: column;
   box-sizing: border-box;
-
+border-bottom-left-radius:20px;
+border-top-left-radius: 20px;
   background-color: #ffffff;
-  border: 1px solid #ccd0d4;
+  border-right: 1px solid #ccd0d4;
 }
 
 .reportheader .reportintro p {
   font-size: 1.4em;
 }
 
+.reportintro .repmessage {
+  background-color: #f8f8f8;
+  border: 0px;
+  padding: 20px;
+  margin-bottom: 20px;
+  font-size: 1em;
+  border-radius: 20px;
+}
 
+
+
+
+
+
+
+
+
+
+.report-section {
+  border-radius: 20px;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+
+}
+
+.report .toc ul {
+
+}
+
+.report .toc ul li {
+ border-bottom: 1px solid #ededed;
+padding: 10px 10px 10px 0px;
+font-size: 1.1em;
+}
+
+.report .toc ul li a {
+  color: #282828;
+  text-decoration: none;
+  font-size: 1.1em;
+}
+
+.report .toc ul li a:hover {
+  color: #00824c;
+}
+
+.report h1,
+.report h2,
+.report h3 {
+  color: #00824c;  
+}
+.report h1 {
+  font-weight: 700;
+}
+
+.report h3 a {
+  color: #00824c;
+  text-decoration: none;
+}
+
+.report h3 a:hover {
+  color: #000000;
+}
+
+
+.repmessage h3 {
+  margin-top: 0px;
+  
+}
+
+
+.reportintro .repmessage p:last-child {
+  margin-bottom: 0px;
+}
 
 .toc {
+ width: 100%;
   line-height: 1.4em;
   margin-bottom: 20px;
+}
+
+.report .tabulator-header {
+  border-top:1px solid #ccd0d4;
 }
 
 .report-section .title {
@@ -188,6 +311,7 @@
 }
 
 .report-section .title h2 {
+  margin-top: 0px;
   margin-right: 10px;
 }
 
@@ -215,10 +339,10 @@
 }
 
 .report-section {
-  border: 1px solid #ccd0d4;
+  border: 0px;
   padding: 15px;
   margin-bottom: 20px;
-  background-color: #f9f9f9;
+  background-color: #ffffff;
   overflow: hidden;
   transition: max-height 0.3s ease;
 

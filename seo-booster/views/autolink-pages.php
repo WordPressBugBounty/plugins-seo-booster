@@ -15,47 +15,73 @@ if (!current_user_can('manage_options')) {
     <?php
     echo wp_kses_post(Utils::show_plugin_headline(esc_html__('Automatic keywords to links', 'seo-booster'), true));
     ?>
-    <div id="sb2_autolink_add" class="card">
-        <h2><?php
-            esc_html_e('Add new link', 'seo-booster');
-            ?></h2>
 
-        <p><?php
-            esc_html_e('Enter keyword and which URL the keyword should link til. Works with internal and external links.', 'seo-booster');
-            ?></p>
+    <div class="add_kw_container">
+        <div id="sb2_autolink_add" class="">
+            <h2><?php
+                esc_html_e('Add new link', 'seo-booster');
+                ?></h2>
 
-
-<form method="get" id="sb2_autolink_add_form" style="display: flex; flex-wrap: wrap; align-items: center; width: 100%; flex-direction: column;">
-    <div style="width: 100%; margin-bottom: 10px;">
-        <label for="newkeyword" style="display: block; margin-bottom: 5px;">
-            <?php esc_html_e('Keyword', 'seo-booster'); ?>
-        </label>
-        <input name="newkeyword" type="text" id="newkeyword" placeholder="<?php esc_html_e('Enter keyword', 'seo-booster'); ?>" value="" style="width: 100%;" required>
-    </div>
-
-    <div style="width: 100%; margin-bottom: 10px;">
-        <label for="targeturl" style="display: block; margin-bottom: 5px;">
-            <?php esc_html_e('Target URL', 'seo-booster'); ?>
-        </label>
-        <input name="targeturl" type="url" id="targeturl" placeholder="https://" value="" style="width: 100%;" required>
-    </div>
-
-    <div style="width: 100%;">
-        <input type="submit" name="submit" id="submit" class="button button-primary" value="<?php esc_html_e('Add Keyword', 'seo-booster'); ?>" style="width: 100%;">
-    </div>
-
-    <input name="action" type="hidden" value="ajax_add_keyword" />
-    <?php wp_nonce_field('add-keyword-nonce', '_ajax_sb2_add_keyword_nonce'); ?>
-</form>
+            <p><?php
+                esc_html_e('Enter keyword and which URL the keyword should link to. Works with internal and external links.', 'seo-booster');
+                ?></p>
 
 
-        <div id="addkwresponse" style="margin-top: 10px;"></div>
-        <div class="kwaddspinner" style="display:none; margin-top: 10px;">
-            <div class="bounce1"></div>
-            <div class="bounce2"></div>
-            <div class="bounce3"></div>
+            <form method="get" id="sb2_autolink_add_form" style="display: flex; flex-wrap: wrap; align-items: center; width: 100%; flex-direction: column;">
+                <div style="width: 100%; margin-bottom: 10px;">
+                    <label for="newkeyword" style="display: block; margin-bottom: 5px;">
+                        <?php esc_html_e('Keyword', 'seo-booster'); ?>
+                    </label>
+                    <input name="newkeyword" type="text" id="newkeyword" placeholder="<?php esc_html_e('Enter keyword', 'seo-booster'); ?>" value="" style="width: 100%;" required>
+                </div>
+
+                <div style="width: 100%; margin-bottom: 10px;">
+                    <label for="targeturl" style="display: block; margin-bottom: 5px;">
+                        <?php esc_html_e('Target URL', 'seo-booster'); ?>
+                    </label>
+                    <input name="targeturl" type="url" id="targeturl" placeholder="https://" value="" style="width: 100%;" required>
+                </div>
+
+                <div style="width: 100%;">
+                    <input type="submit" name="submit" id="submit" class="button button-primary" value="<?php esc_html_e('Add Keyword', 'seo-booster'); ?>" style="width: 100%;">
+                </div>
+
+                <input name="action" type="hidden" value="ajax_add_keyword" />
+                <?php wp_nonce_field('add-keyword-nonce', '_ajax_sb2_add_keyword_nonce'); ?>
+            </form>
+
+
+            <div id="addkwresponse" style="margin-top: 10px;"></div>
+            <div class="kwaddspinner" style="display:none; margin-top: 10px;">
+                <div class="bounce1"></div>
+                <div class="bounce2"></div>
+                <div class="bounce3"></div>
+            </div>
         </div>
-    </div>
+
+        <div id="add_kw_help">
+            <strong>Enter URL and Keyword</strong>
+            <strong>How Links Are Placed</strong>
+            <p>Our system scans your content and automatically adds links where the keyword appears. However, to ensure readability and SEO best practices, links will <strong>not</strong> be placed in:</p>
+            <ul>
+                <li>Headings: <code>&lt;h1&gt;</code>, <code>&lt;h2&gt;</code>, <code>&lt;h3&gt;</code>, <code>&lt;h4&gt;</code>, <code>&lt;strong&gt;</code>, etc.</li>
+                <li>Lists: <code>&lt;ul&gt;</code>, <code>&lt;ol&gt;</code>, <code>&lt;li&gt;</code></li>
+                <li>Existing Links and Code Blocks: <code>&lt;a&gt;</code> tags, <code>&lt;code&gt;</code>, <code>&lt;pre&gt;</code></li>
+            </ul>
+
+            <strong>Supported Page Builders</strong>
+            <p>We support more than just the default WordPress editor. <a href="https://seoboosterpro.com/docs/automatic-links/supported-page-builders/" target="_blank" rel="noopener">Click here</a> for the full list of supported page builders.</p>
+
+
+        </div>
+
+
+    </div><!-- .add_kw_container -->
+
+
+
+
+
     <div id="sb2fof" class="clearfix clear">
         <div>
             <p><?php
@@ -67,13 +93,17 @@ if (!current_user_can('manage_options')) {
     <?php
     global  $wpdb;
     $duplicate_ids = $wpdb->get_col("SELECT t1.id FROM {$wpdb->prefix}sb2_autolink t1 INNER JOIN {$wpdb->prefix}sb2_autolink t2 ON t1.id > t2.id AND t1.keyword = t2.keyword");
-    $deleted_dupes = $wpdb->delete(
-        $wpdb->prefix . 'sb2_autolink',
-        array(
-            'id' => $duplicate_ids,
-        ),
-        array('%d')
-    );
+    
+    $deleted_dupes = 0;
+    if (!empty($duplicate_ids)) {
+        $deleted_dupes = $wpdb->delete(
+            $wpdb->prefix . 'sb2_autolink',
+            array(
+                'id' => $duplicate_ids,
+            ),
+            array('%d')
+        );
+    }
 
     if ($deleted_dupes > 0) {
     ?>

@@ -155,6 +155,38 @@ padding-right: 15px !important;
   margin-left: 5px;
 }
 
+
+.sb-chart-legend {
+  display: flex;
+  justify-content: center;
+  margin-top: 5px;
+  font-size: 11px;
+}
+.sb-legend-item {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+.sb-legend-color {
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  border-radius: 2px;
+}
+/* Ensure the chart container is visible */
+.sb-uplot-container {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.postbox .tabulator-cell .label.label-current {
+	background-color: #e8f5e9;
+  font-weight: bold;
+	color: #2e7d32;
+	border: 1px solid #bbdefb;
+}
+
 .seo-booster-tooltip-icon:hover::after {
   content: attr(title);
   position: absolute;
@@ -315,3 +347,417 @@ padding-right: 15px !important;
 .tabulator-footer {
   display: none !important;
 }
+
+/* uPlot chart container styles */
+.sb-uplot-container {
+    width: 100%;
+    min-width: 180px;
+    height: 60px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+/* Chart placeholder styles */
+.uplot-chart-placeholder {
+    width: 100%;
+    min-width: 180px;
+    height: 60px;
+    margin: 0 auto;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sb-chart-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+    color: #6c757d;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.sb-chart-placeholder:hover {
+    background: #e9ecef;
+    border-color: #0073aa;
+    color: #0073aa;
+    transform: scale(1.02);
+}
+
+.sb-chart-placeholder .dashicons {
+    font-size: 20px;
+    margin-bottom: 4px;
+    color: #6c757d;
+}
+
+.sb-chart-placeholder:hover .dashicons {
+    color: #0073aa;
+}
+
+.sb-placeholder-text {
+    font-size: 11px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.sb-chart-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: #f8f9fa;
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.sb-chart-loading .spinner {
+    margin-right: 8px;
+}
+
+.sb-no-data {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #999;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.sb-error {
+    color: #e53935;
+    font-size: 12px;
+    text-align: center;
+    padding: 5px;
+}
+
+/* Hover effect for the chart container */
+.sb-uplot-container:hover {
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+.sb-uplot-tooltip {
+	position: absolute;
+	display: none;
+	background: rgba(255, 255, 255, 0.95);
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 8px 12px;
+	font-size: 12px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	z-index: 10000;
+	pointer-events: none;
+	max-width: 250px;
+	color: #333;
+}
+
+/* Fix for WordPress admin conflicts with uPlot */
+.uplot canvas {
+    max-width: none;
+}
+
+/* Single data point styles */
+.sb-single-data-point {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    padding: 5px;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.sb-data-date {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.sb-data-metrics {
+    display: flex;
+    justify-content: space-around;
+}
+
+.sb-data-metrics span {
+    display: flex;
+    align-items: center;
+    margin: 0 3px;
+}
+
+.sb-clicks {
+    color: #1877f2;
+}
+
+.sb-impressions {
+    color: #2dc44e;
+}
+
+.sb-position {
+    color: #f27818;
+}
+
+.sb-data-metrics .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    margin-right: 2px;
+}
+
+/* Reanalyze message styles */
+.reanalyze-message {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    font-style: italic;
+}
+
+/* uPlot legend styles */
+.uplot-legend {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #e5e5e5;
+    border-radius: 3px;
+}
+
+.uplot-legend-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.uplot-legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.uplot-legend-color {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin-right: 8px;
+    border-radius: 2px;
+}
+
+
+#sbtablecont {
+  margin-top: 40px;
+  border-top: 1px solid #dee2e6;
+  padding-top: 10px;
+}
+
+#poststuff #sbtablecont {
+  margin-top: initial;
+  border-top:initial;
+  padding-top: initial;
+}
+
+
+.sb-uplot-tooltip {
+  position: absolute;
+  display: none;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+
+#poststuff #sbtablecont h3 {
+  display: none;
+}
+/* No Keywords Message Styles */
+.sb-gsc-no-keywords {
+    padding: 10px 20px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.sb-gsc-no-keywords-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.sb-gsc-no-keywords-icon {
+    margin-bottom: 15px;
+}
+
+.sb-gsc-no-keywords-icon .dashicons {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #2271b1;
+}
+
+.sb-gsc-no-keywords h3 {
+    margin: 0 0 15px 0;
+    color: #1d2327;
+    font-size: 18px;
+}
+
+.sb-gsc-no-keywords p {
+    margin: 0 0 20px 0;
+    color: #50575e;
+    font-size: 14px;
+}
+
+.sb-gsc-no-keywords ul {
+    text-align: left;
+    max-width: 500px;
+    margin: 0 auto 20px auto;
+    color: #50575e;
+    font-size: 14px;
+    padding-left: 20px;
+}
+
+.sb-gsc-no-keywords-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.sb-gsc-no-keywords-actions .button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.sb-gsc-no-keywords-actions .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* URL Check Styles */
+.sb-gsc-url-check {
+    padding: 20px;
+    background-color: #f0f6fc;
+    border-radius: 5px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.sb-gsc-url-check-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.sb-gsc-url-check h4 {
+    margin: 0 0 15px 0;
+    color: #1d2327;
+    font-size: 16px;
+}
+
+.sb-gsc-url-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.sb-gsc-url-display code {
+    background: #fff;
+    padding: 8px 12px;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    max-width: 80%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sb-gsc-copy-url {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+}
+
+.sb-gsc-copy-url .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.sb-gsc-copy-url.copied {
+    background-color: #46b450;
+    border-color: #46b450;
+    color: #fff;
+}
+
+.sb-gsc-url-check p {
+    margin: 0;
+    color: #50575e;
+    font-size: 13px;
+}
+
+/* Load Data Button Styling */
+.sb-gsc-load-button-wrapper {
+    text-align: center;
+    padding: 20px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.sb-gsc-load-button-wrapper .button {
+    font-size: 14px;
+    padding: 8px 16px;
+    height: auto;
+    line-height: 1.4;
+}
+
+.sb-gsc-load-button-wrapper .button .dashicons {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.sb-gsc-load-button-wrapper .description {
+    margin-top: 10px;
+    color: #666;
+    font-style: italic;
+}
+
+.sb-gsc-load-button-wrapper .spinner {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+/* Last visit info styling */
+.sb-last-visit-info {
+	font-size: 9px;
+	color: #8B4513;
+	text-align: center;
+	margin-top: 2px;
+	padding: 1px 4px;
+	background-color: #FFFACD;
+	border-radius: 2px;
+	border-left: 2px solid #FFD700;
+	line-height: 1.2;
+}
+
+.sb-single-data-point .sb-last-visit-info {
+	margin-top: 4px;
+	font-size: 8px;
+}
+
+.sb-no-data .sb-last-visit-info {
+	margin-top: 2px;
+	font-size: 8px;
+}
+

@@ -1,0 +1,641 @@
+{
+  "AI2Bot": {
+      "token": "Ai2",
+      "description": "A web crawler operated by the Allen Institute for AI that systematically explores websites to collect content for training open language models and research purposes.",
+      "frequency": "No information provided.",
+      "function": "Content is used to train open language models.",
+      "respect": "Yes",
+      "type": "bulk"
+  },
+  "Ai2Bot-Dolma": {
+      "token": "Ai2",
+      "description": "A specialized variant of the Allen Institute for AI crawler, part of the Dolma dataset project, designed to collect web content for training large language models.",
+      "frequency": "No information provided.",
+      "function": "Content is used to train open language models.",
+      "respect": "Yes",
+      "type": "bulk"
+  },
+  "Amazonbot": {
+      "token": "Amazon",
+      "description": "Amazon's web crawler that retrieves content on-demand to provide accurate answers through Alexa voice assistant and other Amazon services.",
+      "respect": "Yes",
+      "function": "Service improvement and enabling answers for Alexa users.",
+      "frequency": "No information provided.",
+      "type": "fetcher"
+  },
+  "anthropic-ai": {
+      "token": "Anthropic",
+      "description": "Anthropic's web crawler that systematically collects publicly available content to train their Claude AI models and other artificial intelligence products.",
+      "respect": "Unclear at this time.",
+      "function": "Scrapes data to train Anthropic's AI products.",
+      "frequency": "No information provided.",
+      "type": "bulk"
+  },
+  "Bytespider": {
+      "token": "ByteDance",
+      "description": "ByteDance's web crawler that collects large amounts of web content to train their language models and AI systems, including competitive alternatives to ChatGPT.",
+      "respect": "No",
+      "function": "LLM training.",
+      "frequency": "Unclear at this time.",
+      "type": "bulk"
+  },
+  "CCBot": {
+      "token": "Common Crawl Foundation",
+      "description": "The Common Crawl Foundation's web crawler that creates an open dataset of web content dating back to 2008, widely used for machine learning research and AI model training.",
+      "respect": "[Yes](https://commoncrawl.org/ccbot)",
+      "function": "Provides open crawl dataset, used for many purposes, including Machine Learning/AI.",
+      "frequency": "Monthly at present.",
+      "type": "bulk"
+  },
+  "ChatGPT-User": {
+      "token": "OpenAI",
+      "description": "OpenAI's on-demand web crawler that fetches specific web content when ChatGPT users request real-time information through plugins or browsing features.",
+      "respect": "Yes",
+      "function": "Takes action based on user prompts.",
+      "frequency": "Only when prompted by a user.",
+      "type": "fetcher"
+  },
+  "Claude-Web": {
+      "token": "Anthropic",
+      "description": "Anthropic's web crawler specifically designed to collect content for training their Claude AI models and enhancing their artificial intelligence capabilities.",
+      "respect": "Unclear at this time.",
+      "function": "Scrapes data to train Anthropic's AI products.",
+      "frequency": "No information provided.",
+      "type": "bulk"
+  },
+  "ClaudeBot": {
+      "token": "Anthropic",
+      "description": "Anthropic's primary web crawler that systematically collects publicly available content to train and improve their Claude AI models while respecting website robots.txt files.",
+      "respect": "[Yes](https://support.anthropic.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler)",
+      "function": "Scrapes data to train Anthropic's AI products.",
+      "frequency": "No information provided.",
+      "type": "bulk"
+  },
+  "cohere-ai": {
+      "token": "Cohere",
+      "description": "Cohere's web crawler that fetches specific web content on-demand to provide real-time information and context for their AI-powered search and generation services.",
+      "respect": "Unclear at this time.",
+      "function": "Retrieves data to provide responses to user-initiated prompts.",
+      "frequency": "Takes action based on user prompts.",
+      "type": "fetcher"
+  },
+  "Diffbot": {
+      "token": "Diffbot",
+      "description": "Diffbot's intelligent web crawler that automatically extracts structured data from web pages, used for business intelligence, monitoring, and AI model training purposes.",
+      "respect": "At the discretion of Diffbot users.",
+      "function": "Aggregates structured web data for monitoring and AI model training.",
+      "frequency": "Unclear at this time.",
+      "type": "bulk"
+  },
+  "FacebookBot": {
+      "token": "Meta/Facebook",
+      "description": "Meta's web crawler that collects content for training their speech recognition technology and language models, with controlled crawling rates to minimize server impact.",
+      "respect": "[Yes](https://developers.facebook.com/docs/sharing/bot/)",
+      "function": "Training language models",
+      "frequency": "Up to 1 page per second",
+      "type": "bulk"
+  },
+  "FriendlyCrawler": {
+      "token": "Unknown",
+      "description": "A web crawler operated by an unidentified organization that collects content specifically for building machine learning datasets and conducting AI research experiments.",
+      "frequency": "Unclear at this time.",
+      "function": "We are using the data from the crawler to build datasets for machine learning experiments.",
+      "respect": "[Yes](https://imho.alex-kunz.com/2024/01/25/an-update-on-friendly-crawler)",
+      "type": "bulk"
+  },
+  "Google-Extended": {
+      "token": "Google",
+      "description": "Google's specialized web crawler designed to collect content for training their Gemini AI models and Vertex AI generative APIs, separate from their main search indexing.",
+      "respect": "[Yes](https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers)",
+      "function": "LLM training.",
+      "frequency": "No information.",
+      "type": "bulk"
+  },
+  "GPTBot": {
+      "token": "OpenAI",
+      "respect": "Yes",
+      "function": "Scrapes data to train OpenAI's products.",
+      "frequency": "No information.",
+      "description": "OpenAI's web crawler designed to collect publicly available content for training their language models. The crawler respects robots.txt and removes paywalled content, personally identifiable information, and data that violates OpenAI's usage policies.",
+      "type": "bulk"
+  },
+  "iaskspider/2.0": {
+      "token": "iAsk",
+      "description": "iAsk's web crawler that indexes websites to build a knowledge base for providing accurate answers to user questions through their search and AI services.",
+      "frequency": "Unclear at this time.",
+      "function": "Crawls sites to provide answers to user queries.",
+      "respect": "No",
+      "type": "indexer"
+  },
+  "ICC-Crawler": {
+      "token": "NICT",
+      "description": "The National Institute of Information and Communications Technology's web crawler that collects data for AI research and development, with data shared with third parties for commercial AI applications.",
+      "frequency": "No information.",
+      "function": "Scrapes data to train and support AI technologies.",
+      "respect": "Yes",
+      "type": "bulk"
+  },
+  "ImagesiftBot": {
+      "token": "ImageSift",
+      "description": "ImageSift's specialized web crawler that collects and analyzes images and text from websites to build an intelligent index for their web intelligence and image search products.",
+      "frequency": "No information.",
+      "function": "ImageSiftBot is a web crawler that scrapes the internet for publicly available images to support our suite of web intelligence products",
+      "respect": "[Yes](https://imagesift.com/about)",
+      "type": "bulk"
+  },
+  "img2dataset": {
+      "token": "img2dataset",
+      "description": "An open-source web crawler tool that systematically downloads large collections of images from the internet to create datasets for training large language models and other AI applications.",
+      "frequency": "At the discretion of img2dataset users.",
+      "function": "Scrapes images for use in LLMs.",
+      "respect": "Unclear at this time.",
+      "type": "bulk"
+  },
+  "ISSCyberRiskCrawler": {
+      "token": "ISS-Corporate",
+      "description": "ISS Corporate's specialized web crawler that collects data to train machine learning models designed to assess and quantify cybersecurity risks for corporate clients.",
+      "frequency": "No information.",
+      "function": "Scrapes data to train machine learning models.",
+      "respect": "No",
+      "type": "bulk"
+  },
+  "Kangaroo Bot": {
+      "token": "Kangaroo Bot",
+      "description": "Kangaroo LLM's web crawler that specializes in collecting Australian web content to train AI models with local language patterns, cultural context, and regional knowledge.",
+      "respect": "Unclear at this time.",
+      "function": "AI Data Scrapers",
+      "frequency": "Unclear at this time.",
+      "type": "bulk"
+  },
+  "Meta-ExternalAgent": {
+      "token": "Meta",
+      "description": "Meta's web crawler that systematically collects content from external websites to train their AI models and improve various Meta products and services.",
+      "respect": "Yes.",
+      "function": "Used to train models and improve products.",
+      "frequency": "No information.",
+      "type": "bulk"
+  },
+  "Meta-ExternalFetcher": {
+      "token": "Meta-ExternalFetcher",
+      "description": "Meta's on-demand web crawler that fetches specific web content when their AI assistants need real-time information to answer user queries or provide current data.",
+      "respect": "Unclear at this time.",
+      "function": "AI Assistants",
+      "frequency": "Unclear at this time.",
+      "type": "fetcher"
+  },
+  "OAI-SearchBot": {
+      "token": "OpenAI",
+      "description": "OpenAI's web crawler that indexes websites to provide search results in their SearchGPT service, helping users find relevant information through AI-powered search.",
+      "respect": "[Yes](https://platform.openai.com/docs/bots)",
+      "function": "Search result generation.",
+      "frequency": "No information.",
+      "type": "indexer"
+  },
+  "omgili": {
+      "token": "Webz.io",
+      "description": "Webz.io's web crawler that systematically collects web content to provide data feeds for social media management platforms and AI training purposes, with data sold to various commercial clients.",
+      "respect": "[Yes](https://webz.io/blog/web-data/what-is-the-omgili-bot-and-why-is-it-crawling-your-website/)",
+      "function": "Data is sold.",
+      "frequency": "No information.",
+      "type": "bulk"
+  },
+  "omgilibot": {
+      "token": "Webz.io",
+      "description": "A legacy web crawler originally developed for the Omgili search engine, now maintained by Webz.io for data collection and commercial data services.",
+      "frequency": "No information.",
+      "function": "Data is sold.",
+      "respect": "[Yes](https://web.archive.org/web/20170704003301/http://omgili.com/Crawler.html)",
+      "type": "bulk"
+  },
+  "MistralAI-User": {
+    "token": "Mistral",
+    "description": "Mistral's user agent for their AI assistant 'Le Chat', used to fetch citation content on demand.",
+    "frequency": "Only when a user requests a page or citation.",
+    "function": "Fetches content for LLM-based answers.",
+    "respect": "Yes",
+    "type": "fetcher"
+  },
+  "ChatGPT-User/2.0": {
+    "token": "OpenAI",
+    "description": "Updated on-demand fetcher used by ChatGPT to retrieve live content when browsing is enabled.",
+    "frequency": "Only when prompted by a ChatGPT user.",
+    "function": "Fetches real-time data for ChatGPT answers.",
+    "respect": "Bypasses robots.txt, human-triggered traffic.",
+    "type": "fetcher"
+  },"GrokCrawler": {
+    "token": "xAI",
+    "description": "Crawling agent from xAI (Elon Musk’s company) used to collect data for training the Grok LLM.",
+    "frequency": "Unclear",
+    "function": "Bulk scraping for Grok model training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "NeevaAI-Bot": {
+    "token": "Neeva",
+    "description": "Neeva’s AI crawler (before and after Snowflake acquisition) used for LLM-powered search and retrieval.",
+    "frequency": "Unclear",
+    "function": "Indexes content for AI-enhanced search.",
+    "respect": "Unclear",
+    "type": "indexer"
+  },
+  "PhindBot": {
+    "token": "Phind",
+    "description": "Phind’s AI crawler supporting their code-focused LLM assistant and search engine.",
+    "frequency": "On-demand",
+    "function": "Retrieves content to provide coding/search answers.",
+    "respect": "Unclear",
+    "type": "fetcher"
+  },
+  "AndiBot": {
+    "token": "Andi",
+    "description": "Andi Search crawler collecting data for its conversational AI-powered search results.",
+    "frequency": "Continuous",
+    "function": "Indexes and retrieves for AI search.",
+    "respect": "Unclear",
+    "type": "indexer"
+  },
+  "KompasAI-Crawler": {
+    "token": "KompasAI",
+    "description": "Crawler from Kompas AI (EU-based) collecting structured datasets for training generative AI.",
+    "frequency": "Unclear",
+    "function": "Bulk data gathering for LLM training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "ForefrontAI-Bot": {
+    "token": "Forefront",
+    "description": "Crawler from Forefront AI used to enhance datasets for their hosted AI chat platform.",
+    "frequency": "Unclear",
+    "function": "Scrapes web content to augment LLM training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "Quora-Poe-Bot": {
+    "token": "Quora",
+    "description": "Quora’s Poe crawler fetching data for AI chat integrations and search.",
+    "frequency": "On-demand",
+    "function": "Supports Poe’s multi-LLM interface.",
+    "respect": "Unclear",
+    "type": "fetcher"
+  },
+  "Kagi-IndexBot": {
+    "token": "Kagi",
+    "description": "Kagi Search’s AI-indexer bot for providing high-quality retrieval to their AI assistant.",
+    "frequency": "Continuous",
+    "function": "Indexes sites for AI-powered search.",
+    "respect": "Yes",
+    "type": "indexer"
+  },
+  "OpenAssistant-Crawler": {
+    "token": "LAION",
+    "description": "Community-driven crawler supporting the OpenAssistant dataset project.",
+    "frequency": "Unclear",
+    "function": "Bulk scraping for open LLM training datasets.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "AlephAlpha-Bot": {
+    "token": "Aleph Alpha",
+    "description": "Crawler operated by Aleph Alpha for sourcing European language content for Luminous models.",
+    "frequency": "Unclear",
+    "function": "Scrapes data to train LLMs.",
+    "respect": "Yes",
+    "type": "bulk"
+  },
+  "JinaAI-Crawler": {
+    "token": "Jina",
+    "description": "Jina AI’s crawler collecting multimodal web content to support embedding and RAG services.",
+    "frequency": "Unclear",
+    "function": "Scrapes text and images for AI pipelines.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "WriterAI-Crawler": {
+    "token": "Writer",
+    "description": "Crawler operated by Writer.com to build corpora for enterprise-focused LLM training.",
+    "frequency": "Unclear",
+    "function": "Collects training data for proprietary enterprise AI.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "CopyLeaks-AICrawler": {
+    "token": "Copyleaks",
+    "description": "Copyleaks crawler used for AI content detection datasets and language model refinement.",
+    "frequency": "Unclear",
+    "function": "Scrapes web text to train detection and generation systems.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "ZyteAI-Crawler": {
+    "token": "ZyteAI",
+    "description": "Modernized Zyte crawler variant specifically marketed for AI/ML dataset creation.",
+    "frequency": "Unclear",
+    "function": "Scrapes structured web data for ML/LLMs.",
+    "respect": "Yes",
+    "type": "bulk"
+  },
+  "Cerebras-Crawler": {
+    "token": "Cerebras",
+    "description": "Crawler linked to Cerebras AI supercomputer projects for building model training corpora.",
+    "frequency": "Unclear",
+    "function": "Large-scale content ingestion for LLM training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "MiniMaxAI-Bot": {
+    "token": "MiniMax",
+    "description": "Chinese AI startup’s crawler fetching content for their models.",
+    "frequency": "Unclear",
+    "function": "Scrapes web data for model training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "xVerse-AI-Crawler": {
+    "token": "xVerse",
+    "description": "Crawler operated by xVerse AI, collecting multilingual datasets for its generative AI.",
+    "frequency": "Unclear",
+    "function": "Scrapes multilingual content for LLM training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "AbacusAI-Crawler": {
+    "token": "AbacusAI",
+    "description": "Crawler used by Abacus.ai to enrich datasets and support model customization pipelines.",
+    "frequency": "On-demand and scheduled",
+    "function": "Scrapes content for AI enrichment and training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "TogetherAI-Crawler": {
+    "token": "TogetherAI",
+    "description": "Together.ai crawler gathering training content for open-source large models.",
+    "frequency": "Unclear",
+    "function": "Collects datasets for open LLM training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "DeepMind-GopherBot": {
+    "token": "DeepMind",
+    "description": "Google DeepMind crawler historically tied to Gopher and Gemini model training.",
+    "frequency": "Unclear",
+    "function": "Scrapes web text for model development.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "Perplexity-User": {
+      "token": "Perplexity",
+      "description": "Perplexity's on-demand web crawler that fetches specific web content when users ask questions, providing real-time information and source links in their AI-powered search responses.",
+      "respect": "[No](https://docs.perplexity.ai/guides/bots)",
+      "function": "Used to answer queries at the request of users.",
+      "frequency": "Only when prompted by a user.",
+      "type": "fetcher"
+  },
+  "PerplexityBot": {
+      "token": "Perplexity",
+      "description": "Perplexity's primary web crawler that retrieves web content on-demand to provide accurate, sourced answers to user queries through their AI search platform.",
+      "respect": "[No](https://www.macstories.net/stories/wired-confirms-perplexity-is-bypassing-efforts-by-websites-to-block-its-web-crawler/)",
+      "function": "Used to answer queries at the request of users.",
+      "frequency": "Takes action based on user prompts.",
+      "type": "fetcher"
+  },
+  "Scrapy": {
+      "token": "Zyte",
+      "description": "Zyte's web scraping framework that enables efficient collection of large-scale web data for AI and machine learning applications, helping build structured datasets for model training.",
+      "frequency": "No information.",
+      "function": "Scrapes data for a variety of uses including training AI.",
+      "respect": "Unclear at this time.",
+      "type": "bulk"
+  },
+  "Sidetrade indexer bot": {
+      "token": "Sidetrade",
+      "description": "Sidetrade's web crawler that extracts and processes web data to support their AI-powered financial technology products and services.",
+      "frequency": "No information.",
+      "function": "Extracts data for a variety of uses including training AI.",
+      "respect": "Unclear at this time.",
+      "type": "bulk"
+  },
+  "Timpibot": {
+      "token": "Timpi",
+      "description": "Timpi's web crawler that systematically collects web content to create training datasets for large language models and other AI applications.",
+      "respect": "Unclear at this time.",
+      "function": "Scrapes data for use in training LLMs.",
+      "frequency": "No information.",
+      "type": "bulk"
+  },
+  "VelenPublicWebCrawler": {
+      "token": "Velen Crawler",
+      "description": "Velen's web crawler designed to build comprehensive business datasets and machine learning models that enhance understanding of web content and business intelligence.",
+      "frequency": "No information.",
+      "function": "Scrapes data for business data sets and machine learning models.",
+      "respect": "[Yes](https://velen.io)",
+      "type": "bulk"
+  },
+  "Webzio-Extended": {
+      "token": "Webzio-Extended",
+      "description": "Webz.io's extended web crawler that maintains a comprehensive repository of web data, selling access to companies for AI model training and other commercial applications.",
+      "respect": "Unclear at this time.",
+      "function": "AI Data Scrapers",
+      "frequency": "Unclear at this time.",
+      "type": "bulk"
+  },
+  "YouBot": {
+      "token": "You",
+      "description": "You.com's web crawler that collects content to power their AI-enhanced search engine and train their large language models for improved search and chat capabilities.",
+      "respect": "[Yes](https://about.you.com/youbot/)",
+      "function": "Scrapes data for search engine and LLMs.",
+      "frequency": "No information.",
+      "type": "bulk"
+  },
+  "Amazonbot-Extended": {
+    "token": "Amazon",
+    "description": "Amazon’s AI training opt-out user agent separate from standard Amazonbot indexing.",
+    "frequency": "Unclear.",
+    "function": "Controls use of content for Amazon’s generative AI training.",
+    "respect": "Yes",
+    "type": "bulk"
+  },
+  "CCBot-Image": {
+    "token": "Common Crawl Foundation",
+    "description": "Common Crawl image crawler variant tied to image dataset creation used in ML pipelines.",
+    "frequency": "Monthly (aligned to CC crawls).",
+    "function": "Builds open image datasets for ML research.",
+    "respect": "Yes",
+    "type": "bulk"
+  },
+  "cohere-ai-crawler": {
+    "token": "Cohere",
+    "description": "Cohere’s bulk crawler user agent used for training and evaluation corpora beyond on-demand fetching.",
+    "frequency": "Unclear.",
+    "function": "LLM training and evaluation data collection.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "DataForSEO-AI-Crawler": {
+    "token": "DataForSEO",
+    "description": "DataForSEO’s AI-focused data collection bot marketed for ML/LLM dataset builds.",
+    "frequency": "Client-driven.",
+    "function": "Commercial AI dataset aggregation.",
+    "respect": "At client’s discretion",
+    "type": "bulk"
+  },
+  "DuckAssist-Bot": {
+    "token": "DuckDuckGo",
+    "description": "DuckDuckGo bot associated with DuckAssist and generative answers pipeline.",
+    "frequency": "Unclear.",
+    "function": "Retrieval for AI-assisted answers.",
+    "respect": "Yes",
+    "type": "fetcher"
+  },
+  "GleanAI-Crawler": {
+    "token": "Glean",
+    "description": "Enterprise search vendor’s crawler for building retrieval corpora for AI assistants.",
+    "frequency": "Customer-configured.",
+    "function": "Indexes content for enterprise AI retrieval.",
+    "respect": "Yes",
+    "type": "indexer"
+  },
+  "GoogleOther-Image-Extended": {
+    "token": "Google",
+    "description": "Google’s non-search image fetcher coupled with Extended policy for AI training control.",
+    "frequency": "Unclear.",
+    "function": "Signals/controls for AI training use of images.",
+    "respect": "Yes",
+    "type": "bulk"
+  },
+  "huggingface-bot": {
+    "token": "Hugging Face",
+    "description": "Hugging Face crawler used in dataset curation and evaluation pipelines.",
+    "frequency": "Project-dependent.",
+    "function": "Collects content for open datasets and evals.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "MetaAI-TextDatasetBot": {
+    "token": "Meta",
+    "description": "Meta’s dataset-focused bot distinct from product fetchers, oriented to LLM training corpora.",
+    "frequency": "Unclear.",
+    "function": "Bulk collection for text training datasets.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "Microsoft-Extended": {
+    "token": "Microsoft",
+    "description": "Microsoft’s opt-out mechanism for using site content to train Copilot and other generative AI models.",
+    "frequency": "Unclear.",
+    "function": "Controls use of content for Microsoft AI training.",
+    "respect": "Yes",
+    "type": "bulk"
+  },
+  "OpenAI-ImageBot": {
+    "token": "OpenAI",
+    "description": "OpenAI’s image-focused crawler variant associated with image dataset building.",
+    "frequency": "Unclear.",
+    "function": "Collects images/signals for multimodal training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "OpenAI-DataEvaluator": {
+    "token": "OpenAI",
+    "description": "Evaluation/quality audit crawler used for dataset QA separate from GPTBot.",
+    "frequency": "Unclear.",
+    "function": "Dataset quality checks and evaluation.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "StabilityAI-Crawler": {
+    "token": "Stability AI",
+    "description": "Stability AI’s content/image crawler associated with training multimodal models.",
+    "frequency": "Unclear.",
+    "function": "Collects images/text for generative model training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "RunwayML-Crawler": {
+    "token": "Runway",
+    "description": "Runway’s content crawler tied to video/image model datasets.",
+    "frequency": "Unclear.",
+    "function": "Gathers visual/text content for model training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "Midjourney-Bot": {
+    "token": "Midjourney",
+    "description": "Midjourney’s dataset collection bot for image model training.",
+    "frequency": "Unclear.",
+    "function": "Image-focused dataset building for generative models.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "WenzhongAI-Crawler": {
+    "token": "Wenzhong",
+    "description": "Chinese research-focused crawler linked to open LLM dataset projects.",
+    "frequency": "Unclear.",
+    "function": "Bulk scraping for research LLM datasets.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "CloudVertexBot": {
+    "token": "Google",
+    "description": "Google-operated crawler for targeted site crawls to supply training content for Vertex AI.",
+    "frequency": "Unclear.",
+    "function": "Site-owner-requested crawls for AI training datasets.",
+    "respect": "Yes",
+    "type": "bulk"
+  },
+  "cohere-training-data-crawler": {
+    "token": "Cohere",
+    "description": "Cohere’s bulk crawler to download training data for enterprise LLMs.",
+    "frequency": "Unclear.",
+    "function": "Collects datasets for LLM training.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "Cotoyogi": {
+    "token": "ROIS (Japan)",
+    "description": "Research crawler by Japan’s Research Organization of Information and Systems for AI training datasets.",
+    "frequency": "Unclear.",
+    "function": "Builds research LLM training corpora.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "Datenbank Crawler": {
+    "token": "netEstate",
+    "description": "German-operated data crawler used to collect and sell web data, including for AI training.",
+    "frequency": "Unclear.",
+    "function": "Commercial data collection for AI/ML use.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "PanguBot": {
+    "token": "Huawei",
+    "description": "Huawei crawler used to collect content for PanGu multimodal LLM training.",
+    "frequency": "Unclear.",
+    "function": "LLM training data collection.",
+    "respect": "Unclear",
+    "type": "bulk"
+  },
+  "Claude-SearchBot": {
+    "token": "Anthropic",
+    "description": "Indexer for Anthropic’s Claude search feature.",
+    "frequency": "Continuous.",
+    "function": "Creates an index surfaced in Claude’s AI search.",
+    "respect": "Unclear",
+    "type": "indexer"
+  },
+  "PetalBot": {
+    "token": "Huawei",
+    "description": "Huawei search crawler powering Petal Search and AI-powered recommendations.",
+    "frequency": "Continuous.",
+    "function": "Indexes content used by AI features.",
+    "respect": "Yes",
+    "type": "indexer"
+  },
+  "AddSearchBot": {
+    "token": "AddSearch",
+    "description": "Site search crawler for AddSearch’s AI-powered search solution.",
+    "frequency": "Continuous.",
+    "function": "Indexes sites for AI-enhanced search.",
+    "respect": "Yes",
+    "type": "indexer"
+  }
+}

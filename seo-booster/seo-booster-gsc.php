@@ -6,8 +6,8 @@ if (! defined('ABSPATH')) {
 	exit;
 }
 
-if (! current_user_can('update_plugins')) {
-	wp_die('You are not allowed to update plugins on this blog');
+if (! current_user_can('manage_options')) {
+	wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'seo-booster'));
 }
 
 global $wpdb, $seobooster2;

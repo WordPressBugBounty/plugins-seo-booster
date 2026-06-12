@@ -2,16 +2,12 @@
 
 namespace Cleverplugins\SEOBooster;
 
-if (!defined('ABSPATH')) {
+if ( !defined( 'ABSPATH' ) ) {
     exit;
 }
-
-class email_status
-{
-
-    public static function init() {}
-
-
+class email_status {
+    public static function init() {
+    }
 
     /**
      * send_email_update.
@@ -26,311 +22,300 @@ class email_status
      * @param	boolean	$forced	Default: false
      * @return	void
      */
-    public static function send_email_update($days = 7, $forced = false)
-    {
-        $seobooster_weekly_email = get_option('seobooster_weekly_email');
-        if ('on' !== $seobooster_weekly_email && !$forced) {
+    public static function send_email_update( $days = 7, $forced = false ) {
+        $seobooster_weekly_email = get_option( 'seobooster_weekly_email' );
+        if ( 'on' !== $seobooster_weekly_email && !$forced ) {
             return;
         }
-
-        $seobooster_weekly_email_recipient = get_option('seobooster_weekly_email_recipient');
-        if (strpos($seobooster_weekly_email_recipient, ',') !== false) {
-            $email_recipients = array_map('trim', explode(',', $seobooster_weekly_email_recipient));
+        $seobooster_weekly_email_recipient = get_option( 'seobooster_weekly_email_recipient' );
+        if ( strpos( $seobooster_weekly_email_recipient, ',' ) !== false ) {
+            $email_recipients = array_map( 'trim', explode( ',', $seobooster_weekly_email_recipient ) );
         } else {
-            $email_recipients = [trim($seobooster_weekly_email_recipient)];
+            $email_recipients = [trim( $seobooster_weekly_email_recipient )];
         }
-
-        if (!is_int($days)) {
+        if ( !is_int( $days ) ) {
             $days = 7;
         }
-
+        if ( empty( $email_recipients ) ) {
+            return;
+        }
         global $wpdb;
         $query_keywords_table = $wpdb->prefix . 'sb2_query_keywords';
         $query_keywords_history_table = $wpdb->prefix . 'sb2_query_keywords_history';
-
-        $content = ''; 
+        $content = '';
         $intro_summary = '';
-
+        $latest_date = $wpdb->get_var( $wpdb->prepare( "SELECT MAX(date) \n                FROM {$wpdb->prefix}sb2_query_keywords_history \n                WHERE %s = %s", '1', '1' ) );
+        if ( $latest_date ) {
+            $past_7_days_data = $wpdb->get_results( $wpdb->prepare( "SELECT \n                        SUM(h.impressions) AS total_impressions, \n                        SUM(h.clicks) AS total_clicks, \n                        AVG(h.position) AS avg_position, \n                        AVG(h.ctr) AS avg_ctr\n                    FROM \n                        {$wpdb->prefix}sb2_query_keywords_history AS h\n                    WHERE \n                        h.date BETWEEN DATE_SUB(%s, INTERVAL 7 DAY) AND %s", $latest_date, $latest_date ), OBJECT );
+            $previous_7_days_data = $wpdb->get_results( $wpdb->prepare( "SELECT \n                        SUM(h.impressions) AS total_impressions, \n                        SUM(h.clicks) AS total_clicks, \n                        AVG(h.position) AS avg_position, \n                        AVG(h.ctr) AS avg_ctr\n                    FROM \n                        {$wpdb->prefix}sb2_query_keywords_history AS h\n                    WHERE \n                        h.date BETWEEN DATE_SUB(%s, INTERVAL 14 DAY) AND DATE_SUB(%s, INTERVAL 7 DAY)", $latest_date, $latest_date ), OBJECT );
+        }
+        // Initialize default values
+        $impressions_change = 0;
+        $clicks_change = 0;
+        $position_change = 0;
+        $ctr_change = 0;
+        $impressions_percentage = 0;
+        $clicks_percentage = 0;
+        $position_percentage = 0;
+        $ctr_percentage = 0;
+        $past_7_days = null;
+        $previous_7_days = null;
+        if ( $past_7_days_data && $previous_7_days_data && is_array( $past_7_days_data ) && !empty( $past_7_days_data ) && is_array( $previous_7_days_data ) && !empty( $previous_7_days_data ) ) {
+            $past_7_days = $past_7_days_data[0];
+            $previous_7_days = $previous_7_days_data[0];
+            if ( $past_7_days && $previous_7_days ) {
+                $impressions_change = (float) $past_7_days->total_impressions - (float) $previous_7_days->total_impressions;
+                $clicks_change = (float) $past_7_days->total_clicks - (float) $previous_7_days->total_clicks;
+                $position_change = (float) $past_7_days->avg_position - (float) $previous_7_days->avg_position;
+                $ctr_change = ((float) $past_7_days->avg_ctr - (float) $previous_7_days->avg_ctr) * 100;
+                // Convert to percentage
+                // Calculate percentage changes
+                $impressions_percentage = ( (float) $previous_7_days->total_impressions > 0 ? round( $impressions_change / (float) $previous_7_days->total_impressions * 100, 1 ) : 0 );
+                $clicks_percentage = ( (float) $previous_7_days->total_clicks > 0 ? round( $clicks_change / (float) $previous_7_days->total_clicks * 100, 1 ) : 0 );
+                $position_percentage = ( (float) $previous_7_days->avg_position > 0 ? round( $position_change / (float) $previous_7_days->avg_position * 100, 1 ) : 0 );
+                $ctr_percentage = ( (float) $previous_7_days->avg_ctr > 0 ? round( $ctr_change / ((float) $previous_7_days->avg_ctr * 100) * 100, 1 ) : 0 );
+            }
+        }
         // 1. New Keywords in the Past 7 Days
         $cache_key = 'new_keywords_' . $days;
-        $new_keywords = wp_cache_get($cache_key);
-        if (false === $new_keywords) {
-            $new_keywords = $wpdb->get_results($wpdb->prepare("
-            SELECT k.query, k.page, AVG(h.position) as avg_position, SUM(h.clicks) as total_clicks, SUM(h.impressions) as total_impressions
-            FROM $query_keywords_table k
-            JOIN $query_keywords_history_table h ON k.id = h.query_keywords_id
-            WHERE k.first_seen_date >= CURDATE() - INTERVAL %d DAY
-            GROUP BY k.page, k.query
-            ORDER BY k.first_seen_date DESC
-            LIMIT 10", $days), ARRAY_A);
-            wp_cache_set($cache_key, $new_keywords, '', 3600); // Cache for 1 hour
+        $new_keywords = wp_cache_get( $cache_key );
+        if ( false === $new_keywords ) {
+            $new_keywords = $wpdb->get_results( $wpdb->prepare( "\n            SELECT k.query, k.page, AVG(h.position) as avg_position, SUM(h.clicks) as total_clicks, SUM(h.impressions) as total_impressions\n            FROM {$query_keywords_table} k\n            JOIN {$query_keywords_history_table} h ON k.id = h.query_keywords_id\n            WHERE k.first_seen_date >= CURDATE() - INTERVAL %d DAY\n            GROUP BY k.page, k.query\n            ORDER BY k.first_seen_date DESC\n            LIMIT 10", $days ), ARRAY_A );
+            wp_cache_set(
+                $cache_key,
+                $new_keywords,
+                '',
+                3600
+            );
+            // Cache for 1 hour
         }
-
         // Correct count of new keywords in the past 7 days
         $cache_key = 'total_new_keywords_' . $days;
-        $total_new_keywords = wp_cache_get($cache_key);
-        if (false === $total_new_keywords) {
-            $total_new_keywords = $wpdb->get_var($wpdb->prepare("
-            SELECT COUNT(DISTINCT k.query) as total_new_keywords
-            FROM $query_keywords_table k
-            WHERE k.first_seen_date >= CURDATE() - INTERVAL %d DAY", $days));
-            wp_cache_set($cache_key, $total_new_keywords, '', 3600); // Cache for 1 hour
+        $total_new_keywords = wp_cache_get( $cache_key );
+        if ( false === $total_new_keywords ) {
+            $total_new_keywords = $wpdb->get_var( $wpdb->prepare( "\n            SELECT COUNT(DISTINCT k.query) as total_new_keywords\n            FROM {$query_keywords_table} k\n            WHERE k.first_seen_date >= CURDATE() - INTERVAL %d DAY", $days ) );
+            wp_cache_set(
+                $cache_key,
+                $total_new_keywords,
+                '',
+                3600
+            );
+            // Cache for 1 hour
         }
-
+        $total_new_keywords = ( (int) $total_new_keywords ?: 0 );
         // Total new keywords in the past 30 days
-        $total_new_keywords_30_days = $wpdb->get_var($wpdb->prepare("
-        SELECT COUNT(DISTINCT k.query) as total_new_keywords
-        FROM $query_keywords_table k
-        WHERE k.first_seen_date >= CURDATE() - INTERVAL %d DAY", 30));
-
+        $total_new_keywords_30_days = $wpdb->get_var( $wpdb->prepare( "\n        SELECT COUNT(DISTINCT k.query) as total_new_keywords\n        FROM {$query_keywords_table} k\n        WHERE k.first_seen_date >= CURDATE() - INTERVAL %d DAY", 30 ) );
+        $total_new_keywords_30_days = ( (int) $total_new_keywords_30_days ?: 0 );
         // 2. Trend Analysis (Impressions and Clicks) over the Last 14 Days
         $cache_key = 'trends_analysis_14_days';
-        $trends = wp_cache_get($cache_key);
-        if (false === $trends) {
-            $trends = $wpdb->get_results($wpdb->prepare("
-            SELECT 
-                k.query, 
-                k.page, 
-                SUM(CASE WHEN h.date >= CURDATE() - INTERVAL 7 DAY THEN h.impressions ELSE 0 END) as current_week_impressions,
-                SUM(CASE WHEN h.date >= CURDATE() - INTERVAL 7 DAY THEN h.clicks ELSE 0 END) as current_week_clicks,
-                SUM(CASE WHEN h.date >= CURDATE() - INTERVAL 14 DAY AND h.date < CURDATE() - INTERVAL 7 DAY THEN h.impressions ELSE 0 END) as previous_week_impressions,
-                SUM(CASE WHEN h.date >= CURDATE() - INTERVAL 14 DAY AND h.date < CURDATE() - INTERVAL 7 DAY THEN h.clicks ELSE 0 END) as previous_week_clicks
-            FROM {$query_keywords_table} k
-            JOIN {$query_keywords_history_table} h ON k.id = h.query_keywords_id
-            WHERE h.date >= CURDATE() - INTERVAL 14 DAY
-            GROUP BY k.query, k.page
-            ORDER BY current_week_impressions DESC
-            LIMIT %d", 25), ARRAY_A);
-            wp_cache_set($cache_key, $trends, '', 3600); // Cache for 1 hour
+        $trends = wp_cache_get( $cache_key );
+        if ( false === $trends ) {
+            $trends = $wpdb->get_results( $wpdb->prepare( "\n            SELECT \n                k.query, \n                k.page, \n                SUM(CASE WHEN h.date >= CURDATE() - INTERVAL 7 DAY THEN h.impressions ELSE 0 END) as current_week_impressions,\n                SUM(CASE WHEN h.date >= CURDATE() - INTERVAL 7 DAY THEN h.clicks ELSE 0 END) as current_week_clicks,\n                SUM(CASE WHEN h.date >= CURDATE() - INTERVAL 14 DAY AND h.date < CURDATE() - INTERVAL 7 DAY THEN h.impressions ELSE 0 END) as previous_week_impressions,\n                SUM(CASE WHEN h.date >= CURDATE() - INTERVAL 14 DAY AND h.date < CURDATE() - INTERVAL 7 DAY THEN h.clicks ELSE 0 END) as previous_week_clicks\n            FROM {$query_keywords_table} k\n            JOIN {$query_keywords_history_table} h ON k.id = h.query_keywords_id\n            WHERE h.date >= CURDATE() - INTERVAL 14 DAY\n            GROUP BY k.query, k.page\n            ORDER BY current_week_impressions DESC\n            LIMIT %d", 25 ), ARRAY_A );
+            wp_cache_set(
+                $cache_key,
+                $trends,
+                '',
+                3600
+            );
+            // Cache for 1 hour
         }
-
-        $current_week_impressions = array_sum(array_column($trends, 'current_week_impressions'));
-        $previous_week_impressions = array_sum(array_column($trends, 'previous_week_impressions'));
-
-        // 3. Keyword Cannibalization Detection
-        $cannibalized_keywords = $wpdb->get_results($wpdb->prepare("
-        SELECT 
-            k.query, 
-            k.page, 
-            COUNT(DISTINCT k.page) as page_count,
-            SUM(h.impressions) as total_impressions, 
-            SUM(h.clicks) as total_clicks, 
-            AVG(h.position) as avg_position
-        FROM {$query_keywords_table} k
-        JOIN {$query_keywords_history_table} h ON k.id = h.query_keywords_id
-        GROUP BY k.query
-        HAVING page_count > 1
-        ORDER BY total_impressions DESC
-        LIMIT %d", 10), ARRAY_A);
-
+        $current_week_impressions = array_sum( array_column( $trends, 'current_week_impressions' ) );
+        $previous_week_impressions = array_sum( array_column( $trends, 'previous_week_impressions' ) );
+        // 3. Keyword Cannibalization Detection (only pages competing in last 30 days)
+        $cannibalized_keywords = $wpdb->get_results( $wpdb->prepare( "\n        SELECT \n            k.query, \n            k.page, \n            COUNT(DISTINCT k.page) as page_count,\n            SUM(h.impressions) as total_impressions, \n            SUM(h.clicks) as total_clicks, \n            AVG(h.position) as avg_position\n        FROM {$query_keywords_table} k\n        JOIN {$query_keywords_history_table} h ON k.id = h.query_keywords_id\n        WHERE h.date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)\n        GROUP BY k.query\n        HAVING page_count > 1\n        ORDER BY total_impressions DESC\n        LIMIT %d", 10 ), ARRAY_A );
         // 4. Refined Ranking Anomalies Detection
-        $anomalies = $wpdb->get_results($wpdb->prepare("
-        SELECT 
-            k.query, 
-            k.page, 
-            MIN(h.position) as min_position, 
-            MAX(h.position) as max_position, 
-            MAX(h.date) as max_position_date, 
-            (SELECT h2.position 
-             FROM {$query_keywords_history_table} h2 
-             WHERE h2.query_keywords_id = h.query_keywords_id 
-             ORDER BY h2.date DESC LIMIT 1) as current_position,
-            SUM(h.impressions) as total_impressions, 
-            SUM(h.clicks) as total_clicks
-        FROM {$query_keywords_history_table} h
-        JOIN {$query_keywords_table} k ON k.id = h.query_keywords_id
-        WHERE h.date >= CURDATE() - INTERVAL 30 DAY
-        GROUP BY k.query, k.page
-        HAVING (MAX(h.position) - MIN(h.position)) > 10 AND total_impressions > 0
-        ORDER BY total_impressions DESC
-        LIMIT %d", 10), ARRAY_A);
-
-        $ignored_urls = SB404_Errors::get_ignored_urls_for_404();
-
-        // 5. 404 Errors
-        $errors_404 = $wpdb->get_results($wpdb->prepare("
-        SELECT * 
-        FROM {$wpdb->prefix}sb2_404 
-        LIMIT %d", 1000));
-        $filtered_errors = array_filter($errors_404, function($error) use ($ignored_urls) {
-            return !in_array($error->lp, $ignored_urls);
-        });
-        $total_404s = count($filtered_errors);
-
+        $anomalies = $wpdb->get_results( $wpdb->prepare( "\n        SELECT \n            k.query, \n            k.page, \n            MIN(h.position) as min_position, \n            MAX(h.position) as max_position, \n            MAX(h.date) as max_position_date, \n            (SELECT h2.position \n             FROM {$query_keywords_history_table} h2 \n             WHERE h2.query_keywords_id = h.query_keywords_id \n             ORDER BY h2.date DESC LIMIT 1) as current_position,\n            SUM(h.impressions) as total_impressions, \n            SUM(h.clicks) as total_clicks\n        FROM {$query_keywords_history_table} h\n        JOIN {$query_keywords_table} k ON k.id = h.query_keywords_id\n        WHERE h.date >= CURDATE() - INTERVAL 30 DAY\n        GROUP BY k.query, k.page\n        HAVING (MAX(h.position) - MIN(h.position)) > 10 AND total_impressions > 0\n        ORDER BY total_impressions DESC\n        LIMIT %d", 10 ), ARRAY_A );
+        // 5. SEO Possibilities Data
+        $top_possibilities = [];
+        $possibilities_stats = [
+            'total_issues' => 0,
+            'critical'     => 0,
+            'error'        => 0,
+            'high'         => 0,
+            'warning'      => 0,
+            'medium'       => 0,
+            'low'          => 0,
+        ];
+        if ( class_exists( '\\Cleverplugins\\SEOBooster\\SEO_Issues_Manager' ) ) {
+            $top_possibilities = SEO_Issues_Manager::get_top_possibilities_for_dashboard( 5 );
+            $possibilities_stats = SEO_Issues_Manager::get_analysis_stats();
+            // Ensure we have valid arrays
+            if ( !is_array( $top_possibilities ) ) {
+                $top_possibilities = [];
+            }
+            if ( !is_array( $possibilities_stats ) ) {
+                $possibilities_stats = [
+                    'total_issues' => 0,
+                    'critical'     => 0,
+                    'error'        => 0,
+                    'high'         => 0,
+                    'warning'      => 0,
+                    'medium'       => 0,
+                    'low'          => 0,
+                ];
+            }
+            // Ensure numeric values
+            $possibilities_stats['total_issues'] = ( isset( $possibilities_stats['total_issues'] ) ? (int) $possibilities_stats['total_issues'] : 0 );
+            $possibilities_stats['critical'] = ( isset( $possibilities_stats['critical'] ) ? (int) $possibilities_stats['critical'] : 0 );
+            $possibilities_stats['error'] = ( isset( $possibilities_stats['error'] ) ? (int) $possibilities_stats['error'] : 0 );
+            $possibilities_stats['high'] = ( isset( $possibilities_stats['high'] ) ? (int) $possibilities_stats['high'] : 0 );
+            $possibilities_stats['warning'] = ( isset( $possibilities_stats['warning'] ) ? (int) $possibilities_stats['warning'] : 0 );
+            $possibilities_stats['medium'] = ( isset( $possibilities_stats['medium'] ) ? (int) $possibilities_stats['medium'] : 0 );
+            $possibilities_stats['low'] = ( isset( $possibilities_stats['low'] ) ? (int) $possibilities_stats['low'] : 0 );
+        }
         // Executive Summary
-        $intro_summary .= "<h2>" . __('Executive Summary', 'seo-booster') . "</h2>";
+        $intro_summary .= "<h2>" . __( 'Summary', 'seo-booster' ) . "</h2>";
+        // Key metrics in bullet format
+        if ( $past_7_days && $previous_7_days ) {
+            $intro_summary .= "<ul>";
+            $intro_summary .= "<li>" . sprintf( __( 'Impressions: %s (%s%%)', 'seo-booster' ), ( $impressions_change >= 0 ? '+' . number_format_i18n( $impressions_change ) : number_format_i18n( $impressions_change ) ), ( $impressions_percentage >= 0 ? '+' . number_format_i18n( $impressions_percentage ) : number_format_i18n( $impressions_percentage ) ) ) . "</li>";
+            $intro_summary .= "<li>" . sprintf( __( 'Clicks: %s (%s%%)', 'seo-booster' ), ( $clicks_change >= 0 ? '+' . number_format_i18n( $clicks_change ) : number_format_i18n( $clicks_change ) ), ( $clicks_percentage >= 0 ? '+' . number_format_i18n( $clicks_percentage ) : number_format_i18n( $clicks_percentage ) ) ) . "</li>";
+            $intro_summary .= "<li>" . sprintf( __( 'Avg Position: %s (%s%%)', 'seo-booster' ), ( $position_change <= 0 ? number_format_i18n( abs( $position_change ), 2 ) . ' ' . __( 'improved', 'seo-booster' ) : number_format_i18n( $position_change, 2 ) . ' ' . __( 'worsened', 'seo-booster' ) ), ( $position_percentage <= 0 ? number_format_i18n( abs( $position_percentage ) ) : number_format_i18n( $position_percentage ) ) ) . "</li>";
+            $intro_summary .= "<li>" . sprintf( __( 'CTR: %s%% (%s%%)', 'seo-booster' ), ( $ctr_change >= 0 ? '+' . number_format_i18n( $ctr_change, 2 ) : number_format_i18n( $ctr_change, 2 ) ), ( $ctr_percentage >= 0 ? '+' . number_format_i18n( $ctr_percentage ) : number_format_i18n( $ctr_percentage ) ) ) . "</li>";
+            $intro_summary .= "</ul>";
+        }
         $intro_summary .= "<ul>";
-        $intro_summary .= "<li>" . sprintf(__('You have %s new keywords discovered in the past 7 days.', 'seo-booster'), number_format_i18n($total_new_keywords)) . "</li>";
-        $intro_summary .= "<li>" . sprintf(__('Total new keywords in the past 30 days: %s', 'seo-booster'), number_format_i18n($total_new_keywords_30_days)) . "</li>";
-        $intro_summary .= "<li>" . sprintf(__('Trend Analysis: %s impressions this week, %s last week.', 'seo-booster'), number_format_i18n($current_week_impressions), number_format_i18n($previous_week_impressions)) . "</li>";
-        $intro_summary .= "<li>" . sprintf(__('Keyword Cannibalization: %s instances detected.', 'seo-booster'), number_format_i18n(count($cannibalized_keywords))) . "</li>";
-        $intro_summary .= "<li>" . sprintf(__('Ranking Anomalies: %s anomalies detected.', 'seo-booster'), number_format_i18n(count($anomalies))) . "</li>";
-        $intro_summary .= "<li>" . sprintf(__('404 Errors: %s errors detected.', 'seo-booster'), number_format_i18n($total_404s)) . "</li>";
+        $intro_summary .= "<li>" . sprintf( __( '%s new keywords discovered in the past 7 days', 'seo-booster' ), '<strong>' . number_format_i18n( $total_new_keywords ) . '</strong>' ) . "</li>";
+        if ( $possibilities_stats['total_issues'] > 0 ) {
+            $severity_breakdown = [];
+            if ( $possibilities_stats['critical'] > 0 ) {
+                $severity_breakdown[] = number_format_i18n( $possibilities_stats['critical'] ) . ' ' . __( 'critical', 'seo-booster' );
+            }
+            if ( $possibilities_stats['error'] > 0 ) {
+                $severity_breakdown[] = number_format_i18n( $possibilities_stats['error'] ) . ' ' . __( 'errors', 'seo-booster' );
+            }
+            if ( $possibilities_stats['high'] > 0 ) {
+                $severity_breakdown[] = number_format_i18n( $possibilities_stats['high'] ) . ' ' . __( 'high', 'seo-booster' );
+            }
+            $severity_text = ( !empty( $severity_breakdown ) ? ' (' . implode( ', ', $severity_breakdown ) . ')' : '' );
+            $intro_summary .= "<li>" . sprintf( __( '%s SEO possibilities found%s', 'seo-booster' ), '<strong>' . number_format_i18n( $possibilities_stats['total_issues'] ) . '</strong>', $severity_text ) . "</li>";
+        }
         $intro_summary .= "</ul>";
-        $intro_summary .= '<p><a href="' . esc_url(admin_url('admin.php?page=sb2_reports')) . '">' . __('View full report', 'seo-booster') . '</a></p>';
         $intro_summary .= "<hr>";
-
         // Detailed Sections
-        $content .= "<h2>" . __('New Keywords in the Past 7 Days', 'seo-booster') . "</h2>";
-        if (!empty($new_keywords)) {
-            $content .= '<p>' . __('The following keywords were used to find content on your website for the first time in the past 7 days.', 'seo-booster') . '</p>';
-            foreach (array_slice($new_keywords, 0, 3) as $keyword) { // Limit to top 3
-                $content .= '<p>' . __('Keyword:', 'seo-booster') . " <strong>" . esc_html($keyword['query']) . "</strong><br/>";
-                $content .= "<a href='" . esc_url($keyword['page']) . "' target='_blank'>" . esc_html($keyword['page']) . "</a><br/>";
-                $content .= "<small>";
-                $content .= __('Avg. Position:', 'seo-booster') . " " . number_format_i18n(floor($keyword['avg_position'])) . ' ';
-                $content .= __('Clicks:', 'seo-booster') . " " . number_format_i18n($keyword['total_clicks']) . ' ';
-                $content .= __('Impressions:', 'seo-booster') . " " . number_format_i18n($keyword['total_impressions']) . "</small></p>";
-            }
-            $content .= '<p><a href="' . esc_url(admin_url('admin.php?page=sb2_reports')) . '">' . __('View full report', 'seo-booster') . '</a></p>';
-        } else {
-            $content .= "<p>" . __('No new keywords found in the past 7 days.', 'seo-booster') . "</p>";
-        }
-
-        // Trend Analysis Section
-        $content .= "<h2>" . __('Trend Analysis', 'seo-booster') . "</h2>";
-        if (!empty($trends)) {
-            $content .= '<p>' . __('Here are the top trends in impressions and clicks over the last 14 days.', 'seo-booster') . '</p>';
-            foreach (array_slice($trends, 0, 3) as $trend) { // Limit to top 3
-                $content .= '<p>' . __('Query:', 'seo-booster') . " <strong>" . esc_html($trend['query']) . "</strong><br/>";
-                $content .= "<a href='" . esc_url($trend['page']) . "' target='_blank'>" . esc_html($trend['page']) . "</a><br/>";
-                $content .= "<small>";
-                $content .= __('Current Week Impressions:', 'seo-booster') . " " . number_format_i18n($trend['current_week_impressions']) . ' ';
-                $content .= __('Current Week Clicks:', 'seo-booster') . " " . number_format_i18n($trend['current_week_clicks']) . ' ';
-                $content .= __('Previous Week Impressions:', 'seo-booster') . " " . number_format_i18n($trend['previous_week_impressions']) . ' ';
-                $content .= __('Previous Week Clicks:', 'seo-booster') . " " . number_format_i18n($trend['previous_week_clicks']) . "</small></p>";
-            }
-            $content .= '<p><a href="' . esc_url(admin_url('admin.php?page=sb2_reports')) . '">' . __('View full report', 'seo-booster') . '</a></p>';
-        } else {
-            $content .= "<p>" . __('No significant trends found in the past 14 days.', 'seo-booster') . "</p>";
-        }
-
-        // Keyword Cannibalization Section
-        $content .= "<h2>" . __('Keyword Cannibalization', 'seo-booster') . "</h2>";
-        if (!empty($cannibalized_keywords)) {
-            $content .= '<p>' . __('The following keywords are causing cannibalization issues across multiple pages.', 'seo-booster') . '</p>';
-            foreach (array_slice($cannibalized_keywords, 0, 3) as $keyword) { // Limit to top 3
-                $content .= '<p>' . __('Keyword:', 'seo-booster') . " <strong>" . esc_html($keyword['query']) . "</strong><br/>";
-                $content .= "<a href='" . esc_url($keyword['page']) . "' target='_blank'>" . esc_html($keyword['page']) . "</a><br/>";
-                $content .= "<small>";
-                $content .= __('Total Impressions:', 'seo-booster') . " " . number_format_i18n($keyword['total_impressions']) . ' ';
-                $content .= __('Total Clicks:', 'seo-booster') . " " . number_format_i18n($keyword['total_clicks']) . ' ';
-                $content .= __('Avg. Position:', 'seo-booster') . " " . number_format_i18n($keyword['avg_position']) . "</small></p>";
-            }
-            $content .= '<p><a href="' . esc_url(admin_url('admin.php?page=sb2_reports')) . '">' . __('View full report', 'seo-booster') . '</a></p>';
-        } else {
-            $content .= "<p>" . __('No keyword cannibalization detected.', 'seo-booster') . "</p>";
-        }
-
-        // Ranking Anomalies Section
-        $content .= "<h2>" . __('Ranking Anomalies', 'seo-booster') . "</h2>";
-        if (!empty($anomalies)) {
-            $content .= '<p>' . __('The following keywords have shown significant ranking fluctuations.', 'seo-booster') . '</p>';
-            foreach (array_slice($anomalies, 0, 3) as $anomaly) { // Limit to top 3
-                $content .= '<p>' . __('Keyword:', 'seo-booster') . " <strong>" . esc_html($anomaly['query']) . "</strong><br/>";
-                $content .= "<a href='" . esc_url($anomaly['page']) . "' target='_blank'>" . esc_html($anomaly['page']) . "</a><br/>";
-                $content .= "<small>";
-                $content .= __('Impressions:', 'seo-booster') . " " . number_format_i18n($anomaly['total_impressions']) . ' ';
-                $content .= __('Clicks:', 'seo-booster') . " " . number_format_i18n($anomaly['total_clicks']) . ' ';
-                $content .= '<span style="color:red;">' . __('Position fluctuation:', 'seo-booster') . " " . number_format_i18n($anomaly['min_position']) . " - " . number_format_i18n($anomaly['max_position']) . "</span><br/>";
-                $date_format = get_option('date_format');
-                $content .= sprintf(
-                    // translators: 1: date, 2: current position
-                    __('Current Position (as of %1$s): %2$s', 'seo-booster'),
-                    date_i18n($date_format, strtotime($anomaly['max_position_date'])),
-                    number_format_i18n(floor($anomaly['current_position']))
-                );
-                $content .= "</small></p>";
-            }
-            $content .= '<p><a href="' . esc_url(admin_url('admin.php?page=sb2_reports')) . '">' . __('View full report', 'seo-booster') . '</a></p>';
-        } else {
-            $content .= "<p>" . __('No significant ranking anomalies detected.', 'seo-booster') . "</p>";
-        }
-
-        // 404 Errors Section
-        $content .= '<h2>' . __('404 Errors - Not found content', 'seo-booster') . '</h2>';
-        if (!empty($filtered_errors)) {
-            $content .= '<p>' . sprintf(__('A total of %s not found 404 errors have been detected. The following URLs have been reported as 404 errors. This means that the content was not found on your website.', 'seo-booster'), number_format_i18n($total_404s)) . '</p>';
-            foreach (array_slice($filtered_errors, 0, 3) as $error) { // Limit to top 3
-                $content .=  esc_html(site_url($error->lp)) . '<br><small>' . esc_html($error->visits) . ' ' . __('times', 'seo-booster');
-                if (!empty($error->referer)) {
-                    $content .= ' (' . __('Referrer:', 'seo-booster') . ') ' . esc_html($error->referer);
-                } else {
-                    $content .= ' ('.__('Unknown origin', 'seo-booster').')';
+        // SEO Possibilities Section
+        if ( !empty( $top_possibilities ) && is_array( $top_possibilities ) && isset( $possibilities_stats['total_issues'] ) && $possibilities_stats['total_issues'] > 0 ) {
+            $content .= "<h2>" . __( 'Top SEO Possibilities', 'seo-booster' ) . "</h2>";
+            $content .= '<p>' . sprintf( __( 'Here are the top %d SEO possibilities to address:', 'seo-booster' ), min( 5, count( $top_possibilities ) ) ) . '</p>';
+            $severity_labels = [
+                'critical' => __( 'Critical', 'seo-booster' ),
+                'error'    => __( 'Error', 'seo-booster' ),
+                'high'     => __( 'High', 'seo-booster' ),
+                'warning'  => __( 'Warning', 'seo-booster' ),
+                'medium'   => __( 'Medium', 'seo-booster' ),
+                'low'      => __( 'Low', 'seo-booster' ),
+            ];
+            foreach ( $top_possibilities as $possibility ) {
+                if ( !is_array( $possibility ) ) {
+                    continue;
                 }
-                $content .= '</small><br><br>';
+                $severity = ( isset( $possibility['severity'] ) ? $possibility['severity'] : 'medium' );
+                $severity_label = ( isset( $severity_labels[$severity] ) ? $severity_labels[$severity] : ucfirst( $severity ) );
+                $affected_urls = ( isset( $possibility['affected_urls'] ) ? (int) $possibility['affected_urls'] : 0 );
+                $message = ( isset( $possibility['message'] ) && !empty( $possibility['message'] ) ? $possibility['message'] : __( 'SEO issue detected', 'seo-booster' ) );
+                $content .= '<p><strong>' . esc_html( $severity_label ) . ':</strong> ' . esc_html( $message );
+                if ( $affected_urls > 0 ) {
+                    $content .= ' <small>(' . sprintf( _n(
+                        '%d page affected',
+                        '%d pages affected',
+                        $affected_urls,
+                        'seo-booster'
+                    ), $affected_urls ) . ')</small>';
+                }
+                $content .= '</p>';
             }
-            $content .= '<p>' . __('Please review these URLs. If they are from links inside your website, you should fix them immediately. Any external link you cannot control you can consider redirecting them to relevant content on your website.', 'seo-booster') . '</p>';
-            $content .= '<p><a href="' . esc_url(admin_url('admin.php?page=sb2_reports')) . '">' . __('View full report', 'seo-booster') . '</a></p>';
-        } else {
-            $content .= '<p>' . __('No 404 errors found.', 'seo-booster') . '</p>';
+            $content .= '<p><a href="' . esc_url( admin_url( 'admin.php?page=sb2_seo_issues' ) ) . '">' . __( 'View All SEO Possibilities', 'seo-booster' ) . '</a></p>';
         }
-
+        // New Keywords Section
+        $content .= "<h2>" . __( 'New Keywords', 'seo-booster' ) . "</h2>";
+        if ( !empty( $new_keywords ) && is_array( $new_keywords ) ) {
+            $content .= '<p>' . __( 'Top keywords discovered in the past 7 days:', 'seo-booster' ) . '</p>';
+            foreach ( array_slice( $new_keywords, 0, 3 ) as $keyword ) {
+                if ( !isset( $keyword['query'] ) || !isset( $keyword['page'] ) ) {
+                    continue;
+                }
+                $content .= '<p><strong>' . esc_html( $keyword['query'] ) . '</strong><br/>';
+                $content .= "<a href='" . esc_url( $keyword['page'] ) . "' target='_blank'>" . esc_html( $keyword['page'] ) . "</a><br/>";
+                $content .= "<small>";
+                $avg_position = ( isset( $keyword['avg_position'] ) ? (float) $keyword['avg_position'] : 0 );
+                $total_clicks = ( isset( $keyword['total_clicks'] ) ? (int) $keyword['total_clicks'] : 0 );
+                $total_impressions = ( isset( $keyword['total_impressions'] ) ? (int) $keyword['total_impressions'] : 0 );
+                $content .= __( 'Position:', 'seo-booster' ) . " " . number_format_i18n( floor( $avg_position ) ) . ' • ';
+                $content .= __( 'Clicks:', 'seo-booster' ) . " " . number_format_i18n( $total_clicks ) . ' • ';
+                $content .= __( 'Impressions:', 'seo-booster' ) . " " . number_format_i18n( $total_impressions ) . "</small></p>";
+            }
+            if ( $total_new_keywords > 3 ) {
+                $content .= '<p><a href="' . esc_url( admin_url( 'admin.php?page=sb2_dashboard' ) ) . '">' . sprintf( __( 'View all %s new keywords', 'seo-booster' ), number_format_i18n( $total_new_keywords ) ) . '</a></p>';
+            }
+        } else {
+            $content .= "<p>" . __( 'No new keywords found in the past 7 days.', 'seo-booster' ) . "</p>";
+        }
         // Final Email Assembly
-        $dashboardlink = admin_url('?page=sb2_dashboard');
-        $subjectline = sprintf("Your Weekly SEO Update: New Keywords, Trends, and Performance Insights - %s - %s", date_i18n('F j, Y'), Utils::remove_http(site_url()));
-        $emailtitle = __('Report from SEO Booster on ', 'seo-booster') . ' ' . Utils::remove_http(site_url());
-        $dashboardlinkanchor = __('SEO Booster Dashboard', 'seo-booster');
-        $emailintrotext = __('Hello! We’ve prepared your weekly SEO report, providing insights on new keywords, trends, potential issues, and recommendations.', 'seo-booster');
+        $dashboardlink = admin_url( '?page=sb2_dashboard' );
+        $subjectline = sprintf( __( 'Your Weekly SEO Update - %s - %s', 'seo-booster' ), date_i18n( 'F j, Y' ), Utils::remove_http( site_url() ) );
+        $emailtitle = __( 'SEO Update from SEO Booster', 'seo-booster' ) . ' - ' . Utils::remove_http( site_url() );
+        $dashboardlinkanchor = __( 'SEO Booster Dashboard', 'seo-booster' );
+        $emailintrotext = __( 'Here\'s your weekly SEO update with key insights and opportunities.', 'seo-booster' );
+        $emailintrotext .= '<br><small>' . __( 'Data is based on Google Search Console and does not represent your full website traffic.', 'seo-booster' ) . '</small>';
         $my_replacements = array(
-            '%%emailintrotext%%' => $emailintrotext,
-            '%%websitedomain%%' => Utils::remove_http(site_url()),
-            '%%dashboardlink%%' => $dashboardlink,
+            '%%emailintrotext%%'      => $emailintrotext,
+            '%%websitedomain%%'       => Utils::remove_http( site_url() ),
+            '%%dashboardlink%%'       => $dashboardlink,
             '%%dashboardlinkanchor%%' => $dashboardlinkanchor,
-            '%%emailtitle%%' => $emailtitle,
-            '%%emailcontent%%' => nl2br($intro_summary . $content),
+            '%%emailtitle%%'          => $emailtitle,
+            '%%emailcontent%%'        => nl2br( $intro_summary . $content ),
         );
-
         // Get WP_Filesystem instance
         global $wp_filesystem;
-        if (empty($wp_filesystem)) {
+        if ( empty( $wp_filesystem ) ) {
             require_once ABSPATH . '/wp-admin/includes/file.php';
             WP_Filesystem();
         }
-
         $template_path = SEOBOOSTER_PLUGINPATH . 'templates/email/report.php';
-        if ($wp_filesystem->exists($template_path)) {
-            $html = $wp_filesystem->get_contents($template_path);
+        if ( $wp_filesystem->exists( $template_path ) ) {
+            $html = $wp_filesystem->get_contents( $template_path );
         } else {
             // Handle error - template file not found
-            Utils::log(esc_html__('Email template file not found', 'seo-booster'), 2);
+            Utils::log( 'Email template file not found', 2 );
             return;
         }
-
-        foreach ($my_replacements as $needle => $replacement) {
-            $html = str_replace($needle, $replacement, $html);
+        foreach ( $my_replacements as $needle => $replacement ) {
+            $html = str_replace( $needle, $replacement, $html );
         }
         $headers = array('Content-Type: text/html; charset=UTF-8');
-
-        if (empty($email_recipients)) {
-            Utils::log(esc_html__('No valid email recipients found for status email', 'seo-booster'), 2);
+        if ( empty( $email_recipients ) ) {
+            Utils::log( 'No valid email recipients found for status email', 2 );
             return;
         }
-
-        foreach ($email_recipients as $email) {
-            if (!is_email($email)) {
-                Utils::log(sprintf(
+        foreach ( $email_recipients as $email ) {
+            if ( !is_email( $email ) ) {
+                Utils::log( sprintf( 
                     // translators: 1: Invalid email address
-                    esc_html__('Invalid email address: %1$s', 'seo-booster'),
-                    esc_html($email)
-                ), 2);
+                    esc_html__( 'Invalid email address: %1$s', 'seo-booster' ),
+                    esc_html( $email )
+                 ), 2 );
                 continue;
             }
-
-            $sendresult = wp_mail($email, $subjectline, $html, $headers);
-            if ($sendresult) {
-                Utils::log(sprintf(
+            $sendresult = wp_mail(
+                $email,
+                $subjectline,
+                $html,
+                $headers
+            );
+            if ( $sendresult ) {
+                Utils::log( sprintf( 
                     // translators: 1: Email address of the recipient
-                    esc_html__('Status email was sent to %1$s', 'seo-booster'),
-                    esc_html($email)
-                ), 10);
+                    esc_html__( 'Status email was sent to %1$s', 'seo-booster' ),
+                    esc_html( $email )
+                 ), 10 );
             } else {
-                Utils::log(sprintf(
+                Utils::log( sprintf( 
                     // translators: 1: Email address of the recipient
-                    esc_html__('Status email was not sent to %1$s', 'seo-booster'),
-                    esc_html($email)
-                ), 2);
+                    esc_html__( 'Status email was not sent to %1$s', 'seo-booster' ),
+                    esc_html( $email )
+                 ), 2 );
             }
         }
     }
+
 }

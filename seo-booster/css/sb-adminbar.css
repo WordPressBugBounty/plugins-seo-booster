@@ -9,8 +9,9 @@
   border-bottom: 2px solid #dee2e6;
 }
 
-.tabulator-row {
+.winbox .tabulator-row {
   border-bottom: 1px solid #dee2e6;
+  min-height: 150px;
 }
 
 .tabulator-row.tabulator-row-even {
@@ -33,6 +34,41 @@
 /* WinBox Table Styles */
 .winbox .wb-body {
 	padding: 15px;
+}
+
+.tabulator-cell .sb-uplot-container {
+    min-height: 80px;
+    width: 100%;
+    position: relative;
+    overflow: visible;
+}
+
+.tabulator-cell 
+.sb-uplot-tooltip {
+    position: absolute;
+    display: none;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 99999999;
+    pointer-events: none;
+}
+
+/* Fix the selector to target the global tooltip */
+.sb-uplot-tooltip {
+    position: fixed;
+    display: none;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 99999999;
+    pointer-events: none;
 }
 
 .winbox .tabulator {
@@ -88,8 +124,8 @@ padding:0px !important;
 .sb-search-wrapper .sb-search-input {
     width: 100%;
     font-family: sans-serif;
-    height: 38px;
-    padding: 8px 12px 8px 35px;
+    height: 18px;
+    padding: 8px 12px 8px 15px;
     font-size: 14px;
     line-height: 1.5;
     color: #495057;
@@ -170,6 +206,7 @@ padding:0px !important;
 .tabulator-row .tabulator-cell {
     padding: 12px 8px;
     border-right: none;
+    vertical-align: top;
 }
 
 /* Collapsed Content */
@@ -454,5 +491,5 @@ padding:0px !important;
 }
 
 .fl-builder-seobooster-button svg.hidden {
-    display: none;
+	display: none;
 }

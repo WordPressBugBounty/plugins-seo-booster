@@ -75,6 +75,8 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 			'keyword'  => _x('Keyword', 'Column label', 'seo-booster'),
 			'pointing' => '', // cannot call it arrow because of CSS clashes
 			'url'      => _x('Target URL', 'Column label', 'seo-booster'),
+			'lastseen' => _x('Last Used On', 'Column label', 'seo-booster'), // Add this line
+
 		);
 
 		return $columns;
@@ -128,7 +130,7 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 			case 'pointing':
 				return '<span class="dashicons dashicons-arrow-right-alt"></span>';
 			default:
-				return print_r($item, true);
+				return isset($item[$column_name]) && is_scalar($item[$column_name]) ? esc_html($item[$column_name]) : '';
 		}
 	}
 
@@ -160,6 +162,7 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 	protected function column_lastseen($item)
 	{
 
+
 		$lastseen = maybe_unserialize($item['lastseen']);
 		if (!is_array($lastseen)) {
 			return '';
@@ -168,7 +171,7 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 		foreach ($lastseen as $ls) {
 			$outstr .= '<span class="listitem"><a href="' . site_url($ls) . '" target="_blank">' . $ls . '</a>, </span>';
 		}
-		$outstr = rtrim($outstr, ', </span>');
+
 		return $outstr;
 	}
 
@@ -340,7 +343,7 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 		$table_name = esc_sql($wpdb->prefix . 'sb2_autolink');
 
 		$data = $wpdb->get_results($wpdb->prepare(
-			"SELECT id, keyword, url 
+			"SELECT id, keyword, url, lastseen
 			FROM {$table_name} 
 			WHERE 1 = 1 
 			{$do_search} 
