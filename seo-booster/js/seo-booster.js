@@ -27,10 +27,33 @@ jQuery(document).on('change', '.sb2authenticate #choosecont select', function ()
 
 
 jQuery(document).on('click', '#submit_dbempty, #submit_gsc_change_site, #submit_allempty, #submit_reset_log', function (e) {
-    var confirmation = confirm(sbdata.strings.areYouSure);
-    if (!confirmation) {
-        e.preventDefault();
-    }
+    e.preventDefault();
+    var $btn = jQuery(this);
+    var $form = $btn.closest('form');
+    window.SBModal.confirm(sbdata.strings.areYouSure).then(function (confirmed) {
+        if (!confirmed || !$form.length) {
+            return;
+        }
+
+        var btnName = $btn.attr('name');
+        if (btnName) {
+            $form.find('input[type="hidden"][data-sb-confirmed-action="1"]').remove();
+            $form.append(
+                jQuery('<input>', {
+                    type: 'hidden',
+                    name: btnName,
+                    value: $btn.val() || '1',
+                    'data-sb-confirmed-action': '1'
+                })
+            );
+        }
+
+        if (typeof $form[0].requestSubmit === 'function') {
+            $form[0].requestSubmit($btn[0]);
+        } else {
+            $form[0].submit();
+        }
+    });
 });
 
 jQuery(document).ready(function ($) {
@@ -579,14 +602,55 @@ jQuery(document).ready(function ($) {
     });
 
 
+    // ****** Autolink page helpers
+    function clearAutolinkFormErrors() {
+        jQuery('#addkwresponse').removeClass('hasError').empty();
+        jQuery('#sb2_autolink_add form input').removeClass('hasError');
+        jQuery('.field-error-msg').remove();
+    }
+
+    function showAutolinkFieldError($input, message) {
+        $input.addClass('hasError');
+        const $field = $input.closest('.sb-autolink-field');
+        $field.find('.field-error-msg').remove();
+        $field.append('<span class="field-error-msg" role="alert">' + message + '</span>');
+    }
+
+    function getAutolinkTableBody() {
+        return jQuery('#urls-filter .wp-list-table tbody');
+    }
+
+    function insertAutolinkRow(rowHtml) {
+        const $tbody = getAutolinkTableBody();
+        $tbody.find('tr.no-items').remove();
+        const $row = jQuery(rowHtml);
+        $row.addClass('sb-autolink-row-new');
+        $tbody.prepend($row);
+        setTimeout(function () {
+            $row.removeClass('sb-autolink-row-new');
+        }, 2500);
+    }
+
+    function showAutolinkNoItemsRow() {
+        const $table = jQuery('#urls-filter .wp-list-table');
+        const colCount = $table.find('thead th').length;
+        const noItemsText = (typeof sbdata !== 'undefined' && sbdata.strings && sbdata.strings.autolinkNoItems)
+            ? sbdata.strings.autolinkNoItems
+            : 'No keyword to links made.';
+        getAutolinkTableBody().append(
+            '<tr class="no-items"><td class="colspanchange" colspan="' + colCount + '">' + noItemsText + '</td></tr>'
+        );
+    }
+
     // ****** Add new keyword AJAX
     jQuery("#sb2_autolink_add").submit(function (event) {
         event.preventDefault();
-        jQuery('#sb2_autolink_add #submit').prop('disabled', true); // Disable button
+        clearAutolinkFormErrors();
+        jQuery('#sb2_autolink_add #submit').prop('disabled', true);
 
-        jQuery('.kwaddspinner').show(); // show the spinner
-        jQuery("#sb2_autolink_add form #newkeyword").removeClass('hasError').prop('disabled', true);
-        jQuery("#sb2_autolink_add form #targeturl").removeClass('hasError').prop('disabled', true);
+        jQuery('.kwaddspinner').show();
+        jQuery("#sb2_autolink_add form #newkeyword").prop('disabled', true);
+        jQuery("#sb2_autolink_add form #targeturl").prop('disabled', true);
 
         jQuery.post(
             sbdata.ajaxurl, {
@@ -597,43 +661,99 @@ jQuery(document).ready(function ($) {
             'targeturl': jQuery('#sb2_autolink_add form #targeturl').val()
         },
             function (response) {
-                // malformed url
-                jQuery('#sb2_autolink_add #submit').prop('disabled', false); // Reneable the button
+                jQuery('#sb2_autolink_add #submit').prop('disabled', false);
+                jQuery('.kwaddspinner').hide();
 
-                jQuery('.kwaddspinner').hide(); // Hide the spinner
+                if (response.answer) {
+                    jQuery('#addkwresponse').html(response.answer);
+                }
 
-                jQuery('#addkwresponse').html(response.answer); // Show the response from server
-
-
-                /*
-                            if (response.newrow) {
-                                jQuery(response.newrow).appendTo(jQuery(".seo-booster_page_sb2_autolink #urls-filter .wp-list-table"));
-                            }
-                */
                 if (response.success) {
-                    jQuery("#sb2_autolink_add_form #newkeyword").prop('disabled', false).val('');
+                    jQuery('#addkwresponse').removeClass('hasError');
+                    if (response.newrow) {
+                        insertAutolinkRow(response.newrow);
+                    }
+                    jQuery("#sb2_autolink_add_form #newkeyword").prop('disabled', false).val('').focus();
                     jQuery("#sb2_autolink_add_form #targeturl").prop('disabled', false).val('');
-                    // wait 2 seconds and then reload the page
-                    setTimeout(function () {
-                        location.reload();
-                    }, 2000);
+                    return;
                 }
 
                 if (response.error === 'malurl') {
                     jQuery('#addkwresponse').addClass('hasError');
-                    jQuery('#sb2_autolink_add form #targeturl').addClass('hasError').prop('disabled', false);
+                    const $targetUrl = jQuery('#sb2_autolink_add form #targeturl');
+                    $targetUrl.prop('disabled', false);
+                    showAutolinkFieldError($targetUrl, jQuery('<div>').html(response.answer).text());
                     jQuery("#sb2_autolink_add form #newkeyword").prop('disabled', false);
                 }
 
                 if (response.error === 'kwused') {
                     jQuery('#addkwresponse').addClass('hasError');
-                    jQuery('#sb2_autolink_add form #newkeyword').addClass('hasError').prop('disabled', false).focus();
+                    const $keyword = jQuery('#sb2_autolink_add form #newkeyword');
+                    $keyword.prop('disabled', false).focus();
+                    showAutolinkFieldError($keyword, jQuery('<div>').html(response.answer).text());
                     jQuery("#sb2_autolink_add form #targeturl").prop('disabled', false);
                 }
-
             }
-        );
+        ).fail(function () {
+            jQuery('#sb2_autolink_add #submit').prop('disabled', false);
+            jQuery('.kwaddspinner').hide();
+            jQuery("#sb2_autolink_add form #newkeyword, #sb2_autolink_add form #targeturl").prop('disabled', false);
+            jQuery('#addkwresponse').addClass('hasError').html(
+                (typeof sbdata !== 'undefined' && sbdata.strings && sbdata.strings.errorProcessingRequest)
+                    ? sbdata.strings.errorProcessingRequest
+                    : 'An error occurred while processing the request.'
+            );
+        });
 
+    });
+
+    // ****** Delete autolink keyword via AJAX
+    jQuery(document).on('click', '.sb-delete-keyword', function (event) {
+        event.preventDefault();
+
+        const $link = jQuery(this);
+        const id = $link.data('id');
+        const nonce = $link.data('nonce');
+        const confirmMsg = (typeof sbdata !== 'undefined' && sbdata.strings && sbdata.strings.areYouSure)
+            ? sbdata.strings.areYouSure
+            : 'Are you sure you want to do this?';
+
+        window.SBModal.confirm(confirmMsg).then(function (confirmed) {
+            if (!confirmed) {
+                return;
+            }
+
+            const $row = $link.closest('tr');
+            $row.addClass('sb-autolink-row-removing');
+
+            jQuery.post(sbdata.ajaxurl, {
+                action: 'sb_delete_keyword',
+                id: id,
+                nonce: nonce
+            }, function (response) {
+                if (response.success) {
+                    $row.slideUp(300, function () {
+                        jQuery(this).remove();
+                        const $tbody = getAutolinkTableBody();
+                        if ($tbody.find('tr').not('.no-items').length === 0) {
+                            showAutolinkNoItemsRow();
+                        }
+                    });
+                    return;
+                }
+
+                $row.removeClass('sb-autolink-row-removing');
+                window.SBModal.alert(response.data || 'Error deleting keyword', { tone: 'error' });
+            }).fail(function () {
+                $row.removeClass('sb-autolink-row-removing');
+                window.SBModal.alert(
+                    (typeof sbdata !== 'undefined' && sbdata.strings && sbdata.strings.errorProcessingRequest)
+                        ? sbdata.strings.errorProcessingRequest
+                        : 'An error occurred while processing the request.',
+                    { tone: 'error' }
+                );
+            });
+        });
     });
 
 
@@ -747,12 +867,12 @@ jQuery(document).ready(function ($) {
                     $field.html(newInputValue);
                 } else {
                     cancelEdit($field);
-                    alert(response.data || 'Error updating field');
+                    window.SBModal.alert(response.data || 'Error updating field', { tone: 'error' });
                 }
             },
             error: function () {
                 cancelEdit($field);
-                alert('Error processing request');
+                window.SBModal.alert('Error processing request', { tone: 'error' });
             },
             complete: function () {
                 $spinner.remove();

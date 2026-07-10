@@ -83,7 +83,7 @@ jQuery(document).ready(function() {
             if (typeof open_floating_window === 'function') {
                 open_floating_window();
             } else {
-                alert('SEO Booster activated! The floating window function is not available.');
+                window.SBModal.alert('SEO Booster activated! The floating window function is not available.');
             }
         });
         

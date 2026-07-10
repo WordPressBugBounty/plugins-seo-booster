@@ -6,45 +6,56 @@ jQuery(document).ready(function($) {
     'use strict';
     
     // Tab Navigation - Only for our custom tabs, not Freemius tabs
+    function activateSettingsTab(tabSlug, updateHash) {
+        var $tab = $('.sb-seo-tabs .nav-tab[data-tab="' + tabSlug + '"]:not(.fs-tab)');
+        var $panel = $('#' + tabSlug + '-tab');
+
+        if (!$tab.length || !$panel.length) {
+            return false;
+        }
+
+        $('.sb-seo-tabs .nav-tab[data-tab]:not(.fs-tab)').removeClass('nav-tab-active');
+        $('.sb-tab-content').removeClass('sb-tab-active');
+        $tab.addClass('nav-tab-active');
+        $panel.addClass('sb-tab-active');
+
+        if (updateHash) {
+            var nextUrl = window.location.pathname + window.location.search + '#' + tabSlug;
+            if (window.history.replaceState) {
+                window.history.replaceState(null, '', nextUrl);
+            } else {
+                window.location.hash = '#' + tabSlug;
+            }
+        }
+
+        return true;
+    }
+
     $('.sb-seo-tabs .nav-tab[data-tab]:not(.fs-tab)').on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
-        var targetTab = $(this).data('tab');
-        
-        // Remove active class from all our custom tabs and content
-        $('.sb-seo-tabs .nav-tab[data-tab]:not(.fs-tab)').removeClass('nav-tab-active');
-        $('.sb-tab-content').removeClass('sb-tab-active');
-        
-        // Add active class to clicked tab and corresponding content
-        $(this).addClass('nav-tab-active');
-        $('#' + targetTab + '-tab').addClass('sb-tab-active');
-        
-        // Update URL hash
-        window.location.hash = '#' + targetTab;
+        activateSettingsTab($(this).data('tab'), true);
     });
-    
-    // Handle initial hash on page load. The default tab (automatic-links) is
-    // already rendered active server-side, so only switch if the hash points
-    // to a different tab. This avoids a flash/layout jump on initial load.
+
+    // Restore tab after form submission (?current_tab=...)
+    var urlParams = new URLSearchParams(window.location.search);
+    var savedTab = urlParams.get('current_tab');
     var tabActivated = false;
-    if (window.location.hash) {
+
+    if (savedTab && activateSettingsTab(savedTab, true)) {
+        tabActivated = true;
+    }
+
+    if (!tabActivated && window.location.hash) {
         var hash = window.location.hash.substring(1);
-        var targetTab = $('.sb-seo-tabs .nav-tab[data-tab="' + hash + '"]');
-        if (targetTab.length) {
-            if (!targetTab.hasClass('nav-tab-active')) {
-                targetTab.trigger('click');
-            }
+        if (activateSettingsTab(hash, false)) {
             tabActivated = true;
         }
     }
-    
-    // Default to automatic-links tab if no hash is present or hash doesn't match any tab
+
+    // Default tab when no hash / unknown hash / bare settings URL
     if (!tabActivated) {
-        var defaultTab = $('.sb-seo-tabs .nav-tab[data-tab="automatic-links"]');
-        if (defaultTab.length && !defaultTab.hasClass('nav-tab-active')) {
-            defaultTab.trigger('click');
-        }
+        activateSettingsTab('ai-llm', true);
     }
     
     // Content Types Collapsible Functionality
@@ -103,18 +114,6 @@ jQuery(document).ready(function($) {
             }).appendTo(this);
         }
     });
-    
-    // Restore tab after form submission
-    if (window.location.search.indexOf('current_tab=') > -1) {
-        var urlParams = new URLSearchParams(window.location.search);
-        var savedTab = urlParams.get('current_tab');
-        if (savedTab) {
-            var targetTab = $('.sb-seo-tabs .nav-tab[data-tab="' + savedTab + '"]');
-            if (targetTab.length) {
-                targetTab.trigger('click');
-            }
-        }
-    }
     
     // Image selection functionality
     $('.sb-seo-select-image').on('click', function(e) {

@@ -230,8 +230,7 @@ jQuery(document).ready(function($) {
     
     // Check if we have data
     if (!data || data.length === 0) {
-      const debugInfo = `(Response: ${JSON.stringify(data).substring(0, 100)}...)`;
-      $element.html(`<div class="sb-no-data">No data available ${debugInfo}</div>`);
+      $element.html('<div class="sb-no-data">No data available</div>');
       return;
     }
     
@@ -342,8 +341,7 @@ jQuery(document).ready(function($) {
       createChart(chartCanvas, timestamps, impressions, clicks, positions);
       
     } catch (e) {
-      const debugInfo = `(Data: ${JSON.stringify(data).substring(0, 100)}...)`;
-      $element.html(`<div class="sb-error">Chart error ${debugInfo}</div>` + (lastVisitText ? `<div class="sb-last-visit-info">${lastVisitText}</div>` : ''));
+      $element.html('<div class="sb-error">Chart error</div>' + (lastVisitText ? `<div class="sb-last-visit-info">${lastVisitText}</div>` : ''));
     }
   }
 

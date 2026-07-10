@@ -23,11 +23,11 @@ class SB_GSC_Ajax {
      */
     public static function init() {
         // Register AJAX actions
-        add_action( 'wp_ajax_sb_gsc_get_keywords', [__CLASS__, 'ajax_get_keywords'] );
-        add_action( 'wp_ajax_sb_adminbar_get_keywords', [__CLASS__, 'ajax_adminbar_get_keywords'] );
-        add_action( 'wp_ajax_sb_get_keyword_history', [__CLASS__, 'ajax_get_keyword_history'] );
-        add_action( 'wp_ajax_sb_get_full_keyword_history', [__CLASS__, 'ajax_get_full_keyword_history'] );
-        add_action( 'wp_ajax_sb_get_gsc_keywords_for_highlighting', [__CLASS__, 'ajax_get_gsc_keywords_for_highlighting'] );
+        add_action( 'wp_ajax_sb_gsc_get_keywords', array(__CLASS__, 'ajax_get_keywords') );
+        add_action( 'wp_ajax_sb_adminbar_get_keywords', array(__CLASS__, 'ajax_adminbar_get_keywords') );
+        add_action( 'wp_ajax_sb_get_keyword_history', array(__CLASS__, 'ajax_get_keyword_history') );
+        add_action( 'wp_ajax_sb_get_full_keyword_history', array(__CLASS__, 'ajax_get_full_keyword_history') );
+        add_action( 'wp_ajax_sb_get_gsc_keywords_for_highlighting', array(__CLASS__, 'ajax_get_gsc_keywords_for_highlighting') );
     }
 
     /**
@@ -36,11 +36,11 @@ class SB_GSC_Ajax {
      * First and latest entries
      * Average position, clicks, and impressions per day
      *
-     * @author	Lars Koudal
-     * @since	v0.0.1
-     * @version	v1.0.0	Thursday, May 8th, 2025.
-     * @access	public static
-     * @return	void
+     * @author  Lars Koudal
+     * @since   v0.0.1
+     * @version v1.0.0  Thursday, May 8th, 2025.
+     * @access  public static
+     * @return  void
      */
     public static function ajax_get_keyword_history() {
         check_ajax_referer( 'sb_gsc_nonce', 'security' );
@@ -63,15 +63,8 @@ class SB_GSC_Ajax {
             delete_transient( $cache_key );
         }
         // Try to get cached data
-        $start_time = microtime( true );
         $cached_data = get_transient( $cache_key );
         if ( false !== $cached_data ) {
-            $response_time = (microtime( true ) - $start_time) * 1000;
-            // Convert to milliseconds
-            $cached_data['_debug'] = [
-                'cached'           => true,
-                'response_time_ms' => round( $response_time, 2 ),
-            ];
             wp_send_json_success( $cached_data );
             return;
         }
@@ -90,7 +83,7 @@ class SB_GSC_Ajax {
         // First, check if we have any data for these keywords (without date filter)
         $count_check = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table_name} WHERE query_keywords_id IN ({$placeholders})", ...$keyword_ids ) );
         if ( $count_check === 0 ) {
-            $response = array_fill_keys( $keyword_ids, [] );
+            $response = array_fill_keys( $keyword_ids, array() );
             set_transient( $cache_key, $response, HOUR_IN_SECONDS );
             wp_send_json_success( $response );
             return;
@@ -99,7 +92,7 @@ class SB_GSC_Ajax {
         // Use 60-day filter for optimization, but ensure we get at least one entry per keyword
         $all_entries = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table_name} \n                WHERE query_keywords_id IN ({$placeholders})\n                AND date >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)\n                ORDER BY query_keywords_id, date ASC", ...$keyword_ids ) );
         // Check which keywords have recent data
-        $keywords_with_recent_data = [];
+        $keywords_with_recent_data = array();
         foreach ( $all_entries as $entry ) {
             $keywords_with_recent_data[$entry->query_keywords_id] = true;
         }
@@ -115,20 +108,20 @@ class SB_GSC_Ajax {
                 $historical_placeholders = implode( ',', array_fill( 0, count( $historical_keyword_ids ), '%d' ) );
                 $historical_entries = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table_name} \n                        WHERE query_keywords_id IN ({$historical_placeholders})\n                        ORDER BY query_keywords_id, date ASC", ...$historical_keyword_ids ) );
             } else {
-                $historical_entries = [];
+                $historical_entries = array();
             }
             // Merge recent and historical data
             $all_entries = array_merge( $all_entries, $historical_entries );
         }
         // Group entries by keyword_id
-        $grouped_entries = [];
+        $grouped_entries = array();
         foreach ( $all_entries as $entry ) {
             $grouped_entries[$entry->query_keywords_id][] = $entry;
         }
         // Process each keyword's data
-        $result = [];
+        $result = array();
         foreach ( $keyword_ids as $keyword_id ) {
-            $result[$keyword_id] = [];
+            $result[$keyword_id] = array();
             // Skip if no data for this keyword
             if ( !isset( $grouped_entries[$keyword_id] ) || empty( $grouped_entries[$keyword_id] ) ) {
                 continue;
@@ -145,10 +138,10 @@ class SB_GSC_Ajax {
             $last_date = $last_entry->date;
             $total_days = (strtotime( $last_date ) - strtotime( $first_date )) / (24 * 60 * 60);
             // Calculate 120 days ago from today
-            $cutoff_date = date( 'Y-m-d', strtotime( '-120 days' ) );
+            $cutoff_date = gmdate( 'Y-m-d', strtotime( '-120 days' ) );
             // Split data into recent (120 days) and historical
-            $recent_entries = [];
-            $historical_entries = [];
+            $recent_entries = array();
+            $historical_entries = array();
             foreach ( $entries as $entry ) {
                 if ( $entry->date >= $cutoff_date ) {
                     $recent_entries[] = $entry;
@@ -211,19 +204,13 @@ class SB_GSC_Ajax {
             }
         }
         // Cache the results for 1 hour
-        $response_time = (microtime( true ) - $start_time) * 1000;
-        // Convert to milliseconds
-        $result['_debug'] = [
-            'cached'           => false,
-            'response_time_ms' => round( $response_time, 2 ),
-        ];
         set_transient( $cache_key, $result, HOUR_IN_SECONDS );
         wp_send_json_success( $result );
     }
 
     /**
      * Clear old cache entries for keyword history
-     * 
+     *
      * @return void
      */
     public static function clear_keyword_history_cache() {
@@ -239,7 +226,7 @@ class SB_GSC_Ajax {
 
     /**
      * Format a database entry for JSON response
-     * 
+     *
      * @param object $entry Database entry
      * @return array Formatted entry
      */
@@ -255,11 +242,11 @@ class SB_GSC_Ajax {
     /**
      * ajax_get_keywords.
      *
-     * @author	Lars Koudal
-     * @since	v0.0.1
-     * @version	v1.0.0	Wednesday, October 16th, 2024.
-     * @access	public static
-     * @return	void
+     * @author  Lars Koudal
+     * @since   v0.0.1
+     * @version v1.0.0  Wednesday, October 16th, 2024.
+     * @access  public static
+     * @return  void
      */
     public static function ajax_get_keywords() {
         check_ajax_referer( 'sb_gsc_nonce', 'security' );
@@ -306,16 +293,16 @@ class SB_GSC_Ajax {
         $results = $wpdb->get_results( $wpdb->prepare( "SELECT k.id, k.query, k.page, k.first_seen_date, k.latest_date,\n        k.is_used_in_content, k.last_checked,\n        SUM(h.clicks) AS clicks,\n        SUM(h.impressions) AS total_impressions,\n        AVG(h.ctr) AS average_ctr,\n        AVG(h.position) AS average_position\n        FROM {$wpdb->prefix}sb2_query_keywords AS k\n        INNER JOIN {$wpdb->prefix}sb2_query_keywords_history AS h \n            ON k.id = h.query_keywords_id\n        WHERE k.page = %s\n        GROUP BY k.query, k.page\n        ORDER BY total_impressions DESC", $public_url ), ARRAY_A );
         $prepared_query = $wpdb->prepare( "SELECT k.id, k.query, k.page, k.first_seen_date, k.latest_date,\n        k.is_used_in_content, k.last_checked,\n        SUM(h.clicks) AS clicks,\n        SUM(h.impressions) AS total_impressions,\n        AVG(h.ctr) AS average_ctr,\n        AVG(h.position) AS average_position\n        FROM {$wpdb->prefix}sb2_query_keywords AS k\n        INNER JOIN {$wpdb->prefix}sb2_query_keywords_history AS h \n            ON k.id = h.query_keywords_id\n        WHERE k.page = %s\n        GROUP BY k.query, k.page\n        ORDER BY total_impressions DESC", $public_url );
         if ( empty( $results ) ) {
-            wp_send_json_success( [
+            wp_send_json_success( array(
                 'message'        => __( 'No keywords found for this URL.', 'seo-booster' ),
                 'status'         => 'no_keywords',
                 'last_refreshed' => get_option( 'sb_gsc_last_refreshed' ),
                 'time'           => Utils::timerstop( 'ajax_get_keywords' ),
-            ] );
+            ) );
         } else {
-            $response = [];
+            $response = array();
             // Get a list of all auto links
-            $auto_links = [];
+            $auto_links = array();
             foreach ( $results as $res ) {
                 $keyword_id = intval( $res['id'] );
                 $keyword_query = esc_html( $res['query'] ?? '' );
@@ -330,7 +317,7 @@ class SB_GSC_Ajax {
                     $position_intext = '0';
                     $position_details = '&#10068; ' . __( 'Not analyzed yet', 'seo-booster' );
                 }
-                $newrow = [
+                $newrow = array(
                     'id'               => $keyword_id,
                     'query'            => $keyword_query,
                     'clicks'           => ( isset( $res['clicks'] ) ? $res['clicks'] : 0 ),
@@ -340,14 +327,14 @@ class SB_GSC_Ajax {
                     'position_intext'  => $position_intext,
                     'position_details' => $position_details,
                     'autolink'         => '<span class="label label-info" title="' . esc_attr__( 'Create internal links to this keyword with one click', 'seo-booster' ) . '">' . esc_html__( 'Pro', 'seo-booster' ) . '</span>',
-                ];
+                );
                 // Get historical data for charts
                 $history = $wpdb->get_results( $wpdb->prepare( "SELECT \n                        date,\n                        clicks,\n                        impressions,\n                        position\n                    FROM {$wpdb->prefix}sb2_query_keywords_history\n                    WHERE query_keywords_id = %d\n                    ORDER BY date ASC", $keyword_id ), ARRAY_A );
                 // If no recent data, get the most recent entry to show at least something
                 if ( empty( $history ) ) {
                     $latest_entry = $wpdb->get_row( $wpdb->prepare( "SELECT \n                            date,\n                            clicks,\n                            impressions,\n                            position\n                        FROM {$wpdb->prefix}sb2_query_keywords_history\n                        WHERE query_keywords_id = %d\n                        ORDER BY date DESC\n                        LIMIT 1", $keyword_id ), ARRAY_A );
                     if ( $latest_entry ) {
-                        $history = [$latest_entry];
+                        $history = array($latest_entry);
                     }
                 }
                 // Apply data reduction at server level
@@ -356,7 +343,7 @@ class SB_GSC_Ajax {
                     $target_points = min( 100, max( 10, count( $history ) ) );
                     // If we have more points than needed, reduce the data
                     if ( count( $history ) > $target_points ) {
-                        $reduced_history = [];
+                        $reduced_history = array();
                         // Always keep the first point
                         $reduced_history[] = $history[0];
                         // Calculate step size for even distribution
@@ -386,22 +373,22 @@ class SB_GSC_Ajax {
                 $newrow['curves'] = '';
                 $response[] = $newrow;
             }
-            wp_send_json_success( [
+            wp_send_json_success( array(
                 'keywords'       => $response,
                 'last_refreshed' => get_option( 'sb_gsc_last_refreshed' ),
                 'time'           => Utils::timerstop( 'ajax_get_keywords' ),
-            ] );
+            ) );
         }
     }
 
     /**
      * ajax_adminbar_get_keywords.
      *
-     * @author	Lars Koudal
-     * @since	v0.0.1
-     * @version	v1.0.0	Sunday, April 20th, 2025.
-     * @access	public static
-     * @return	void
+     * @author  Lars Koudal
+     * @since   v0.0.1
+     * @version v1.0.0  Sunday, April 20th, 2025.
+     * @access  public static
+     * @return  void
      */
     public static function ajax_adminbar_get_keywords() {
         Utils::timerstart( 'ajax_adminbar_get_keywords' );
@@ -445,19 +432,19 @@ class SB_GSC_Ajax {
         $lookup_query = $wpdb->prepare( "SELECT k.id, k.query, k.page, k.first_seen_date, k.latest_date, \n        k.is_used_in_content, k.last_checked, SUM(h.clicks) AS clicks, \n        SUM(h.impressions) AS total_impressions, \n        AVG(h.ctr) AS average_ctr, \n        AVG(h.position) AS average_position\n        FROM {$wpdb->prefix}sb2_query_keywords AS k\n        INNER JOIN {$wpdb->prefix}sb2_query_keywords_history AS h \n            ON k.id = h.query_keywords_id\n        WHERE k.page = %s\n        GROUP BY k.query, k.page\n        ORDER BY total_impressions DESC", $post_url );
         $results = $wpdb->get_results( $lookup_query, ARRAY_A );
         if ( empty( $results ) ) {
-            wp_send_json_success( [
+            wp_send_json_success( array(
                 'message'        => __( 'No keywords found for this URL.', 'seo-booster' ),
                 'status'         => 'no_keywords',
                 'last_refreshed' => get_option( 'sb_gsc_last_refreshed' ),
                 'time'           => Utils::timerstop( 'ajax_get_keywords' ),
-            ] );
+            ) );
         } else {
-            $response = [];
+            $response = array();
             $post_modified_time = get_post_modified_time( 'U', false, $post_id );
             // Fetch all transients for the given post_id
             $transients = $wpdb->get_results( $wpdb->prepare( "SELECT option_name, option_value \n                    FROM {$wpdb->options} \n                    WHERE option_name LIKE %s", $wpdb->esc_like( '_transient_sb_gsc_keyword_usage_' . $post_id . '_' ) . '%' ), OBJECT_K );
             // Convert transients to a more accessible format
-            $transient_data = [];
+            $transient_data = array();
             foreach ( $transients as $option_name => $option_value ) {
                 $transient_data[$option_name] = maybe_unserialize( $option_value->option_value );
             }
@@ -467,7 +454,7 @@ class SB_GSC_Ajax {
                 // Use 'is_used_in_content' directly from the results
                 $position_intext = ( $res['is_used_in_content'] ? __( 'Used in content', 'seo-booster' ) : __( 'Not used in content', 'seo-booster' ) );
                 $position_details = ( $res['is_used_in_content'] ? '&#10004; ' . __( 'Used', 'seo-booster' ) : '&#10005; ' . __( 'Not used', 'seo-booster' ) );
-                $newrow = [
+                $newrow = array(
                     'id'               => $keyword_id,
                     'query'            => $keyword_query,
                     'clicks'           => $res['clicks'] ?? 0,
@@ -476,25 +463,25 @@ class SB_GSC_Ajax {
                     'position'         => $res['average_position'] ?? 0,
                     'position_intext'  => $position_intext,
                     'position_details' => $position_details,
-                ];
+                );
                 $response[] = $newrow;
             }
-            wp_send_json_success( [
+            wp_send_json_success( array(
                 'keywords'       => $response,
                 'last_refreshed' => get_option( 'sb_gsc_last_refreshed' ),
                 'time'           => Utils::timerstop( 'ajax_adminbar_get_keywords' ),
-            ] );
+            ) );
         }
     }
 
     /**
      * AJAX handler for getting GSC keywords for highlighting
      *
-     * @author	Unknown
-     * @since	v0.0.1
-     * @version	v1.0.0	Monday, June 23rd, 2025.
-     * @access	public static
-     * @return	void
+     * @author  Unknown
+     * @since   v0.0.1
+     * @version v1.0.0  Monday, June 23rd, 2025.
+     * @access  public static
+     * @return  void
      */
     public static function ajax_get_gsc_keywords_for_highlighting() {
         // Verify nonce
@@ -536,13 +523,14 @@ class SB_GSC_Ajax {
         $prepared_query = $wpdb->prepare( $query, $permalink );
         $results = $wpdb->get_results( $prepared_query, ARRAY_A );
         if ( empty( $results ) ) {
-            wp_send_json_success( [
-                'keywords' => [],
+            wp_send_json_success( array(
+                'keywords' => array(),
                 'message'  => __( 'No GSC keywords found for this page.', 'seo-booster' ),
-            ] );
+            ) );
+            return;
         }
         // Process and format keywords for highlighting
-        $keywords = [];
+        $keywords = array();
         foreach ( $results as $result ) {
             $keyword = trim( $result['query'] );
             // Skip empty or very short keywords
@@ -551,7 +539,7 @@ class SB_GSC_Ajax {
             }
             // Calculate a simple score based on performance
             $score = $result['total_impressions'] * 0.4 + $result['total_clicks'] * 0.4 + (100 - $result['avg_position']) * 0.2;
-            $keywords[] = [
+            $keywords[] = array(
                 'id'          => intval( $result['id'] ),
                 'keyword'     => $keyword,
                 'length'      => strlen( $keyword ),
@@ -559,7 +547,7 @@ class SB_GSC_Ajax {
                 'clicks'      => intval( $result['total_clicks'] ),
                 'position'    => round( $result['avg_position'], 1 ),
                 'score'       => round( $score, 2 ),
-            ];
+            );
         }
         // Sort by length (longest first) and then by score
         usort( $keywords, function ( $a, $b ) {
@@ -570,11 +558,11 @@ class SB_GSC_Ajax {
             return $b['score'] - $a['score'];
             // Highest score first
         } );
-        wp_send_json_success( [
+        wp_send_json_success( array(
             'keywords' => $keywords,
             'count'    => count( $keywords ),
             'url'      => $permalink,
-        ] );
+        ) );
     }
 
     /**
@@ -598,7 +586,7 @@ class SB_GSC_Ajax {
             wp_send_json_error( 'No data found for this keyword' );
         }
         // Format the data
-        $formatted_data = [];
+        $formatted_data = array();
         foreach ( $entries as $entry ) {
             $formatted_entry = self::format_entry( $entry );
             $formatted_data[] = $formatted_entry;

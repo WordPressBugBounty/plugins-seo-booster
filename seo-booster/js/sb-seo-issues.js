@@ -27,7 +27,6 @@
             }
             this.bindEvents();
             this.initSearch();
-            this.initStatusUpdates();
             this.initialized = true;
         },
 
@@ -133,22 +132,6 @@
             // Filter dropdowns
             $(document).on('change', '#filter-severity, #filter-status', function() {
                 self.applyFilters();
-            });
-        },
-
-        /**
-         * Initialize status update functionality.
-         */
-        initStatusUpdates: function() {
-            var self = this;
-
-            // Checkbox change handler
-            $(document).on('change', '.sb-issue-checkbox', function(e) {
-                var $checkbox = $(this);
-                var issueId = $checkbox.data('id');
-                var status = $checkbox.is(':checked') ? 'fixed' : 'active';
-                
-                self.updateIssueStatus(issueId, status);
             });
         },
 
@@ -591,121 +574,6 @@
         },
 
         /**
-         * Update single issue status.
-         */
-        updateIssueStatus: function(issueId, status) {
-            var self = this;
-            var $issueItem = $('.sb-analysis-item').find('input[type="checkbox"][data-id="' + issueId + '"]').closest('.sb-analysis-item');
-            var $checkbox = $issueItem.find('.sb-issue-checkbox');
-            
-            // Mark issue item as in transition
-            $issueItem.addClass('sb-transitioning');
-            $checkbox.prop('disabled', true);
-            
-            // Add loading indicator to the checkbox
-            var $loadingIndicator = $('<span class="sb-loading-indicator">⏳</span>');
-            $checkbox.after($loadingIndicator);
-            
-            $.ajax({
-                url: sb_seo_issues.ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'sb_update_issue_status',
-                    nonce: sb_seo_issues.nonce,
-                    issue_id: issueId,
-                    status: status
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Update checkbox state to match status
-                        $checkbox.prop('checked', status === 'fixed');
-                        
-                        // Update visual state
-                        if (status === 'fixed') {
-                            $issueItem.addClass('sb-issue-fixed');
-                        } else {
-                            $issueItem.removeClass('sb-issue-fixed');
-                        }
-                        
-                        // Remove transition state after animation
-                        setTimeout(function() {
-                            $issueItem.removeClass('sb-transitioning sb-updated');
-                            $checkbox.prop('disabled', false);
-                            $loadingIndicator.remove();
-                        }, 500);
-                        
-                        self.showNotice(response.data.message, 'success');
-                    } else {
-                        // Reset checkbox state on error
-                        $checkbox.prop('checked', status !== 'fixed');
-                        $issueItem.removeClass('sb-transitioning');
-                        $checkbox.prop('disabled', false);
-                        $loadingIndicator.remove();
-                        self.showError(response.data.message || 'Failed to update status');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    
-                    // Reset checkbox state on error
-                    $checkbox.prop('checked', status !== 'fixed');
-                    $issueItem.removeClass('sb-transitioning');
-                    $checkbox.prop('disabled', false);
-                    $loadingIndicator.remove();
-                    self.showError('Network error occurred: ' + error);
-                }
-            });
-        },
-
-        /**
-         * Update status badge in the issue item.
-         */
-        updateStatusBadge: function($issueItem, status) {
-            var $actionsDiv = $issueItem.find('.sb-issue-actions');
-            var $existingBadge = $actionsDiv.find('.sb-status-badge');
-            
-            // Remove existing badge
-            $existingBadge.remove();
-            
-            // Add new badge if status is not active
-            if (status && status !== 'active') {
-                var labels = {
-                    'fixed': 'Fixed',
-                    'ignored_temp': 'Ignored',
-                    'ignored_permanent': 'Ignored (Perm)'
-                };
-                var label = labels[status] || status;
-                var $badge = $('<span class="sb-status-badge sb-status-' + status + '">' + label + '</span>');
-                $actionsDiv.append($badge);
-            }
-        },
-
-        /**
-         * Check and hide empty sections after issue removal.
-         */
-        checkAndHideEmptySections: function() {
-            // Check each severity section
-            var sections = ['critical', 'high', 'medium', 'low'];
-            
-            sections.forEach(function(severity) {
-                var $section = $('.sb-collapsible-content[id*="' + severity + '"]');
-                var $issues = $section.find('.sb-analysis-item');
-                
-                if ($issues.length === 0) {
-                    // Hide the entire section if no issues remain
-                    $section.closest('.sb-analysis-section').fadeOut(300);
-                }
-            });
-            
-            // Check if all sections are empty and hide the entire issues area
-            var $allSections = $('.sb-analysis-section');
-            var $visibleSections = $allSections.filter(':visible');
-            
-            if ($visibleSections.length === 0) {
-                $('.sb-url-issues-inline').fadeOut(300);
-            }
-        },
-
-        /**
          * Perform search.
          */
         performSearch: function(searchTerm) {
@@ -784,24 +652,18 @@
          */
         stopAnalysis: function() {
             var self = this;
-            var $button = $('#sb-stop-analysis');
-            
-            if (!confirm('Are you sure you want to stop the analysis? This will cancel all pending analysis tasks.')) {
-                return;
-            }
-            
-            // Set flag to stop recursive calls
-            this.isAnalyzing = false;
-            
-            // Reset button states immediately
-            $('#sb-analyze-remaining').prop('disabled', false).text('Analyze Remaining');
-            $('#sb-stop-analysis').hide();
-            
-            // Hide current analysis display
-            $('#sb-current-analysis').hide();
-            
-            // Show stopped message
-            this.showNotice('Analysis stopped by user.', 'info');
+
+            window.SBModal.confirm('Are you sure you want to stop the analysis? This will cancel all pending analysis tasks.').then(function (confirmed) {
+                if (!confirmed) {
+                    return;
+                }
+
+                self.isAnalyzing = false;
+                $('#sb-analyze-remaining').prop('disabled', false).text('Analyze Remaining');
+                $('#sb-stop-analysis').hide();
+                $('#sb-current-analysis').hide();
+                self.showNotice('Analysis stopped by user.', 'info');
+            });
         },
 
         /**

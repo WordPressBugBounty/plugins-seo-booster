@@ -561,14 +561,14 @@
                         // Re-enable button on error
                         BulkSeoStatusBanner.isCancelled = false;
                         $cancelBtn.prop('disabled', false).text(sbBulkSeoStatus.strings.cancel);
-                        alert(response.data && response.data.message ? response.data.message : 'Failed to cancel analysis');
+                        window.SBModal.alert(response.data && response.data.message ? response.data.message : 'Failed to cancel analysis', { tone: 'error' });
                     }
                 },
                 error: function() {
                     // Re-enable button on error
                     BulkSeoStatusBanner.isCancelled = false;
                     $cancelBtn.prop('disabled', false).text(sbBulkSeoStatus.strings.cancel);
-                    alert('An error occurred while cancelling analysis');
+                    window.SBModal.alert('An error occurred while cancelling analysis', { tone: 'error' });
                 }
             });
         },

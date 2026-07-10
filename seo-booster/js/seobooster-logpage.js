@@ -3,6 +3,10 @@ jQuery(document).ready(function($) {
     if ($("#seobooster_tabulator.seoboosterlogpage").length) {
         if (typeof Tabulator !== 'undefined') {
             var table = new Tabulator("#seobooster_tabulator.seoboosterlogpage", {
+                debugInvalidOptions: false,
+                debugInvalidComponentFuncs: false,
+                debugInitialization: false,
+                debugDeprecation: false,
                 ajaxURL: sblogdata.ajaxurl,
                 ajaxParams: function() {
                     return {

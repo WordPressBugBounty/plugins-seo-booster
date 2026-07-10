@@ -12,15 +12,15 @@ class email_status {
     /**
      * send_email_update.
      *
-     * @author	Unknown
-     * @author	Lars Koudal
-     * @since	v0.0.1
-     * @version	v1.0.0	Tuesday, November 30th, 2021.	
-     * @version	v1.0.1	Wednesday, August 14th, 2024.
-     * @access	public static
-     * @param	integer	$days  	Default: 7
-     * @param	boolean	$forced	Default: false
-     * @return	void
+     * @author  Unknown
+     * @author  Lars Koudal
+     * @since   v0.0.1
+     * @version v1.0.0  Tuesday, November 30th, 2021.
+     * @version v1.0.1  Wednesday, August 14th, 2024.
+     * @access  public static
+     * @param   integer $days   Default: 7
+     * @param   boolean $forced Default: false
+     * @return  void
      */
     public static function send_email_update( $days = 7, $forced = false ) {
         $seobooster_weekly_email = get_option( 'seobooster_weekly_email' );
@@ -31,7 +31,7 @@ class email_status {
         if ( strpos( $seobooster_weekly_email_recipient, ',' ) !== false ) {
             $email_recipients = array_map( 'trim', explode( ',', $seobooster_weekly_email_recipient ) );
         } else {
-            $email_recipients = [trim( $seobooster_weekly_email_recipient )];
+            $email_recipients = array(trim( $seobooster_weekly_email_recipient ));
         }
         if ( !is_int( $days ) ) {
             $days = 7;
@@ -126,8 +126,8 @@ class email_status {
         // 4. Refined Ranking Anomalies Detection
         $anomalies = $wpdb->get_results( $wpdb->prepare( "\n        SELECT \n            k.query, \n            k.page, \n            MIN(h.position) as min_position, \n            MAX(h.position) as max_position, \n            MAX(h.date) as max_position_date, \n            (SELECT h2.position \n             FROM {$query_keywords_history_table} h2 \n             WHERE h2.query_keywords_id = h.query_keywords_id \n             ORDER BY h2.date DESC LIMIT 1) as current_position,\n            SUM(h.impressions) as total_impressions, \n            SUM(h.clicks) as total_clicks\n        FROM {$query_keywords_history_table} h\n        JOIN {$query_keywords_table} k ON k.id = h.query_keywords_id\n        WHERE h.date >= CURDATE() - INTERVAL 30 DAY\n        GROUP BY k.query, k.page\n        HAVING (MAX(h.position) - MIN(h.position)) > 10 AND total_impressions > 0\n        ORDER BY total_impressions DESC\n        LIMIT %d", 10 ), ARRAY_A );
         // 5. SEO Possibilities Data
-        $top_possibilities = [];
-        $possibilities_stats = [
+        $top_possibilities = array();
+        $possibilities_stats = array(
             'total_issues' => 0,
             'critical'     => 0,
             'error'        => 0,
@@ -135,16 +135,16 @@ class email_status {
             'warning'      => 0,
             'medium'       => 0,
             'low'          => 0,
-        ];
+        );
         if ( class_exists( '\\Cleverplugins\\SEOBooster\\SEO_Issues_Manager' ) ) {
             $top_possibilities = SEO_Issues_Manager::get_top_possibilities_for_dashboard( 5 );
             $possibilities_stats = SEO_Issues_Manager::get_analysis_stats();
             // Ensure we have valid arrays
             if ( !is_array( $top_possibilities ) ) {
-                $top_possibilities = [];
+                $top_possibilities = array();
             }
             if ( !is_array( $possibilities_stats ) ) {
-                $possibilities_stats = [
+                $possibilities_stats = array(
                     'total_issues' => 0,
                     'critical'     => 0,
                     'error'        => 0,
@@ -152,7 +152,7 @@ class email_status {
                     'warning'      => 0,
                     'medium'       => 0,
                     'low'          => 0,
-                ];
+                );
             }
             // Ensure numeric values
             $possibilities_stats['total_issues'] = ( isset( $possibilities_stats['total_issues'] ) ? (int) $possibilities_stats['total_issues'] : 0 );
@@ -164,20 +164,20 @@ class email_status {
             $possibilities_stats['low'] = ( isset( $possibilities_stats['low'] ) ? (int) $possibilities_stats['low'] : 0 );
         }
         // Executive Summary
-        $intro_summary .= "<h2>" . __( 'Summary', 'seo-booster' ) . "</h2>";
+        $intro_summary .= '<h2>' . __( 'Summary', 'seo-booster' ) . '</h2>';
         // Key metrics in bullet format
         if ( $past_7_days && $previous_7_days ) {
-            $intro_summary .= "<ul>";
-            $intro_summary .= "<li>" . sprintf( __( 'Impressions: %s (%s%%)', 'seo-booster' ), ( $impressions_change >= 0 ? '+' . number_format_i18n( $impressions_change ) : number_format_i18n( $impressions_change ) ), ( $impressions_percentage >= 0 ? '+' . number_format_i18n( $impressions_percentage ) : number_format_i18n( $impressions_percentage ) ) ) . "</li>";
-            $intro_summary .= "<li>" . sprintf( __( 'Clicks: %s (%s%%)', 'seo-booster' ), ( $clicks_change >= 0 ? '+' . number_format_i18n( $clicks_change ) : number_format_i18n( $clicks_change ) ), ( $clicks_percentage >= 0 ? '+' . number_format_i18n( $clicks_percentage ) : number_format_i18n( $clicks_percentage ) ) ) . "</li>";
-            $intro_summary .= "<li>" . sprintf( __( 'Avg Position: %s (%s%%)', 'seo-booster' ), ( $position_change <= 0 ? number_format_i18n( abs( $position_change ), 2 ) . ' ' . __( 'improved', 'seo-booster' ) : number_format_i18n( $position_change, 2 ) . ' ' . __( 'worsened', 'seo-booster' ) ), ( $position_percentage <= 0 ? number_format_i18n( abs( $position_percentage ) ) : number_format_i18n( $position_percentage ) ) ) . "</li>";
-            $intro_summary .= "<li>" . sprintf( __( 'CTR: %s%% (%s%%)', 'seo-booster' ), ( $ctr_change >= 0 ? '+' . number_format_i18n( $ctr_change, 2 ) : number_format_i18n( $ctr_change, 2 ) ), ( $ctr_percentage >= 0 ? '+' . number_format_i18n( $ctr_percentage ) : number_format_i18n( $ctr_percentage ) ) ) . "</li>";
-            $intro_summary .= "</ul>";
+            $intro_summary .= '<ul>';
+            $intro_summary .= '<li>' . sprintf( __( 'Impressions: %1$s (%2$s%%)', 'seo-booster' ), ( $impressions_change >= 0 ? '+' . number_format_i18n( $impressions_change ) : number_format_i18n( $impressions_change ) ), ( $impressions_percentage >= 0 ? '+' . number_format_i18n( $impressions_percentage ) : number_format_i18n( $impressions_percentage ) ) ) . '</li>';
+            $intro_summary .= '<li>' . sprintf( __( 'Clicks: %1$s (%2$s%%)', 'seo-booster' ), ( $clicks_change >= 0 ? '+' . number_format_i18n( $clicks_change ) : number_format_i18n( $clicks_change ) ), ( $clicks_percentage >= 0 ? '+' . number_format_i18n( $clicks_percentage ) : number_format_i18n( $clicks_percentage ) ) ) . '</li>';
+            $intro_summary .= '<li>' . sprintf( __( 'Avg Position: %1$s (%2$s%%)', 'seo-booster' ), ( $position_change <= 0 ? number_format_i18n( abs( $position_change ), 2 ) . ' ' . __( 'improved', 'seo-booster' ) : number_format_i18n( $position_change, 2 ) . ' ' . __( 'worsened', 'seo-booster' ) ), ( $position_percentage <= 0 ? number_format_i18n( abs( $position_percentage ) ) : number_format_i18n( $position_percentage ) ) ) . '</li>';
+            $intro_summary .= '<li>' . sprintf( __( 'CTR: %1$s%% (%2$s%%)', 'seo-booster' ), ( $ctr_change >= 0 ? '+' . number_format_i18n( $ctr_change, 2 ) : number_format_i18n( $ctr_change, 2 ) ), ( $ctr_percentage >= 0 ? '+' . number_format_i18n( $ctr_percentage ) : number_format_i18n( $ctr_percentage ) ) ) . '</li>';
+            $intro_summary .= '</ul>';
         }
-        $intro_summary .= "<ul>";
-        $intro_summary .= "<li>" . sprintf( __( '%s new keywords discovered in the past 7 days', 'seo-booster' ), '<strong>' . number_format_i18n( $total_new_keywords ) . '</strong>' ) . "</li>";
+        $intro_summary .= '<ul>';
+        $intro_summary .= '<li>' . sprintf( __( '%s new keywords discovered in the past 7 days', 'seo-booster' ), '<strong>' . number_format_i18n( $total_new_keywords ) . '</strong>' ) . '</li>';
         if ( $possibilities_stats['total_issues'] > 0 ) {
-            $severity_breakdown = [];
+            $severity_breakdown = array();
             if ( $possibilities_stats['critical'] > 0 ) {
                 $severity_breakdown[] = number_format_i18n( $possibilities_stats['critical'] ) . ' ' . __( 'critical', 'seo-booster' );
             }
@@ -188,23 +188,23 @@ class email_status {
                 $severity_breakdown[] = number_format_i18n( $possibilities_stats['high'] ) . ' ' . __( 'high', 'seo-booster' );
             }
             $severity_text = ( !empty( $severity_breakdown ) ? ' (' . implode( ', ', $severity_breakdown ) . ')' : '' );
-            $intro_summary .= "<li>" . sprintf( __( '%s SEO possibilities found%s', 'seo-booster' ), '<strong>' . number_format_i18n( $possibilities_stats['total_issues'] ) . '</strong>', $severity_text ) . "</li>";
+            $intro_summary .= '<li>' . sprintf( __( '%1$s SEO possibilities found%2$s', 'seo-booster' ), '<strong>' . number_format_i18n( $possibilities_stats['total_issues'] ) . '</strong>', $severity_text ) . '</li>';
         }
-        $intro_summary .= "</ul>";
-        $intro_summary .= "<hr>";
+        $intro_summary .= '</ul>';
+        $intro_summary .= '<hr>';
         // Detailed Sections
         // SEO Possibilities Section
         if ( !empty( $top_possibilities ) && is_array( $top_possibilities ) && isset( $possibilities_stats['total_issues'] ) && $possibilities_stats['total_issues'] > 0 ) {
-            $content .= "<h2>" . __( 'Top SEO Possibilities', 'seo-booster' ) . "</h2>";
+            $content .= '<h2>' . __( 'Top SEO Possibilities', 'seo-booster' ) . '</h2>';
             $content .= '<p>' . sprintf( __( 'Here are the top %d SEO possibilities to address:', 'seo-booster' ), min( 5, count( $top_possibilities ) ) ) . '</p>';
-            $severity_labels = [
+            $severity_labels = array(
                 'critical' => __( 'Critical', 'seo-booster' ),
                 'error'    => __( 'Error', 'seo-booster' ),
                 'high'     => __( 'High', 'seo-booster' ),
                 'warning'  => __( 'Warning', 'seo-booster' ),
                 'medium'   => __( 'Medium', 'seo-booster' ),
                 'low'      => __( 'Low', 'seo-booster' ),
-            ];
+            );
             foreach ( $top_possibilities as $possibility ) {
                 if ( !is_array( $possibility ) ) {
                     continue;
@@ -227,7 +227,7 @@ class email_status {
             $content .= '<p><a href="' . esc_url( admin_url( 'admin.php?page=sb2_seo_issues' ) ) . '">' . __( 'View All SEO Possibilities', 'seo-booster' ) . '</a></p>';
         }
         // New Keywords Section
-        $content .= "<h2>" . __( 'New Keywords', 'seo-booster' ) . "</h2>";
+        $content .= '<h2>' . __( 'New Keywords', 'seo-booster' ) . '</h2>';
         if ( !empty( $new_keywords ) && is_array( $new_keywords ) ) {
             $content .= '<p>' . __( 'Top keywords discovered in the past 7 days:', 'seo-booster' ) . '</p>';
             foreach ( array_slice( $new_keywords, 0, 3 ) as $keyword ) {
@@ -235,24 +235,24 @@ class email_status {
                     continue;
                 }
                 $content .= '<p><strong>' . esc_html( $keyword['query'] ) . '</strong><br/>';
-                $content .= "<a href='" . esc_url( $keyword['page'] ) . "' target='_blank'>" . esc_html( $keyword['page'] ) . "</a><br/>";
-                $content .= "<small>";
+                $content .= "<a href='" . esc_url( $keyword['page'] ) . "' target='_blank'>" . esc_html( $keyword['page'] ) . '</a><br/>';
+                $content .= '<small>';
                 $avg_position = ( isset( $keyword['avg_position'] ) ? (float) $keyword['avg_position'] : 0 );
                 $total_clicks = ( isset( $keyword['total_clicks'] ) ? (int) $keyword['total_clicks'] : 0 );
                 $total_impressions = ( isset( $keyword['total_impressions'] ) ? (int) $keyword['total_impressions'] : 0 );
-                $content .= __( 'Position:', 'seo-booster' ) . " " . number_format_i18n( floor( $avg_position ) ) . ' • ';
-                $content .= __( 'Clicks:', 'seo-booster' ) . " " . number_format_i18n( $total_clicks ) . ' • ';
-                $content .= __( 'Impressions:', 'seo-booster' ) . " " . number_format_i18n( $total_impressions ) . "</small></p>";
+                $content .= __( 'Position:', 'seo-booster' ) . ' ' . number_format_i18n( floor( $avg_position ) ) . ' • ';
+                $content .= __( 'Clicks:', 'seo-booster' ) . ' ' . number_format_i18n( $total_clicks ) . ' • ';
+                $content .= __( 'Impressions:', 'seo-booster' ) . ' ' . number_format_i18n( $total_impressions ) . '</small></p>';
             }
             if ( $total_new_keywords > 3 ) {
                 $content .= '<p><a href="' . esc_url( admin_url( 'admin.php?page=sb2_dashboard' ) ) . '">' . sprintf( __( 'View all %s new keywords', 'seo-booster' ), number_format_i18n( $total_new_keywords ) ) . '</a></p>';
             }
         } else {
-            $content .= "<p>" . __( 'No new keywords found in the past 7 days.', 'seo-booster' ) . "</p>";
+            $content .= '<p>' . __( 'No new keywords found in the past 7 days.', 'seo-booster' ) . '</p>';
         }
         // Final Email Assembly
         $dashboardlink = admin_url( '?page=sb2_dashboard' );
-        $subjectline = sprintf( __( 'Your Weekly SEO Update - %s - %s', 'seo-booster' ), date_i18n( 'F j, Y' ), Utils::remove_http( site_url() ) );
+        $subjectline = sprintf( __( 'Your Weekly SEO Update - %1$s - %2$s', 'seo-booster' ), date_i18n( 'F j, Y' ), Utils::remove_http( site_url() ) );
         $emailtitle = __( 'SEO Update from SEO Booster', 'seo-booster' ) . ' - ' . Utils::remove_http( site_url() );
         $dashboardlinkanchor = __( 'SEO Booster Dashboard', 'seo-booster' );
         $emailintrotext = __( 'Here\'s your weekly SEO update with key insights and opportunities.', 'seo-booster' );
@@ -271,7 +271,7 @@ class email_status {
             require_once ABSPATH . '/wp-admin/includes/file.php';
             WP_Filesystem();
         }
-        $template_path = SEOBOOSTER_PLUGINPATH . 'templates/email/report.php';
+        $template_path = SEOBOOSTER_PLUGINPATH . 'templates/email/report.html';
         if ( $wp_filesystem->exists( $template_path ) ) {
             $html = $wp_filesystem->get_contents( $template_path );
         } else {

@@ -2,8 +2,8 @@
 
 namespace Cleverplugins\SEOBooster;
 
-if (!defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
 /**
@@ -15,33 +15,31 @@ if (!defined('ABSPATH')) {
  * @package Cleverplugins\SEOBooster
  * @since 6.1.26
  */
-class SEO_Output
-{
-    /**
-     * Initialize the SEO output functionality.
-     *
-     * @since 6.1.26
-     * @return void
-     */
-    public static function init()
-    {
-        add_action('wp_head', [__CLASS__, 'output_seo_meta'], 999);
-    }
+class SEO_Output {
 
-    /**
-     * Output SEO Booster branding comment.
-     *
-     * @since 6.1.26
-     * @return void
-     */
-    public static function output_seo_meta()
-    {
-        // Skip on admin pages
-        if (is_admin()) {
-            return;
-        }
-        
-        // Output SEO Booster comment for branding
-        echo '<!-- Using SEO Booster plugin v' . Utils::get_plugin_version() . ' - https://seoboosterpro.com -->' . "\n";
-    }
+	/**
+	 * Initialize the SEO output functionality.
+	 *
+	 * @since 6.1.26
+	 * @return void
+	 */
+	public static function init() {
+		add_action( 'wp_head', array( __CLASS__, 'output_seo_meta' ), 999 );
+	}
+
+	/**
+	 * Output SEO Booster branding comment.
+	 *
+	 * @since 6.1.26
+	 * @return void
+	 */
+	public static function output_seo_meta() {
+		// Skip on admin pages
+		if ( is_admin() ) {
+			return;
+		}
+
+		// Output SEO Booster comment for branding
+		echo '<!-- Using SEO Booster plugin v' . esc_html( Utils::get_plugin_version() ) . ' - https://seoboosterpro.com -->' . "\n";
+	}
 }

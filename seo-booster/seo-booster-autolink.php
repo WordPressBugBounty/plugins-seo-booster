@@ -1,5 +1,6 @@
 <?php
 namespace Cleverplugins\SEOBooster;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }

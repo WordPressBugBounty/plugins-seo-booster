@@ -1,0 +1,22 @@
+.sb-tools-seo-compat {
+	margin: 12px 0 16px;
+	padding: 10px 14px;
+}
+
+.sb-tools-seo-compat p {
+	margin: 0;
+}
+
+.sb-tools-seo-compat .dashicons {
+	margin-right: 6px;
+	vertical-align: text-bottom;
+}
+
+.sb-tools-seo-compat.notice-info {
+	border-left-color: #72aee6;
+}
+
+.sb-admin-seo-compat-wrap {
+	margin: 0 0 16px;
+	max-width: 100%;
+}

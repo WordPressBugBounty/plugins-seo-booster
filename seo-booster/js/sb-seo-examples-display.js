@@ -75,6 +75,59 @@
     };
 
     /**
+     * Extract a display filename from an image URL.
+     *
+     * @since 7.2.4
+     * @param {string} url Image URL.
+     * @returns {string} Filename or empty string.
+     */
+    window.SB_SEO_ExamplesDisplay.imageFilenameFromUrl = function(url) {
+        if (!url) {
+            return '';
+        }
+        var parts = url.split('/');
+        var last = parts[parts.length - 1] || '';
+        return last.split('?')[0].split('#')[0];
+    };
+
+    /**
+     * Render a shared image issue row with thumbnail and plain label.
+     *
+     * @since 7.2.4
+     * @param {Object} item Image item with url, line.
+     * @param {string} noteText Plain-English issue label.
+     * @returns {string} HTML string for the item content (without <li> tags)
+     */
+    window.SB_SEO_ExamplesDisplay.renderImageIssue = function(item, noteText) {
+        var url = (item.url || '').toString();
+        var html = '<div class="sb-image-issue">';
+
+        if (url) {
+            var escapedUrl = window.SB_SEO_ExamplesDisplay.escapeHtml(url);
+            html += '<img class="sb-image-thumb" src="' + escapedUrl + '" loading="lazy" alt="">';
+            html += '<div class="sb-image-issue-details">';
+            var filename = window.SB_SEO_ExamplesDisplay.imageFilenameFromUrl(url);
+            html += '<span class="sb-item-label">' + window.SB_SEO_ExamplesDisplay.escapeHtml(filename || url) + '</span>';
+            if (item.line) {
+                html += '<span class="sb-line-number">Line ' + item.line + '</span>';
+            }
+            html += '<span class="sb-image-note">' + window.SB_SEO_ExamplesDisplay.escapeHtml(noteText) + '</span>';
+            html += '</div>';
+        } else {
+            html += '<span class="sb-image-thumb sb-image-thumb-broken dashicons dashicons-format-image" aria-hidden="true"></span>';
+            html += '<div class="sb-image-issue-details">';
+            if (item.line) {
+                html += '<span class="sb-line-number">Line ' + item.line + '</span>';
+            }
+            html += '<span class="sb-image-note">' + window.SB_SEO_ExamplesDisplay.escapeHtml(noteText) + '</span>';
+            html += '</div>';
+        }
+
+        html += '</div>';
+        return html;
+    };
+
+    /**
      * Render broken image example
      *
      * @since 6.1.26
@@ -82,33 +135,32 @@
      * @returns {string} HTML string for the item content (without <li> tags)
      */
     window.SB_SEO_ExamplesDisplay.renderBrokenImage = function(item) {
-        var html = '';
         var url = (item.url || '').toString();
         var error = (item.error || '').toString();
-        var line = item.line;
-        var context = item.context;
-        
-        // Line number
-        if (line) {
-            html += '<span class="sb-line-number">Line ' + line + ':</span> ';
-        }
-        
+        var html = '<div class="sb-image-issue">';
+
+        html += '<span class="sb-image-thumb sb-image-thumb-broken dashicons dashicons-format-image" aria-hidden="true"></span>';
+        html += '<div class="sb-image-issue-details">';
+
         if (url) {
             var escapedUrl = window.SB_SEO_ExamplesDisplay.escapeHtml(url);
-            html += '<a href="' + escapedUrl + '" target="_blank" rel="noopener">' + escapedUrl + '</a>';
+            var filename = window.SB_SEO_ExamplesDisplay.imageFilenameFromUrl(url);
+            html += '<a href="' + escapedUrl + '" target="_blank" rel="noopener" class="sb-item-label">';
+            html += window.SB_SEO_ExamplesDisplay.escapeHtml(filename || url);
+            html += '</a>';
         }
-        
+
+        if (item.line) {
+            html += '<span class="sb-line-number">Line ' + item.line + '</span>';
+        }
+
         if (error) {
-            var escapedError = window.SB_SEO_ExamplesDisplay.escapeHtml(error);
-            html += ' <em>(' + escapedError + ')</em>';
+            html += '<span class="sb-image-note">' + window.SB_SEO_ExamplesDisplay.escapeHtml(error) + '</span>';
+        } else {
+            html += '<span class="sb-image-note">Broken image</span>';
         }
-        
-        // Context snippet
-        if (context) {
-            var escapedContext = window.SB_SEO_ExamplesDisplay.escapeHtml(context);
-            html += '<div class="sb-context-snippet"><code>' + escapedContext + '</code></div>';
-        }
-        
+
+        html += '</div></div>';
         return html;
     };
 
@@ -120,32 +172,7 @@
      * @returns {string} HTML string for the item content (without <li> tags)
      */
     window.SB_SEO_ExamplesDisplay.renderImageWithoutDimensions = function(item) {
-        var html = '';
-        var line = item.line;
-        var context = item.context;
-        
-        // Line number
-        if (line) {
-            html += '<span class="sb-line-number">Line ' + line + ':</span> ';
-        }
-        
-        if (item.html) {
-            var escapedHtml = window.SB_SEO_ExamplesDisplay.escapeHtml(item.html);
-            html += '<code class="sb-image-html">' + escapedHtml + '</code>';
-        }
-        
-        if (item.url) {
-            var escapedUrl = window.SB_SEO_ExamplesDisplay.escapeHtml(item.url);
-            html += ' <a href="' + escapedUrl + '" target="_blank" rel="noopener">' + escapedUrl + '</a>';
-        }
-        
-        // Context snippet
-        if (context) {
-            var escapedContext = window.SB_SEO_ExamplesDisplay.escapeHtml(context);
-            html += '<div class="sb-context-snippet"><code>' + escapedContext + '</code></div>';
-        }
-        
-        return html;
+        return window.SB_SEO_ExamplesDisplay.renderImageIssue(item, 'Missing width/height');
     };
 
     /**
@@ -156,32 +183,18 @@
      * @returns {string} HTML string for the item content (without <li> tags)
      */
     window.SB_SEO_ExamplesDisplay.renderImageWithoutAltText = function(item) {
-        var html = '';
-        var line = item.line;
-        var context = item.context;
-        
-        // Line number
-        if (line) {
-            html += '<span class="sb-line-number">Line ' + line + ':</span> ';
-        }
-        
-        if (item.html) {
-            var escapedHtml = window.SB_SEO_ExamplesDisplay.escapeHtml(item.html);
-            html += '<code class="sb-image-html">' + escapedHtml + '</code>';
-        }
-        
-        if (item.url) {
-            var escapedUrl = window.SB_SEO_ExamplesDisplay.escapeHtml(item.url);
-            html += ' <a href="' + escapedUrl + '" target="_blank" rel="noopener">' + escapedUrl + '</a>';
-        }
-        
-        // Context snippet
-        if (context) {
-            var escapedContext = window.SB_SEO_ExamplesDisplay.escapeHtml(context);
-            html += '<div class="sb-context-snippet"><code>' + escapedContext + '</code></div>';
-        }
-        
-        return html;
+        return window.SB_SEO_ExamplesDisplay.renderImageIssue(item, 'Needs alt text');
+    };
+
+    /**
+     * Render image with empty alt text example
+     *
+     * @since 7.2.4
+     * @param {Object} item Image item with html, url, line, and context
+     * @returns {string} HTML string for the item content (without <li> tags)
+     */
+    window.SB_SEO_ExamplesDisplay.renderImageWithEmptyAltText = function(item) {
+        return window.SB_SEO_ExamplesDisplay.renderImageIssue(item, 'Empty alt text');
     };
 
     /**
@@ -192,32 +205,7 @@
      * @returns {string} HTML string for the item content (without <li> tags)
      */
     window.SB_SEO_ExamplesDisplay.renderExternalImage = function(item) {
-        var html = '';
-        var line = item.line;
-        var context = item.context;
-        
-        // Line number
-        if (line) {
-            html += '<span class="sb-line-number">Line ' + line + ':</span> ';
-        }
-        
-        if (item.html) {
-            var escapedHtml = window.SB_SEO_ExamplesDisplay.escapeHtml(item.html);
-            html += '<code class="sb-image-html">' + escapedHtml + '</code>';
-        }
-        
-        if (item.url) {
-            var escapedUrl = window.SB_SEO_ExamplesDisplay.escapeHtml(item.url);
-            html += ' <a href="' + escapedUrl + '" target="_blank" rel="noopener">' + escapedUrl + '</a>';
-        }
-        
-        // Context snippet
-        if (context) {
-            var escapedContext = window.SB_SEO_ExamplesDisplay.escapeHtml(context);
-            html += '<div class="sb-context-snippet"><code>' + escapedContext + '</code></div>';
-        }
-        
-        return html;
+        return window.SB_SEO_ExamplesDisplay.renderImageIssue(item, 'Hosted externally');
     };
 
     /**
@@ -263,25 +251,28 @@
      * @returns {string} HTML string
      */
     window.SB_SEO_ExamplesDisplay.renderGSCKeyword = function(item) {
-        var html = '';
         var query = item.query || '';
-        var clicks = item.clicks || 0;
-        var impressions = item.impressions || 0;
-        var position = item.position ? Math.round(item.position * 10) / 10 : 'N/A';
-        var ctr = item.ctr ? (Math.round(item.ctr * 100) / 100).toFixed(2) + '%' : 'N/A';
-        
-        if (query) {
-            var escapedQuery = window.SB_SEO_ExamplesDisplay.escapeHtml(query);
-            html += '<strong>' + escapedQuery + '</strong>';
-            html += ' <span style="color: #646970; font-size: 12px;">';
-            html += 'Clicks: ' + clicks + ' | ';
-            html += 'Impressions: ' + impressions + ' | ';
-            html += 'Position: ' + position;
-            if (item.ctr !== undefined) {
-                html += ' | CTR: ' + ctr;
-            }
-            html += '</span>';
+        if (!query) {
+            return '';
         }
+
+        var clicks = item.clicks !== undefined && item.clicks !== null ? item.clicks : 0;
+        var impressions = item.impressions !== undefined && item.impressions !== null ? item.impressions : 0;
+        var position = item.position !== undefined && item.position !== null
+            ? Math.round(item.position * 10) / 10
+            : 'N/A';
+        var ctr = item.ctr !== undefined && item.ctr !== null
+            ? (Math.round(item.ctr * 100) / 100).toFixed(2) + '%'
+            : 'N/A';
+
+        var escapedQuery = window.SB_SEO_ExamplesDisplay.escapeHtml(query);
+        var html = '<span class="sb-item-label">' + escapedQuery + '</span>';
+        html += '<span class="sb-item-metrics">';
+        html += 'Clicks: ' + clicks + ' · Impr: ' + impressions + ' · Pos: ' + position;
+        if (item.ctr !== undefined) {
+            html += ' · CTR: ' + ctr;
+        }
+        html += '</span>';
         return html;
     };
 
@@ -293,20 +284,27 @@
      * @returns {string} HTML string
      */
     window.SB_SEO_ExamplesDisplay.renderGSCContentFreshness = function(item) {
-        var html = '';
         var query = item.query || '';
-        var decline = item.decline_percentage || 0;
-        var recentImpressions = item.recent_impressions || 0;
-        var previousImpressions = item.previous_impressions || 0;
-        
-        if (query) {
-            var escapedQuery = window.SB_SEO_ExamplesDisplay.escapeHtml(query);
-            html += '<strong>' + escapedQuery + '</strong>';
-            html += ' <span style="color: #d63638; font-size: 12px;">';
-            html += 'Decline: ' + decline + '%';
-            html += ' (' + recentImpressions + ' → ' + previousImpressions + ' impressions)';
-            html += '</span>';
+        if (!query) {
+            return '';
         }
+
+        var decline = item.decline_percentage !== undefined && item.decline_percentage !== null
+            ? item.decline_percentage
+            : 0;
+        var recentImpressions = item.recent_impressions !== undefined && item.recent_impressions !== null
+            ? item.recent_impressions
+            : 0;
+        var previousImpressions = item.previous_impressions !== undefined && item.previous_impressions !== null
+            ? item.previous_impressions
+            : 0;
+
+        var escapedQuery = window.SB_SEO_ExamplesDisplay.escapeHtml(query);
+        var html = '<span class="sb-item-label">' + escapedQuery + '</span>';
+        html += '<span class="sb-item-metrics sb-item-metrics-decline">';
+        html += 'Decline: ' + decline + '%';
+        html += ' (' + recentImpressions + ' → ' + previousImpressions + ' impr)';
+        html += '</span>';
         return html;
     };
 

@@ -160,7 +160,7 @@ jQuery(document).ready(function($) {
                 // Revert checkbox on error
                 checkbox.prop('checked', !isExcluded);
                 updateExclusionUI(!isExcluded);
-                alert('Failed to save exclusion preference. Please try again.');
+                window.SBModal.alert('Failed to save exclusion preference. Please try again.', { tone: 'error' });
             }
         });
     }
@@ -286,12 +286,14 @@ jQuery(document).ready(function($) {
             });
         }
         
-        // Add improvements to possibilities
-        if (data.improvements && data.improvements.length > 0) {
-            data.improvements.forEach(function(improvement) {
+        // Add opportunities/improvements to possibilities (prefer opportunities bucket).
+        var suggestionItems = (data.opportunities && data.opportunities.length > 0) ? data.opportunities : (data.improvements || []);
+        if (suggestionItems.length > 0) {
+            suggestionItems.forEach(function(improvement) {
                 allPossibilities.push({
                     type: 'improvement',
-                    severity: 'improvement',
+                    key: improvement.key,
+                    severity: improvement.severity || 'opportunity',
                     message: improvement.message,
                     extra_data: improvement.extra_data
                 });
@@ -321,21 +323,26 @@ jQuery(document).ready(function($) {
                     iconClass = 'dashicons-warning';
                 } else if (item.severity === 'medium') {
                     iconClass = 'dashicons-info';
-                } else if (item.severity === 'low') {
+                } else if (item.severity === 'low' || item.severity === 'opportunity') {
                     iconClass = 'dashicons-lightbulb';
                 }
                 
                 html += '<span class="dashicons ' + iconClass + '"></span>';
                 
-                // Add GSC label for GSC-based possibilities
+                // Add GSC / AI Readiness labels for categorized possibilities
                 var gscLabel = '';
                 if (item.key && item.key.indexOf('gsc_') === 0) {
                     gscLabel = '<span class="sb-gsc-label" style="display: inline-block; background: #4285f4; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; margin-right: 6px; text-transform: uppercase; letter-spacing: 0.5px;">GSC</span>';
                 }
+                var aiReadinessLabel = '';
+                var aiKeys = (typeof sb_seo_metabox !== 'undefined' && sb_seo_metabox.ai_readiness_keys) ? sb_seo_metabox.ai_readiness_keys : [];
+                if (item.key && aiKeys.indexOf(item.key) !== -1) {
+                    aiReadinessLabel = '<span class="sb-ai-readiness-label-badge" style="display: inline-block; background: #7c3aed; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; margin-right: 6px; text-transform: uppercase; letter-spacing: 0.5px;">AI</span>';
+                }
                 
                 // Escape HTML in message to prevent XSS
                 var messageText = (item.message || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-                html += '<div class="sb-analysis-text">' + gscLabel + messageText + '</div>';
+                html += '<div class="sb-analysis-text">' + gscLabel + aiReadinessLabel + messageText + '</div>';
                 
                 // Display extra data for various issue types
                 if (item.extra_data) {
@@ -447,7 +454,7 @@ jQuery(document).ready(function($) {
                             html += window.SB_SEO_ExamplesDisplay.renderExamples({
                                 title: 'Images with empty alt text',
                                 items: item.extra_data.images_with_empty_alt,
-                                renderItem: window.SB_SEO_ExamplesDisplay.renderImageWithoutAltText,
+                                renderItem: window.SB_SEO_ExamplesDisplay.renderImageWithEmptyAltText,
                                 maxVisible: 5,
                                 maxTotal: 50
                             });
@@ -540,20 +547,25 @@ jQuery(document).ready(function($) {
                             if (cannibalized.hasOwnProperty(query)) {
                                 var pages = cannibalized[query];
                                 var escapedQuery = (query || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                                html += '<li><strong>' + escapedQuery + '</strong><ul>';
+                                html += '<li><span class="sb-item-label">' + escapedQuery + '</span><ul>';
                                 pages.forEach(function(pageData) {
                                     var pageUrl = pageData.page || '';
                                     var isCurrent = (pageUrl === currentPage);
                                     var escapedUrl = (pageUrl || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                                    var clicks = pageData.clicks !== undefined && pageData.clicks !== null ? pageData.clicks : 0;
+                                    var impressions = pageData.impressions !== undefined && pageData.impressions !== null ? pageData.impressions : 0;
+                                    var position = pageData.position !== undefined && pageData.position !== null
+                                        ? Math.round(pageData.position * 10) / 10
+                                        : 'N/A';
                                     html += '<li>';
+                                    html += '<span class="sb-item-label">';
                                     if (isCurrent) {
                                         html += '<strong style="color: #2271b1;">[Current Page]</strong> ';
                                     }
                                     html += '<a href="' + escapedUrl + '" target="_blank" rel="noopener">' + escapedUrl + '</a>';
-                                    html += ' <span style="color: #646970; font-size: 11px;">';
-                                    html += 'Clicks: ' + (pageData.clicks || 0) + ' | ';
-                                    html += 'Impressions: ' + (pageData.impressions || 0) + ' | ';
-                                    html += 'Position: ' + (pageData.position ? Math.round(pageData.position * 10) / 10 : 'N/A');
+                                    html += '</span>';
+                                    html += '<span class="sb-item-metrics">';
+                                    html += 'Clicks: ' + clicks + ' · Impr: ' + impressions + ' · Pos: ' + position;
                                     html += '</span>';
                                     html += '</li>';
                                 });
@@ -567,6 +579,25 @@ jQuery(document).ready(function($) {
                 html += '</div>';
             });
             
+            html += '</div>';
+            html += '</div>';
+        }
+
+        // Not applicable checks (skipped) - muted, collapsed by default
+        if (data.not_applicable && data.not_applicable.length > 0) {
+            html += '<div class="sb-analysis-section sb-not-applicable-section">';
+            html += '<h4 class="sb-collapsible-header" data-target="sb-not-applicable-list">';
+            html += '<span class="dashicons dashicons-arrow-up-alt2 sb-collapse-icon"></span>';
+            html += (sb_seo_metabox.strings.not_applicable || 'Not applicable') + ' (' + data.not_applicable.length + ')';
+            html += '</h4>';
+            html += '<div class="sb-collapsible-content" id="sb-not-applicable-list" style="display: none;">';
+            data.not_applicable.forEach(function(item) {
+                html += '<div class="sb-analysis-item">';
+                html += '<span class="dashicons dashicons-minus" style="color: #888;"></span>';
+                var naMessage = (item.message || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+                html += '<div class="sb-analysis-text" style="color:#666;">' + naMessage + '</div>';
+                html += '</div>';
+            });
             html += '</div>';
             html += '</div>';
         }
@@ -797,11 +828,9 @@ jQuery(document).ready(function($) {
                     var html = '<div class="sb-keyword-list">';
                     response.data.keywords.forEach(function(keyword) {
                         html += '<div class="sb-keyword-item" data-keyword="' + keyword.query + '">';
-                        html += '<span class="sb-keyword-text">' + keyword.query + '</span>';
-                        html += '<span class="sb-keyword-stats">';
-                        html += 'Clicks: ' + keyword.clicks + ' | ';
-                        html += 'Impressions: ' + keyword.impressions + ' | ';
-                        html += 'Position: ' + Math.round(keyword.position);
+                        html += '<span class="sb-keyword-text sb-item-label">' + keyword.query + '</span>';
+                        html += '<span class="sb-keyword-stats sb-item-metrics">';
+                        html += 'Clicks: ' + keyword.clicks + ' · Impr: ' + keyword.impressions + ' · Pos: ' + Math.round(keyword.position);
                         html += '</span>';
                         html += '</div>';
                     });
@@ -836,17 +865,52 @@ jQuery(document).ready(function($) {
         language: null
     };
 
+    function updateAiPanelVisibility() {
+        var $activity = $('#sb-ai-activity-zone');
+        var $results = $('#sb-ai-results-zone');
+        var $loading = $('.sb-llm-loading');
+        var $recent = $('#sb-recent-requests-wrap');
+        var hasResults = $('#sb-llm-suggestions-display').children().length > 0
+            || ($('#sb-comprehensive-analysis-display').length && $('#sb-comprehensive-analysis-display').children().length > 0);
+        var hasRecentRows = $recent.length && $recent.find('tbody tr').length > 0;
+        var loadingVisible = $loading.length && !$loading.hasClass('sb-hidden') && $loading.is(':visible');
+        var progressVisible = $('#sb-ai-progress').length && $('#sb-ai-progress').is(':visible');
+        var activityVisible = loadingVisible || hasRecentRows || progressVisible;
+
+        if ($activity.length) {
+            $activity.toggleClass('sb-hidden', !activityVisible);
+        }
+        if ($results.length) {
+            $results.toggleClass('sb-hidden', !hasResults);
+        }
+    }
+
+    function showAiLoading() {
+        $('#sb-ai-activity-zone').removeClass('sb-hidden');
+        $('.sb-llm-loading').removeClass('sb-hidden').show();
+        updateAiPanelVisibility();
+    }
+
+    function hideAiLoading() {
+        $('.sb-llm-loading').addClass('sb-hidden').hide();
+        updateAiPanelVisibility();
+    }
+
     // Load saved suggestions on page load
     function loadSavedLLMSuggestions() {
+        if (isAttachmentPage()) {
+            return;
+        }
+
         var postId = $('#post_ID').val() || (sb_seo_metabox && sb_seo_metabox.post_id) || '';
         if (!postId) return;
-        
+
         // Check if AI is disabled
         var $disabledSection = $('.sb-llm-disabled');
         if ($disabledSection.length > 0) {
             return; // Don't load anything if AI is disabled
         }
-        
+
         $.ajax({
             url: sb_seo_metabox.ajax_url,
             type: 'POST',
@@ -859,11 +923,13 @@ jQuery(document).ready(function($) {
                 if (response.success && response.data) {
                     var $btn = $('#sb-get-llm-suggestions');
                     $btn.prop('disabled', false).html('<span class="dashicons dashicons-lightbulb"></span> Generate AI SEO Suggestions');
-                    
+
                     // Display suggestions if available
                     if (response.data.titles && response.data.descriptions) {
                         displayLLMResults(response.data);
                         updateLanguageDisplay(response.data.language);
+                    } else {
+                        updateAiPanelVisibility();
                     }
                 }
             },
@@ -871,6 +937,7 @@ jQuery(document).ready(function($) {
                 // On error, still enable button with default message
                 var $btn = $('#sb-get-llm-suggestions');
                 $btn.prop('disabled', false).html('<span class="dashicons dashicons-lightbulb"></span> Generate AI SEO Suggestions');
+                updateAiPanelVisibility();
             }
         });
     }
@@ -883,14 +950,14 @@ jQuery(document).ready(function($) {
         var $displayArea = $('#sb-llm-suggestions-display');
         if ($displayArea.find('.sb-llm-results').length === 0) {
             $displayArea.html(`
-                <div class="sb-llm-results" style="display: none;">
+                <div class="sb-llm-results sb-hidden">
                     <div class="sb-llm-results-header sb-llm-toggle-header">
                         <h4>Generated AI SEO Suggestions</h4>
 						<span class="sb-llm-toggle-arrow">
                             <span class="dashicons dashicons-arrow-down"></span>
                         </span>
                     </div>
-                    <div class="sb-llm-results-content" style="display: none;">
+                    <div class="sb-llm-results-content">
                         <div class="sb-llm-results-intro" style="margin-bottom: 20px; padding: 12px; background: #f0f6fc; border-left: 4px solid #2271b1; border-radius: 2px;">
                             <p style="margin: 0; font-size: 13px; color: #1d2327;">
                                 <strong>What you received:</strong> The AI analyzed your content and generated 5 optimized SEO title suggestions and 5 meta description suggestions. 
@@ -980,9 +1047,9 @@ jQuery(document).ready(function($) {
         var $results = $('.sb-llm-results');
         var $content = $results.find('.sb-llm-results-content');
         var $arrow = $results.find('.sb-llm-toggle-header .dashicons');
-        
-        $results.show();
-        
+
+        $results.removeClass('sb-hidden');
+
         // Expand by default for new generations, keep collapsed for saved suggestions
         if (isNewGeneration) {
             $results.addClass('expanded');
@@ -993,6 +1060,12 @@ jQuery(document).ready(function($) {
             $results.removeClass('expanded');
             $content.hide();
             $arrow.removeClass('dashicons-arrow-up').addClass('dashicons-arrow-down');
+        }
+
+        updateAiPanelVisibility();
+
+        if (isNewGeneration && $results[0]) {
+            $results[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     }
 
@@ -1014,7 +1087,10 @@ jQuery(document).ready(function($) {
     }
 
     function displayComprehensiveAnalysis(data) {
-        var $container = $('#sb-llm-suggestions-display');
+        var $container = $('#sb-comprehensive-analysis-display');
+        if (!$container.length) {
+            return;
+        }
         var html = '<div class="sb-comprehensive-analysis">';
         html += '<h4>Comprehensive SEO Analysis</h4>';
 
@@ -1066,6 +1142,7 @@ jQuery(document).ready(function($) {
 
         html += '</div>';
         $container.html(html);
+        updateAiPanelVisibility();
     }
 
     function updateCreditsDisplay(balance) {
@@ -1126,7 +1203,7 @@ jQuery(document).ready(function($) {
         var originalHtml = $btn.html();
         $btn.prop('disabled', true).html('<span class="dashicons dashicons-update" style="animation: spin 1s linear infinite;"></span> ' + 'Generating...');
 
-        $loading.show();
+        showAiLoading();
         updateStatusMessage('analyzing', $statusMessage, $statusStep);
 
         var countup = 0;
@@ -1138,7 +1215,7 @@ jQuery(document).ready(function($) {
             $timerText.text('Elapsed time: ' + timeText);
         }, 1000);
 
-        var provider = $btn.data('provider') || sb_seo_metabox.ai_provider;
+        var provider = ($btn.data('provider') || sb_seo_metabox.ai_provider || '').toString().toLowerCase();
         var type = requestType || $btn.data('request-type') || 'seo_suggestions';
 
         function finishGeneration() {
@@ -1153,7 +1230,7 @@ jQuery(document).ready(function($) {
             startWPConnectorGeneration(postId, $loading, $statusMessage, $statusStep, countupInterval, finishGeneration);
         } else {
             finishGeneration();
-            $loading.hide();
+            hideAiLoading();
             showError('AI provider not configured. Please configure your AI provider in SEO Booster Settings.');
         }
     }
@@ -1175,17 +1252,17 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     updateStatusMessage('complete', $statusMessage, $statusStep);
                     setTimeout(function() {
-                        $loading.hide();
+                        hideAiLoading();
                         displayLLMResults(response.data, true);
                         updateLanguageDisplay(response.data.language);
                     }, 500);
                 } else {
-                    $loading.hide();
+                    hideAiLoading();
                     showError(response.data.message || 'An error occurred while generating suggestions.');
                 }
             },
             error: function() {
-                $loading.hide();
+                hideAiLoading();
                 showError('Failed to generate suggestions. Please try again.');
             },
             complete: finishCb
@@ -1227,7 +1304,7 @@ jQuery(document).ready(function($) {
                     });
                     pollCreditsRequest(response.data.request_id, postId, $loading, $statusMessage, $statusStep, countupInterval, finishCb, rType);
                 } else {
-                    $loading.hide();
+                    hideAiLoading();
                     finishCb();
                     if (response.data && response.data.insufficient_credits) {
                         showError(
@@ -1240,7 +1317,7 @@ jQuery(document).ready(function($) {
                 }
             },
             error: function() {
-                $loading.hide();
+                hideAiLoading();
                 finishCb();
                 showError('Failed to submit credits request. Please try again.');
             }
@@ -1278,7 +1355,7 @@ jQuery(document).ready(function($) {
 
             if (pollCount > maxPolls) {
                 if (lastCheckedInterval) clearInterval(lastCheckedInterval);
-                $loading.hide();
+                hideAiLoading();
                 finishCb();
                 showError('Request timed out (5 min). Your credits have been preserved. Please try again.');
                 clearPending();
@@ -1303,7 +1380,7 @@ jQuery(document).ready(function($) {
 
                     if (!response.success) {
                         if (lastCheckedInterval) clearInterval(lastCheckedInterval);
-                        $loading.hide();
+                        hideAiLoading();
                         finishCb();
                         showError(response.data.message || 'Error checking request status.');
                         clearPending();
@@ -1320,7 +1397,7 @@ jQuery(document).ready(function($) {
                         updateStatusMessage('complete', $statusMessage, $statusStep);
                         clearPending();
                         setTimeout(function() {
-                            $loading.hide();
+                            hideAiLoading();
                             finishCb();
                             if (requestType === 'comprehensive_seo_analysis') {
                                 displayComprehensiveAnalysis(response.data.data);
@@ -1331,7 +1408,7 @@ jQuery(document).ready(function($) {
                     } else if (status === 'failed') {
                         if (lastCheckedInterval) clearInterval(lastCheckedInterval);
                         clearPending();
-                        $loading.hide();
+                        hideAiLoading();
                         finishCb();
                         showError('AI processing failed: ' + (response.data.error || 'Unknown error') + '. Credits refunded.');
                     } else {
@@ -1438,12 +1515,18 @@ jQuery(document).ready(function($) {
             post_id: postId,
             nonce: sb_seo_metabox.nonce
         }).done(function(response) {
-            if (!response.success || !response.data) return;
-            var statuses = response.data.statuses || [];
-            if (!statuses.length) {
-                $list.html('<p class="sb-recent-requests-empty" style="margin:0;color:#646970;">' + (sb_seo_metabox.strings.no_recent_requests || 'No recent requests for this page.') + '</p>');
+            if (!response.success || !response.data) {
+                $wrap.addClass('sb-hidden');
+                updateAiPanelVisibility();
                 return;
             }
+            var statuses = response.data.statuses || [];
+            if (!statuses.length) {
+                $wrap.addClass('sb-hidden');
+                updateAiPanelVisibility();
+                return;
+            }
+            $wrap.removeClass('sb-hidden');
             var html = '<table class="widefat striped" style="margin:0;"><thead><tr><th>Type</th><th>Status</th><th>Time</th><th></th></tr></thead><tbody>';
             statuses.forEach(function(row) {
                 var typeLabel = getRequestTypeLabel(row.type);
@@ -1459,12 +1542,18 @@ jQuery(document).ready(function($) {
             });
             html += '</tbody></table>';
             $list.html(html);
+            updateAiPanelVisibility();
         }).fail(function() {
-            $list.html('<p class="sb-recent-requests-empty" style="margin:0;color:#646970;">' + (sb_seo_metabox.strings.no_recent_requests || 'No recent requests for this page.') + '</p>');
+            $wrap.addClass('sb-hidden');
+            updateAiPanelVisibility();
         });
     }
     if (sb_seo_metabox.post_id && $('#sb-recent-requests-wrap').length) {
-        loadRecentRequests();
+        var shouldLoadRecent = sb_seo_metabox.ai_provider === 'seobooster'
+            && (sb_seo_metabox.has_recent_request_ids || sb_seo_metabox.pending_request_id);
+        if (shouldLoadRecent) {
+            loadRecentRequests();
+        }
     }
 
     $(document).on('click', '.sb-recent-retry-btn', function() {
@@ -1481,11 +1570,11 @@ jQuery(document).ready(function($) {
                 loadRecentRequests();
             } else {
                 $btn.prop('disabled', false).text(sb_seo_metabox.strings.retry || 'Retry');
-                alert(response.data && response.data.message ? response.data.message : 'Retry failed');
+                window.SBModal.alert(response.data && response.data.message ? response.data.message : 'Retry failed', { tone: 'error' });
             }
         }).fail(function() {
             $btn.prop('disabled', false).text(sb_seo_metabox.strings.retry || 'Retry');
-            alert('Retry failed');
+            window.SBModal.alert('Retry failed', { tone: 'error' });
         });
     });
 
@@ -1498,7 +1587,7 @@ jQuery(document).ready(function($) {
         var $timerText = $loading.find('.sb-llm-timer-text');
         var originalHtml = $btn.html();
         $btn.prop('disabled', true).html('<span class="dashicons dashicons-update" style="animation: spin 1s linear infinite;"></span> ' + 'Generating...');
-        $loading.show();
+        showAiLoading();
         updateStatusMessage('queued', $statusMessage, $statusStep);
         var countup = 0;
         var countupInterval = setInterval(function() {
@@ -1581,21 +1670,51 @@ jQuery(document).ready(function($) {
                     var fieldSelector = response.data.fields[field];
                     var applied = false;
 
-					// Prefer hidden/legacy inputs provided by detected plugin (Yoast, etc.)
-					if (fieldSelector && $(fieldSelector).length) {
-						var el = $(fieldSelector).get(0);
+					// Prefer hidden/legacy inputs provided by detected plugin (Yoast, SEOPress, AIOSEO, TSF, etc.)
+					var domSelectors = [];
+					if (fieldSelector) {
+						domSelectors.push(fieldSelector);
+					}
+					if (response.data.plugin === 'aioseo') {
+						if (field === 'title') {
+							domSelectors.push('#aioseo-title', '#aioseo_title', 'input[name="aioseo-title"]');
+						} else if (field === 'description') {
+							domSelectors.push('#aioseo-description', '#aioseo_description', 'textarea[name="aioseo-description"]');
+						} else if (field === 'focus_keyword') {
+							domSelectors.push('#aioseo-keyphrase', '#aioseo_keywords', 'input[name="aioseo-keyphrase"]');
+						}
+					} else if (response.data.plugin === 'seoframework') {
+						if (field === 'title') {
+							domSelectors.push('#autodescription-title', '#tsf_title');
+						} else if (field === 'description') {
+							domSelectors.push('#autodescription-description', '#tsf_description');
+						}
+					} else if (response.data.plugin === 'seopress') {
+						if (field === 'title') {
+							domSelectors.push('#seopress_titles_title');
+						} else if (field === 'description') {
+							domSelectors.push('#seopress_titles_desc');
+						} else if (field === 'focus_keyword') {
+							domSelectors.push('#seopress_analysis_target_kw');
+						}
+					}
+
+					for (var s = 0; s < domSelectors.length; s++) {
+						if (!domSelectors[s] || !$(domSelectors[s]).length) {
+							continue;
+						}
+						var el = $(domSelectors[s]).get(0);
 						if (el) {
-							// Set value directly and emit native events React listens to
 							el.value = value;
 							try {
 								el.dispatchEvent(new Event('input', { bubbles: true }));
 								el.dispatchEvent(new Event('change', { bubbles: true }));
 								el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
 							} catch (e) {
-								// Fallback to jQuery triggers
 								$(el).trigger('input').trigger('change').trigger('keyup');
 							}
 							applied = true;
+							break;
 						}
 					}
 
@@ -1627,6 +1746,14 @@ jQuery(document).ready(function($) {
 											}
 											rankMathUpdated = true;
 										}
+									} else if (field === 'focus_keyword') {
+										if (typeof rankMathDispatch.updateFocusKeyword === 'function') {
+											rankMathDispatch.updateFocusKeyword(value);
+											rankMathUpdated = true;
+										} else if (typeof rankMathDispatch.setFocusKeyword === 'function') {
+											rankMathDispatch.setFocusKeyword(value);
+											rankMathUpdated = true;
+										}
 									}
 									
 									// Trigger Rank Math UI refresh
@@ -1640,7 +1767,33 @@ jQuery(document).ready(function($) {
 						}
 					}
 					
-					if (applied || rankMathUpdated) {
+					// Try AIOSEO block editor data store when DOM apply did not run.
+					var aioseoUpdated = false;
+					if (response.data.plugin === 'aioseo' && !applied) {
+						try {
+							if (window.wp && window.wp.data && window.wp.data.dispatch) {
+								var aioseoDispatch = window.wp.data.dispatch('aioseo/editor');
+								if (aioseoDispatch) {
+									if (field === 'title' && typeof aioseoDispatch.setTitle === 'function') {
+										aioseoDispatch.setTitle(value);
+										aioseoUpdated = true;
+									} else if (field === 'description' && typeof aioseoDispatch.setDescription === 'function') {
+										aioseoDispatch.setDescription(value);
+										aioseoUpdated = true;
+									} else if (field === 'focus_keyword' && typeof aioseoDispatch.setKeyphrase === 'function') {
+										aioseoDispatch.setKeyphrase(value);
+										aioseoUpdated = true;
+									}
+								}
+							}
+						} catch (e) {
+							// AIOSEO store access failed, continue with other methods
+						}
+					}
+
+					var uiUpdated = applied || rankMathUpdated || aioseoUpdated;
+
+					if (uiUpdated) {
 						var reduxUpdated = false;
 						
 						// Try to access Yoast Redux store via WordPress data API
@@ -1667,6 +1820,14 @@ jQuery(document).ready(function($) {
 												reduxUpdated = true;
 											} else if (typeof dispatch.setMetaDescription === 'function') {
 												dispatch.setMetaDescription(value);
+												reduxUpdated = true;
+											}
+										} else if (field === 'focus_keyword') {
+											if (typeof dispatch.updateData === 'function') {
+												dispatch.updateData({ keyword: value });
+												reduxUpdated = true;
+											} else if (typeof dispatch.setFocusKeyword === 'function') {
+												dispatch.setFocusKeyword(value);
 												reduxUpdated = true;
 											}
 										}
@@ -1699,41 +1860,77 @@ jQuery(document).ready(function($) {
 								}
 							} catch (e) { /* no-op */ }
 						}
-						
-						// Show success feedback with clear message
-						var fieldName = field === 'title' ? 'SEO Title' : 'Meta Description';
+					}
+
+					var $metabox = $('#sb-seo-metabox');
+					var objectId = $metabox.data('object-id') || $metabox.attr('data-object-id') || $('#post_ID').val() || (sb_seo_metabox && sb_seo_metabox.post_id) || '';
+					var objectType = $metabox.data('object-type') || $metabox.attr('data-object-type') || 'post';
+					if (!$metabox.length && $('#tag_ID').length) {
+						objectId = $('#tag_ID').val();
+						objectType = 'term';
+					}
+
+					var fieldName = field === 'title' ? 'SEO Title' : (field === 'description' ? 'Meta Description' : 'Focus Keyword');
+
+					function showApplyFeedback(persisted, persistError) {
 						$btn.text('✓ Applied').addClass('button-success');
-						
-						// Show notice message explaining save requirement
-						var saveMessage = response.data.plugin === 'rankmath' 
-							? 'The field value has been updated in Rank Math. Changes will be saved when you save or update the post.'
-							: 'The field value has been updated. The visual update in the ' + response.data.name + ' interface will appear when you save or update the post.';
+						var saveMessage;
+						if (persisted) {
+							saveMessage = 'Saved to ' + response.data.name + '. The value is stored in your SEO plugin.';
+						} else if (persistError) {
+							saveMessage = 'Updated in the editor, but server save failed: ' + persistError + '. Save the post to keep changes.';
+						} else if (uiUpdated) {
+							saveMessage = 'Updated in the editor. Save the post or term to keep changes.';
+						} else {
+							saveMessage = 'Could not update the SEO plugin field in the editor.';
+						}
 						var $notice = $('<div class="sb-llm-applied-notice notice notice-success is-dismissible" style="margin: 10px 0; padding: 10px 15px;">' +
 							'<p style="margin: 0;"><strong>✓ Value applied to ' + response.data.name + ' ' + fieldName + '</strong><br>' +
 							'<small>' + saveMessage + '</small></p>' +
 							'<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button>' +
 							'</div>');
-						
-						// Insert notice before the suggestions display
-						$('#sb-llm-suggestions-display').before($notice);
-						
-						// Auto-dismiss after 8 seconds
+						var $noticeAnchor = $('#sb-ai-results-zone');
+						if (!$noticeAnchor.length) {
+							$noticeAnchor = $('#sb-llm-suggestions-display');
+						}
+						$noticeAnchor.before($notice);
 						setTimeout(function() {
 							$notice.fadeOut(300, function() {
 								$(this).remove();
 							});
 						}, 8000);
-						
-						// Handle manual dismiss
 						$notice.on('click', '.notice-dismiss', function() {
 							$notice.fadeOut(300, function() {
 								$(this).remove();
 							});
 						});
-						
 						setTimeout(function() {
 							$btn.text(originalText).prop('disabled', false).removeClass('button-success');
 						}, 3000);
+					}
+
+					if (objectId) {
+						$.ajax({
+							url: sb_seo_metabox.ajax_url,
+							type: 'POST',
+							data: {
+								action: 'sb_seo_apply_seo_field',
+								nonce: sb_seo_metabox.nonce,
+								object_id: objectId,
+								object_type: objectType,
+								field: field,
+								value: value
+							},
+							success: function(persistResponse) {
+								showApplyFeedback(!!(persistResponse.success && persistResponse.data && persistResponse.data.persisted), '');
+							},
+							error: function(xhr) {
+								var errMsg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) ? xhr.responseJSON.data.message : '';
+								showApplyFeedback(false, errMsg);
+							}
+						});
+					} else if (uiUpdated) {
+						showApplyFeedback(false, '');
                     } else {
                         // Fallback to SEO Booster fields
                         $('#sb_seo_' + field).val(value).trigger('input');
@@ -1805,12 +2002,16 @@ jQuery(document).ready(function($) {
     });
 
     // Load saved suggestions on page load
-    loadSavedLLMSuggestions();
+    if (!isAttachmentPage()) {
+        loadSavedLLMSuggestions();
+    }
 
     // Restore saved comprehensive analysis if present (e.g. after reload)
     if (sb_seo_metabox.saved_comprehensive_analysis && typeof displayComprehensiveAnalysis === 'function') {
         displayComprehensiveAnalysis(sb_seo_metabox.saved_comprehensive_analysis);
     }
+
+    updateAiPanelVisibility();
 
     // Toggle switch functionality for SEO settings
     $('.sb-seo-toggle-switch input').on('change', function() {
@@ -1830,6 +2031,87 @@ jQuery(document).ready(function($) {
         }
     });
 
+
+    function readinessItemClass(item) {
+        if (item.pass) {
+            return 'is-pass';
+        }
+        if (item.unknown) {
+            return 'is-unknown';
+        }
+        return 'is-fail';
+    }
+
+    function readinessItemSymbol(item) {
+        if (item.pass) {
+            return '✓';
+        }
+        if (item.unknown) {
+            return '—';
+        }
+        return '○';
+    }
+
+    function buildChecklistHtml(items, showPoints) {
+        if (!items || !items.length) {
+            var notAnalyzed = (sb_seo_metabox.strings && sb_seo_metabox.strings.readiness_not_analyzed) || 'Not analyzed yet.';
+            return '<li class="is-unknown"><span class="sb-ai-readiness-status">—</span><span class="sb-ai-readiness-label">' + notAnalyzed + '</span></li>';
+        }
+        return items.map(function (item) {
+            var pointsHtml = showPoints && item.points ? '<span class="sb-ai-readiness-points">+' + item.points + '</span>' : '';
+            return '<li class="' + readinessItemClass(item) + '" data-key="' + (item.key || '') + '">' +
+                '<span class="sb-ai-readiness-status">' + readinessItemSymbol(item) + '</span>' +
+                '<span class="sb-ai-readiness-label">' + (item.label || '') + '</span>' +
+                pointsHtml +
+            '</li>';
+        }).join('');
+    }
+
+    function renderReadinessSections(view) {
+        if (!view || !jQuery('#sb-ai-readiness-section').length) {
+            return;
+        }
+        var grade = view.grade || {};
+        var summaryText = (view.score || 0) + ' / ' + (view.max || 0) + ' · ' + (grade.label || '');
+        jQuery('.sb-ai-readiness-summary-meta')
+            .text(summaryText)
+            .css('color', grade.color || '#646970');
+        jQuery('#sb-ai-readiness-checklist').html(buildChecklistHtml(view.details || [], true));
+        jQuery('#sb-ai-readiness-sitewide').html(buildChecklistHtml(view.sitewide || [], false));
+    }
+
+    function refreshQuickReview() {
+        var objectId = jQuery('#sb-seo-item-id').val();
+        if (!objectId || !sb_seo_metabox.readiness_action) {
+            return;
+        }
+        var $btn = jQuery('#sb-quick-review');
+        if (!$btn.data('default-html')) {
+            $btn.data('default-html', $btn.html());
+        }
+        var runningLabel = (sb_seo_metabox.strings && sb_seo_metabox.strings.quick_review_running) || 'Running quick review…';
+        $btn.prop('disabled', true).html(runningLabel);
+
+        jQuery.ajax({
+            url: sb_seo_metabox.ajax_url,
+            type: 'POST',
+            data: {
+                action: sb_seo_metabox.readiness_action,
+                post_id: objectId,
+                refresh: 1,
+                security: sb_seo_metabox.readiness_nonce
+            },
+            success: function (response) {
+                if (response && response.success && response.data) {
+                    renderReadinessSections(response.data);
+                    loadExistingAnalysis();
+                }
+            },
+            complete: function () {
+                $btn.prop('disabled', false).html($btn.data('default-html'));
+            }
+        });
+    }
 
     // Load existing analysis on page load
     function loadExistingAnalysis() {
@@ -1885,7 +2167,9 @@ jQuery(document).ready(function($) {
                         score: response.data.score !== null && response.data.score !== undefined ? response.data.score : null,
                         issues: response.data.issues || [],
                         improvements: response.data.improvements || [],
+                        opportunities: response.data.opportunities || [],
                         good: response.data.good || [],
+                        not_applicable: response.data.not_applicable || [],
                         content_changed: contentChanged,
                         needs_refresh: needsRefresh,
                         refresh_reason: refreshReason,
@@ -2131,6 +2415,10 @@ jQuery(document).ready(function($) {
 
     // Enable analysis button after document is ready
     jQuery('#sb-download-and-analyze').prop('disabled', false);
+
+    jQuery('#sb-quick-review').on('click', function () {
+        refreshQuickReview();
+    });
     
     // Download and analyze full page button
     jQuery('#sb-download-and-analyze').on('click', function() {
@@ -2408,21 +2696,23 @@ jQuery(document).ready(function($) {
                 return;
             }
 
-            if (!confirm('Are you sure you want to restore the previous content? This will overwrite the current values.')) {
-                return;
-            }
-
             var $btn = $(this);
-            $btn.prop('disabled', true).text('Restoring...');
 
-            $.ajax({
-                url: sb_seo_metabox.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'sb_seo_restore_image_content',
-                    attachment_id: attachmentId,
-                    nonce: sb_seo_metabox.nonce
-                },
+            window.SBModal.confirm('Are you sure you want to restore the previous content? This will overwrite the current values.').then(function (confirmed) {
+                if (!confirmed) {
+                    return;
+                }
+
+                $btn.prop('disabled', true).text('Restoring...');
+
+                $.ajax({
+                    url: sb_seo_metabox.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action: 'sb_seo_restore_image_content',
+                        attachment_id: attachmentId,
+                        nonce: sb_seo_metabox.nonce
+                    },
                 success: function(response) {
                     $btn.prop('disabled', false).text('Restore Previous');
 
@@ -2484,6 +2774,7 @@ jQuery(document).ready(function($) {
                     $btn.prop('disabled', false).text('Restore Previous');
                     showImageNotification('An error occurred while restoring content. Please try again.', 'error');
                 }
+            });
             });
         });
     }

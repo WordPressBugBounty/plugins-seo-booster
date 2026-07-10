@@ -25,7 +25,7 @@
     window.SB_SEO_Issues.expandUrlIssues = function(urlId) {
         var $row = $('tr.sb-url-row[data-url-id="' + urlId + '"]');
         var $detailRow = $row.next('.sb-url-detail-row');
-        
+
         // If already expanded, collapse it
         if ($detailRow.length > 0 && $detailRow.is(':visible')) {
             $detailRow.slideUp(300, function() {
@@ -34,10 +34,10 @@
             $row.find('.sb-url-expand .dashicons').removeClass('dashicons-arrow-up-alt2').addClass('dashicons-arrow-down-alt2');
             return;
         }
-        
+
         // Show loading state
         $row.find('.sb-url-expand .dashicons').removeClass('dashicons-arrow-down-alt2').addClass('dashicons-arrow-up-alt2');
-        
+
         // Make AJAX call to get issues
         $.ajax({
             url: sb_seo_issues.ajaxurl,
@@ -48,8 +48,8 @@
                 url_id: urlId
             },
             success: function(response) {
-                if (response.success && response.data.issues) {
-                    window.SB_SEO_Issues.displayUrlIssues($row, response.data.issues, urlId);
+                if (response.success && response.data) {
+                    window.SB_SEO_Issues.displayUrlIssues($row, response.data, urlId);
                 } else {
                     window.SB_SEO_Issues.showError(response.data.message || 'Failed to load issues');
                     $row.find('.sb-url-expand .dashicons').removeClass('dashicons-arrow-up-alt2').addClass('dashicons-arrow-down-alt2');
@@ -63,102 +63,119 @@
     };
 
     /**
+     * Render a single issue row.
+     *
+     * @param {object} issue Issue object.
+     * @param {string} iconClass Dashicon class.
+     * @param {string} color Icon color.
+     * @return {string} HTML fragment.
+     */
+    window.SB_SEO_Issues.renderIssueRow = function(issue, iconClass, color) {
+        var html = '';
+
+        html += '<div class="sb-analysis-item">';
+        html += '<span class="sb-severity-icon dashicons ' + iconClass + '" style="color: ' + color + ';"></span>';
+        html += '<div class="sb-issue-content-wrapper">';
+        html += '<div class="sb-issue-message">' + window.SB_SEO_Issues.escapeHtml(issue.message) + '</div>';
+
+        if (issue.extra_data) {
+            try {
+                var extraData = typeof issue.extra_data === 'string' ? JSON.parse(issue.extra_data) : issue.extra_data;
+
+                if (extraData.used_by && extraData.used_by.length > 0) {
+                    html += '<div class="sb-extra-data">';
+                    html += '<strong>Used by:</strong> ';
+                    var usedByLinks = [];
+                    extraData.used_by.forEach(function(usedItem) {
+                        if (usedItem.url && usedItem.title) {
+                            usedByLinks.push('<a href="' + window.SB_SEO_Issues.escapeHtml(usedItem.url) + '">' + window.SB_SEO_Issues.escapeHtml(usedItem.title) + '</a>');
+                        } else if (usedItem.title) {
+                            usedByLinks.push(window.SB_SEO_Issues.escapeHtml(usedItem.title));
+                        }
+                    });
+                    html += usedByLinks.join(', ');
+                    html += '</div>';
+                }
+            } catch (e) {
+                // If JSON parsing fails, ignore extra_data
+            }
+        }
+
+        html += '</div>';
+        html += '</div>';
+
+        return html;
+    };
+
+    /**
+     * Map DB severity to icon and color for actionable issues.
+     *
+     * @param {string} severity Severity slug.
+     * @return {object} Icon metadata.
+     */
+    window.SB_SEO_Issues.getActionableStyle = function(severity) {
+        var map = {
+            critical: { icon: 'dashicons-dismiss', color: '#d63638' },
+            error: { icon: 'dashicons-dismiss', color: '#d63638' },
+            high: { icon: 'dashicons-warning', color: '#dba617' },
+            warning: { icon: 'dashicons-warning', color: '#dba617' },
+            medium: { icon: 'dashicons-info', color: '#72aee6' },
+            low: { icon: 'dashicons-lightbulb', color: '#00a32a' }
+        };
+
+        return map[severity] || { icon: 'dashicons-info', color: '#72aee6' };
+    };
+
+    /**
      * Display URL issues in an expandable row.
      *
      * @since 6.1.26
-     * @param object $row jQuery row element.
-     * @param object issues Issues grouped by severity.
-     * @param int urlId URL ID.
+     * @param {object} $row jQuery row element.
+     * @param {object} data Bucket data from AJAX.
+     * @param {int} urlId URL ID.
      * @return void
      */
-    window.SB_SEO_Issues.displayUrlIssues = function($row, issues, urlId) {
+    window.SB_SEO_Issues.displayUrlIssues = function($row, data, urlId) {
         var $detailRow = $row.next('.sb-url-detail-row');
-        
-        // Remove existing detail row if present
+
         if ($detailRow.length > 0) {
             $detailRow.remove();
         }
-        
-        // Create detail row
+
         var $newRow = $('<tr class="sb-url-detail-row"><td colspan="3"></td></tr>');
         var $cell = $newRow.find('td');
-        
         var html = '<div class="sb-url-issues-inline">';
-        
-        // Severity order and icons
-        var severities = ['critical', 'high', 'medium', 'low'];
-        var severityIcons = {
-            'critical': 'dashicons-warning',
-            'high': 'dashicons-dismiss',
-            'medium': 'dashicons-info',
-            'low': 'dashicons-lightbulb'
-        };
-        var severityColors = {
-            'critical': '#dc3545',
-            'high': '#fd7e14',
-            'medium': '#ffc107',
-            'low': '#28a745'
-        };
-        
-        // Collect all issues in a flat array with their severity
-        var allIssues = [];
-        severities.forEach(function(severity) {
-            if (issues[severity] && issues[severity].length > 0) {
-                issues[severity].forEach(function(issue) {
-                    allIssues.push({
-                        issue: issue,
-                        severity: severity,
-                        icon: severityIcons[severity],
-                        color: severityColors[severity]
-                    });
-                });
-            }
-        });
-        
-        if (allIssues.length === 0) {
-            html += '<p>' + sb_seo_issues.strings.no_recent + '</p>';
+
+        var issues = data.issues || [];
+        var opportunities = data.opportunities || [];
+        var strings = sb_seo_issues.strings || {};
+        var hasContent = issues.length + opportunities.length > 0;
+
+        if (!hasContent) {
+            html += '<p>' + (strings.no_recent || 'No recent analysis') + '</p>';
         } else {
-            // Render all issues in a flat list
-            allIssues.forEach(function(item) {
-                var issue = item.issue;
-                var isFixed = issue.user_status === 'fixed';
-                html += '<div class="sb-analysis-item' + (isFixed ? ' sb-issue-fixed' : '') + '">';
-                html += '<input type="checkbox" class="sb-issue-checkbox" data-id="' + issue.id + '"' + (isFixed ? ' checked' : '') + ' />';
-                html += '<span class="sb-severity-icon dashicons ' + item.icon + '" style="color: ' + item.color + ';"></span>';
-                html += '<div class="sb-issue-content-wrapper">';
-                html += '<div class="sb-issue-message">' + window.SB_SEO_Issues.escapeHtml(issue.message) + '</div>';
-                
-                // Display extra_data if it exists
-                if (issue.extra_data) {
-                    try {
-                        var extraData = typeof issue.extra_data === 'string' ? JSON.parse(issue.extra_data) : issue.extra_data;
-                        
-                        if (extraData.used_by && extraData.used_by.length > 0) {
-                            html += '<div class="sb-extra-data">';
-                            html += '<strong>Used by:</strong> ';
-                            var usedByLinks = [];
-                            extraData.used_by.forEach(function(usedItem) {
-                                if (usedItem.url && usedItem.title) {
-                                    usedByLinks.push('<a href="' + window.SB_SEO_Issues.escapeHtml(usedItem.url) + '">' + window.SB_SEO_Issues.escapeHtml(usedItem.title) + '</a>');
-                                } else if (usedItem.title) {
-                                    usedByLinks.push(window.SB_SEO_Issues.escapeHtml(usedItem.title));
-                                }
-                            });
-                            html += usedByLinks.join(', ');
-                            html += '</div>';
-                        }
-                    } catch (e) {
-                        // If JSON parsing fails, ignore extra_data
-                    }
-                }
-                
+            if (issues.length > 0) {
+                html += '<div class="sb-url-issues-section">';
+                html += '<h4 class="sb-url-section-title">' + (strings.possibilities || 'Issues') + ' (' + issues.length + ')</h4>';
+                issues.forEach(function(issue) {
+                    var style = window.SB_SEO_Issues.getActionableStyle(issue.severity);
+                    html += window.SB_SEO_Issues.renderIssueRow(issue, style.icon, style.color);
+                });
                 html += '</div>';
+            }
+
+            if (opportunities.length > 0) {
+                html += '<div class="sb-url-issues-section sb-url-suggestions-section">';
+                html += '<h4 class="sb-url-section-title sb-muted-section-title">' + (strings.suggestions || 'Suggestions') + ' (' + opportunities.length + ')</h4>';
+                opportunities.forEach(function(issue) {
+                    html += window.SB_SEO_Issues.renderIssueRow(issue, 'dashicons-lightbulb', '#646970');
+                });
                 html += '</div>';
-            });
+            }
         }
-        
+
         html += '</div>';
-        
+
         $cell.html(html);
         $row.after($newRow);
         $newRow.hide().slideDown(300);
@@ -172,6 +189,9 @@
      * @return string Escaped text.
      */
     window.SB_SEO_Issues.escapeHtml = function(text) {
+        if (typeof text !== 'string') {
+            text = String(text || '');
+        }
         var map = {
             '&': '&amp;',
             '<': '&lt;',
@@ -183,4 +203,3 @@
     };
 
 })(jQuery);
-

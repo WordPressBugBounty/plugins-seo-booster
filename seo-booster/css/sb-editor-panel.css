@@ -1,0 +1,162 @@
+.sb-editor-panel-metabox .sb-ai-readiness-score-wrap,
+.sb-editor-panel-metabox .sb-editor-panel-seo-score-wrap {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 10px;
+}
+
+.sb-ai-readiness-score-circle {
+	width: 52px;
+	height: 52px;
+	border: 3px solid #646970;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 16px;
+	flex-shrink: 0;
+}
+
+.sb-ai-readiness-fails {
+	margin: 0 0 10px 18px;
+}
+
+.sb-ai-readiness-fails li {
+	list-style: disc;
+	margin-bottom: 4px;
+}
+
+.sb-editor-panel-section {
+	margin-bottom: 16px;
+}
+
+.sb-editor-panel-section-title {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	color: #646970;
+	margin: 0 0 8px;
+	letter-spacing: 0.02em;
+}
+
+.sb-editor-panel-score-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 8px;
+}
+
+.sb-editor-panel-score-circle {
+	width: 48px;
+	height: 48px;
+	border: 3px solid #646970;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 15px;
+	flex-shrink: 0;
+}
+
+.sb-editor-panel-score-meta strong {
+	display: block;
+	margin-bottom: 2px;
+}
+
+.sb-editor-panel-score-meta .description {
+	margin: 0;
+}
+
+.sb-ai-readiness-sidebar-score {
+	text-align: center;
+	margin-bottom: 12px;
+}
+
+.sb-ai-readiness-sidebar-score-value {
+	display: inline-block;
+	font-size: 28px;
+	font-weight: 700;
+	line-height: 1;
+	padding: 8px 14px;
+	border: 2px solid #646970;
+	border-radius: 999px;
+}
+
+.sb-ai-readiness-sidebar-grade {
+	margin-top: 6px;
+	font-weight: 600;
+}
+
+.sb-ai-readiness-checklist {
+	margin: 12px 0 16px;
+	padding: 0;
+	list-style: none;
+}
+
+.sb-ai-readiness-checklist li {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 6px 0;
+	border-bottom: 1px solid #f0f0f1;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.sb-ai-readiness-checklist li.is-pass .sb-ai-readiness-status {
+	color: #00a32a;
+}
+
+.sb-ai-readiness-checklist li.is-fail .sb-ai-readiness-status {
+	color: #d63638;
+}
+
+.sb-ai-readiness-checklist li.is-unknown .sb-ai-readiness-status {
+	color: #646970;
+}
+
+.sb-ai-readiness-label {
+	flex: 1;
+}
+
+.sb-ai-readiness-points {
+	color: #646970;
+	font-size: 11px;
+}
+
+.sb-editor-panel-possibilities {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.sb-editor-panel-possibilities li {
+	padding: 8px 0;
+	border-bottom: 1px solid #f0f0f1;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.sb-editor-panel-possibilities li:last-child {
+	border-bottom: none;
+}
+
+.sb-editor-panel-links {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 12px;
+}
+
+.sb-editor-panel-links a {
+	text-decoration: none;
+}
+
+.sb-editor-panel-empty {
+	font-size: 12px;
+	color: #646970;
+	margin: 0 0 12px;
+}

@@ -11,7 +11,7 @@
 namespace Cleverplugins\SEOBooster;
 
 // don't load directly
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -20,8 +20,8 @@ if (!defined('ABSPATH')) {
  *
  * @package Cleverplugins\SEOBooster
  */
-class SB_GSC_List_Table extends \WP_List_Table
-{
+class SB_GSC_List_Table extends \WP_List_Table {
+
 
 
 	/**
@@ -29,14 +29,13 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @return void
 	 */
-	public function __construct()
-	{
+	public function __construct() {
 		// Set parent defaults.
 		parent::__construct(
 			array(
 				'singular' => 'gsc',
 				'plural'   => 'gscs',
-				'ajax'     => true,   
+				'ajax'     => true,
 			)
 		);
 	}
@@ -47,9 +46,8 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @return void
 	 */
-	public function no_items()
-	{
-		esc_html_e('Nothing found.', 'seo-booster');
+	public function no_items() {
+		esc_html_e( 'Nothing found.', 'seo-booster' );
 	}
 
 
@@ -59,11 +57,10 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @return array An array of hidden column names.
 	 */
-	protected function get_hidden_columns()
-	{
+	protected function get_hidden_columns() {
 		$screen = \get_current_screen();
-		$hidden = get_user_option("manage{$screen->id}columnshidden");
-		return is_array($hidden) ? $hidden : [];
+		$hidden = get_user_option( "manage{$screen->id}columnshidden" );
+		return is_array( $hidden ) ? $hidden : array();
 	}
 
 
@@ -73,23 +70,22 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @return array An associative array of column identifiers and labels.
 	 */
-	public function get_columns()
-	{
+	public function get_columns() {
 		$columns = array(
 			'cb'          => '<input type="checkbox" />',
-			'query'       => esc_html__('Query', 'seo-booster'),
-			'page'        => esc_html__('Page', 'seo-booster'),
-			'clicks'      => esc_html__('Clicks', 'seo-booster'),
-			'impressions' => esc_html__('Impressions', 'seo-booster'),
+			'query'       => esc_html__( 'Query', 'seo-booster' ),
+			'page'        => esc_html__( 'Page', 'seo-booster' ),
+			'clicks'      => esc_html__( 'Clicks', 'seo-booster' ),
+			'impressions' => esc_html__( 'Impressions', 'seo-booster' ),
 			// 'ctr'         => esc_html__('CTR', 'seo-booster'),
 			// 'position'    => esc_html__('Average Pos', 'seo-booster'),
-			'trends'			=> esc_html__('Trends', 'seo-booster'),
+			'trends'      => esc_html__( 'Trends', 'seo-booster' ),
 		);
 
 		$hidden_columns = $this->get_hidden_columns();
-		foreach ($hidden_columns as $hidden_column) {
-			if (isset($columns[$hidden_column])) {
-				unset($columns[$hidden_column]);
+		foreach ( $hidden_columns as $hidden_column ) {
+			if ( isset( $columns[ $hidden_column ] ) ) {
+				unset( $columns[ $hidden_column ] );
 			}
 		}
 
@@ -105,9 +101,8 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @return string The sanitized orderby parameter.
 	 */
-	protected function sanitize_orderby($orderby)
-	{
-		$valid_column_names = [
+	protected function sanitize_orderby( $orderby ) {
+		$valid_column_names = array(
 			'query',
 			'clicks',
 			'impressions',
@@ -116,9 +111,9 @@ class SB_GSC_List_Table extends \WP_List_Table
 			// 'first_seen_date',
 			'latest_date',
 			'unique_landing_pages', // Add new column
-		];
+		);
 
-		if (in_array($orderby, $valid_column_names, true)) {
+		if ( in_array( $orderby, $valid_column_names, true ) ) {
 			return $orderby;
 		}
 
@@ -131,8 +126,7 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @return string The default primary column name.
 	 */
-	protected function get_default_primary_column_name()
-	{
+	protected function get_default_primary_column_name() {
 		return 'impressions';
 	}
 
@@ -142,16 +136,15 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @return array An associative array of sortable column identifiers and their sorting criteria.
 	 */
-	public function get_sortable_columns()
-	{
+	public function get_sortable_columns() {
 		$sortable_columns = array(
-			'query'      => array('query', false),
-			'clicks'     => array('clicks', false),
-			'impressions' => array('impressions', true),
-			'ctr'        => array('ctr', false),
-			'position'   => array('position', false),
+			'query'       => array( 'query', false ),
+			'clicks'      => array( 'clicks', false ),
+			'impressions' => array( 'impressions', true ),
+			'ctr'         => array( 'ctr', false ),
+			'position'    => array( 'position', false ),
 			// 'first_seen_date'       => array('first_seen_date', false),
-			'latest_date'       => array('latest_date', false),
+			'latest_date' => array( 'latest_date', false ),
 		);
 
 		return $sortable_columns;
@@ -167,21 +160,20 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 * @param array $item The current item.
 	 * @return string CSS classes for the row.
 	 */
-	protected function get_row_class($item)
-	{
+	protected function get_row_class( $item ) {
 		$classes = array();
-		
+
 		// Check if keyword has no recent traffic (over 30 days)
-		if (isset($item['latest_date']) && !empty($item['latest_date'])) {
-			$stored_time = strtotime(get_date_from_gmt($item['latest_date']));
-			$time_diff = current_time('timestamp') - $stored_time;
-			
-			if ($time_diff > (30 * 24 * 60 * 60)) {
+		if ( isset( $item['latest_date'] ) && ! empty( $item['latest_date'] ) ) {
+			$stored_time = strtotime( get_date_from_gmt( $item['latest_date'] ) );
+			$time_diff   = current_time( 'timestamp' ) - $stored_time;
+
+			if ( $time_diff > ( 30 * 24 * 60 * 60 ) ) {
 				$classes[] = 'sb-inactive-keyword';
 			}
 		}
-		
-		return implode(' ', $classes);
+
+		return implode( ' ', $classes );
 	}
 
 	/**
@@ -189,11 +181,10 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @param array $item The current item.
 	 */
-	public function single_row($item)
-	{
-		$row_class = $this->get_row_class($item);
-		echo '<tr class="' . esc_attr($row_class) . '">';
-		$this->single_row_columns($item);
+	public function single_row( $item ) {
+		$row_class = $this->get_row_class( $item );
+		echo '<tr class="' . esc_attr( $row_class ) . '">';
+		$this->single_row_columns( $item );
 		echo '</tr>';
 	}
 
@@ -205,150 +196,143 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @return string The rendered column content.
 	 */
-	protected function column_default($item, $column_name)
-	{
+	protected function column_default( $item, $column_name ) {
 		// get the current post id
 
 		global $wpdb;
 
-		switch ($column_name) {
+		switch ( $column_name ) {
 			case 'query':
 				// Check if this is a cannibalizing keyword for indentation
-				$keyword_id = intval($item['id']);
-				$competition_data = get_transient('sb_competition_' . $keyword_id);
-				
+				$keyword_id       = intval( $item['id'] );
+				$competition_data = get_transient( 'sb_competition_' . $keyword_id );
+
 				// Add indentation class for non-leader competing keywords
 				$keyword_class = 'sb-keyword';
-				if ($competition_data && $competition_data['is_competing'] && !$competition_data['is_leader']) {
+				if ( $competition_data && $competition_data['is_competing'] && ! $competition_data['is_leader'] ) {
 					$keyword_class .= ' sb-cannibalizing-keyword';
 				}
-				
-				$output = '<span class="' . $keyword_class . '">'.esc_html($item[$column_name]).'</span>';
-		
+
+				$output = '<span class="' . $keyword_class . '">' . esc_html( $item[ $column_name ] ) . '</span>';
+
 				$output .= '<div class="sbkbd">';
 				// Add "Used" label if keyword is used in content
-				if (isset($item['kw_used']) && $item['kw_used'] == 1) {
+				if ( isset( $item['kw_used'] ) && $item['kw_used'] == 1 ) {
 					$output .= sprintf(
 						' <span class="label label-ok used" title="%s">%s</span>',
-						esc_html__('This keyword is used in the content', 'seo-booster'),
-						esc_html__('In use', 'seo-booster')
+						esc_html__( 'This keyword is used in the content', 'seo-booster' ),
+						esc_html__( 'In use', 'seo-booster' )
 					);
 				}
-				
+
 				// Add "Last visit: X days ago" label if over 14 days
-				if (isset($item['latest_date']) && !empty($item['latest_date'])) {
-					$stored_time = strtotime(get_date_from_gmt($item['latest_date']));
-					$time_diff = current_time('timestamp') - $stored_time;
-					
-					if ($time_diff > (14 * 24 * 60 * 60)) {
-						$days_diff = floor($time_diff / 86400);
-						$output .= ' <span class="sb-last-visit-label" title="Last visit for this keyword">' . esc_html($days_diff) . ' days ago</span>';
+				if ( isset( $item['latest_date'] ) && ! empty( $item['latest_date'] ) ) {
+					$stored_time = strtotime( get_date_from_gmt( $item['latest_date'] ) );
+					$time_diff   = current_time( 'timestamp' ) - $stored_time;
+
+					if ( $time_diff > ( 14 * 24 * 60 * 60 ) ) {
+						$days_diff = floor( $time_diff / 86400 );
+						$output   .= ' <span class="sb-last-visit-label" title="Last visit for this keyword">' . esc_html( $days_diff ) . ' days ago</span>';
 					}
 				}
-				
+
 				// Add competition indicators
-				$keyword_id = intval($item['id']);
-				$competition_data = get_transient('sb_competition_' . $keyword_id);
-				
-				if ($competition_data === false) {
+				$keyword_id       = intval( $item['id'] );
+				$competition_data = get_transient( 'sb_competition_' . $keyword_id );
+
+				if ( $competition_data === false ) {
 					// First time - calculate and store
-					$competition_data = $this->calculate_keyword_competition($keyword_id);
-					set_transient('sb_competition_' . $keyword_id, $competition_data, DAY_IN_SECONDS);
+					$competition_data = $this->calculate_keyword_competition( $keyword_id );
+					set_transient( 'sb_competition_' . $keyword_id, $competition_data, DAY_IN_SECONDS );
 				}
-				
-				
+
 				// Display competition indicators with enhanced tooltips
-				if ($competition_data['is_competing']) {
-					if ($competition_data['is_leader']) {
+				if ( $competition_data['is_competing'] ) {
+					if ( $competition_data['is_leader'] ) {
 						$tooltip = sprintf(
 							'<strong>Traffic Leader</strong><br>This page gets the most clicks for "%s"<br><br>📊 <strong>Your Performance:</strong><br>• %d clicks<br>• %d pages competing<br><br>💡 <em>This page is winning the traffic battle for this keyword</em>',
-							esc_html($item['query']),
+							esc_html( $item['query'] ),
 							$competition_data['current_clicks'],
 							$competition_data['page_count']
 						);
-						$output .= ' <span class="sb-competition-indicator sb-leader" data-tooltip-html="' . esc_attr($tooltip) . '">🟢</span>';
+						$output .= ' <span class="sb-competition-indicator sb-leader" data-tooltip-html="' . esc_attr( $tooltip ) . '">🟢</span>';
 					} else {
 						$tooltip = sprintf(
 							'<strong>Keyword Cannibalization</strong><br>This page is competing with %d other pages for "%s"<br><br>📊 <strong>Performance Comparison:</strong><br>• Your clicks: %d<br>• Leader clicks: %d<br>• Gap: %d clicks<br><br>⚠️ <em>Consider consolidating or improving this page to avoid traffic cannibalization</em>',
 							$competition_data['page_count'] - 1,
-							esc_html($item['query']),
+							esc_html( $item['query'] ),
 							$competition_data['current_clicks'],
 							$competition_data['leader_clicks'],
 							$competition_data['leader_clicks'] - $competition_data['current_clicks']
 						);
-						$output .= ' <span class="sb-competition-indicator sb-cannibalizing" data-tooltip-html="' . esc_attr($tooltip) . '">🟡</span>';
+						$output .= ' <span class="sb-competition-indicator sb-cannibalizing" data-tooltip-html="' . esc_attr( $tooltip ) . '">🟡</span>';
 					}
 				}
-				
+
 				$output .= '</div>';
 
-				
 				return $output;
 
 			case 'clicks':
 			case 'impressions':
-				return  $item[$column_name];
+				return $item[ $column_name ];
 
 			case 'clicks':
-				return  $item[$column_name];
+				return $item[ $column_name ];
 
 			case 'ctr':
-				$value = $item[$column_name];
-				return (float)$value === 0.0 ? '0' : number_format_i18n($value, 4);
+				$value = $item[ $column_name ];
+				return (float) $value === 0.0 ? '0' : number_format_i18n( $value, 4 );
 
 			case 'first_seen_date':
-				$stored_time = strtotime(get_date_from_gmt($item[$column_name]));
-				$formatted_date = date_i18n(get_option('date_format'), $stored_time);
+				$stored_time    = strtotime( get_date_from_gmt( $item[ $column_name ] ) );
+				$formatted_date = date_i18n( get_option( 'date_format' ), $stored_time );
 				return $formatted_date;
 
-
 			case 'trends':
-				return '<div class="uplot-chart-placeholder" data-sb-kwid="'.intval($item['id']).'">
+				return '<div class="uplot-chart-placeholder" data-sb-kwid="' . intval( $item['id'] ) . '">
 					<div class="sb-chart-placeholder">
 						<span class="dashicons dashicons-chart-line"></span>
-						<span class="sb-placeholder-text">' . esc_html__('Hover to load chart', 'seo-booster') . '</span>
+						<span class="sb-placeholder-text">' . esc_html__( 'Hover to load chart', 'seo-booster' ) . '</span>
 					</div>
 				</div>';
 
 			case 'position':
+				return '<span title="' . esc_attr( $item[ $column_name ] ) . '">' . number_format_i18n( $item[ $column_name ] ) . '</span>';
 
-				return '<span title="' . esc_attr($item[$column_name]) . '">' . number_format_i18n($item[$column_name]) . '</span>';
-
-				return $item[$column_name];
+				return $item[ $column_name ];
 
 			case 'page':
-				$url = $item['page'];
-				$path = wp_parse_url($url, PHP_URL_PATH); // Extract path from URL
-				$path = trailingslashit($path); // Ensure path ends with a slash
+				$url  = $item['page'];
+				$path = wp_parse_url( $url, PHP_URL_PATH ); // Extract path from URL
+				$path = trailingslashit( $path ); // Ensure path ends with a slash
 
-				$post_id = url_to_postid($url);
+				$post_id = url_to_postid( $url );
 
 				$edit_link = false;
-				if ($post_id) {
-					$edit_link = get_edit_post_link($post_id);
+				if ( $post_id ) {
+					$edit_link = get_edit_post_link( $post_id );
 				}
 
-				$parsed_url = wp_parse_url($url);
-				$stripped_url = isset($parsed_url['path']) ? $parsed_url['path'] : '';
+				$parsed_url   = wp_parse_url( $url );
+				$stripped_url = isset( $parsed_url['path'] ) ? $parsed_url['path'] : '';
 
-				$return = '';
+				$return  = '';
 				$return .= sprintf(
 					'<a href="%1$s">%2$s</a>',
 					$url,
 					$stripped_url
 				);
-				if ($edit_link) {
-					$return .= '<div class="row-actions"><span class="edit"><a href="' . esc_url($edit_link) . '">' . esc_html__('Edit', 'seo-booster') .  '</a> | <span class="view"><a href="'.esc_url($url).'" target="_blank" rel="bookmark">'.esc_html__('View', 'seo-booster') .'</a></span></div>';
-				}
-				else {
-					$return .= '<div class="row-actions"><span class="view"><a href="'.esc_url($url).'" target="_blank" rel="bookmark">'.esc_html__('View', 'seo-booster') .'</a></span></div>';
+				if ( $edit_link ) {
+					$return .= '<div class="row-actions"><span class="edit"><a href="' . esc_url( $edit_link ) . '">' . esc_html__( 'Edit', 'seo-booster' ) . '</a> | <span class="view"><a href="' . esc_url( $url ) . '" target="_blank" rel="bookmark">' . esc_html__( 'View', 'seo-booster' ) . '</a></span></div>';
+				} else {
+					$return .= '<div class="row-actions"><span class="view"><a href="' . esc_url( $url ) . '" target="_blank" rel="bookmark">' . esc_html__( 'View', 'seo-booster' ) . '</a></span></div>';
 
 				}
 				return $return;
 
-
 			default:
-				return esc_html(var_export($item, true));
+				return esc_html( var_export( $item, true ) );
 		}
 	}
 
@@ -359,9 +343,8 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @return string The sanitized order parameter.
 	 */
-	protected function sanitize_order($order)
-	{
-		if (in_array(strtoupper($order), ['ASC', 'DESC'], true)) {
+	protected function sanitize_order( $order ) {
+		if ( in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ) {
 			return $order;
 		}
 
@@ -379,9 +362,8 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @return string The prepared query condition or an empty string if the value is empty.
 	 */
-	protected function prepare_if_not_empty($query, $value)
-	{
-		return !empty($value) ? $this->db->prepare($query, $value) : '';
+	protected function prepare_if_not_empty( $query, $value ) {
+		return ! empty( $value ) ? $this->db->prepare( $query, $value ) : '';
 	}
 
 
@@ -398,28 +380,31 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 * @param int $keyword_id The keyword ID to analyze
 	 * @return array Competition data
 	 */
-	private function calculate_keyword_competition($keyword_id)
-	{
+	private function calculate_keyword_competition( $keyword_id ) {
 		global $wpdb;
-		
+
 		// First, get the keyword query text for this ID
-		$keyword_query = $wpdb->prepare("
+		$keyword_query = $wpdb->prepare(
+			"
 			SELECT query FROM {$wpdb->prefix}sb2_query_keywords WHERE id = %d
-		", $keyword_id);
-		
-		$keyword_text = $wpdb->get_var($keyword_query);
-		
-		if (empty($keyword_text)) {
-			return [
-				'is_competing' => false,
-				'is_leader' => false,
-				'page_count' => 0,
-				'calculated_date' => current_time('Y-m-d H:i:s')
-			];
+		",
+			$keyword_id
+		);
+
+		$keyword_text = $wpdb->get_var( $keyword_query );
+
+		if ( empty( $keyword_text ) ) {
+			return array(
+				'is_competing'    => false,
+				'is_leader'       => false,
+				'page_count'      => 0,
+				'calculated_date' => current_time( 'Y-m-d H:i:s' ),
+			);
 		}
-		
+
 		// Now find all pages using this same keyword query
-		$query = $wpdb->prepare("
+		$query = $wpdb->prepare(
+			"
 			SELECT 
 				qk.id,
 				qk.page,
@@ -430,60 +415,62 @@ class SB_GSC_List_Table extends \WP_List_Table
 			WHERE qk.query = %s
 			GROUP BY qk.id, qk.page
 			ORDER BY total_clicks DESC
-		", $keyword_text);
-		
-		$pages_data = $wpdb->get_results($query, ARRAY_A);
-		
-		if (empty($pages_data)) {
-			return [
-				'is_competing' => false,
-				'is_leader' => false,
-				'page_count' => 0,
-				'calculated_date' => current_time('Y-m-d H:i:s')
-			];
+		",
+			$keyword_text
+		);
+
+		$pages_data = $wpdb->get_results( $query, ARRAY_A );
+
+		if ( empty( $pages_data ) ) {
+			return array(
+				'is_competing'    => false,
+				'is_leader'       => false,
+				'page_count'      => 0,
+				'calculated_date' => current_time( 'Y-m-d H:i:s' ),
+			);
 		}
-		
-		$page_count = count($pages_data);
+
+		$page_count   = count( $pages_data );
 		$is_competing = $page_count > 1;
-		
+
 		// Find current page data
 		$current_page_data = null;
-		foreach ($pages_data as $page_data) {
-			if ($page_data['id'] == $keyword_id) {
+		foreach ( $pages_data as $page_data ) {
+			if ( $page_data['id'] == $keyword_id ) {
 				$current_page_data = $page_data;
 				break;
 			}
 		}
-		
-		if (!$current_page_data) {
-			return [
-				'is_competing' => false,
-				'is_leader' => false,
-				'page_count' => 0,
-				'calculated_date' => current_time('Y-m-d H:i:s')
-			];
+
+		if ( ! $current_page_data ) {
+			return array(
+				'is_competing'    => false,
+				'is_leader'       => false,
+				'page_count'      => 0,
+				'calculated_date' => current_time( 'Y-m-d H:i:s' ),
+			);
 		}
-		
-		$current_page = $current_page_data['page'];
+
+		$current_page   = $current_page_data['page'];
 		$current_clicks = $current_page_data['total_clicks'];
-		
+
 		// Find the traffic leader
-		$leader_data = $pages_data[0];
-		$leader_page = $leader_data['page'];
+		$leader_data   = $pages_data[0];
+		$leader_page   = $leader_data['page'];
 		$leader_clicks = $leader_data['total_clicks'];
-		
-		$is_leader = ($current_page === $leader_page);
-		
-		return [
-			'is_competing' => $is_competing,
-			'is_leader' => $is_leader,
-			'page_count' => $page_count,
-			'current_page' => $current_page,
-			'current_clicks' => $current_clicks,
-			'leader_page' => $leader_page,
-			'leader_clicks' => $leader_clicks,
-			'calculated_date' => current_time('Y-m-d H:i:s')
-		];
+
+		$is_leader = ( $current_page === $leader_page );
+
+		return array(
+			'is_competing'    => $is_competing,
+			'is_leader'       => $is_leader,
+			'page_count'      => $page_count,
+			'current_page'    => $current_page,
+			'current_clicks'  => $current_clicks,
+			'leader_page'     => $leader_page,
+			'leader_clicks'   => $leader_clicks,
+			'calculated_date' => current_time( 'Y-m-d H:i:s' ),
+		);
 	}
 
 	/**
@@ -491,9 +478,10 @@ class SB_GSC_List_Table extends \WP_List_Table
 	 *
 	 * @return void
 	 */
-	public function prepare_items()
-	{
+	public function prepare_items() {
 		global $wpdb;
+
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- List table pagination, search, and sort reads only.
 
 		$per_page = 50;
 
@@ -501,72 +489,79 @@ class SB_GSC_List_Table extends \WP_List_Table
 		$hidden   = $this->get_hidden_columns();
 		$sortable = $this->get_sortable_columns();
 
-		$this->_column_headers = array($columns, $hidden, $sortable);
+		$this->_column_headers = array( $columns, $hidden, $sortable );
 
 		$this->process_bulk_action();
 
 		$current_page = $this->get_pagenum();
-		$offset = ($current_page * $per_page) - $per_page;
+		$offset       = ( $current_page * $per_page ) - $per_page;
 
-		$search = isset($_REQUEST['s']) ? sanitize_text_field(wp_unslash($_REQUEST['s'])) : '';
+		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 
-		$is_exact_match = isset($_REQUEST['exact_match']) && $_REQUEST['exact_match'] == 1;
+		$is_exact_match = isset( $_REQUEST['exact_match'] ) && $_REQUEST['exact_match'] == 1;
 
 		$do_search = '';
-		if (!empty($search)) {
+		if ( ! empty( $search ) ) {
 			$do_search = $is_exact_match
-				? $wpdb->prepare(" AND qk.query = %s ", $search)
-				: $wpdb->prepare(" AND (qk.query LIKE %s OR qk.page LIKE %s OR qk.first_seen_date LIKE %s OR qk.latest_date LIKE %s) ", "%{$search}%", "%{$search}%", "%{$search}%", "%{$search}%");
+				? $wpdb->prepare( ' AND qk.query = %s ', $search )
+				: $wpdb->prepare( ' AND (qk.query LIKE %s OR qk.page LIKE %s OR qk.first_seen_date LIKE %s OR qk.latest_date LIKE %s) ', "%{$search}%", "%{$search}%", "%{$search}%", "%{$search}%" );
 		}
 
 		$lp_filter_query = '';
-		$lp_filter = isset($_GET['filter_options']) ? filter_var(wp_unslash($_GET['filter_options']), FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '';
+		$lp_filter       = isset( $_GET['filter_options'] ) ? filter_var( wp_unslash( $_GET['filter_options'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS ) : '';
 
-		if ($lp_filter) {
-			switch ($lp_filter) {
+		if ( $lp_filter ) {
+			switch ( $lp_filter ) {
 				case 'new_keywords':
-					$lp_filter_query = " AND qk.latest_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) ";
+					$lp_filter_query = ' AND qk.latest_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) ';
 					break;
 				case 'not_seen':
-					$lp_filter_query = " AND qk.latest_date < DATE_SUB(CURDATE(), INTERVAL 30 DAY) ";
+					$lp_filter_query = ' AND qk.latest_date < DATE_SUB(CURDATE(), INTERVAL 30 DAY) ';
 					break;
 				case 'keywords_used':
 					$lp_filter_query = " AND qk.is_used_in_content = '1' ";
 					break;
 				case 'keywords_unused':
-					$lp_filter_query = " AND (qk.is_used_in_content = -1 OR qk.is_used_in_content IS NULL) ";
+					$lp_filter_query = ' AND (qk.is_used_in_content = -1 OR qk.is_used_in_content IS NULL) ';
 					break;
 				case 'high_position':
-					$lp_filter_query = " AND qkh.position BETWEEN 1 AND 10 ";
+					$lp_filter_query = ' AND qkh.position BETWEEN 1 AND 10 ';
 					break;
 				case 'medium_position':
-					$lp_filter_query = " AND qkh.position BETWEEN 11 AND 50 ";
+					$lp_filter_query = ' AND qkh.position BETWEEN 11 AND 50 ';
 					break;
 				case 'low_position':
-					$lp_filter_query = " AND qkh.position > 50 ";
+					$lp_filter_query = ' AND qkh.position > 50 ';
 					break;
 			}
 		}
-		
-		// Add traffic filter for past 30 days
-		$traffic_filter_query = '';
-		$traffic_30_days = isset($_GET['traffic_30_days']) && $_GET['traffic_30_days'] == 1;
-		
-		if ($traffic_30_days) {
-			$traffic_filter_query = " AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) ";
-		}
-		
-		// Sanitize and validate the order parameter
-		$order = isset($_GET['order']) ? sanitize_text_field(wp_unslash($_GET['order'])) : 'DESC';
-		$order = strtoupper($order); // Convert to uppercase for comparison
-		$order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'DESC';
 
-		$orderby = isset($_GET['orderby']) ? esc_sql(sanitize_text_field(wp_unslash($_GET['orderby']))) : 'impressions';
+		// Add traffic filter for past 30 days. On first page load (filter form
+		// not yet submitted) the "Recent Activity" filter is preselected; once
+		// the form is submitted we respect the checkbox state.
+		$traffic_filter_query = '';
+		$filter_submitted     = isset( $_GET['sb_gsc_filtered'] );
+		if ( $filter_submitted ) {
+			$traffic_30_days = isset( $_GET['traffic_30_days'] ) && $_GET['traffic_30_days'] == 1;
+		} else {
+			$traffic_30_days = true;
+		}
+
+		if ( $traffic_30_days ) {
+			$traffic_filter_query = ' AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) ';
+		}
+
+		// Sanitize and validate the order parameter
+		$order = isset( $_GET['order'] ) ? sanitize_text_field( wp_unslash( $_GET['order'] ) ) : 'DESC';
+		$order = strtoupper( $order ); // Convert to uppercase for comparison
+		$order = in_array( $order, array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
+
+		$orderby = isset( $_GET['orderby'] ) ? esc_sql( sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) ) : 'impressions';
 
 		// Fetch the filtered and searched count of items
 		$total_filtered_query = "SELECT COUNT(DISTINCT qk.id) FROM {$wpdb->prefix}sb2_query_keywords AS qk LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh ON qk.id = qkh.query_keywords_id WHERE 1=1 $do_search $lp_filter_query $traffic_filter_query";
 
-		$total_filtered = $wpdb->get_var($total_filtered_query);
+		$total_filtered = $wpdb->get_var( $total_filtered_query );
 
 		$query = "SELECT qk.id, qk.query,
 		qk.is_used_in_content as kw_used, 
@@ -584,14 +579,17 @@ class SB_GSC_List_Table extends \WP_List_Table
 			  ORDER BY {$orderby} {$order} 
 			  LIMIT %d, %d";
 
-		$data = $wpdb->get_results($wpdb->prepare($query, $offset, $per_page), ARRAY_A);
+		$data = $wpdb->get_results( $wpdb->prepare( $query, $offset, $per_page ), ARRAY_A );
 
 		$this->items = $data;
 
-		$this->set_pagination_args(array(
-			'total_items' => $total_filtered,
-			'per_page'    => $per_page,
-			'total_pages' => ceil($total_filtered / $per_page),
-		));
+		$this->set_pagination_args(
+			array(
+				'total_items' => $total_filtered,
+				'per_page'    => $per_page,
+				'total_pages' => ceil( $total_filtered / $per_page ),
+			)
+		);
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	}
 }

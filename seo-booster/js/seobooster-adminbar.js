@@ -389,6 +389,10 @@ function initializeKeywordsTable(data) {
 
 	// Initialize table
 	window.keywordsTable = new Tabulator("#seobooster-keywords-table", {
+		debugInvalidOptions: false,
+		debugInvalidComponentFuncs: false,
+		debugInitialization: false,
+		debugDeprecation: false,
 		data: data,
 		layout: "fitColumns",
 		responsiveLayout: "collapse",

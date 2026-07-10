@@ -553,14 +553,14 @@
                         // Re-enable button on error
                         BulkStatusBanner.isCancelled = false;
                         $cancelBtn.prop('disabled', false).text(sbBulkStatus.strings.cancel);
-                        alert(response.data && response.data.message ? response.data.message : 'Failed to cancel generation');
+                        window.SBModal.alert(response.data && response.data.message ? response.data.message : 'Failed to cancel generation', { tone: 'error' });
                     }
                 },
                 error: function() {
                     // Re-enable button on error
                     BulkStatusBanner.isCancelled = false;
                     $cancelBtn.prop('disabled', false).text(sbBulkStatus.strings.cancel);
-                    alert('An error occurred while cancelling generation');
+                    window.SBModal.alert('An error occurred while cancelling generation', { tone: 'error' });
                 }
             });
         },

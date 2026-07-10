@@ -1,0 +1,73 @@
+/* SEO Booster styled modal (replaces native window.alert / window.confirm). */
+.sb-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.55);
+    animation: sb-modal-fade 0.12s ease-out;
+}
+
+.sb-modal {
+    width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+    padding: 24px;
+    outline: none;
+    animation: sb-modal-pop 0.12s ease-out;
+}
+
+.sb-modal-title {
+    margin: 0 0 12px;
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+.sb-modal-body {
+    margin: 0 0 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1d2327;
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+.sb-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.sb-modal--error .sb-modal-title {
+    color: #b32d2e;
+}
+
+.sb-modal--warning .sb-modal-title {
+    color: #bd8600;
+}
+
+.sb-modal--success .sb-modal-title {
+    color: #007017;
+}
+
+@keyframes sb-modal-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes sb-modal-pop {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sb-modal-overlay,
+    .sb-modal {
+        animation: none;
+    }
+}

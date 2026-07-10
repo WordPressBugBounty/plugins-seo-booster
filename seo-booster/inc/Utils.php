@@ -3,11 +3,11 @@
 namespace Cleverplugins\SEOBooster;
 
 // don't load directly
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-class Utils extends Seobooster2
-{
+class Utils extends Seobooster2 {
+
 	/**
 	 * Performs daily maintenance routines for SEO Booster.
 	 *
@@ -20,47 +20,57 @@ class Utils extends Seobooster2
 	 * @global wpdb $wpdb WordPress database abstraction object.
 	 * @return void
 	 */
-	public static function do_seobooster_dailymaintenance()
-	{
+	public static function do_seobooster_dailymaintenance() {
 		global $wpdb;
 		$table_name_log = $wpdb->prefix . 'sb2_log';
 
 		// Get current table stats
-		$initial_count = $wpdb->get_var("SELECT COUNT(*) FROM {$table_name_log}");
-		$initial_size = $wpdb->get_var($wpdb->prepare(
-			"SELECT ROUND(((data_length + index_length) / 1024 / 1024), 2)
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table prefix only; aggregate count query.
+		$initial_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name_log}" );
+		$initial_size  = $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT ROUND(((data_length + index_length) / 1024 / 1024), 2)
 			FROM information_schema.TABLES
-			WHERE table_schema = %s AND table_name = %s",
-			DB_NAME,
-			$table_name_log
-		));
+			WHERE table_schema = %s AND table_name = %s',
+				DB_NAME,
+				$table_name_log
+			)
+		);
 
 		// Delete entries older than 14 days
-		$deleted_old = $wpdb->query($wpdb->prepare(
-			"DELETE FROM {$table_name_log} WHERE logtime < DATE_SUB(NOW(), INTERVAL %d DAY)",
-			14
-		));
+		$deleted_old = $wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$table_name_log} WHERE logtime < DATE_SUB(NOW(), INTERVAL %d DAY)",
+				14
+			)
+		);
 
 		// If still more than 10000 entries, delete oldest entries
-		$current_count = $wpdb->get_var("SELECT COUNT(*) FROM {$table_name_log}");
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table prefix only; aggregate count query.
+		$current_count  = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name_log}" );
 		$deleted_excess = 0;
-		if ($current_count > 10000) {
+		if ( $current_count > 10000 ) {
 			$entries_to_delete = $current_count - 5000;
-			$deleted_excess = $wpdb->query($wpdb->prepare(
-				"DELETE FROM {$table_name_log} ORDER BY logtime ASC LIMIT %d",
-				$entries_to_delete
-			));
+			$deleted_excess    = $wpdb->query(
+				$wpdb->prepare(
+					"DELETE FROM {$table_name_log} ORDER BY logtime ASC LIMIT %d",
+					$entries_to_delete
+				)
+			);
 		}
 
 		// Get final table size
-		$final_count = $wpdb->get_var("SELECT COUNT(*) FROM {$table_name_log}");
-		$final_size = $wpdb->get_var($wpdb->prepare(
-			"SELECT ROUND(((data_length + index_length) / 1024 / 1024), 2)
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table prefix only; aggregate count query.
+		$final_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name_log}" );
+		$final_size  = $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT ROUND(((data_length + index_length) / 1024 / 1024), 2)
 			FROM information_schema.TABLES
-			WHERE table_schema = %s AND table_name = %s",
-			DB_NAME,
-			$table_name_log
-		));
+			WHERE table_schema = %s AND table_name = %s',
+				DB_NAME,
+				$table_name_log
+			)
+		);
 
 		// Log the maintenance results
 		self::log(
@@ -76,6 +86,55 @@ class Utils extends Seobooster2
 			10 // Info priority
 		);
 
+		$deleted_ai_hits = AI_Bot_Tracker::cleanup_old_hits();
+		if ( $deleted_ai_hits > 0 ) {
+			self::log(
+				sprintf( 'AI bot hits retention: deleted %d rows older than %d days', $deleted_ai_hits, AI_Bot_Tracker::get_retention_days() ),
+				5
+			);
+		}
+
+		$deleted_ai_referrals = AI_Referral_Tracker::cleanup_old_referrals();
+		if ( $deleted_ai_referrals > 0 ) {
+			self::log(
+				sprintf( 'AI referral hits retention: deleted %d rows older than %d days', $deleted_ai_referrals, AI_Bot_Tracker::get_retention_days() ),
+				5
+			);
+		}
+
+		self::refresh_dashboard_tools_counts();
+	}
+
+	/**
+	 * Cache dashboard Tools quick-win counts for the admin dashboard card.
+	 *
+	 * @return void
+	 */
+	public static function refresh_dashboard_tools_counts() {
+		if ( ! defined( 'SEOBOOSTER_PLUGINPATH' ) ) {
+			return;
+		}
+
+		require_once SEOBOOSTER_PLUGINPATH . 'inc/Tools/Tools_Image_Scanner.php';
+		require_once SEOBOOSTER_PLUGINPATH . 'inc/Tools/Tools_Meta_Scanner.php';
+
+		$images_missing = count( \Cleverplugins\SEOBooster\Tools\Tools_Image_Scanner::get_matching_attachment_ids( array( 'empty_alt' ) ) );
+		$posts_missing  = count(
+			\Cleverplugins\SEOBooster\Tools\Tools_Meta_Scanner::get_matching_post_ids(
+				array( 'missing_title', 'missing_description' ),
+				\Cleverplugins\SEOBooster\Tools\Tools_Meta_Scanner::get_default_post_types()
+			)
+		);
+
+		set_transient(
+			'sb_dashboard_tools_counts',
+			array(
+				'images_missing_alt' => (int) $images_missing,
+				'posts_missing_meta' => (int) $posts_missing,
+				'updated'            => time(),
+			),
+			DAY_IN_SECONDS
+		);
 	}
 
 	/**
@@ -87,55 +146,69 @@ class Utils extends Seobooster2
 	 * @access  public static
 	 * @return  void
 	 */
-	public static function gsc_make_auto_link()
-	{
-		if (isset($_POST['security'])) {
-			$nonce = sanitize_text_field(wp_unslash($_POST['security']));
+	public static function gsc_make_auto_link() {
+		if ( isset( $_POST['security'] ) ) {
+			$nonce = sanitize_text_field( wp_unslash( $_POST['security'] ) );
 			// Nonce.
 		} else {
 			$nonce = '';
 		}
-		if (empty($nonce) || !wp_verify_nonce($nonce, 'sb_gsc_nonce')) {
-			wp_send_json_error(array(
-				'success' => false,
-				'message' => esc_html__('Nonce verification failed.', 'seo-booster'),
-			));
+		if ( empty( $nonce ) || ! wp_verify_nonce( $nonce, 'sb_gsc_nonce' ) ) {
+			wp_send_json_error(
+				array(
+					'success' => false,
+					'message' => esc_html__( 'Nonce verification failed.', 'seo-booster' ),
+				)
+			);
 		}
-		if (!current_user_can('manage_options')) {
-			wp_send_json_error(array(
-				'success' => false,
-				'message' => esc_html__('You do not have permission to create auto links.', 'seo-booster'),
-			));
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array(
+					'success' => false,
+					'message' => esc_html__( 'You do not have permission to create auto links.', 'seo-booster' ),
+				)
+			);
 		}
 		global $wpdb;
-		$post_id = (isset($_POST['post_id']) ? sanitize_text_field(wp_unslash($_POST['post_id'])) : '');
-		$query_id = (isset($_POST['query_id']) ? sanitize_text_field(wp_unslash($_POST['query_id'])) : '');
-		if (empty($post_id) || empty($query_id)) {
-			wp_send_json_error(array(
-				'success' => false,
-				'message' => esc_html__('Post ID or Query ID is missing.', 'seo-booster'),
-			));
+		$post_id  = ( isset( $_POST['post_id'] ) ? sanitize_text_field( wp_unslash( $_POST['post_id'] ) ) : '' );
+		$query_id = ( isset( $_POST['query_id'] ) ? sanitize_text_field( wp_unslash( $_POST['query_id'] ) ) : '' );
+		if ( empty( $post_id ) || empty( $query_id ) ) {
+			wp_send_json_error(
+				array(
+					'success' => false,
+					'message' => esc_html__( 'Post ID or Query ID is missing.', 'seo-booster' ),
+				)
+			);
 		}
-		$keyword = $wpdb->get_var($wpdb->prepare("SELECT query FROM {$wpdb->prefix}sb2_query_keywords WHERE id = %d", $query_id));
-		$page_url = get_permalink($post_id);
-		if ($keyword && $page_url) {
-			$wpdb->insert("{$wpdb->prefix}sb2_autolink", array(
-				'keyword' => $keyword,
-				'url'     => $page_url,
-			), array('%s', '%s'));
+		$keyword  = $wpdb->get_var( $wpdb->prepare( "SELECT query FROM {$wpdb->prefix}sb2_query_keywords WHERE id = %d", $query_id ) );
+		$page_url = get_permalink( $post_id );
+		if ( $keyword && $page_url ) {
+			$wpdb->insert(
+				"{$wpdb->prefix}sb2_autolink",
+				array(
+					'keyword' => $keyword,
+					'url'     => $page_url,
+				),
+				array( '%s', '%s' )
+			);
 			$last_insert_id = $wpdb->insert_id;
 			// if $last_insert_id is ok, return success
-			if ($last_insert_id) {
-				wp_send_json_success(array(
-					'success' => true,
-					'message' => '<span class="label label-info">' . esc_html__('Linked', 'seo-booster') . '</span>',
-				));
+			if ( $last_insert_id ) {
+				Seobooster2::flush_autolink_caches();
+				wp_send_json_success(
+					array(
+						'success' => true,
+						'message' => '<span class="label label-info">' . esc_html__( 'Linked', 'seo-booster' ) . '</span>',
+					)
+				);
 			} else {
 				$wpdb_error = $wpdb->last_error;
-				wp_send_json_error(array(
-					'success' => false,
-					'message' => esc_html__('Link creation failed.', 'seo-booster') . ' ' . esc_html($wpdb_error),
-				));
+				wp_send_json_error(
+					array(
+						'success' => false,
+						'message' => esc_html__( 'Link creation failed.', 'seo-booster' ) . ' ' . esc_html( $wpdb_error ),
+					)
+				);
 			}
 		}
 		exit;
@@ -150,22 +223,21 @@ class Utils extends Seobooster2
 	 * @access  public static
 	 * @return  void
 	 */
-	public static function prefixsetupschedule()
-	{
-		if (!wp_next_scheduled('seobooster_email_update')) {
-			wp_schedule_event(time(), 'weekly', 'seobooster_email_update');
+	public static function prefixsetupschedule() {
+		if ( ! wp_next_scheduled( 'seobooster_email_update' ) ) {
+			wp_schedule_event( time(), 'weekly', 'seobooster_email_update' );
 		}
-		if (!wp_next_scheduled('seobooster_gsc_data_fetch')) {
-			wp_schedule_event(time(), 'daily', 'seobooster_gsc_data_fetch');
+		if ( ! wp_next_scheduled( 'seobooster_gsc_data_fetch' ) ) {
+			wp_schedule_event( time(), 'daily', 'seobooster_gsc_data_fetch' );
 		}
-		if (!wp_next_scheduled('seobooster_dailymaintenance')) {
-			wp_schedule_event(time(), 'daily', 'seobooster_dailymaintenance');
+		if ( ! wp_next_scheduled( 'seobooster_dailymaintenance' ) ) {
+			wp_schedule_event( time(), 'daily', 'seobooster_dailymaintenance' );
 		}
-		if (!wp_next_scheduled('seobooster_token_validation')) {
-			wp_schedule_event(time(), 'sixhours', 'seobooster_token_validation');
+		if ( ! wp_next_scheduled( 'seobooster_token_validation' ) ) {
+			wp_schedule_event( time(), 'sixhours', 'seobooster_token_validation' );
 		}
-		if (!wp_next_scheduled('seobooster_cache_cleanup')) {
-			wp_schedule_event(time(), 'daily', 'seobooster_cache_cleanup');
+		if ( ! wp_next_scheduled( 'seobooster_cache_cleanup' ) ) {
+			wp_schedule_event( time(), 'daily', 'seobooster_cache_cleanup' );
 		}
 	}
 
@@ -181,27 +253,101 @@ class Utils extends Seobooster2
 	 * @param   array   $arr
 	 * @return  boolean
 	 */
-	public static function array_in_string($str, array $arr)
-	{
+	public static function array_in_string( $str, array $arr ) {
 		$return_arr = array();
-		foreach ($arr as $arr_value) {
-			$pattern = '/\\b' . preg_quote($arr_value['kw'], '/') . '\\b/u';
-			if (preg_match(
+		foreach ( $arr as $arr_value ) {
+			$pattern = '/\\b' . preg_quote( $arr_value['kw'], '/' ) . '\\b/u';
+			if ( preg_match(
 				$pattern,
 				$str,
 				$matches,
 				PREG_OFFSET_CAPTURE
-			)) {
-				$wrdpos = $matches[0][1];
-				$orgword = mb_substr($str, $wrdpos, mb_strlen($arr_value['kw']));
+			) ) {
+				$wrdpos               = $matches[0][1];
+				$orgword              = mb_substr( $str, $wrdpos, mb_strlen( $arr_value['kw'] ) );
 				$arr_value['orgword'] = $orgword;
-				$return_arr[] = $arr_value;
+				$return_arr[]         = $arr_value;
 			}
 		}
-		if (!empty($return_arr)) {
+		if ( ! empty( $return_arr ) ) {
 			return $return_arr;
 		}
 		return false;
+	}
+
+	/**
+	 * Ordered list of plugin-owned table slugs (without $wpdb->prefix).
+	 *
+	 * @return string[]
+	 */
+	public static function get_plugin_table_slugs() {
+		return array(
+			'sb2_query_keywords',
+			'sb2_query_keywords_history',
+			'sb2_autolink',
+			'sb2_404',
+			'sb2_log',
+			'sb2_seo_urls',
+			'sb2_seo_analysis',
+			'sb2_seo_issues',
+			'sb2_seo_url_status',
+			'sb2_ai_requests',
+			'sb2_llm_seo_suggestions',
+			'sb2_improvements_tracking',
+			'sb2_ai_bot_hits',
+			'sb2_ai_referrals',
+		);
+	}
+
+	/**
+	 * Map of plugin table slug => full table name (with $wpdb->prefix).
+	 *
+	 * @return array<string, string>
+	 */
+	public static function get_plugin_table_names() {
+		global $wpdb;
+
+		$tables = array();
+		foreach ( self::get_plugin_table_slugs() as $slug ) {
+			$tables[ $slug ] = $wpdb->prefix . $slug;
+		}
+
+		return $tables;
+	}
+
+	/**
+	 * Whether a plugin table exists in the database.
+	 *
+	 * @param string $table_name Full table name including prefix.
+	 * @return bool
+	 */
+	public static function plugin_table_exists( $table_name ) {
+		global $wpdb;
+
+		return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name;
+	}
+
+	/**
+	 * Action Scheduler group slug for SEO Booster background jobs.
+	 *
+	 * @return string
+	 */
+	public static function get_action_scheduler_group_slug() {
+		return 'seo-booster';
+	}
+
+	/**
+	 * Whether a WP-Cron hook belongs to SEO Booster.
+	 *
+	 * @param string $hook Cron hook name.
+	 * @return bool
+	 */
+	public static function is_plugin_cron_hook( $hook ) {
+		if ( strpos( $hook, 'seobooster' ) !== false ) {
+			return true;
+		}
+
+		return 0 === strpos( $hook, 'sb_gsc_' ) || 0 === strpos( $hook, 'sb_' );
 	}
 
 	/**
@@ -213,47 +359,58 @@ class Utils extends Seobooster2
 	 * @access  public static
 	 * @return  void
 	 */
-	public static function create_database_tables()
-	{
+	public static function create_database_tables() {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		global $wpdb;
 		$wpdb_collate = $wpdb->get_charset_collate();
-		$table_name = $wpdb->prefix . 'sb2_query_keywords';
-		
+		$table_name   = $wpdb->prefix . 'sb2_query_keywords';
+
 		// Handle migration from varchar to text for query field
 		// Check if table exists and has old schema - validate table name
-		$allowed_tables = [$wpdb->prefix . 'sb2_query_keywords'];
-		$table_exists = false;
-		if (in_array($table_name, $allowed_tables, true)) {
-			$table_name_escaped = esc_sql($table_name);
-			$table_exists = $wpdb->get_var($wpdb->prepare(
-				"SHOW TABLES LIKE %s",
-				$table_name_escaped
-			));
+		$allowed_tables = array( $wpdb->prefix . 'sb2_query_keywords' );
+		$table_exists   = false;
+		if ( in_array( $table_name, $allowed_tables, true ) ) {
+			$table_name_escaped = esc_sql( $table_name );
+			$table_exists       = $wpdb->get_var(
+				$wpdb->prepare(
+					'SHOW TABLES LIKE %s',
+					$table_name_escaped
+				)
+			);
 		}
-		
-		if ($table_exists && in_array($table_name, $allowed_tables, true)) {
-			$table_name_escaped = esc_sql($table_name);
-			$column_name_escaped = esc_sql('query');
+
+		if ( $table_exists && in_array( $table_name, $allowed_tables, true ) ) {
+			$table_name_escaped  = esc_sql( $table_name );
+			$column_name_escaped = esc_sql( 'query' );
 			// Check if query column is varchar (could be 191 or 1000)
-			$column_info = $wpdb->get_row($wpdb->prepare(
-				"SHOW COLUMNS FROM `{$table_name_escaped}` LIKE %s",
-				$column_name_escaped
-			));
-			if ($column_info && (strpos($column_info->Type, 'varchar(1000)') !== false || strpos($column_info->Type, 'varchar(191)') !== false)) {
+			$column_info = $wpdb->get_row(
+				$wpdb->prepare(
+					"SHOW COLUMNS FROM `{$table_name_escaped}` LIKE %s",
+					$column_name_escaped
+				)
+			);
+			if ( $column_info && ( strpos( $column_info->Type, 'varchar(1000)' ) !== false || strpos( $column_info->Type, 'varchar(191)' ) !== false ) ) {
 				// Drop indexes first to avoid conflicts
-				$wpdb->query("ALTER TABLE `{$table_name_escaped}` DROP INDEX IF EXISTS unique_query_page");
-				$wpdb->query("ALTER TABLE `{$table_name_escaped}` DROP INDEX IF EXISTS query");
-				$wpdb->query("ALTER TABLE `{$table_name_escaped}` DROP INDEX IF EXISTS page");
-				
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DDL migration; table name escaped with esc_sql().
+				$wpdb->query( "ALTER TABLE `{$table_name_escaped}` DROP INDEX IF EXISTS unique_query_page" );
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DDL migration; table name escaped with esc_sql().
+				$wpdb->query( "ALTER TABLE `{$table_name_escaped}` DROP INDEX IF EXISTS query" );
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DDL migration; table name escaped with esc_sql().
+				$wpdb->query( "ALTER TABLE `{$table_name_escaped}` DROP INDEX IF EXISTS page" );
+
 				// Change column types
-				$wpdb->query("ALTER TABLE `{$table_name_escaped}` MODIFY COLUMN query text NOT NULL");
-				$wpdb->query("ALTER TABLE `{$table_name_escaped}` MODIFY COLUMN page varchar(500) NOT NULL");
-				
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DDL migration; table name escaped with esc_sql().
+				$wpdb->query( "ALTER TABLE `{$table_name_escaped}` MODIFY COLUMN query text NOT NULL" );
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DDL migration; table name escaped with esc_sql().
+				$wpdb->query( "ALTER TABLE `{$table_name_escaped}` MODIFY COLUMN page varchar(500) NOT NULL" );
+
 				// Recreate indexes with proper key length
-				$wpdb->query("ALTER TABLE `{$table_name_escaped}` ADD UNIQUE KEY unique_query_page (query(191), page(191))");
-				$wpdb->query("ALTER TABLE `{$table_name_escaped}` ADD KEY query (query(191))");
-				$wpdb->query("ALTER TABLE `{$table_name_escaped}` ADD KEY page (page(191))");
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DDL migration; table name escaped with esc_sql().
+				$wpdb->query( "ALTER TABLE `{$table_name_escaped}` ADD UNIQUE KEY unique_query_page (query(191), page(191))" );
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DDL migration; table name escaped with esc_sql().
+				$wpdb->query( "ALTER TABLE `{$table_name_escaped}` ADD KEY query (query(191))" );
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DDL migration; table name escaped with esc_sql().
+				$wpdb->query( "ALTER TABLE `{$table_name_escaped}` ADD KEY page (page(191))" );
 			}
 		}
 
@@ -271,10 +428,10 @@ class Utils extends Seobooster2
 				KEY page (page(191))
 				) $wpdb_collate";
 
-		dbDelta($sql);
+		dbDelta( $sql );
 
 		$table_name_history = $wpdb->prefix . 'sb2_query_keywords_history';
-		$sql = "CREATE TABLE {$table_name_history} (
+		$sql                = "CREATE TABLE {$table_name_history} (
 id mediumint(9) NOT NULL AUTO_INCREMENT,
 query_keywords_id mediumint(9) NOT NULL,
 clicks int(11) NOT NULL,
@@ -288,10 +445,10 @@ KEY date (date),
 UNIQUE KEY unique_query_date (query_keywords_id, date)
 ) $wpdb_collate";
 
-		dbDelta($sql);
+		dbDelta( $sql );
 
 		$table_name = $wpdb->prefix . 'sb2_autolink';
-		$sql = "CREATE TABLE {$table_name} (
+		$sql        = "CREATE TABLE {$table_name} (
 id bigint(20) NOT NULL AUTO_INCREMENT,
 keyword varchar(255),
 url varchar(255),
@@ -302,10 +459,10 @@ PRIMARY KEY  (id),
 KEY keyword (keyword),
 KEY url (url)) $wpdb_collate";
 
-		dbDelta($sql);
+		dbDelta( $sql );
 
 		$table_name = $wpdb->prefix . 'sb2_404';
-		$sql = "CREATE TABLE {$table_name} (
+		$sql        = "CREATE TABLE {$table_name} (
 id bigint(20) NOT NULL AUTO_INCREMENT,
 lp varchar(500) NOT NULL,
 code varchar(3) DEFAULT NULL,
@@ -315,10 +472,10 @@ visits int(11) NOT NULL,
 referer text NOT NULL,
 PRIMARY KEY  (id)) $wpdb_collate";
 
-		dbDelta($sql);
+		dbDelta( $sql );
 
 		$table_name = $wpdb->prefix . 'sb2_log';
-		$sql = "CREATE TABLE {$table_name} (
+		$sql        = "CREATE TABLE {$table_name} (
 ID bigint(20) NOT NULL AUTO_INCREMENT,
 logtime timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 prio tinyint(1) NOT NULL,
@@ -326,11 +483,11 @@ log varchar(2048) NOT NULL,
 PRIMARY KEY  (ID),
 KEY ID (ID)) $wpdb_collate";
 
-		dbDelta($sql);
+		dbDelta( $sql );
 
 		// SEO URLs table - Store unique URLs with metadata
 		$table_name = $wpdb->prefix . 'sb2_seo_urls';
-		$sql = "CREATE TABLE {$table_name} (
+		$sql        = "CREATE TABLE {$table_name} (
 			id bigint(20) NOT NULL AUTO_INCREMENT,
 			url varchar(1000) NOT NULL,
 			url_hash varchar(64) NOT NULL,
@@ -348,11 +505,11 @@ KEY ID (ID)) $wpdb_collate";
 			KEY last_analyzed (last_analyzed)
 		) $wpdb_collate";
 
-		dbDelta($sql);
+		dbDelta( $sql );
 
 		// SEO Analysis table - Store analysis sessions
 		$table_name = $wpdb->prefix . 'sb2_seo_analysis';
-		$sql = "CREATE TABLE {$table_name} (
+		$sql        = "CREATE TABLE {$table_name} (
 			id bigint(20) NOT NULL AUTO_INCREMENT,
 			url_id bigint(20) NOT NULL,
 			score tinyint(3) DEFAULT 0,
@@ -368,11 +525,11 @@ KEY ID (ID)) $wpdb_collate";
 			KEY score (score)
 		) $wpdb_collate";
 
-		dbDelta($sql);
+		dbDelta( $sql );
 
 		// SEO Issues table - Store individual issues
 		$table_name = $wpdb->prefix . 'sb2_seo_issues';
-		$sql = "CREATE TABLE {$table_name} (
+		$sql        = "CREATE TABLE {$table_name} (
 			id bigint(20) NOT NULL AUTO_INCREMENT,
 			analysis_id bigint(20) NOT NULL,
 			url_id bigint(20) NOT NULL,
@@ -395,11 +552,31 @@ KEY ID (ID)) $wpdb_collate";
 			KEY status_updated_at (status_updated_at)
 		) $wpdb_collate";
 
-		dbDelta($sql);
+		dbDelta( $sql );
+
+		// Cached URL status for link/image validation.
+		$table_name = $wpdb->prefix . 'sb2_seo_url_status';
+		$sql        = "CREATE TABLE {$table_name} (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			url_hash varchar(64) NOT NULL,
+			url text NOT NULL,
+			kind varchar(20) NOT NULL DEFAULT 'link',
+			status varchar(20) NOT NULL DEFAULT 'unknown',
+			status_code smallint(5) NOT NULL DEFAULT 0,
+			final_url text DEFAULT NULL,
+			error_message text DEFAULT NULL,
+			checked_at datetime NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY url_hash_kind (url_hash, kind),
+			KEY kind (kind),
+			KEY checked_at (checked_at)
+		) $wpdb_collate";
+
+		dbDelta( $sql );
 
 		// AI Requests table - Track AI endpoint requests
 		$table_name = $wpdb->prefix . 'sb2_ai_requests';
-		$sql = "CREATE TABLE {$table_name} (
+		$sql        = "CREATE TABLE {$table_name} (
 			id bigint(20) NOT NULL AUTO_INCREMENT,
 			url_id bigint(20) NOT NULL,
 			object_id bigint(20) DEFAULT NULL,
@@ -419,11 +596,11 @@ KEY ID (ID)) $wpdb_collate";
 			KEY created_at (created_at)
 		) $wpdb_collate";
 
-		dbDelta($sql);
+		dbDelta( $sql );
 
 		// LLM SEO Suggestions table - Store AI-generated SEO suggestions
 		$table_name = $wpdb->prefix . 'sb2_llm_seo_suggestions';
-		$sql = "CREATE TABLE {$table_name} (
+		$sql        = "CREATE TABLE {$table_name} (
 			id bigint(20) NOT NULL AUTO_INCREMENT,
 			post_id bigint(20) NOT NULL,
 			wp_user_id bigint(20) NOT NULL,
@@ -445,12 +622,11 @@ KEY ID (ID)) $wpdb_collate";
 		// dbDelta() is WordPress's standard function for creating/updating database tables
 		// It compares the desired table structure with the existing one and makes necessary changes
 		// This is the WordPress-recommended approach for database schema management
-		dbDelta($sql);
-
+		dbDelta( $sql );
 
 		// Improvements Tracking table - Track daily improvements for gamification
 		$table_name = $wpdb->prefix . 'sb2_improvements_tracking';
-		$sql = "CREATE TABLE {$table_name} (
+		$sql        = "CREATE TABLE {$table_name} (
 			id bigint(20) NOT NULL AUTO_INCREMENT,
 			date date NOT NULL,
 			improvements_count int(11) DEFAULT 0,
@@ -463,14 +639,82 @@ KEY ID (ID)) $wpdb_collate";
 			KEY created_at (created_at)
 		) $wpdb_collate";
 
-		dbDelta($sql);
-		
+		dbDelta( $sql );
+
+		// AI bot hits — aggregated crawler visit tracking.
+		$table_name = $wpdb->prefix . 'sb2_ai_bot_hits';
+		$sql        = "CREATE TABLE {$table_name} (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			bot_name varchar(100) NOT NULL,
+			bot_purpose varchar(20) NOT NULL DEFAULT 'research',
+			request_path varchar(500) NOT NULL,
+			normalized_url varchar(500) NOT NULL DEFAULT '',
+			url_hash varchar(64) NOT NULL,
+			object_id bigint(20) DEFAULT NULL,
+			object_type varchar(20) DEFAULT NULL,
+			status_code smallint(5) NOT NULL DEFAULT 200,
+			request_kind varchar(20) NOT NULL DEFAULT 'unmapped',
+			hit_date date NOT NULL,
+			first_seen datetime NOT NULL,
+			last_seen datetime NOT NULL,
+			visits int(11) NOT NULL DEFAULT 1,
+			PRIMARY KEY (id),
+			UNIQUE KEY unique_bot_url_day (bot_name, url_hash, hit_date),
+			KEY bot_name (bot_name),
+			KEY bot_purpose (bot_purpose),
+			KEY url_hash (url_hash),
+			KEY object_id (object_id),
+			KEY request_kind (request_kind),
+			KEY object_lookup (object_type, object_id),
+			KEY hit_date (hit_date),
+			KEY last_seen (last_seen)
+		) $wpdb_collate";
+
+		dbDelta( $sql );
+
+		if ( AI_Bot_Tracker::table_has_request_kind_column() ) {
+			AI_Bot_Tracker::backfill_request_kinds();
+			AI_Bot_Tracker::backfill_redirect_kinds();
+		}
+
+		// AI referral hits — human visits from AI answer engines.
+		$table_name = $wpdb->prefix . 'sb2_ai_referrals';
+		$sql        = "CREATE TABLE {$table_name} (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			source varchar(80) NOT NULL,
+			referrer_host varchar(120) NOT NULL DEFAULT '',
+			landing_path varchar(500) NOT NULL,
+			normalized_url varchar(500) NOT NULL DEFAULT '',
+			url_hash varchar(64) NOT NULL,
+			object_id bigint(20) DEFAULT NULL,
+			object_type varchar(20) DEFAULT NULL,
+			hit_date date NOT NULL,
+			first_seen datetime NOT NULL,
+			last_seen datetime NOT NULL,
+			visits int(11) NOT NULL DEFAULT 1,
+			PRIMARY KEY (id),
+			UNIQUE KEY unique_source_url_day (source, url_hash, hit_date),
+			KEY source (source),
+			KEY url_hash (url_hash),
+			KEY object_id (object_id),
+			KEY object_lookup (object_type, object_id),
+			KEY hit_date (hit_date),
+			KEY last_seen (last_seen)
+		) $wpdb_collate";
+
+		dbDelta( $sql );
+
 		// Note: dbDelta() should handle adding missing columns automatically.
 		// If columns are still missing after dbDelta(), the safety checks in
 		// get_sitewide_issues() and get_sitewide_stats() will trigger migration.
 
-		Utils::log('Updated database tables', 10);
-		update_option('SEOBOOSTER_INSTALLED_DB_VERSION', SEOBOOSTER_DB_VERSION);
+		self::log( 'Updated database tables', 10 );
+		$previous_db_version = get_option( 'SEOBOOSTER_INSTALLED_DB_VERSION', '0' );
+		update_option( 'SEOBOOSTER_INSTALLED_DB_VERSION', SEOBOOSTER_DB_VERSION );
+		if ( version_compare( $previous_db_version, SEOBOOSTER_DB_VERSION, '<' ) ) {
+			update_option( 'seobooster_scanner_polish_notice', '1' );
+			delete_transient( 'sb_seo_analysis_stats' );
+		}
 	}
 
 
@@ -485,8 +729,7 @@ KEY ID (ID)) $wpdb_collate";
 	 * @param   boolean $base64 Default: true
 	 * @return  mixed
 	 */
-	public static function get_icon_svg($base64 = true)
-	{
+	public static function get_icon_svg( $base64 = true ) {
 		$svg = '<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:bx="https://boxy-svg.com">
 			<defs>
 			<symbol id="symbol-0" viewBox="0 0 100 100">
@@ -496,11 +739,131 @@ KEY ID (ID)) $wpdb_collate";
 			<use width="100" height="100" transform="matrix(4.947808, 0, 0, 4.947808, -20.354914, -11.482257)" xlink:href="#symbol-0"/>
 			<path style="paint-order: stroke; fill: rgb(130, 135, 140);" d="M 349.355 16.098 C 333.687 49.355 248.938 171.838 248.938 171.838 C 248.938 171.838 228.3 199.676 236.116 203.927 C 247.584 210.168 267.795 206.135 284.389 206.805 C 309.456 207.816 329.639 205.313 341.68 205.786 C 341.68 205.786 359.942 201.1 363.11 211.672 C 365.18 218.581 354.131 230.067 354.131 230.067 L 105.339 481.212 L 213.627 310.542 C 213.627 310.542 221.796 293.779 216.787 287.127 C 210.653 278.986 186.557 281.117 186.557 281.117 C 186.557 281.117 140.259 279.657 117.109 279.939 C 108.054 280.05 99.5 279.319 99.082 272.877 C 98.532 264.365 100.711 262.353 110.047 252.866 C 188.089 173.584 349.355 16.098 349.355 16.098 Z"/>
 			</svg>';
-		if ($base64) {
-			return 'data:image/svg+xml;base64,' . base64_encode($svg);
+		if ( $base64 ) {
+			return 'data:image/svg+xml;base64,' . base64_encode( $svg );
 			//phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 		}
 		return $svg;
+	}
+
+	/**
+	 * Whether automatic link injection should skip the current request.
+	 *
+	 * Covers REST API, JSON, non-page requests, sitemaps, previews, and static assets.
+	 *
+	 * @return bool
+	 */
+	public static function should_skip_autolink_processing() {
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			return true;
+		}
+
+		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+			return true;
+		}
+
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			return true;
+		}
+
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return true;
+		}
+
+		if ( function_exists( 'wp_is_json_request' ) && wp_is_json_request() ) {
+			return true;
+		}
+
+		if ( isset( $_SERVER['REQUEST_METHOD'] ) && 'GET' !== strtoupper( $_SERVER['REQUEST_METHOD'] ) ) {
+			return true;
+		}
+
+		if ( function_exists( 'is_feed' ) && is_feed() ) {
+			return true;
+		}
+
+		if ( function_exists( 'is_robots' ) && is_robots() ) {
+			return true;
+		}
+
+		if ( function_exists( 'is_trackback' ) && is_trackback() ) {
+			return true;
+		}
+
+		if ( function_exists( 'is_search' ) && is_search() ) {
+			return true;
+		}
+
+		if ( function_exists( 'is_embed' ) && is_embed() ) {
+			return true;
+		}
+
+		if ( function_exists( 'is_404' ) && is_404() ) {
+			return true;
+		}
+
+		if ( function_exists( 'is_preview' ) && is_preview() ) {
+			return true;
+		}
+
+		if ( function_exists( 'is_customize_preview' ) && is_customize_preview() ) {
+			return true;
+		}
+
+		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+			$request_uri = strtolower( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+
+			if ( false !== strpos( $request_uri, '/wp-json/' ) || preg_match( '#/wp-json$#', $request_uri ) ) {
+				return true;
+			}
+
+			if ( preg_match( '#/wp-sitemap#i', $request_uri ) || preg_match( '#sitemap[^/]*\.xml#i', $request_uri ) ) {
+				return true;
+			}
+
+			$skip_extensions = array( '.ico', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.css', '.js', '.webp', '.scss' );
+			foreach ( $skip_extensions as $ext ) {
+				if ( false !== strpos( $request_uri, $ext ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Whether automatic linking is allowed for the current front-end view.
+	 *
+	 * Requires a singular post/page with _sbp-autolink meta set to yes.
+	 *
+	 * @return bool
+	 */
+	public static function is_autolink_allowed_for_current_view() {
+		if ( ! function_exists( 'is_singular' ) || ! is_singular() ) {
+			return false;
+		}
+
+		global $post;
+		if ( ! $post || ! isset( $post->ID ) ) {
+			return false;
+		}
+
+		return get_post_meta( $post->ID, '_sbp-autolink', true ) === 'yes';
+	}
+
+	/**
+	 * Whether a stored relative path points at the WordPress REST API.
+	 *
+	 * @param string $path Relative path stored in lastseen, e.g. "/wp-json/wp/v2/pages".
+	 * @return bool
+	 */
+	public static function is_rest_api_path( $path ) {
+		if ( ! is_string( $path ) || '' === $path ) {
+			return false;
+		}
+
+		return (bool) preg_match( '#(^|/)wp-json(/|$)#i', $path );
 	}
 
 	/**
@@ -513,25 +876,24 @@ KEY ID (ID)) $wpdb_collate";
 	 * @param   boolean $full   Default: false
 	 * @return  mixed
 	 */
-	public static function seobooster_currenturl($full = false)
-	{
+	public static function seobooster_currenturl( $full = false ) {
 		// no need to run in the admin...
-		if (is_admin()) {
+		if ( is_admin() ) {
 			return;
 		}
-		$phpdetected = add_query_arg(null, null);
-		if (!$phpdetected) {
-			$phpdetected = (isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '');
+		$phpdetected = add_query_arg( null, null );
+		if ( ! $phpdetected ) {
+			$phpdetected = ( isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '' );
 		}
 		// Clean up URL if we have a value
-		if ($phpdetected) {
-			$phpdetected = remove_query_arg(array('gclid'), $phpdetected);
+		if ( $phpdetected ) {
+			$phpdetected = remove_query_arg( array( 'gclid' ), $phpdetected );
 			// removes various params from url
 		}
-		if ($full) {
-			return esc_url_raw(site_url($phpdetected));
+		if ( $full ) {
+			return esc_url_raw( site_url( $phpdetected ) );
 		}
-		return esc_url_raw($phpdetected);
+		return esc_url_raw( $phpdetected );
 	}
 
 	/**
@@ -544,18 +906,17 @@ KEY ID (ID)) $wpdb_collate";
 	 * @param   string  $url    Default: ''
 	 * @return  mixed
 	 */
-	public static function remove_http($url = '')
-	{
-		if ('http://' === $url || 'https://' === $url) {
+	public static function remove_http( $url = '' ) {
+		if ( 'http://' === $url || 'https://' === $url ) {
 			return $url;
 		}
-		$matches = substr($url, 0, 7);
-		if ('http://' === $matches) {
-			$url = substr($url, 7);
+		$matches = substr( $url, 0, 7 );
+		if ( 'http://' === $matches ) {
+			$url = substr( $url, 7 );
 		} else {
-			$matches = substr($url, 0, 8);
-			if ('https://' === $matches) {
-				$url = substr($url, 8);
+			$matches = substr( $url, 0, 8 );
+			if ( 'https://' === $matches ) {
+				$url = substr( $url, 8 );
 			}
 		}
 		return $url;
@@ -575,24 +936,23 @@ KEY ID (ID)) $wpdb_collate";
 	 *                                    Legacy strings 'error', 'warning', 'info', 'debug', 'success', 'normal' are also accepted.
 	 * @return  void
 	 */
-	public static function log($text, $prio = 0)
-	{
-		if (! is_scalar($text)) {
-			$text = wp_json_encode($text);
+	public static function log( $text, $prio = 0 ) {
+		if ( ! is_scalar( $text ) ) {
+			$text = wp_json_encode( $text );
 		}
-		$text = substr((string) $text, 0, 2048);
-		$prio = self::normalize_log_priority($prio);
+		$text = substr( (string) $text, 0, 2048 );
+		$prio = self::normalize_log_priority( $prio );
 
 		global $wpdb;
 		$table_name_log = $wpdb->prefix . 'sb2_log';
 		$wpdb->insert(
 			$table_name_log,
 			array(
-				'logtime' => current_time('mysql'),
+				'logtime' => current_time( 'mysql' ),
 				'prio'    => $prio,
 				'log'     => $text,
 			),
-			array('%s', '%d', '%s')
+			array( '%s', '%d', '%s' )
 		);
 	}
 
@@ -602,9 +962,8 @@ KEY ID (ID)) $wpdb_collate";
 	 * @param int|string $prio Requested priority.
 	 * @return int
 	 */
-	private static function normalize_log_priority($prio)
-	{
-		if (is_string($prio)) {
+	private static function normalize_log_priority( $prio ) {
+		if ( is_string( $prio ) ) {
 			$map = array(
 				'normal'  => 0,
 				'debug'   => 1,
@@ -613,9 +972,9 @@ KEY ID (ID)) $wpdb_collate";
 				'info'    => 5,
 				'success' => 10,
 			);
-			$key = strtolower($prio);
+			$key = strtolower( $prio );
 
-			return isset($map[$key]) ? $map[$key] : 0;
+			return isset( $map[ $key ] ) ? $map[ $key ] : 0;
 		}
 
 		return (int) $prio;
@@ -633,20 +992,22 @@ KEY ID (ID)) $wpdb_collate";
 	 * @param   mixed   $params     Any additional parameters to add to the link
 	 * @return  mixed
 	 */
-	public static function generate_cp_web_link($placement = '', $page = '/', $params = array())
-	{
+	public static function generate_cp_web_link( $placement = '', $page = '/', $params = array() ) {
 		$base_url = 'https://seoboosterpro.com';
-		if ('/' !== $page) {
-			$page = '/' . trim($page, '/') . '/';
+		if ( '/' !== $page ) {
+			$page = '/' . trim( $page, '/' ) . '/';
 		}
 		$utm_source = 'seo_booster_free';
-		$parts = array_merge(array(
-			'utm_source'   => esc_attr($utm_source),
-			'utm_medium'   => 'plugin',
-			'utm_content'  => esc_attr($placement),
-			'utm_campaign' => esc_attr('seo_booster_v' . self::get_plugin_version()),
-		), $params);
-		$out = $base_url . $page . '?' . http_build_query($parts, '', '&amp;');
+		$parts      = array_merge(
+			array(
+				'utm_source'   => esc_attr( $utm_source ),
+				'utm_medium'   => 'plugin',
+				'utm_content'  => esc_attr( $placement ),
+				'utm_campaign' => esc_attr( 'seo_booster_v' . self::get_plugin_version() ),
+			),
+			$params
+		);
+		$out        = $base_url . $page . '?' . http_build_query( $parts, '', '&amp;' );
 		return $out;
 	}
 
@@ -660,9 +1021,8 @@ KEY ID (ID)) $wpdb_collate";
 	 * @param   mixed   $watchname
 	 * @return  void
 	 */
-	public static function timerstart($watchname)
-	{
-		set_transient('sb2_' . $watchname, microtime(true), 60 * 60 * 1);
+	public static function timerstart( $watchname ) {
+		set_transient( 'sb2_' . $watchname, microtime( true ), 60 * 60 * 1 );
 	}
 
 	/**
@@ -676,70 +1036,69 @@ KEY ID (ID)) $wpdb_collate";
 	 * @param   integer $digits     Default: 5
 	 * @return  mixed
 	 */
-	public static function timerstop($watchname, $digits = 5)
-	{
-		$return = round(microtime(true) - get_transient('sb2_' . $watchname), $digits);
-		delete_transient('sb2_' . $watchname);
+	public static function timerstop( $watchname, $digits = 5 ) {
+		$return = round( microtime( true ) - get_transient( 'sb2_' . $watchname ), $digits );
+		delete_transient( 'sb2_' . $watchname );
 		return $return;
 	}
 
 	/**
 	 * show_plugin_headline.
 	 *
-	 * @author	Lars Koudal
-	 * @since	v0.0.1
-	 * @version	v1.0.0	Monday, August 26th, 2024.
-	 * @access	public static
-	 * @param	string 	$title 	Default: ''
-	 * @param	boolean	$return	Default: false
-	 * @return	void
+	 * @author  Lars Koudal
+	 * @since   v0.0.1
+	 * @version v1.0.0  Monday, August 26th, 2024.
+	 * @access  public static
+	 * @param   string  $title  Default: ''
+	 * @param   boolean $return Default: false
+	 * @return  void
 	 */
-	public static function show_plugin_headline($title = '', $return = false)
-	{
-		$content = '<div class="big welcome"><span><img src="' . esc_url(SEOBOOSTER_PLUGINURL . 'images/sblogo25.png') . '" height="40" class="SEO Booster logo" alt="SEO Booster"></span>SEO Booster <span class="version">v. ' . esc_html(self::get_plugin_version()) . '</span><span class="title">' . esc_html($title) . '</span>';
-		$documentation_url = Utils::generate_cp_web_link('admin', 'docs');
+	public static function show_plugin_headline( $title = '', $return = false ) {
+		$content           = '<div class="big welcome"><span><img src="' . esc_url( SEOBOOSTER_PLUGINURL . 'images/sblogo25.png' ) . '" height="40" class="SEO Booster logo" alt="SEO Booster"></span>SEO Booster <span class="version">v. ' . esc_html( self::get_plugin_version() ) . '</span><span class="title">' . esc_html( $title ) . '</span>';
+		$documentation_url = self::generate_cp_web_link( 'admin', 'docs' );
 
 		$roadmap_url = 'https://seobooster.productlift.dev/';
 		$support_url = 'https://seoboosterpro.com/support/';
 
 		$content .= '<span class="navcont">';
-		$content .= '<span class="documentation"><a href="' . esc_url($documentation_url) . '" target="_blank" class="documentation extlink">' . esc_html__('Documentation', 'seo-booster') . '</a></span>';
+		$content .= '<span class="documentation"><a href="' . esc_url( $documentation_url ) . '" target="_blank" class="documentation extlink">' . esc_html__( 'Documentation', 'seo-booster' ) . '</a></span>';
 
-		$content .= '<span class="roadmap"><a href="' . esc_url($roadmap_url) . '" target="_blank" class="roadmap extlink">' . esc_html__('Roadmap', 'seo-booster') . '</a></span>';
+		$content .= '<span class="roadmap"><a href="' . esc_url( $roadmap_url ) . '" target="_blank" class="roadmap extlink">' . esc_html__( 'Roadmap', 'seo-booster' ) . '</a></span>';
 
-		$content .= '<span class="support"><a href="' . esc_url($support_url) . '" target="_blank" class="support extlink">' . esc_html__('Support', 'seo-booster') . '</a></span>';
+		$content .= '<span class="support"><a href="' . esc_url( $support_url ) . '" target="_blank" class="support extlink">' . esc_html__( 'Support', 'seo-booster' ) . '</a></span>';
 
 		$content .= '</div>';
 
-
-		if ($return) {
+		if ( $return ) {
 			return $content;
 		}
 
-
-		echo wp_kses($content, array(
-			'div'  => array(
-				'class' => array(),
-			),
-			'span' => array(
-				'class' => array(),
-			),
-			'img'  => array(
-				'src'    => array(),
-				'height' => array(),
-				'class'  => array(),
-				'alt'    => array(),
-			),
-			'a'    => array(
-				'href'                     => array(),
-				'class'                    => array(),
-				'id'                       => array(),
-				'target'                   => array(),
-				'rel'                      => array(),
-				'data-productlift-widget'  => array(),
-				'data-productlift-sidebar' => array(),
-			),
-		));
+		echo wp_kses(
+			$content,
+			array(
+				'div'  => array(
+					'class' => array(),
+				),
+				'span' => array(
+					'class' => array(),
+				),
+				'img'  => array(
+					'src'    => array(),
+					'height' => array(),
+					'class'  => array(),
+					'alt'    => array(),
+				),
+				'a'    => array(
+					'href'                     => array(),
+					'class'                    => array(),
+					'id'                       => array(),
+					'target'                   => array(),
+					'rel'                      => array(),
+					'data-productlift-widget'  => array(),
+					'data-productlift-sidebar' => array(),
+				),
+			)
+		);
 	}
 
 	/**
@@ -750,46 +1109,47 @@ KEY ID (ID)) $wpdb_collate";
 	 * @access public static
 	 * @return void
 	 */
-	public static function process_weekly_email_signup()
-	{
+	public static function process_weekly_email_signup() {
 		// Verify nonce for security
-		if (!check_ajax_referer('seobooster_save_selected_site', 'nonce', false)) {
-			wp_send_json_error(__('Security check failed', 'seo-booster'));
+		if ( ! check_ajax_referer( 'seobooster_save_selected_site', 'nonce', false ) ) {
+			wp_send_json_error( __( 'Security check failed', 'seo-booster' ) );
 			return;
 		}
 		// Check user capabilities
-		if (!current_user_can('manage_options')) {
-			wp_send_json_error(__('Insufficient permissions', 'seo-booster'));
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions', 'seo-booster' ) );
 			return;
 		}
 		// Validate email input
-		$email_recipient = (isset($_POST['email']) ? sanitize_text_field(wp_unslash($_POST['email'])) : '');
-		if (empty($email_recipient)) {
-			wp_send_json_error(__('No email address provided', 'seo-booster'));
+		$email_recipient = ( isset( $_POST['email'] ) ? sanitize_text_field( wp_unslash( $_POST['email'] ) ) : '' );
+		if ( empty( $email_recipient ) ) {
+			wp_send_json_error( __( 'No email address provided', 'seo-booster' ) );
 			return;
 		}
 		// Process and validate email addresses
-		$email_addresses = array_map('trim', explode(',', $email_recipient));
-		$valid_emails = array_filter($email_addresses, 'is_email');
+		$email_addresses = array_map( 'trim', explode( ',', $email_recipient ) );
+		$valid_emails    = array_filter( $email_addresses, 'is_email' );
 		// Handle case of single email address
-		if (count($email_addresses) === 1 && is_email($email_addresses[0])) {
+		if ( count( $email_addresses ) === 1 && is_email( $email_addresses[0] ) ) {
 			$valid_emails = $email_addresses;
 		}
-		if (empty($valid_emails)) {
-			wp_send_json_error(__('No valid email addresses provided', 'seo-booster'));
+		if ( empty( $valid_emails ) ) {
+			wp_send_json_error( __( 'No valid email addresses provided', 'seo-booster' ) );
 			return;
 		}
 		// Prepare validated email string
-		$email_recipient = implode(',', $valid_emails);
+		$email_recipient = implode( ',', $valid_emails );
 		// Update options
-		update_option('seobooster_weekly_email', 'on', true);
-		update_option('seobooster_weekly_email_recipient', $email_recipient, true);
+		update_option( 'seobooster_weekly_email', 'on', true );
+		update_option( 'seobooster_weekly_email_recipient', $email_recipient, true );
 		// Send success response
-		wp_send_json_success(sprintf(
+		wp_send_json_success(
+			sprintf(
 			/* translators: %s: Email recipient(s) */
-			__('Weekly email signup processed successfully for: %s', 'seo-booster'),
-			$email_recipient
-		));
+				__( 'Weekly email signup processed successfully for: %s', 'seo-booster' ),
+				$email_recipient
+			)
+		);
 	}
 
 
@@ -804,8 +1164,7 @@ KEY ID (ID)) $wpdb_collate";
 	 * @param   integer $limit Number of keywords to return
 	 * @return  array   Array of top keywords with their stats
 	 */
-	public static function get_top_keywords($days = 30, $limit = 10)
-	{
+	public static function get_top_keywords( $days = 30, $limit = 10 ) {
 		global $wpdb;
 
 		$query = $wpdb->prepare(
@@ -822,7 +1181,7 @@ KEY ID (ID)) $wpdb_collate";
 			$limit
 		);
 
-		return $wpdb->get_results($query, ARRAY_A);
+		return $wpdb->get_results( $query, ARRAY_A );
 	}
 
 	/**
@@ -836,9 +1195,8 @@ KEY ID (ID)) $wpdb_collate";
 	 * @access  public static
 	 * @return  mixed
 	 */
-	public static function get_plugin_version()
-	{
-		if (null !== self::$version) {
+	public static function get_plugin_version() {
+		if ( null !== self::$version ) {
 			return self::$version;
 		}
 		$plugin_data   = get_file_data(
@@ -853,17 +1211,44 @@ KEY ID (ID)) $wpdb_collate";
 	}
 
 	/**
+	 * Count failed Action Scheduler jobs for SEO Booster hooks.
+	 *
+	 * @return int Zero when Action Scheduler is unavailable or no failures exist.
+	 */
+	public static function get_failed_background_job_count() {
+		if ( ! class_exists( 'ActionScheduler_Store' ) ) {
+			return 0;
+		}
+
+		global $wpdb;
+
+		$group_slug = self::get_action_scheduler_group_slug();
+
+		$count = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*)
+				FROM {$wpdb->prefix}actionscheduler_actions a
+				INNER JOIN {$wpdb->prefix}actionscheduler_groups g ON a.group_id = g.group_id
+				WHERE a.status = 'failed'
+				AND g.slug = %s",
+				$group_slug
+			)
+		);
+
+		return (int) $count;
+	}
+
+	/**
 	 * Check if current admin page is an SEO Booster page
 	 *
 	 * @since 6.1.26
 	 * @return string|false The screen ID if it's an SEO Booster page, false otherwise
 	 */
-	public static function is_sb2_admin_page()
-	{
+	public static function is_sb2_admin_page() {
 		$screen = get_current_screen();
 
 		// First verify that $screen is an object and has an 'id' property
-		if (! is_object($screen) || ! isset($screen->id)) {
+		if ( ! is_object( $screen ) || ! isset( $screen->id ) ) {
 			return false;
 		}
 
@@ -876,13 +1261,14 @@ KEY ID (ID)) $wpdb_collate";
 			'seo-booster_page_sb2_seo_settings',
 			'seo-booster_page_sb2_gsc',
 			'seo-booster_page_sb2_404',
+			'seo-booster_page_sb2_ai_bots',
 			'seo-booster_page_sb2_autolink',
 			'seo-booster_page_sb2_tools',
 			'sb2_dashboard',
 			'admin_page_seo-booster-oauth2',
 		);
 
-		if (in_array($screen->id, $admin_pages)) {
+		if ( in_array( $screen->id, $admin_pages ) ) {
 			return $screen->id;
 		}
 
@@ -899,34 +1285,33 @@ KEY ID (ID)) $wpdb_collate";
 	 * @param   string $url Default: ''
 	 * @return  mixed
 	 */
-	public static function is_local_url($url = '')
-	{
+	public static function is_local_url( $url = '' ) {
 		$is_local_url = false;
-		$url          = strtolower(trim($url));
-		if (false === strpos($url, 'http://') && false === strpos($url, 'https://')) {
+		$url          = strtolower( trim( $url ) );
+		if ( false === strpos( $url, 'http://' ) && false === strpos( $url, 'https://' ) ) {
 			$url = 'http://' . $url;
 		}
-		$url_parts = wp_parse_url($url);
-		$host      = (! empty($url_parts['host']) ? $url_parts['host'] : false);
-		if (! empty($url) && ! empty($host)) {
-			if (false !== ip2long($host)) {
-				if (! filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+		$url_parts = wp_parse_url( $url );
+		$host      = ( ! empty( $url_parts['host'] ) ? $url_parts['host'] : false );
+		if ( ! empty( $url ) && ! empty( $host ) ) {
+			if ( false !== ip2long( $host ) ) {
+				if ( ! filter_var( $host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
 					$is_local_url = true;
 				}
-			} elseif ('localhost' === $host) {
+			} elseif ( 'localhost' === $host ) {
 				$is_local_url = true;
 			}
-			$tlds_to_check = array('.dev', '.local', '.loc');
-			foreach ($tlds_to_check as $tld) {
-				if (false !== strpos($host, $tld)) {
+			$tlds_to_check = array( '.dev', '.local', '.loc' );
+			foreach ( $tlds_to_check as $tld ) {
+				if ( false !== strpos( $host, $tld ) ) {
 					$is_local_url = true;
 					continue;
 				}
 			}
-			if (substr_count($host, '.') > 1) {
-				$subdomains_to_check = array('dev.', 'staging.');
-				foreach ($subdomains_to_check as $subdomain) {
-					if (0 === strpos($host, $subdomain)) {
+			if ( substr_count( $host, '.' ) > 1 ) {
+				$subdomains_to_check = array( 'dev.', 'staging.' );
+				foreach ( $subdomains_to_check as $subdomain ) {
+					if ( 0 === strpos( $host, $subdomain ) ) {
 						$is_local_url = true;
 						continue;
 					}
@@ -934,5 +1319,41 @@ KEY ID (ID)) $wpdb_collate";
 			}
 		}
 		return $is_local_url;
+	}
+
+	/**
+	 * Register and enqueue the shared SBModal alert/confirm assets.
+	 *
+	 * @return void
+	 */
+	public static function enqueue_modal_assets() {
+		if ( ! wp_script_is( 'sb-modal', 'registered' ) ) {
+			wp_register_style(
+				'sb-modal',
+				SEOBOOSTER_PLUGINURL . 'css/sb-modal.css',
+				array(),
+				filemtime( SEOBOOSTER_PLUGINPATH . 'css/sb-modal.css' )
+			);
+			wp_register_script(
+				'sb-modal',
+				SEOBOOSTER_PLUGINURL . 'js/sb-modal.js',
+				array( 'jquery' ),
+				filemtime( SEOBOOSTER_PLUGINPATH . 'js/sb-modal.js' ),
+				true
+			);
+			wp_localize_script(
+				'sb-modal',
+				'sbModalStrings',
+				array(
+					'strings' => array(
+						'ok'     => __( 'OK', 'seo-booster' ),
+						'cancel' => __( 'Cancel', 'seo-booster' ),
+					),
+				)
+			);
+		}
+
+		wp_enqueue_style( 'sb-modal' );
+		wp_enqueue_script( 'sb-modal' );
 	}
 }

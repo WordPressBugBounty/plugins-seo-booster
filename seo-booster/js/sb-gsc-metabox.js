@@ -23,7 +23,7 @@ jQuery(document).ready(function ($) {
                 // Validate response structure
                 if (!response.data || !response.data.styles || !response.data.scripts) {
                     $btn.prop('disabled', false).html('<span class="dashicons dashicons-chart-line"></span> ' + sb_gsc_metabox_data.strings.loadData);
-                    alert('Invalid response from server. Please try again.');
+                    window.SBModal.alert('Invalid response from server. Please try again.', { tone: 'error' });
                     return;
                 }
                 
@@ -52,14 +52,14 @@ jQuery(document).ready(function ($) {
                         if (scriptErrors.length > 0) {
                             // Handle script loading errors
                             $btn.prop('disabled', false).html('<span class="dashicons dashicons-chart-line"></span> ' + sb_gsc_metabox_data.strings.loadData);
-                            alert('Some libraries failed to load: ' + scriptErrors.join(', '));
+                            window.SBModal.alert('Some libraries failed to load: ' + scriptErrors.join(', '), { tone: 'error' });
                             return;
                         }
                         
                         // Check if Tabulator and uPlot are available
                         if (typeof Tabulator === 'undefined' || typeof uPlot === 'undefined') {
                             $btn.prop('disabled', false).html('<span class="dashicons dashicons-chart-line"></span> ' + sb_gsc_metabox_data.strings.loadData);
-                            alert('Libraries loaded but not available. Please refresh the page and try again.');
+                            window.SBModal.alert('Libraries loaded but not available. Please refresh the page and try again.', { tone: 'error' });
                             return;
                         }
                         
@@ -92,12 +92,12 @@ jQuery(document).ready(function ($) {
             } else {
                 // Handle error
                 $btn.prop('disabled', false).html('<span class="dashicons dashicons-chart-line"></span> ' + sb_gsc_metabox_data.strings.loadData);
-                alert('Error loading libraries: ' + (response.data ? response.data.message : 'Unknown error'));
+                window.SBModal.alert('Error loading libraries: ' + (response.data ? response.data.message : 'Unknown error'), { tone: 'error' });
             }
         }).fail(function(xhr, status, error) {
             // Handle AJAX failure
             $btn.prop('disabled', false).html('<span class="dashicons dashicons-chart-line"></span> ' + sb_gsc_metabox_data.strings.loadData);
-            alert('Failed to load libraries. Please try again.');
+            window.SBModal.alert('Failed to load libraries. Please try again.', { tone: 'error' });
         });
     });
 
@@ -177,6 +177,10 @@ jQuery(document).ready(function ($) {
 
                     // Initialize Tabulator
                     table = new Tabulator("#sb-gsc-keywords-container", {
+                        debugInvalidOptions: false,
+                        debugInvalidComponentFuncs: false,
+                        debugInitialization: false,
+                        debugDeprecation: false,
                         data: response.data.keywords,
                         layout: "fitColumns",
                         responsiveLayout: "hide",
@@ -346,7 +350,7 @@ jQuery(document).ready(function ($) {
                             return `"${row.query}"`;
                         }).join(', ');
                         navigator.clipboard.writeText(textToCopy).then(function() {
-                            alert(sb_gsc_metabox_data.strings.copiedToClipboard + ': ' + textToCopy);
+                            window.SBModal.alert(sb_gsc_metabox_data.strings.copiedToClipboard + ': ' + textToCopy, { tone: 'success' });
                         }).catch(function(err) {
                         });
                     });
@@ -449,10 +453,10 @@ jQuery(document).ready(function ($) {
                 }
                 setTimeout(loadKeywordsData, 4000);
             } else {
-                alert(sb_gsc_metabox_data.strings.errorDeletingTransients);
+                window.SBModal.alert(sb_gsc_metabox_data.strings.errorDeletingTransients, { tone: 'error' });
             }
         }).fail(function() {
-            alert(sb_gsc_metabox_data.strings.errorDeletingTransients);
+            window.SBModal.alert(sb_gsc_metabox_data.strings.errorDeletingTransients, { tone: 'error' });
         });
     }
 
@@ -485,8 +489,10 @@ jQuery(document).ready(function ($) {
         var query_id = $(this).data('queryid');
         var orgknap = $(this);
 
-        // Confirmation dialog
-        if (confirm(wp.i18n.__('Are you sure you want to create internal links using this keyword on other pages, linking to this page?', 'seo-booster'))) {
+        window.SBModal.confirm(wp.i18n.__('Are you sure you want to create internal links using this keyword on other pages, linking to this page?', 'seo-booster')).then(function (confirmed) {
+            if (!confirmed) {
+                return;
+            }
             orgknap.replaceWith(`<span class="spinner is-active spin-${post_id}"></span>`);
 
             $.post(ajaxurl, {
@@ -503,7 +509,7 @@ jQuery(document).ready(function ($) {
             }).fail(function() {
                 $(`.spinner.is-active.spin-${post_id}`).replaceWith(`<p class="error">${wp.i18n.__('An error occurred. Please try again.', 'seo-booster')}</p>`);
             });
-        }
+        });
     });
 
     // Event listener for copyicon click
@@ -517,7 +523,7 @@ jQuery(document).ready(function ($) {
                 $icon.removeClass('copied');
             }, 3000);
         }).catch(function(err) {
-            alert(sb_gsc_metabox_data.strings.error + ': ' + err.message);
+            window.SBModal.alert(sb_gsc_metabox_data.strings.error + ': ' + err.message, { tone: 'error' });
         });
     });
 

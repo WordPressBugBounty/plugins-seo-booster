@@ -415,6 +415,7 @@
     }
 
     function hideResults() {
+        hideMissingFilesNotice();
         $('#sb-tools-results').hide().removeClass('is-rescanning');
     }
 
@@ -428,6 +429,7 @@
         state.scanItems = [];
         state.totalFound = 0;
 
+        hideMissingFilesNotice();
         $('#sb-tools-results-body').html(
             '<tr class="sb-tools-results-placeholder"><td colspan="3">' +
                 escapeHtml(sbToolsImage.strings.updating_results) +
@@ -517,7 +519,7 @@
         options = options || {};
         var filters = getScanFilters();
         if (filters.length === 0) {
-            window.alert(sbToolsImage.strings.select_filter);
+            window.SBTools.alert(sbToolsImage.strings.select_filter);
             return;
         }
 
@@ -549,7 +551,7 @@
                     renderResults(response.data);
                 } else {
                     showResultsScanError();
-                    window.alert(extractErrorMessage(response));
+                    window.SBTools.alert(extractErrorMessage(response), { tone: 'error' });
                 }
             },
             error: function (xhr) {
@@ -559,7 +561,7 @@
                     restoreDocumentTitle();
                 }
                 showResultsScanError();
-                window.alert(extractErrorMessage(null, xhr));
+                window.SBTools.alert(extractErrorMessage(null, xhr), { tone: 'error' });
             },
         });
     }
@@ -644,7 +646,30 @@
         );
     }
 
+    function hideMissingFilesNotice() {
+        $('#sb-tools-missing-files-notice').prop('hidden', true).empty();
+    }
+
+    function updateMissingFilesNotice(data) {
+        var missingCount = (data && data.missing_file_count) ? parseInt(data.missing_file_count, 10) : 0;
+        var $notice = $('#sb-tools-missing-files-notice');
+
+        if (missingCount <= 0) {
+            hideMissingFilesNotice();
+            return;
+        }
+
+        var tpl = missingCount === 1
+            ? sbToolsImage.strings.missing_files_one
+            : sbToolsImage.strings.missing_files_many;
+
+        $notice
+            .html('<p>' + escapeHtml(tpl.replace('%d', String(missingCount))) + '</p>')
+            .prop('hidden', false);
+    }
+
     function showResultsScanError() {
+        hideMissingFilesNotice();
         $('#sb-tools-results-body').html(
             '<tr class="sb-tools-results-placeholder"><td colspan="3">' +
                 escapeHtml(sbToolsImage.strings.scan_refresh_failed) +
@@ -658,9 +683,17 @@
         var $body = $('#sb-tools-results-body');
         $body.empty();
 
+        updateMissingFilesNotice(data);
+
+        var missingCount = (data && data.missing_file_count) ? parseInt(data.missing_file_count, 10) : 0;
+        var emptyMessage = sbToolsImage.strings.no_results;
+        if ((!data.items || data.items.length === 0) && missingCount > 0 && (data.total_found || 0) === 0) {
+            emptyMessage = sbToolsImage.strings.no_results_missing_files || emptyMessage;
+        }
+
         if (!data.items || data.items.length === 0) {
             $body.append(
-                '<tr><td colspan="3">' + escapeHtml(sbToolsImage.strings.no_results) + '</td></tr>'
+                '<tr><td colspan="3">' + escapeHtml(emptyMessage) + '</td></tr>'
             );
         } else {
             data.items.forEach(function (item) {
@@ -721,7 +754,7 @@
 
     function startBatchAllMatching() {
         if (!sbToolsImage.ai_available) {
-            window.alert(
+            window.SBTools.alert(
                 sbToolsImage.ai_unavailable_message || sbToolsImage.strings.ai_disabled
             );
             return;
@@ -729,18 +762,18 @@
 
         var applyFields = getApplyFields();
         if (!hasApplyField(applyFields)) {
-            window.alert(sbToolsImage.strings.select_apply);
+            window.SBTools.alert(sbToolsImage.strings.select_apply);
             return;
         }
 
         var filters = getScanFilters();
         if (filters.length === 0) {
-            window.alert(sbToolsImage.strings.select_filter);
+            window.SBTools.alert(sbToolsImage.strings.select_filter);
             return;
         }
 
         if (state.totalFound === 0) {
-            window.alert(sbToolsImage.strings.no_results);
+            window.SBTools.alert(sbToolsImage.strings.no_results);
             return;
         }
 
@@ -748,13 +781,14 @@
             '%d',
             String(state.totalFound)
         );
-        if (!window.confirm(confirmMsg)) {
-            return;
-        }
-
-        startBatchRequest({
-            processScope: 'all_matching',
-            filters: filters,
+        window.SBTools.confirm(confirmMsg).then(function (confirmed) {
+            if (!confirmed) {
+                return;
+            }
+            startBatchRequest({
+                processScope: 'all_matching',
+                filters: filters,
+            });
         });
     }
 
@@ -764,7 +798,7 @@
         var attachmentIds = options.attachmentIds || [];
 
         if (!sbToolsImage.ai_available) {
-            window.alert(
+            window.SBTools.alert(
                 sbToolsImage.ai_unavailable_message || sbToolsImage.strings.ai_disabled
             );
             return;
@@ -772,13 +806,13 @@
 
         var applyFields = getApplyFields();
         if (!hasApplyField(applyFields)) {
-            window.alert(sbToolsImage.strings.select_apply);
+            window.SBTools.alert(sbToolsImage.strings.select_apply);
             return;
         }
 
         if (processScope !== 'all_matching') {
             if (!attachmentIds || attachmentIds.length === 0) {
-                window.alert(sbToolsImage.strings.select_images);
+                window.SBTools.alert(sbToolsImage.strings.select_images);
                 return;
             }
         }
@@ -829,12 +863,12 @@
                     processNextInQueue();
                 } else {
                     closeBatchPreview();
-                    window.alert(extractErrorMessage(response));
+                    window.SBTools.alert(extractErrorMessage(response), { tone: 'error' });
                 }
             },
             error: function (xhr) {
                 closeBatchPreview();
-                window.alert(extractErrorMessage(null, xhr));
+                window.SBTools.alert(extractErrorMessage(null, xhr), { tone: 'error' });
             },
         });
     }

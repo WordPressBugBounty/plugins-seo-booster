@@ -177,9 +177,11 @@ jQuery(document).ready(function($) {
                             }
                                 
                             return '<div class="competing-page">' +
-                                '<a href="' + page.url + '" target="_blank">' + page.url + '</a>' +
-                                '<br>Position: ' + parseFloat(page.position).toFixed(1) +
-                                '<br>Clicks: ' + parseInt(page.clicks).toLocaleString() +
+                                '<div class="sb-item-row">' +
+                                '<a href="' + page.url + '" target="_blank" rel="noopener" class="sb-item-label">' + page.url + '</a>' +
+                                '<span class="sb-item-metrics">Pos: ' + parseFloat(page.position).toFixed(1) +
+                                ' · Clicks: ' + parseInt(page.clicks, 10).toLocaleString() + '</span>' +
+                                '</div>' +
                                 lastVisitText +
                                 inactiveText +
                                 '</div>';
@@ -242,6 +244,10 @@ jQuery(document).ready(function($) {
 
             // Initialize Tabulator
             const table = new Tabulator(`#${tableId}`, {
+                debugInvalidOptions: false,
+                debugInvalidComponentFuncs: false,
+                debugInitialization: false,
+                debugDeprecation: false,
                 data: data,
                 columns: columns,
                 layout: "fitData",
@@ -284,7 +290,7 @@ jQuery(document).ready(function($) {
                 
                 // Ensure we have data to export
                 if (!currentData || !currentData.length) {
-                    alert('No data to export.');
+                    window.SBModal.alert('No data to export.');
                     return;
                 }
                 
@@ -652,7 +658,7 @@ jQuery(document).ready(function($) {
                         
                         // Show notification
                         if (response.data && response.data.message) {
-                            alert(response.data.message);
+                            window.SBModal.alert(response.data.message, { tone: 'success' });
                         }
                         
                         // Reset button after 3 seconds
@@ -666,7 +672,7 @@ jQuery(document).ready(function($) {
                         // Show error
                         button.html('<span class="dashicons dashicons-no" style="margin-right: 5px;"></span>Error');
                         if (response.data && response.data.message) {
-                            alert('Error: ' + response.data.message);
+                            window.SBModal.alert('Error: ' + response.data.message, { tone: 'error' });
                         }
                         
                         // Reset button after 3 seconds
@@ -679,7 +685,7 @@ jQuery(document).ready(function($) {
                 error: (jqXHR, textStatus, errorThrown) => {
                     // Show error
                     button.html('<span class="dashicons dashicons-no" style="margin-right: 5px;"></span>Error');
-                    alert('Error clearing cache: ' + textStatus);
+                    window.SBModal.alert('Error clearing cache: ' + textStatus, { tone: 'error' });
                     
                     // Reset button after 3 seconds
                     setTimeout(() => {
