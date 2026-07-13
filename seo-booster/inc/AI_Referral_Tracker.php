@@ -105,7 +105,7 @@ class AI_Referral_Tracker {
 			return;
 		}
 
-		$pending              = self::$pending_referral;
+		$pending                = self::$pending_referral;
 		self::$pending_referral = null;
 
 		$status_code = (int) http_response_code();

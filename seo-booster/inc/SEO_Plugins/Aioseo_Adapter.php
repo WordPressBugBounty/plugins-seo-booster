@@ -526,8 +526,8 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 		$record = $this->get_aioseo_post( $post_id );
 		if ( ! $record ) {
 			if ( class_exists( '\AIOSEO\Plugin\Common\Models\Post' ) ) {
-				$record            = new \AIOSEO\Plugin\Common\Models\Post();
-				$record->post_id   = (int) $post_id;
+				$record          = new \AIOSEO\Plugin\Common\Models\Post();
+				$record->post_id = (int) $post_id;
 			} else {
 				return;
 			}

@@ -26,72 +26,64 @@ class SB_GSC_Metaboxes {
 	 * @since 0.0.1
 	 * @return void
 	 */
+	/**
+	 * Taxonomies where Keywords are embedded in the SEO Booster metabox.
+	 *
+	 * @since 7.3.2
+	 * @return string[]
+	 */
+	private static function get_seo_embedded_taxonomies() {
+		return array( 'category', 'post_tag' );
+	}
+
 	public static function init() {
-		add_action( 'add_meta_boxes', array( __CLASS__, 'add_gsc_metabox' ) );
+		// Post-type Keywords live inside SB_SEO_Metabox tabs — no separate metabox.
 		add_action( 'wp_ajax_sb_gsc_reanalyze_keywords', array( __CLASS__, 'reanalyze_keywords' ) );
 		add_action( 'wp_ajax_sb_gsc_load_libraries', array( __CLASS__, 'load_libraries' ) );
 
-		add_action( 'product_cat_edit_form', array( __CLASS__, 'render_taxonomy_metabox' ), 9999, 2 );
-		add_action( 'product_tag_edit_form', array( __CLASS__, 'render_taxonomy_metabox' ), 10, 2 );
-		add_action( 'category_edit_form', array( __CLASS__, 'render_taxonomy_metabox' ), 10, 2 );
-
-		add_action( 'post_tag_edit_form', array( __CLASS__, 'render_taxonomy_metabox' ), 10, 2 );
-
-		// Add metabox to all public taxonomies
-		$public_taxonomies = get_taxonomies( array( 'public' => true ), 'names' );
+		// Standalone Keywords on taxonomies that do not get the SEO Booster metabox.
+		$embedded_taxonomies = self::get_seo_embedded_taxonomies();
+		$public_taxonomies   = get_taxonomies( array( 'public' => true ), 'names' );
 		foreach ( $public_taxonomies as $taxonomy ) {
-			if ( $taxonomy !== 'post_tag' ) { // Skip post_tag as we already added it above
-				add_action( "{$taxonomy}_edit_form", array( __CLASS__, 'render_taxonomy_metabox' ), 10, 2 );
+			if ( in_array( $taxonomy, $embedded_taxonomies, true ) ) {
+				continue;
 			}
+			$priority = ( 'product_cat' === $taxonomy ) ? 9999 : 10;
+			add_action( "{$taxonomy}_edit_form", array( __CLASS__, 'render_taxonomy_metabox' ), $priority, 2 );
 		}
 	}
 
 
 	public static function render_taxonomy_metabox( $term, $taxonomy ) {
-		$term_id   = $term->term_id;
 		$term_link = get_term_link( $term );
 
 		// Ensure we have an absolute URL
 		if ( ! empty( $term_link ) && strpos( $term_link, 'http' ) !== 0 ) {
 			$term_link = home_url( $term_link );
 		}
-		self::render_metabox( $term );
+		self::render_metabox( $term, false );
 	}
 
-
 	/**
-	 * Add the Google Search Console metabox to public post types.
+	 * Render Keywords section for embedding inside the SEO Booster metabox.
 	 *
-	 * @since 0.0.1
+	 * @since 7.3.2
+	 * @param mixed $post_or_term Post or term object.
 	 * @return void
 	 */
-	public static function add_gsc_metabox() {
-		$post_types = get_post_types( array( 'public' => true ), 'names' );
-		foreach ( $post_types as $post_type ) {
-			// Skip attachment pages
-			if ( $post_type === 'attachment' ) {
-				continue;
-			}
-
-			add_meta_box(
-				'sb_gsc_keywords',
-				__( 'SEO Booster Keyword Analysis', 'seo-booster' ),
-				array( __CLASS__, 'render_metabox' ),
-				$post_type,
-				'normal',
-				'default'
-			);
-		}
+	public static function render_embedded_section( $post_or_term ) {
+		self::render_metabox( $post_or_term, true );
 	}
 
 	/**
-	 * Render the Google Search Console metabox content.
+	 * Render the Google Search Console keyword analysis content.
 	 *
 	 * @since 0.0.1
 	 * @param mixed $post_or_term The current post object, term object, or array of rows.
+	 * @param bool  $embedded     When true, omit the standalone heading (used inside SEO tabs).
 	 * @return void
 	 */
-	public static function render_metabox( $post_or_term ) {
+	public static function render_metabox( $post_or_term, $embedded = false ) {
 
 		$seo_plug_name = Google_API::identify_active_seo_plugin();
 
@@ -119,13 +111,14 @@ class SB_GSC_Metaboxes {
 			$public_url = home_url( $public_url );
 		}
 
-		$output  = '<div id="sbtablecont">';
-		$output .= '<input type="hidden" id="sb-gsc-public-url" value="' . esc_attr( $public_url ) . '">';
-		$output .= '<input type="hidden" id="sb-gsc-content-type" value="' . esc_attr( $content_type ) . '">';
-		$output .= '<input type="hidden" id="sb-gsc-item-id" value="' . esc_attr( $item_id ) . '">';
+		$wrapper_class = $embedded ? 'sb-gsc-embedded' : '';
+		$output        = '<div id="sbtablecont"' . ( $wrapper_class ? ' class="' . esc_attr( $wrapper_class ) . '"' : '' ) . '>';
+		$output       .= '<input type="hidden" id="sb-gsc-public-url" value="' . esc_attr( $public_url ) . '">';
+		$output       .= '<input type="hidden" id="sb-gsc-content-type" value="' . esc_attr( $content_type ) . '">';
+		$output       .= '<input type="hidden" id="sb-gsc-item-id" value="' . esc_attr( $item_id ) . '">';
 
-		if ( $seo_plug_name ) {
-			$output .= '<p>' . esc_html__( 'Detected SEO plugin: ', 'seo-booster' ) . esc_html( $seo_plug_name['name'] );
+		if ( $seo_plug_name && ! $embedded ) {
+			$output .= '<p class="sb-gsc-plugin-status">' . esc_html__( 'Detected SEO plugin: ', 'seo-booster' ) . esc_html( $seo_plug_name['name'] );
 
 			if ( $content_type === 'post' && $item_id > 0 ) {
 				$get_focus_keyword = Google_API::get_focus_keywords( $item_id );
@@ -133,18 +126,18 @@ class SB_GSC_Metaboxes {
 				if ( $get_focus_keyword ) {
 					$output .= ' | ' . esc_html__( 'Focus keyword(s)', 'seo-booster' ) . ': ';
 					foreach ( $get_focus_keyword as $focus_keyword ) {
-						$output .= '<p><span class="label">' . esc_html( $focus_keyword ) . '</span> </p>';
+						$output .= '<span class="label">' . esc_html( $focus_keyword ) . '</span> ';
 					}
 				} else {
 					$output .= ' | ' . esc_html__( 'No focus keyword found.', 'seo-booster' );
 				}
 			}
-			if ( $content_type === 'term' ) {
-				// Focus keywords for terms could be implemented here if needed
-			}
 			$output .= '</p>';
 		}
-		$output .= '<h3>' . esc_html__( 'SEO booster Keyword Analysis', 'seo-booster' ) . '</h3>';
+
+		if ( ! $embedded ) {
+			$output .= '<h3>' . esc_html__( 'SEO Booster Keyword Analysis', 'seo-booster' ) . '</h3>';
+		}
 
 		// Add the "click to load data" button instead of immediately showing the container
 		$output .= '<div id="sb-gsc-load-button-container" class="sb-gsc-load-button-wrapper">';
@@ -172,7 +165,7 @@ class SB_GSC_Metaboxes {
         </div>';
 		$output .= '<div class="sb-analysis-lastupdate"></div>';
 		$output .= '</div>';
-		echo $output;
+		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built with escaped pieces above.
 	}
 
 	/**

@@ -13,11 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Severity {
 
-	public const ERROR           = 'error';
-	public const WARNING         = 'warning';
-	public const OPPORTUNITY     = 'opportunity';
-	public const GOOD            = 'good';
-	public const NOT_APPLICABLE  = 'not_applicable';
+	public const ERROR          = 'error';
+	public const WARNING        = 'warning';
+	public const OPPORTUNITY    = 'opportunity';
+	public const GOOD           = 'good';
+	public const NOT_APPLICABLE = 'not_applicable';
 
 	/**
 	 * Map analysis severity to database severity values.
@@ -27,17 +27,17 @@ class Severity {
 	 */
 	public static function to_db( $severity ) {
 		$mapping = array(
-			self::ERROR           => 'critical',
-			self::WARNING         => 'high',
-			self::OPPORTUNITY     => 'opportunity',
-			self::GOOD            => 'good',
-			self::NOT_APPLICABLE  => 'not_applicable',
+			self::ERROR          => 'critical',
+			self::WARNING        => 'high',
+			self::OPPORTUNITY    => 'opportunity',
+			self::GOOD           => 'good',
+			self::NOT_APPLICABLE => 'not_applicable',
 			// Legacy values from older analyses.
-			'critical'            => 'critical',
-			'high'                => 'high',
-			'medium'              => 'medium',
-			'low'                 => 'low',
-			'improvement'         => 'medium',
+			'critical'           => 'critical',
+			'high'               => 'high',
+			'medium'             => 'medium',
+			'low'                => 'low',
+			'improvement'        => 'medium',
 		);
 
 		return $mapping[ $severity ] ?? 'medium';

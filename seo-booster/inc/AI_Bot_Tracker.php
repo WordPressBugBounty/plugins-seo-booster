@@ -1024,6 +1024,39 @@ class AI_Bot_Tracker {
     }
 
     /**
+     * Per-bot visit totals and latest seen (for settings block list).
+     *
+     * Single indexed aggregation — intended for on-demand AJAX, not page render.
+     *
+     * @param int|null $days Days to include; defaults to retention window.
+     * @return array<string, array{visits: int, last_seen: string}>
+     */
+    public static function get_bot_visit_stats( $days = null ) {
+        global $wpdb;
+        if ( null === $days ) {
+            $days = self::get_retention_days();
+        }
+        $table = $wpdb->prefix . 'sb2_ai_bot_hits';
+        $since = self::get_since_date( (int) $days );
+        $rows = $wpdb->get_results( $wpdb->prepare( "SELECT bot_name, SUM(visits) AS visits, MAX(last_seen) AS last_seen\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE hit_date >= %s\n\t\t\t\tGROUP BY bot_name", $since ), ARRAY_A );
+        $stats = array();
+        if ( !is_array( $rows ) ) {
+            return $stats;
+        }
+        foreach ( $rows as $row ) {
+            $name = ( isset( $row['bot_name'] ) ? (string) $row['bot_name'] : '' );
+            if ( '' === $name ) {
+                continue;
+            }
+            $stats[$name] = array(
+                'visits'    => ( isset( $row['visits'] ) ? (int) $row['visits'] : 0 ),
+                'last_seen' => ( isset( $row['last_seen'] ) ? (string) $row['last_seen'] : '' ),
+            );
+        }
+        return $stats;
+    }
+
+    /**
      * Top bots by visit count.
      *
      * @param int $days  Days to include.

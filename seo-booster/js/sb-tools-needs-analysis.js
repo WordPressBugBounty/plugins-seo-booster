@@ -55,6 +55,13 @@
             var $body = $('#sb-tools-needs-results-body');
             $body.empty();
             (data.items || []).forEach(function (item) {
+                var issuesHtml = $('<div>').text(item.issues || '').html();
+                if (item.possibilities_url) {
+                    issuesHtml += (issuesHtml ? '<br>' : '') +
+                        '<a href="' + $('<div>').text(item.possibilities_url).html() + '">' +
+                        $('<div>').text(sbToolsNeedsAnalysis.strings.view_possibilities || 'View in SEO Possibilities').html() +
+                        '</a>';
+                }
                 $body.append(
                     '<tr data-post-id="' + (item.id || '') + '">' +
                     '<td class="title column-primary has-row-actions">' + window.SBTools.contentCellInner({
@@ -64,7 +71,7 @@
                         slug: item.slug,
                     }) + '</td>' +
                     '<td>' + $('<div>').text(item.status).html() + '</td>' +
-                    '<td>' + $('<div>').text(item.issues || '').html() + '</td></tr>'
+                    '<td>' + issuesHtml + '</td></tr>'
                 );
             });
             $('#sb-tools-needs-displaying-num').text(state.totalFound + ' matching');

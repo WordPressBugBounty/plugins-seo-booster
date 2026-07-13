@@ -334,14 +334,14 @@ function render_seo_issues_page() {
 		</div>
 
 		<!-- Progress Modal (Hidden - using inline progress instead) -->
-		<div id="sb-progress-modal" class="sb-modal" style="display: none !important;">
-			<div class="sb-modal-content">
-				<div class="sb-modal-header">
+		<div id="sb-progress-modal" class="sb-issues-modal-overlay" style="display: none !important;">
+			<div class="sb-issues-modal-content">
+				<div class="sb-issues-modal-header">
 					<h3><?php _e( 'Analyzing Content', 'seo-booster' ); ?></h3>
-					<button type="button" class="sb-modal-close">&times;</button>
+					<button type="button" class="sb-issues-modal-close">&times;</button>
 				</div>
 				
-				<div class="sb-modal-body">
+				<div class="sb-issues-modal-body">
 					<div class="sb-progress-bar-container">
 						<div class="sb-progress-bar">
 							<div class="sb-progress-fill" id="sb-progress-fill" style="width: 0%;"></div>
@@ -367,7 +367,7 @@ function render_seo_issues_page() {
 			
 				</div>
 				
-				<div class="sb-modal-footer">
+				<div class="sb-issues-modal-footer">
 					<button type="button" class="button" id="sb-cancel-analysis"><?php _e( 'Cancel', 'seo-booster' ); ?></button>
 				</div>
 			</div>

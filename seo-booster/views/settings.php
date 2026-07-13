@@ -33,7 +33,7 @@ $seo_possibilities_frequency = get_option( 'seobooster_seo_possibilities_frequen
 echo wp_kses_post( Utils::show_plugin_headline( __( 'Settings', 'seo-booster' ), true ) );
 settings_errors( 'seobooster_messages' );
 echo '<div class="sb-admin-seo-compat-wrap">';
-include SEOBOOSTER_PLUGINPATH . 'inc/views/seo-plugin-compat-notice.php';
+require SEOBOOSTER_PLUGINPATH . 'inc/views/seo-plugin-compat-notice.php';
 echo '</div>';
 ?>
 <div class="seo-booster-settings-page">
@@ -1098,8 +1098,15 @@ esc_html_e( 'days', 'seo-booster' );
 ?></span>
 						<p class="description">
 							<?php 
-esc_html_e( 'Hit rows older than this are removed during daily maintenance.', 'seo-booster' );
+esc_html_e( 'Hit rows older than this are removed during daily maintenance. 30–60 days is usually enough for most sites.', 'seo-booster' );
 ?>
+							<a href="<?php 
+echo esc_url( admin_url( 'admin.php?page=sb2_settings#stats' ) );
+?>">
+								<?php 
+esc_html_e( 'See database usage on the Stats tab', 'seo-booster' );
+?>
+							</a>
 						</p>
 					</td>
 				</tr>
@@ -1274,9 +1281,11 @@ esc_html_e( "Warning: This will permanently change your database. Proceed with c
 			<h2><?php 
 esc_html_e( 'Database Statistics', 'seo-booster' );
 ?></h2>
-			<?php 
-\Cleverplugins\SEOBooster\Google_API::display_data_size();
-?>
+			<div id="sb-db-stats-container" data-loaded="0">
+				<p class="description"><?php 
+esc_html_e( 'Loading database statistics…', 'seo-booster' );
+?></p>
+			</div>
 		</div>
 
 		<div class="sb-stats-section">

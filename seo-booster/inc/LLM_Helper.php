@@ -601,7 +601,7 @@ class LLM_Helper {
 		$provider = get_option( 'seobooster_ai_provider', 'disabled' );
 
 		// Normalize legacy and case-variant values to the canonical 'WordPress'.
-		if ( $provider === 'openai' || strtolower( (string) $provider ) === 'wordpress' ) {
+		if ( $provider === 'openai' || strtolower( (string) $provider ) === 'WordPress' ) {
 			$provider = 'WordPress';
 		}
 

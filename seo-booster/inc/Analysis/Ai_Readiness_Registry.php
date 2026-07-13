@@ -193,10 +193,10 @@ class Ai_Readiness_Registry {
 		}
 
 		$buckets = array(
-			'issues'        => 'fail',
-			'opportunities' => 'fail',
-			'improvements'  => 'fail',
-			'good'          => 'pass',
+			'issues'         => 'fail',
+			'opportunities'  => 'fail',
+			'improvements'   => 'fail',
+			'good'           => 'pass',
 			'not_applicable' => 'pass',
 		);
 

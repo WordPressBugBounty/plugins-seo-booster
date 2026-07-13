@@ -5,7 +5,7 @@ Tags: seo, google-search-console, internal-links, analytics, woocommerce
 Requires at least: 6.8
 Requires PHP: 7.4
 Tested up to: 7.0
-Stable tag: 7.3.1
+Stable tag: 7.3.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,6 +68,7 @@ Optional AI features use the **WordPress Connectors** system built into **WordPr
 * **Image metadata** — scan and batch-fix missing alt text, titles, captions, and descriptions (see below)
 * **llms.txt** — generate and serve `/llms.txt` for AI crawlers, curated from your top content (GSC-aware when data exists)
 * **Pro:** Needs analysis overview (never analyzed, stale, or open issues)
+* **Pro:** Content decay — pages with declining Search Console clicks (30d vs prior 30d)
 * **Pro:** Entity Map — publish `/entitymap.json` and `/entitymap.html` with human + AI curation
 
 = SEO Booster Pro =
@@ -79,7 +80,10 @@ Upgrade at [seoboosterpro.com](https://seoboosterpro.com) for:
 * **Autolink column** — enable or disable automatic linking per post from the posts list and Quick Edit
 * **Autolink status in GSC popup** — see which keywords are auto-linked, or create links in one click from the keyword details view
 * **Needs analysis (Tools)** — find content never analyzed or with stale SEO analysis; queue bulk re-analysis from the Tools page
+* **Content decay (Tools)** — find pages whose GSC clicks fell over the last 30 days vs the previous 30 days; open Possibilities or queue re-analysis
 * **Entity Map (Tools)** — structured `/entitymap.json` and `/entitymap.html` for AI discovery; build from GSC + bot traffic, edit relations/chunks, optional AI draft via WordPress Connectors; links from llms.txt when published
+* **More Pro Tools** — GSC opportunities, Focus keywords, and Autolink opportunities
+* **AI bot blocking** — block selected AI crawlers at the PHP level when monitoring is enabled
 
 == Automatic Links ==
 
@@ -180,7 +184,7 @@ AI is optional and can stay disabled. When you want it, you need **WordPress 7.0
 
 = What is included in SEO Booster Pro? =
 
-Pro adds 404 and redirect monitoring with 404 highlights in weekly email reports, per-post autolink controls from the posts list, and autolink status with one-click link creation in the GSC keyword popup. See [seoboosterpro.com](https://seoboosterpro.com) for details and pricing.
+Pro adds 404 and redirect monitoring (with 404 highlights in weekly emails), per-post autolink controls from the posts list, autolink status with one-click link creation in the GSC keyword popup, Pro Tools (Needs analysis, Content decay, GSC opportunities, Focus keywords, Autolink opportunities, Entity Map), and AI bot blocking. See [seoboosterpro.com](https://seoboosterpro.com) for details and pricing.
 
 = Other questions =
 
@@ -198,6 +202,27 @@ Please contact us at [seoboosterpro.com/contact/](https://seoboosterpro.com/cont
 
 == Changelog ==
 
+= 7.3.2 | 2026-07-09 =
+
+* Fixed: GSC Overview and GSC keyword table sorting now allow only known column names and ASC/DESC — untrusted sort parameters can no longer change the SQL query (administrator access required).
+* Fixed: Fatal error when opening the post editor SEO metabox (missing SEO plugin registry import in analysis context).
+* Fixed: Freemius integration restored missing product flags (premium version, WordPress.org compliance/gatekeeper, affiliation) and the post-activation welcome first-path.
+* NEW (Pro): Content decay tool — list pages whose Search Console clicks fell over the last 30 days vs the previous 30 days; open SEO Possibilities or queue re-analysis.
+* Improved: Needs analysis results link to SEO Possibilities for URLs with open issues.
+* Improved: FAQ and description Pro sections list current Pro features including Content decay and AI bot blocking.
+* Improved: Post editor SEO Booster and Keyword Analysis metaboxes are combined into one tabbed panel (Analysis, AI tools, Keywords), with keyword charts still loaded on demand.
+* Improved: Detected SEO plugin / focus keywords, Automatic Linking, and Exclude from SEO Analysis are grouped in one Page settings area above the tabs; the side Autolink metabox is merged in.
+* Improved: Full-page SEO review lives under Analysis and only shows when needed (not analyzed or after content-change warnings); metabox quick review removed; saved AI suggestions open expanded on the AI tools tab.
+* Improved: AI bot block list shows visit counts and latest visit (loaded on demand), with sort by activity and a “visited only” filter.
+* Fixed: AI bot block visit stats AJAX is Pro-only; visit counts retry if the first load fails; “visited only” stays disabled until counts load.
+* Improved: Settings Stats lists all plugin tables including AI bot and referral data, with lighter approximate size reporting loaded when the tab opens.
+* Improved: AI bot retention help notes that 30–60 days is usually enough and links to Stats for database usage.
+* Improved: Entity Map workflow uses clearer Sources & organization → Edit & refine → Publish steps with an always-visible health strip (live, unsaved draft, static-file shadowing, AI busy).
+* NEW: Improve with AI enriches the current draft in place — locked entities are skipped, nothing is deleted, and a summary shows what changed.
+* Improved: Generate with AI warns before replacing an existing draft; org sameAs is only filled when empty; sticky AI status panel and disabled controls during long AI requests.
+* Improved: Review with AI and Improve with AI have distinct labels and helper copy; friendly AI errors log to Debug Log.
+* Improved: Admin alert and confirm dialogs use a consistent custom modal (ESC, click-outside, Enter) across plugin screens instead of native browser popups.
+
 = 7.3.1 | 2026-07-09 =
 
 * Improved: Entity Map generator always exports EntityMap v1.0 core types and predicates — legacy WebPage/Article/PUBLISHES values are migrated on save and export.
@@ -206,6 +231,7 @@ Please contact us at [seoboosterpro.com/contact/](https://seoboosterpro.com/cont
 * Improved: AI-generated maps publish as `verificationStatus: generator-draft` until marked human-reviewed; site builds stay `self-declared`.
 * Improved: Entity Map editor adds per-entity sameAs, relevance scores from curation, richer chunk types, filter chips, unsaved-draft banner, and live vs preview check.
 * Fixed: Static `entitymap.json` shadowing is called out clearly; bot-gap “Add as entity” returns the new entity to the editor.
+* Fixed: Entity Map admin UI stayed unresponsive when entity JSON was large or the page hit a render error — entity data now loads from a hidden textarea and admin render failures are caught safely.
 
 = 7.3.0 | 2026-07-08 =
 

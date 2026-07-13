@@ -52,8 +52,12 @@ function downloadAndAnalyzeFullPage() {
             }
             
             if (response && response.success && response.data) {
-                // Remove content changed warning after successful analysis
+                // Remove content changed / refresh warnings after successful analysis
                 jQuery('#sb-content-changed-warning').remove();
+                jQuery('#sb-analysis-refresh-warning').remove();
+                if (typeof window.updateFullReviewActionsVisibility === 'function') {
+                    window.updateFullReviewActionsVisibility('fresh');
+                }
                 
                 // Check if displayAnalysisResults function exists
                 if (typeof window.displayAnalysisResults === 'function') {
@@ -746,17 +750,24 @@ jQuery(document).ready(function($) {
         });
     });
 
-    // Tab functionality
-    $('.sb-seo-tab').on('click', function() {
-        var tab = $(this).data('tab');
-        
-        // Update active tab
-        $('.sb-seo-tab').removeClass('active');
-        $(this).addClass('active');
-        
-        // Update active panel
-        $('.sb-seo-tab-panel').removeClass('active');
-        $('#sb-seo-' + tab).addClass('active');
+    // Section tabs (Analysis / AI tools / Keywords)
+    $('#sb-seo-metabox').on('click', '.sb-seo-tab', function() {
+        var $metabox = $('#sb-seo-metabox');
+        var $tab = $(this);
+        var tab = $tab.data('tab');
+
+        $metabox.find('.sb-seo-tab').removeClass('active').attr('aria-selected', 'false');
+        $tab.addClass('active').attr('aria-selected', 'true');
+
+        $metabox.find('.sb-seo-tab-panel').removeClass('active');
+        $metabox.find('#sb-seo-' + tab).addClass('active');
+
+        // Tabulator needs a redraw after the Keywords panel becomes visible again.
+        if (tab === 'keywords' && window.sbGscKeywordsTable && typeof window.sbGscKeywordsTable.redraw === 'function') {
+            window.setTimeout(function() {
+                window.sbGscKeywordsTable.redraw(true);
+            }, 50);
+        }
     });
 
     // Character counting with range-based color indicators
@@ -806,58 +817,6 @@ jQuery(document).ready(function($) {
     // Initial count
     updateCharacterCount();
 
-
-    // Load keyword suggestions
-    function loadKeywordSuggestions() {
-        var itemId = $('#sb-seo-item-id').val();
-        var itemType = $('#sb-seo-item-type').val();
-        var currentUrl = $('#sb-seo-current-url').val();
-        
-        $.ajax({
-            url: sb_seo_metabox.ajax_url,
-            type: 'POST',
-            data: {
-                action: 'sb_seo_get_keyword_suggestions',
-                item_id: itemId,
-                item_type: itemType,
-                current_url: currentUrl,
-                nonce: sb_seo_metabox.nonce
-            },
-            success: function(response) {
-                if (response.success && response.data.keywords.length > 0) {
-                    var html = '<div class="sb-keyword-list">';
-                    response.data.keywords.forEach(function(keyword) {
-                        html += '<div class="sb-keyword-item" data-keyword="' + keyword.query + '">';
-                        html += '<span class="sb-keyword-text sb-item-label">' + keyword.query + '</span>';
-                        html += '<span class="sb-keyword-stats sb-item-metrics">';
-                        html += 'Clicks: ' + keyword.clicks + ' · Impr: ' + keyword.impressions + ' · Pos: ' + Math.round(keyword.position);
-                        html += '</span>';
-                        html += '</div>';
-                    });
-                    html += '</div>';
-                    $('#keyword-suggestions').html(html);
-                } else {
-                    $('#keyword-suggestions').html('<p>' + sb_seo_metabox.strings.no_suggestions + '</p>');
-                }
-            },
-            error: function() {
-                $('#keyword-suggestions').html('<p>' + sb_seo_metabox.strings.error + '</p>');
-            }
-        });
-    }
-
-    // Load suggestions on page load (skip on attachment pages)
-    if (!isAttachmentPage()) {
-        loadKeywordSuggestions();
-    }
-
-    // Click to insert keyword
-    $(document).on('click', '.sb-keyword-item', function() {
-        var keyword = $(this).data('keyword');
-        var activeField = $('.sb-seo-tab-panel.active input, .sb-seo-tab-panel.active textarea').first();
-        activeField.val(keyword);
-        updateCharacterCount();
-    });
 
 
     // LLM SEO Suggestions
@@ -1050,17 +1009,10 @@ jQuery(document).ready(function($) {
 
         $results.removeClass('sb-hidden');
 
-        // Expand by default for new generations, keep collapsed for saved suggestions
-        if (isNewGeneration) {
-            $results.addClass('expanded');
-            $content.show();
-            $arrow.removeClass('dashicons-arrow-down').addClass('dashicons-arrow-up');
-        } else {
-            // Keep collapsed for saved suggestions (no expanded class)
-            $results.removeClass('expanded');
-            $content.hide();
-            $arrow.removeClass('dashicons-arrow-up').addClass('dashicons-arrow-down');
-        }
+        // Expand whenever suggestions are shown (saved or newly generated).
+        $results.addClass('expanded');
+        $content.show();
+        $arrow.removeClass('dashicons-arrow-down').addClass('dashicons-arrow-up');
 
         updateAiPanelVisibility();
 
@@ -2080,38 +2032,34 @@ jQuery(document).ready(function($) {
         jQuery('#sb-ai-readiness-sitewide').html(buildChecklistHtml(view.sitewide || [], false));
     }
 
-    function refreshQuickReview() {
-        var objectId = jQuery('#sb-seo-item-id').val();
-        if (!objectId || !sb_seo_metabox.readiness_action) {
+    function updateFullReviewActionsVisibility(mode) {
+        var $wrap = jQuery('#sb-seo-full-review-actions');
+        if (!$wrap.length) {
             return;
         }
-        var $btn = jQuery('#sb-quick-review');
-        if (!$btn.data('default-html')) {
-            $btn.data('default-html', $btn.html());
-        }
-        var runningLabel = (sb_seo_metabox.strings && sb_seo_metabox.strings.quick_review_running) || 'Running quick review…';
-        $btn.prop('disabled', true).html(runningLabel);
+        var $buttons = $wrap.find('.sb-seo-analysis-buttons');
+        var $help = $wrap.find('.sb-full-review-help');
+        var $heading = $wrap.find('h3');
 
-        jQuery.ajax({
-            url: sb_seo_metabox.ajax_url,
-            type: 'POST',
-            data: {
-                action: sb_seo_metabox.readiness_action,
-                post_id: objectId,
-                refresh: 1,
-                security: sb_seo_metabox.readiness_nonce
-            },
-            success: function (response) {
-                if (response && response.success && response.data) {
-                    renderReadinessSections(response.data);
-                    loadExistingAnalysis();
-                }
-            },
-            complete: function () {
-                $btn.prop('disabled', false).html($btn.data('default-html'));
-            }
-        });
+        if (mode === 'warning') {
+            $wrap.addClass('sb-hidden');
+            return;
+        }
+
+        $wrap.removeClass('sb-hidden');
+        if (mode === 'needed') {
+            $buttons.show();
+            $help.show();
+            $heading.show();
+            return;
+        }
+
+        // Fresh analysis: keep last-downloaded note only.
+        $buttons.hide();
+        $help.hide();
+        $heading.hide();
     }
+    window.updateFullReviewActionsVisibility = updateFullReviewActionsVisibility;
 
     // Load existing analysis on page load
     function loadExistingAnalysis() {
@@ -2180,6 +2128,7 @@ jQuery(document).ready(function($) {
                     // Show warning banner if content has changed
                     if (contentChanged) {
                         showContentChangedWarning();
+                        updateFullReviewActionsVisibility('warning');
                     } else {
                         // Remove any existing warning
                         $('#sb-content-changed-warning').remove();
@@ -2188,9 +2137,14 @@ jQuery(document).ready(function($) {
                     // Show refresh warning if analysis is missing checks
                     if (needsRefresh) {
                         showRefreshWarning(refreshReason);
+                        updateFullReviewActionsVisibility('warning');
                     } else {
                         // Remove any existing refresh warning
                         $('#sb-analysis-refresh-warning').remove();
+                    }
+
+                    if (!contentChanged && !needsRefresh) {
+                        updateFullReviewActionsVisibility('fresh');
                     }
                     
                     window.displayAnalysisResults(resultsData);
@@ -2287,6 +2241,10 @@ jQuery(document).ready(function($) {
         // Reset score circle
         var scoreCircle = $('#sb-score-circle');
         scoreCircle.removeClass('green yellow red');
+
+        $('#sb-content-changed-warning').remove();
+        $('#sb-analysis-refresh-warning').remove();
+        updateFullReviewActionsVisibility('needed');
     }
 
     // Show content changed warning
@@ -2304,6 +2262,7 @@ jQuery(document).ready(function($) {
         
         // Insert warning before analysis results
         $('#sb-analysis-results').before(warningHtml);
+        updateFullReviewActionsVisibility('warning');
         
         // Handle reanalyze button click
         $('#sb-reanalyze-button').on('click', function() {
@@ -2327,6 +2286,7 @@ jQuery(document).ready(function($) {
         
         // Insert warning before analysis results
         $('#sb-analysis-results').before(warningHtml);
+        updateFullReviewActionsVisibility('warning');
         
         // Handle refresh button click
         $('#sb-refresh-analysis-button').on('click', function() {
@@ -2415,10 +2375,6 @@ jQuery(document).ready(function($) {
 
     // Enable analysis button after document is ready
     jQuery('#sb-download-and-analyze').prop('disabled', false);
-
-    jQuery('#sb-quick-review').on('click', function () {
-        refreshQuickReview();
-    });
     
     // Download and analyze full page button
     jQuery('#sb-download-and-analyze').on('click', function() {

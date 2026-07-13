@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit00167ce1f2b9002a7a4bc8af5fdf2c25
+class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
 {
     public static $files = array (
         'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
@@ -148,6 +148,8 @@ class ComposerStaticInit00167ce1f2b9002a7a4bc8af5fdf2c25
         'Cleverplugins\\SEOBooster\\LLM_Content_Condenser' => __DIR__ . '/../..' . '/inc/LLM_Content_Condenser.php',
         'Cleverplugins\\SEOBooster\\LLM_Helper' => __DIR__ . '/../..' . '/inc/LLM_Helper.php',
         'Cleverplugins\\SEOBooster\\LLM_WP_Connector_Service' => __DIR__ . '/../..' . '/inc/LLM_WP_Connector_Service.php',
+        'Cleverplugins\\SEOBooster\\Media\\AI_Image_Generator' => __DIR__ . '/../..' . '/inc/Media/AI_Image_Generator.php',
+        'Cleverplugins\\SEOBooster\\Media\\Media_Library_Enhancements' => __DIR__ . '/../..' . '/inc/Media/Media_Library_Enhancements.php',
         'Cleverplugins\\SEOBooster\\Reports' => __DIR__ . '/../..' . '/inc/Reports.php',
         'Cleverplugins\\SEOBooster\\SB404_Errors' => __DIR__ . '/../..' . '/inc/SB404_Errors.php',
         'Cleverplugins\\SEOBooster\\SB_AI_Bots_Ajax' => __DIR__ . '/../..' . '/inc/SB_AI_Bots_Ajax.php',
@@ -190,6 +192,7 @@ class ComposerStaticInit00167ce1f2b9002a7a4bc8af5fdf2c25
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Autolink_Opportunities' => __DIR__ . '/../..' . '/inc/Tools/Tools_Autolink_Opportunities.php',
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Autolink_Opportunities_Batch' => __DIR__ . '/../..' . '/inc/Tools/Tools_Autolink_Opportunities_Batch.php',
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Batch_Base' => __DIR__ . '/../..' . '/inc/Tools/Tools_Batch_Base.php',
+        'Cleverplugins\\SEOBooster\\Tools\\Tools_Content_Decay' => __DIR__ . '/../..' . '/inc/Tools/Tools_Content_Decay.php',
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Entity_Map' => __DIR__ . '/../..' . '/inc/Tools/Tools_Entity_Map.php',
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Focus_Keyword' => __DIR__ . '/../..' . '/inc/Tools/Tools_Focus_Keyword.php',
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Focus_Keyword_Batch' => __DIR__ . '/../..' . '/inc/Tools/Tools_Focus_Keyword_Batch.php',
@@ -436,9 +439,9 @@ class ComposerStaticInit00167ce1f2b9002a7a4bc8af5fdf2c25
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit00167ce1f2b9002a7a4bc8af5fdf2c25::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit00167ce1f2b9002a7a4bc8af5fdf2c25::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit00167ce1f2b9002a7a4bc8af5fdf2c25::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708::$classMap;
 
         }, null, ClassLoader::class);
     }

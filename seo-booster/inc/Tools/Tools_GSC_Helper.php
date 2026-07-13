@@ -40,6 +40,26 @@ class Tools_GSC_Helper {
 	const MAX_FOCUS_KEYWORD_ALTERNATIVES = 10;
 
 	/**
+	 * Days in each comparison window (recent vs prior). Matches Gsc_Checks content freshness.
+	 */
+	const DECAY_WINDOW_DAYS = 30;
+
+	/**
+	 * Minimum recent impressions for a confident decay signal (same as Gsc_Checks).
+	 */
+	const DECAY_MIN_RECENT_IMPRESSIONS = 100;
+
+	/**
+	 * Minimum previous-period clicks so small pages are not flagged as decaying.
+	 */
+	const DECAY_MIN_PREVIOUS_CLICKS = 5;
+
+	/**
+	 * Decline percentage threshold (clicks for page-level Content decay tool).
+	 */
+	const DECAY_MIN_DECLINE_PCT = 20;
+
+	/**
 	 * Opportunity filter keys.
 	 *
 	 * @return string[]
@@ -1086,5 +1106,145 @@ class Tools_GSC_Helper {
 			default:
 				return $type;
 		}
+	}
+
+	/**
+	 * Scan pages with declining GSC clicks (recent 30d vs prior 30d).
+	 *
+	 * Thresholds align with Analysis\Checks\Gsc_Checks::check_gsc_content_freshness()
+	 * windows; this method aggregates by page and ranks by click decline.
+	 *
+	 * @return array{items: array, total_found: int, preview_limit: int, preview_count: int, all_ids: int[], has_history: bool}
+	 */
+	public static function scan_content_decay() {
+		global $wpdb;
+
+		$window    = (int) self::DECAY_WINDOW_DAYS;
+		$table_qk  = $wpdb->prefix . 'sb2_query_keywords';
+		$table_qkh = $wpdb->prefix . 'sb2_query_keywords_history';
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prefixed table names; read-only aggregate.
+		$span_days   = (int) $wpdb->get_var(
+			"SELECT DATEDIFF(MAX(date), MIN(date)) FROM {$table_qkh}"
+		);
+		$has_history = $span_days >= ( $window * 2 - 1 );
+
+		if ( ! $has_history ) {
+			return array(
+				'items'         => array(),
+				'total_found'   => 0,
+				'preview_limit' => self::PREVIEW_LIMIT,
+				'preview_count' => 0,
+				'all_ids'       => array(),
+				'has_history'   => false,
+			);
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prefixed tables; CURDATE windows match Gsc_Checks.
+		$rows = $wpdb->get_results(
+			"SELECT
+				qk.page,
+				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL {$window} DAY) THEN qkh.clicks ELSE 0 END) AS recent_clicks,
+				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL {$window} DAY) THEN qkh.impressions ELSE 0 END) AS recent_impressions,
+				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL " . ( $window * 2 ) . " DAY)
+					AND qkh.date < DATE_SUB(CURDATE(), INTERVAL {$window} DAY) THEN qkh.clicks ELSE 0 END) AS previous_clicks,
+				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL " . ( $window * 2 ) . " DAY)
+					AND qkh.date < DATE_SUB(CURDATE(), INTERVAL {$window} DAY) THEN qkh.impressions ELSE 0 END) AS previous_impressions
+			FROM {$table_qk} AS qk
+			LEFT JOIN {$table_qkh} AS qkh
+				ON qk.id = qkh.query_keywords_id
+			WHERE qk.page IS NOT NULL AND qk.page != ''
+			GROUP BY qk.page
+			HAVING previous_clicks >= " . (int) self::DECAY_MIN_PREVIOUS_CLICKS . '
+				AND recent_impressions >= ' . (int) self::DECAY_MIN_RECENT_IMPRESSIONS,
+			ARRAY_A
+		);
+
+		if ( ! is_array( $rows ) ) {
+			$rows = array();
+		}
+
+		$matching = array();
+		foreach ( $rows as $row ) {
+			$page            = (string) ( $row['page'] ?? '' );
+			$recent_clicks   = (int) ( $row['recent_clicks'] ?? 0 );
+			$previous_clicks = (int) ( $row['previous_clicks'] ?? 0 );
+			$recent_impr     = (int) ( $row['recent_impressions'] ?? 0 );
+			$previous_impr   = (int) ( $row['previous_impressions'] ?? 0 );
+
+			if ( $page === '' || $previous_clicks <= 0 ) {
+				continue;
+			}
+
+			$decline_pct = ( ( $previous_clicks - $recent_clicks ) / $previous_clicks ) * 100;
+			if ( $decline_pct < self::DECAY_MIN_DECLINE_PCT ) {
+				continue;
+			}
+
+			$post_id = self::resolve_publishable_post_id( $page );
+			if ( $post_id <= 0 ) {
+				continue;
+			}
+
+			$view_url = get_permalink( $post_id ) ?: $page;
+			$status   = class_exists( __NAMESPACE__ . '\\Tools_Needs_Analysis' )
+				? Tools_Needs_Analysis::get_analysis_status( $post_id )
+				: array(
+					'label'       => '',
+					'never'       => false,
+					'stale'       => false,
+					'issue_count' => 0,
+				);
+
+			$item = array(
+				'post_id'              => $post_id,
+				'title'                => get_the_title( $post_id ),
+				'post_type'            => get_post_type( $post_id ),
+				'slug'                 => get_post_field( 'post_name', $post_id ),
+				'edit_url'             => get_edit_post_link( $post_id, 'raw' ) ?: '',
+				'view_url'             => $view_url,
+				'page_url'             => $page,
+				'recent_clicks'        => $recent_clicks,
+				'previous_clicks'      => $previous_clicks,
+				'recent_impressions'   => $recent_impr,
+				'previous_impressions' => $previous_impr,
+				'decline_pct'          => round( $decline_pct, 1 ),
+				'analysis_status'      => $status['label'],
+				'never'                => ! empty( $status['never'] ),
+				'stale'                => ! empty( $status['stale'] ),
+				'issue_count'          => (int) $status['issue_count'],
+			);
+
+			if ( $status['issue_count'] > 0 && $view_url !== '' ) {
+				$item['possibilities_url'] = admin_url(
+					'admin.php?page=sb2_seo_issues&s=' . rawurlencode( $view_url )
+				);
+			}
+
+			$matching[] = $item;
+		}
+
+		usort(
+			$matching,
+			static function ( $a, $b ) {
+				$by_decline = $b['decline_pct'] <=> $a['decline_pct'];
+				if ( 0 !== $by_decline ) {
+					return $by_decline;
+				}
+				return $b['previous_clicks'] <=> $a['previous_clicks'];
+			}
+		);
+
+		$total_found = count( $matching );
+		$preview     = array_slice( $matching, 0, self::PREVIEW_LIMIT );
+
+		return array(
+			'items'         => $preview,
+			'total_found'   => $total_found,
+			'preview_limit' => self::PREVIEW_LIMIT,
+			'preview_count' => count( $preview ),
+			'all_ids'       => array_column( $matching, 'post_id' ),
+			'has_history'   => true,
+		);
 	}
 }

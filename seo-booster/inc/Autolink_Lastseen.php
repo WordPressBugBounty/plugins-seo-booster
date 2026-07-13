@@ -103,10 +103,10 @@ class Autolink_Lastseen {
 	public static function reconcile_keywords_last_usage( array $injected_keywords, $current_url ) {
 		global $wpdb;
 
-		$current_path     = self::relative_path_from_full_url( $current_url );
-		$injected_lookup  = self::build_injected_lookup( $injected_keywords );
-		$table_name       = $wpdb->prefix . 'sb2_autolink';
-		$table_escaped    = esc_sql( $table_name );
+		$current_path    = self::relative_path_from_full_url( $current_url );
+		$injected_lookup = self::build_injected_lookup( $injected_keywords );
+		$table_name      = $wpdb->prefix . 'sb2_autolink';
+		$table_escaped   = esc_sql( $table_name );
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name escaped; read for reconcile pass.
 		$rows = $wpdb->get_results( "SELECT id, keyword, url, lastseen FROM `{$table_escaped}` WHERE lastseen IS NOT NULL AND lastseen != ''" );

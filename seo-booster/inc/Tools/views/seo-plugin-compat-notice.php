@@ -9,4 +9,4 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-include SEOBOOSTER_PLUGINPATH . 'inc/views/seo-plugin-compat-notice.php';
+require SEOBOOSTER_PLUGINPATH . 'inc/views/seo-plugin-compat-notice.php';

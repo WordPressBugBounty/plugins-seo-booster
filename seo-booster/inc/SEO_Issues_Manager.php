@@ -274,11 +274,11 @@ class SEO_Issues_Manager {
 		);
 
 		// Separate items by severity into issues, improvements, opportunities, good, and not applicable.
-		$saved_issues           = array();
-		$saved_improvements     = array();
-		$saved_opportunities    = array();
-		$saved_good             = array();
-		$saved_not_applicable   = array();
+		$saved_issues         = array();
+		$saved_improvements   = array();
+		$saved_opportunities  = array();
+		$saved_good           = array();
+		$saved_not_applicable = array();
 
 		foreach ( $all_items as $item ) {
 			$item_data = array(
@@ -312,13 +312,13 @@ class SEO_Issues_Manager {
 
 		// Use saved data instead of running fresh analysis
 		$results = array(
-			'score'            => $analysis->score,
-			'issues'           => $saved_issues,
-			'improvements'     => $saved_improvements,
-			'opportunities'    => $saved_opportunities,
-			'good'             => $saved_good,
-			'not_applicable'   => $saved_not_applicable,
-			'content_changed'  => $has_pending,
+			'score'           => $analysis->score,
+			'issues'          => $saved_issues,
+			'improvements'    => $saved_improvements,
+			'opportunities'   => $saved_opportunities,
+			'good'            => $saved_good,
+			'not_applicable'  => $saved_not_applicable,
+			'content_changed' => $has_pending,
 			'metadata'        => array(
 				'timestamp'    => $analyzed_timestamp, // Unix timestamp for JavaScript compatibility
 				'is_full_page' => false, // Will be determined by presence of full page content
@@ -474,7 +474,7 @@ class SEO_Issues_Manager {
 		);
 
 		// Actionable issue counts only (excludes good, opportunity, not_applicable).
-		$actionable_sql = Severity::sql_in_actionable( 'i.severity' );
+		$actionable_sql  = Severity::sql_in_actionable( 'i.severity' );
 		$severity_counts = $wpdb->get_results(
 			"SELECT i.severity, COUNT(*) as count 
              FROM {$issues_table} i
@@ -695,13 +695,13 @@ class SEO_Issues_Manager {
 	 */
 	private static function map_severity( $severity ) {
 		$mapping = array(
-			'error'           => 'critical',
-			'warning'         => 'high',
-			'opportunity'     => 'opportunity',
-			'improvement'     => 'opportunity',
-			'good'            => 'good',
-			'not_applicable'  => 'not_applicable',
-			'low'             => 'opportunity',
+			'error'          => 'critical',
+			'warning'        => 'high',
+			'opportunity'    => 'opportunity',
+			'improvement'    => 'opportunity',
+			'good'           => 'good',
+			'not_applicable' => 'not_applicable',
+			'low'            => 'opportunity',
 		);
 
 		return $mapping[ $severity ] ?? 'medium';
@@ -1001,13 +1001,13 @@ class SEO_Issues_Manager {
 	 * @return array<string, array>
 	 */
 	private static function bucket_analysis_items( array $rows ) {
-		$issues          = array();
-		$opportunities   = array();
-		$not_applicable  = array();
-		$good            = array();
+		$issues         = array();
+		$opportunities  = array();
+		$not_applicable = array();
+		$good           = array();
 
 		foreach ( $rows as $row ) {
-			$item = is_array( $row ) ? $row : (array) $row;
+			$item      = is_array( $row ) ? $row : (array) $row;
 			$item_data = array(
 				'id'          => isset( $item['id'] ) ? (int) $item['id'] : 0,
 				'key'         => $item['issue_key'] ?? ( $item['key'] ?? '' ),

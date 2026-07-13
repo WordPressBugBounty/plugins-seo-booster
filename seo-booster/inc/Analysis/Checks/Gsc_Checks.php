@@ -347,7 +347,7 @@ class Gsc_Checks extends Abstract_Checks {
 				return intval( $b['impressions'] ) - intval( $a['impressions'] );
 			}
 		);
-		$matches = array_slice( $matches, 0, 20 );
+		$matches      = array_slice( $matches, 0, 20 );
 		$keyword_list = array();
 		foreach ( $matches as $kw ) {
 			$keyword_list[] = array(
@@ -402,7 +402,7 @@ class Gsc_Checks extends Abstract_Checks {
 				return ( intval( $b['clicks'] ) + intval( $b['impressions'] ) ) - ( intval( $a['clicks'] ) + intval( $a['impressions'] ) );
 			}
 		);
-		$unused = array_slice( $unused, 0, 20 );
+		$unused       = array_slice( $unused, 0, 20 );
 		$keyword_list = array();
 		foreach ( $unused as $kw ) {
 			$keyword_list[] = array(
@@ -520,7 +520,7 @@ class Gsc_Checks extends Abstract_Checks {
 			$keyword_stats[ $query_text ] = $total;
 		}
 		arsort( $keyword_stats );
-		$top = array_slice( array_keys( $keyword_stats ), 0, 10 );
+		$top   = array_slice( array_keys( $keyword_stats ), 0, 10 );
 		$final = array();
 		foreach ( $top as $query_text ) {
 			$final[ $query_text ] = $relevant[ $query_text ];
@@ -552,10 +552,10 @@ class Gsc_Checks extends Abstract_Checks {
 
 		$longtail = array();
 		foreach ( $keywords as $keyword ) {
-			$word_count = count( explode( ' ', trim( $keyword['query'] ) ) );
-			$clicks     = intval( $keyword['clicks'] );
+			$word_count  = count( explode( ' ', trim( $keyword['query'] ) ) );
+			$clicks      = intval( $keyword['clicks'] );
 			$impressions = intval( $keyword['impressions'] );
-			$position   = floatval( $keyword['position'] );
+			$position    = floatval( $keyword['position'] );
 			if ( $word_count >= 4 && ( $clicks > 10 || $impressions > 100 ) && $position >= 4 && $position <= 20 ) {
 				$longtail[] = $keyword;
 			}
@@ -572,7 +572,7 @@ class Gsc_Checks extends Abstract_Checks {
 				return intval( $b['impressions'] ) - intval( $a['impressions'] );
 			}
 		);
-		$longtail = array_slice( $longtail, 0, 20 );
+		$longtail     = array_slice( $longtail, 0, 20 );
 		$keyword_list = array();
 		foreach ( $longtail as $kw ) {
 			$keyword_list[] = array(
@@ -718,7 +718,7 @@ class Gsc_Checks extends Abstract_Checks {
 			}
 		);
 		$question_keywords = array_slice( $question_keywords, 0, 20 );
-		$keyword_list = array();
+		$keyword_list      = array();
 		foreach ( $question_keywords as $kw ) {
 			$keyword_list[] = array(
 				'query'       => $kw['query'],

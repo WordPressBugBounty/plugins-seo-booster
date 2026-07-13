@@ -11,12 +11,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$tier               = $seo_tier ?? SEO_Plugin_Registry::get_integration_tier();
-$seo_target         = $seo_target ?? SEO_Plugin_Registry::supports_bulk_write();
-$seo_target_label   = $seo_target_label ?? SEO_Plugin_Registry::get_active_label();
-$multi_plugin       = SEO_Plugin_Registry::has_multiple_active_plugins();
-$active_labels      = SEO_Plugin_Registry::get_active_labels();
-$notice_class       = 'notice-success';
+$tier                = $seo_tier ?? SEO_Plugin_Registry::get_integration_tier();
+$seo_target          = $seo_target ?? SEO_Plugin_Registry::supports_bulk_write();
+$seo_target_label    = $seo_target_label ?? SEO_Plugin_Registry::get_active_label();
+$multi_plugin        = SEO_Plugin_Registry::has_multiple_active_plugins();
+$active_labels       = SEO_Plugin_Registry::get_active_labels();
+$notice_class        = 'notice-success';
 $compat_notice_class = 'sb-tools-seo-compat notice inline';
 
 if ( $tier === 'analysis_only' || ! $seo_target ) {

@@ -791,6 +791,76 @@
     margin-bottom: 8px;
 }
 
+.sb-bot-visited-only-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0;
+    font-size: 13px;
+}
+
+.sb-bot-block-stats-caption {
+    margin: 4px 0 0;
+}
+
+.sb-toggle-bot-list {
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid #c3c4c7;
+    padding: 0;
+    background: #fff;
+}
+
+.sb-bot-block-header,
+.sb-bot-block-row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 72px 110px;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 10px;
+    margin: 0;
+}
+
+.sb-bot-block-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f6f7f7;
+    border-bottom: 1px solid #dcdcde;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #646970;
+}
+
+.sb-bot-block-rows .sb-bot-block-row {
+    margin-bottom: 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.sb-bot-block-rows .sb-bot-block-row:last-child {
+    border-bottom: none;
+}
+
+.sb-bot-block-col-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sb-bot-block-col-visits,
+.sb-bot-block-col-last {
+    font-size: 12px;
+    color: #646970;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.sb-bot-block-row.is-filtered-out {
+    display: none;
+}
+
 /* Cache Management Styles */
 .sb-cache-stats {
     margin: 0;

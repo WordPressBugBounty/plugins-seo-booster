@@ -17,7 +17,7 @@ unset( $tools['overview'] );
 
 ?>
 <div class="sb-tools-overview">
-	<?php include SEOBOOSTER_PLUGINPATH . 'inc/Tools/views/seo-plugin-compat-notice.php'; ?>
+	<?php require SEOBOOSTER_PLUGINPATH . 'inc/Tools/views/seo-plugin-compat-notice.php'; ?>
 
 	<p class="description">
 		<?php esc_html_e( 'Bulk tools help you fix SEO issues across many posts, pages, or media items at once. Choose a tool below.', 'seo-booster' ); ?>

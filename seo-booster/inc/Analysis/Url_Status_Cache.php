@@ -99,14 +99,14 @@ class Url_Status_Cache {
 		$wpdb->replace(
 			$table,
 			array(
-				'url_hash'    => $hash,
-				'url'         => $url,
-				'kind'        => $kind,
-				'status'      => $data['status'] ?? 'unknown',
-				'status_code' => isset( $data['status_code'] ) ? (int) $data['status_code'] : 0,
-				'final_url'   => $data['final_url'] ?? '',
+				'url_hash'      => $hash,
+				'url'           => $url,
+				'kind'          => $kind,
+				'status'        => $data['status'] ?? 'unknown',
+				'status_code'   => isset( $data['status_code'] ) ? (int) $data['status_code'] : 0,
+				'final_url'     => $data['final_url'] ?? '',
 				'error_message' => $data['error'] ?? '',
-				'checked_at'  => current_time( 'mysql', true ),
+				'checked_at'    => current_time( 'mysql', true ),
 			),
 			array( '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s' )
 		);

@@ -364,6 +364,7 @@ class Tools_Llms_Txt {
         nocache_headers();
         header( 'Content-Type: text/plain; charset=utf-8' );
         header( 'Content-Disposition: attachment; filename="llms.txt"' );
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- text/plain download body.
         echo $content;
         exit;
     }
@@ -612,6 +613,7 @@ class Tools_Llms_Txt {
         header( 'Content-Type: text/plain; charset=utf-8' );
         header( 'X-Content-Type-Options: nosniff' );
         header( 'X-Robots-Tag: noindex, follow' );
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- text/plain llms.txt body.
         echo $content;
         exit;
     }

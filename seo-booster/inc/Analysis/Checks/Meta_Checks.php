@@ -182,10 +182,10 @@ class Meta_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_structured_data( Html_Document $document, Result_Set $results ) {
-		$html = $document->get_scope_html( Html_Document::SCOPE_FULL_PAGE );
-		$json_ld_count = preg_match_all( '/<script[^>]*type=["\']application\/ld\+json["\'][^>]*>/i', $html );
+		$html            = $document->get_scope_html( Html_Document::SCOPE_FULL_PAGE );
+		$json_ld_count   = preg_match_all( '/<script[^>]*type=["\']application\/ld\+json["\'][^>]*>/i', $html );
 		$microdata_count = preg_match_all( '/\bitemscope\b/i', $html );
-		$total = $json_ld_count + $microdata_count;
+		$total           = $json_ld_count + $microdata_count;
 
 		if ( 0 === $total ) {
 			$results->add_opportunity( 'no_structured_data', __( 'No structured data found. Consider adding JSON-LD markup for rich results.', 'seo-booster' ) );
@@ -201,10 +201,10 @@ class Meta_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_open_graph( Html_Document $document, Result_Set $results ) {
-		$html     = $document->get_scope_html( Html_Document::SCOPE_FULL_PAGE );
-		$og_tags  = array( 'og:title', 'og:description', 'og:image', 'og:url', 'og:type' );
-		$found    = 0;
-		$missing  = array();
+		$html    = $document->get_scope_html( Html_Document::SCOPE_FULL_PAGE );
+		$og_tags = array( 'og:title', 'og:description', 'og:image', 'og:url', 'og:type' );
+		$found   = 0;
+		$missing = array();
 
 		foreach ( $og_tags as $tag ) {
 			if ( preg_match( '/<meta[^>]*property=["\']' . preg_quote( $tag, '/' ) . '["\'][^>]*>/i', $html ) ) {
@@ -233,9 +233,9 @@ class Meta_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_twitter_cards( Html_Document $document, Result_Set $results ) {
-		$html = $document->get_scope_html( Html_Document::SCOPE_FULL_PAGE );
-		$tags = array( 'twitter:card', 'twitter:title', 'twitter:description', 'twitter:image' );
-		$found = 0;
+		$html    = $document->get_scope_html( Html_Document::SCOPE_FULL_PAGE );
+		$tags    = array( 'twitter:card', 'twitter:title', 'twitter:description', 'twitter:image' );
+		$found   = 0;
 		$missing = array();
 
 		foreach ( $tags as $tag ) {

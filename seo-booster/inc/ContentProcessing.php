@@ -86,7 +86,7 @@ class ContentProcessing {
 				}
 			}
 
-			$replace_count        = 0;
+			$replace_count         = 0;
 			$replace_limit_reached = false;
 
 			// Use voku's DOMDocument wrapper (single parse; HTML5/encoding workarounds built in).

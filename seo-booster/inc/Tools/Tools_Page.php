@@ -89,6 +89,13 @@ class Tools_Page {
                 'render'  => array(__CLASS__, 'render_needs_analysis_tab'),
                 'enqueue' => array(__CLASS__, 'enqueue_needs_analysis_scripts'),
             ),
+            'content-decay'          => array(
+                'id'      => 'content-decay',
+                'label'   => __( 'Content decay', 'seo-booster' ),
+                'premium' => true,
+                'render'  => array(__CLASS__, 'render_content_decay_tab'),
+                'enqueue' => array(__CLASS__, 'enqueue_content_decay_scripts'),
+            ),
             'gsc-opportunities'      => array(
                 'id'      => 'gsc-opportunities',
                 'label'   => __( 'GSC opportunities', 'seo-booster' ),
@@ -230,6 +237,18 @@ class Tools_Page {
     /**
      * @return void
      */
+    public static function render_content_decay_tab() {
+        self::render_premium_tool_tab(
+            'Cleverplugins\\SEOBooster\\Tools\\Tools_Content_Decay',
+            __( 'Content decay', 'seo-booster' ),
+            __( 'Find pages whose Search Console clicks fell over the last 30 days compared with the previous 30 days. Open the editor, review SEO Possibilities, or queue a fresh analysis.', 'seo-booster' ),
+            array('Cleverplugins\\SEOBooster\\Tools\\Tools_Content_Decay', 'render_admin')
+        );
+    }
+
+    /**
+     * @return void
+     */
     public static function render_gsc_opportunities_tab() {
         self::render_premium_tool_tab(
             'Cleverplugins\\SEOBooster\\Tools\\Tools_GSC_Opportunities',
@@ -282,6 +301,14 @@ class Tools_Page {
      */
     public static function enqueue_needs_analysis_scripts( $hook ) {
         self::enqueue_premium_tool_scripts( 'Cleverplugins\\SEOBooster\\Tools\\Tools_Needs_Analysis', array('Cleverplugins\\SEOBooster\\Tools\\Tools_Needs_Analysis', 'enqueue_scripts'), $hook );
+    }
+
+    /**
+     * @param string $hook Admin hook.
+     * @return void
+     */
+    public static function enqueue_content_decay_scripts( $hook ) {
+        self::enqueue_premium_tool_scripts( 'Cleverplugins\\SEOBooster\\Tools\\Tools_Content_Decay', array('Cleverplugins\\SEOBooster\\Tools\\Tools_Content_Decay', 'enqueue_scripts'), $hook );
     }
 
     /**

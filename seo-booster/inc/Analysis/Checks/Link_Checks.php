@@ -146,10 +146,10 @@ class Link_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_broken_external_links( Html_Document $document, Result_Set $results, $scope, array &$queue ) {
-		$broken = array();
+		$broken     = array();
 		$redirected = array();
-		$checked = 0;
-		$seen = array();
+		$checked    = 0;
+		$seen       = array();
 
 		foreach ( $document->links( $scope ) as $node ) {
 			if ( $checked >= 10 ) {
@@ -222,10 +222,10 @@ class Link_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_broken_internal_links( Html_Document $document, Result_Set $results, $scope, array &$queue ) {
-		$broken = array();
+		$broken     = array();
 		$redirected = array();
-		$checked = 0;
-		$seen = array();
+		$checked    = 0;
+		$seen       = array();
 
 		foreach ( $document->links( $scope ) as $node ) {
 			if ( $checked >= 15 ) {

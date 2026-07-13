@@ -3,7 +3,7 @@
 namespace Cleverplugins\SEOBooster\Analysis;
 
 use Cleverplugins\SEOBooster\CacheManager;
-use Cleverplugins\SEOBooster\Google_API;
+use Cleverplugins\SEOBooster\SEO_Plugin_Registry;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -89,8 +89,8 @@ class Content_Context {
 		if ( $object_type === 'post' ) {
 			$post = get_post( $object_id );
 			if ( $post instanceof \WP_Post ) {
-				$this->object       = $post;
-				$this->raw_content  = (string) $post->post_content;
+				$this->object           = $post;
+				$this->raw_content      = (string) $post->post_content;
 				$this->rendered_content = (string) apply_filters( 'the_content', $this->raw_content );
 			}
 			return;
@@ -99,8 +99,8 @@ class Content_Context {
 		if ( $object_type === 'term' && $this->object_id > 0 ) {
 			$term = get_term( $this->object_id );
 			if ( ! is_wp_error( $term ) && $term instanceof \WP_Term ) {
-				$this->object      = $term;
-				$this->raw_content = isset( $term->description ) ? (string) $term->description : '';
+				$this->object           = $term;
+				$this->raw_content      = isset( $term->description ) ? (string) $term->description : '';
 				$this->rendered_content = $this->raw_content;
 			}
 		}

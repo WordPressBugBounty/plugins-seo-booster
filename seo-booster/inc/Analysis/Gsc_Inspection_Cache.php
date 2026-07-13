@@ -22,7 +22,7 @@ class Gsc_Inspection_Cache {
 	 * @return array|\WP_Error|null Cached inspection payload, WP_Error, or null if missing.
 	 */
 	public static function get( $url ) {
-		$key = 'sb_gsc_inspect_' . md5( $url );
+		$key    = 'sb_gsc_inspect_' . md5( $url );
 		$cached = get_transient( $key );
 		return false === $cached ? null : $cached;
 	}

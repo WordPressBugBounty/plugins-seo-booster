@@ -485,7 +485,7 @@ class SB_GSC_Ajax {
      */
     public static function ajax_get_gsc_keywords_for_highlighting() {
         // Verify nonce
-        if ( !wp_verify_nonce( $_POST['_wpnonce'], 'seobooster_gsc_highlight_nonce' ) ) {
+        if ( !isset( $_POST['_wpnonce'] ) || !wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'seobooster_gsc_highlight_nonce' ) ) {
             wp_send_json_error( 'Security check failed.' );
             return;
         }
@@ -497,7 +497,7 @@ class SB_GSC_Ajax {
         // Get the permalink from the request
         $permalink = '';
         if ( isset( $_POST['page_url'] ) ) {
-            $raw_url = sanitize_url( $_POST['page_url'] );
+            $raw_url = sanitize_url( wp_unslash( $_POST['page_url'] ) );
             // Remove fragment (#hash) and query params (including UTM)
             $parsed = wp_parse_url( $raw_url );
             $permalink = '';

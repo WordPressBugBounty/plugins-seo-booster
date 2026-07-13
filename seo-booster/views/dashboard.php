@@ -69,7 +69,7 @@ if ( $missing ) {
 }
 echo wp_kses_post( Utils::show_plugin_headline( esc_html__( 'Dashboard', 'seo-booster' ), true ) );
 echo '<div class="sb-admin-seo-compat-wrap">';
-include SEOBOOSTER_PLUGINPATH . 'inc/views/seo-plugin-compat-notice.php';
+require SEOBOOSTER_PLUGINPATH . 'inc/views/seo-plugin-compat-notice.php';
 echo '</div>';
 $ai_provider = \Cleverplugins\SEOBooster\LLM_Helper::get_selected_ai_provider();
 $wp_ai_ready = function_exists( 'wp_ai_client_prompt' );
@@ -383,7 +383,7 @@ if ( $selected_site && 0 < $unique_days ) {
         echo '            type: "POST",';
         echo '            data: {';
         echo '                action: "manual_token_refresh",';
-        echo '                nonce: "' . wp_create_nonce( 'seobooster_token_refresh' ) . '"';
+        echo '                nonce: "' . esc_js( wp_create_nonce( 'seobooster_token_refresh' ) ) . '"';
         echo '            },';
         echo '            success: function(response) {';
         echo '                if (response.valid) {';
@@ -573,7 +573,7 @@ if ( $selected_site && 0 < $unique_days ) {
         ?>
 					<p class="sb-card__meta">
 							<?php 
-        printf( esc_html__( '%1$s possibilities detected. Top items to address:', 'seo-booster' ), number_format_i18n( $possibilities_stats['total_issues'] ) );
+        printf( esc_html__( '%1$s possibilities detected. Top items to address:', 'seo-booster' ), esc_html( number_format_i18n( $possibilities_stats['total_issues'] ) ) );
         ?>
 					</p>
 				<?php 
@@ -611,7 +611,7 @@ if ( $selected_site && 0 < $unique_days ) {
                 'Affects %1$s pages',
                 $possibility['affected_urls'],
                 'seo-booster'
-            ) ), number_format_i18n( $possibility['affected_urls'] ) );
+            ) ), esc_html( number_format_i18n( $possibility['affected_urls'] ) ) );
             ?>
 								</p>
 							</div>
@@ -687,10 +687,10 @@ if ( $selected_site && 0 < $unique_days ) {
 						<?php 
         printf(
             esc_html__( '%1$s pages crawled · %2$s%% mapped content · %3$s research · %4$s citation', 'seo-booster' ),
-            number_format_i18n( (int) $ai_bot_summary['unique_content_pages'] ),
-            number_format_i18n( (float) $ai_bot_ratio['content_percent'], 1 ),
-            number_format_i18n( (int) $ai_bot_purpose['research'] ),
-            number_format_i18n( (int) $ai_bot_purpose['citation'] )
+            esc_html( number_format_i18n( (int) $ai_bot_summary['unique_content_pages'] ) ),
+            esc_html( number_format_i18n( (float) $ai_bot_ratio['content_percent'], 1 ) ),
+            esc_html( number_format_i18n( (int) $ai_bot_purpose['research'] ) ),
+            esc_html( number_format_i18n( (int) $ai_bot_purpose['citation'] ) )
         );
         ?>
 					</p>
@@ -737,7 +737,7 @@ if ( $selected_site && 0 < $unique_days ) {
         ?>
 					<p class="sb-card__meta">
 							<?php 
-        printf( esc_html__( '%1$s images missing alt text · %2$s posts missing SEO meta', 'seo-booster' ), number_format_i18n( (int) $tools_counts['images_missing_alt'] ), number_format_i18n( (int) $tools_counts['posts_missing_meta'] ) );
+        printf( esc_html__( '%1$s images missing alt text · %2$s posts missing SEO meta', 'seo-booster' ), esc_html( number_format_i18n( (int) $tools_counts['images_missing_alt'] ) ), esc_html( number_format_i18n( (int) $tools_counts['posts_missing_meta'] ) ) );
         ?>
 					</p>
 				<?php 
@@ -957,6 +957,7 @@ if ( !$access_token ) {
         echo '<p>' . esc_html__( 'Authentication with Google may fail because you are using a local development domain. OAuth services typically reject callbacks to non-public domains for security reasons.', 'seo-booster' ) . '</p>';
         echo '<p><a href="#" class="button show-local-domain-info">' . esc_html__( 'Show More Information', 'seo-booster' ) . '</a></p>';
         echo '<div class="local-domain-details" style="display:none;">';
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- get_local_domain_info() returns pre-escaped HTML.
         echo Google_API::get_local_domain_info();
         echo '</div>';
         echo '</div>';

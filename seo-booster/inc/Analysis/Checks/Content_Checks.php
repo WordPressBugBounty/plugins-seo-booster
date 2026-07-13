@@ -182,7 +182,7 @@ class Content_Checks extends Abstract_Checks {
 			$results->add_good( 'h1_ok', sprintf( __( 'Good H1 heading structure. Found: "%s"', 'seo-booster' ), $h1_texts[0] ) );
 		}
 
-		$h2_count = count( $document->headings( $scope, 'h2' ) );
+		$h2_count   = count( $document->headings( $scope, 'h2' ) );
 		$word_count = str_word_count( $document->text( $scope ) );
 		if ( 0 === $h2_count && $word_count > 500 ) {
 			$results->add_opportunity( 'no_h2', __( 'Consider adding H2 headings to structure your content.', 'seo-booster' ) );
@@ -253,7 +253,7 @@ class Content_Checks extends Abstract_Checks {
 		// Contact details often live in footer/site chrome, not post content alone.
 		$trust_scope = $context->has_full_page ? Html_Document::SCOPE_FULL_PAGE : $scope;
 		$text        = $document->text( $trust_scope );
-		$found = 0;
+		$found       = 0;
 
 		if ( preg_match( '/\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/', $text ) ) {
 			++$found;
@@ -322,7 +322,7 @@ class Content_Checks extends Abstract_Checks {
 				return trim( $s ) !== '';
 			}
 		);
-		$words = str_word_count( $text_content );
+		$words     = str_word_count( $text_content );
 		if ( ! empty( $sentences ) ) {
 			$avg = $words / count( $sentences );
 			if ( $avg <= 15 ) {
@@ -334,8 +334,8 @@ class Content_Checks extends Abstract_Checks {
 			}
 		}
 
-		$scope_html = $document->get_scope_html( $scope );
-		$long_paragraphs = 0;
+		$scope_html           = $document->get_scope_html( $scope );
+		$long_paragraphs      = 0;
 		$long_paragraphs_list = array();
 
 		foreach ( $document->paragraphs( $scope ) as $node ) {
@@ -355,9 +355,12 @@ class Content_Checks extends Abstract_Checks {
 
 			++$long_paragraphs;
 			if ( count( $long_paragraphs_list ) < 50 ) {
-				$html = Html_Document::node_to_html( $node );
-				$pos  = strpos( $scope_html, $html );
-				$line = false !== $pos ? $this->get_line_number_and_context( $scope_html, $pos ) : array( 'line' => 0, 'context' => '' );
+				$html    = Html_Document::node_to_html( $node );
+				$pos     = strpos( $scope_html, $html );
+				$line    = false !== $pos ? $this->get_line_number_and_context( $scope_html, $pos ) : array(
+					'line'    => 0,
+					'context' => '',
+				);
 				$preview = mb_substr( $p_text, 0, 150 );
 				if ( mb_strlen( $p_text ) > 150 ) {
 					$preview .= '...';

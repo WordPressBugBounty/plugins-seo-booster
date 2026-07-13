@@ -5,6 +5,7 @@ namespace Cleverplugins\SEOBooster;
 if ( !defined( 'ABSPATH' ) ) {
     exit;
 }
+// phpcs:disable WordPress.Security.NonceVerification -- Nonce verified once in process_settings_form(); private handlers only run after that gate.
 /**
  * Form processing utilities for settings pages
  *
@@ -29,6 +30,9 @@ class Form_Processor {
         $nonce = sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) );
         if ( !wp_verify_nonce( $nonce, 'seobooster_save_settings' ) ) {
             die( 'Security check failed.' );
+        }
+        if ( !current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Permission denied.', 'seo-booster' ) );
         }
         // Handle current tab preservation
         if ( isset( $_POST['current_tab'] ) ) {

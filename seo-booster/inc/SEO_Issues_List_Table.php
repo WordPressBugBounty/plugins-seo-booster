@@ -348,9 +348,13 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 		);
 
 		// Add expandable indicator
-		$html .= '<div class="sb-url-expand" data-url-id="' . $item->id . '">';
+		$html .= '<div class="sb-url-expand" data-url-id="' . esc_attr( (string) $item->id ) . '">';
 		$html .= '<span class="dashicons dashicons-arrow-down-alt2"></span> ';
-		$html .= sprintf( _n( '%d possibility', '%d possibilities', $item->total_issues, 'seo-booster' ), $item->total_issues );
+		$html .= sprintf(
+			/* translators: %d: number of SEO possibilities */
+			esc_html( _n( '%d possibility', '%d possibilities', (int) $item->total_issues, 'seo-booster' ) ),
+			(int) $item->total_issues
+		);
 		$html .= '</div>';
 
 		return $html;
@@ -396,12 +400,12 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 	 * @return string Issues HTML.
 	 */
 	public function column_issues( $item ) {
-		$total        = (int) $item->total_issues;
-		$critical     = (int) $item->critical_count;
-		$high         = (int) $item->high_count;
-		$medium       = (int) $item->medium_count;
-		$low          = (int) $item->low_count;
-		$opportunity  = isset( $item->opportunity_count ) ? (int) $item->opportunity_count : 0;
+		$total       = (int) $item->total_issues;
+		$critical    = (int) $item->critical_count;
+		$high        = (int) $item->high_count;
+		$medium      = (int) $item->medium_count;
+		$low         = (int) $item->low_count;
+		$opportunity = isset( $item->opportunity_count ) ? (int) $item->opportunity_count : 0;
 
 		$html  = '<div class="sb-issues-column">';
 		$html .= sprintf( '<strong class="sb-issues-total">%d</strong>', $total );
@@ -489,14 +493,15 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 
 		// Add transition class and data attributes for URL expansion
 		$row_class = 'sb-url-row';
-		$row_data  = 'data-url-id="' . $item->id . '"';
+		$row_data  = 'data-url-id="' . esc_attr( (string) $item->id ) . '"';
 
-		echo '<tr class="' . $row_class . '" ' . $row_data . '>';
+		echo '<tr class="' . esc_attr( $row_class ) . '" ' . $row_data . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $row_data built with esc_attr above.
 		foreach ( $columns as $column_name => $column_display_name ) {
-			$class      = "class='$column_name column-$column_name'";
+			$class      = "class='" . esc_attr( $column_name ) . ' column-' . esc_attr( $column_name ) . "'";
 			$attributes = $class;
 
-			echo "<td $attributes>";
+			echo '<td ' . $attributes . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $attributes built with esc_attr above.
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Column methods return escaped HTML.
 			echo $this->column_default( $item, $column_name );
 			echo '</td>';
 		}
@@ -698,15 +703,15 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 	 * @return void
 	 */
 	private function display_filters() {
-		$current_severity = isset( $_GET['severity'] ) ? sanitize_text_field( $_GET['severity'] ) : '';
-		$current_status   = isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '';
-		$current_search   = isset( $_GET['s'] ) ? sanitize_text_field( $_GET['s'] ) : '';
+		$current_severity = isset( $_GET['severity'] ) ? sanitize_text_field( wp_unslash( $_GET['severity'] ) ) : '';
+		$current_status   = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
+		$current_search   = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
 
 		echo '<div class="alignleft actions">';
 
 		// Severity filter
 		echo '<select name="severity" id="filter-severity">';
-		echo '<option value="">' . __( 'All Severities', 'seo-booster' ) . '</option>';
+		echo '<option value="">' . esc_html__( 'All Severities', 'seo-booster' ) . '</option>';
 		$severities = array(
 			'critical' => __( 'Critical', 'seo-booster' ),
 			'high'     => __( 'High', 'seo-booster' ),
@@ -714,13 +719,18 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 			'low'      => __( 'Low', 'seo-booster' ),
 		);
 		foreach ( $severities as $value => $label ) {
-			printf( '<option value="%s"%s>%s</option>', $value, selected( $current_severity, $value, false ), $label );
+			printf(
+				'<option value="%s"%s>%s</option>',
+				esc_attr( $value ),
+				selected( $current_severity, $value, false ),
+				esc_html( $label )
+			);
 		}
 		echo '</select>';
 
 		// Status filter
 		echo '<select name="status" id="filter-status">';
-		echo '<option value="">' . __( 'All Statuses', 'seo-booster' ) . '</option>';
+		echo '<option value="">' . esc_html__( 'All Statuses', 'seo-booster' ) . '</option>';
 		$statuses = array(
 			'active'            => __( 'Active', 'seo-booster' ),
 			'fixed'             => __( 'Fixed', 'seo-booster' ),
@@ -728,7 +738,12 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 			'ignored_permanent' => __( 'Ignored (Perm)', 'seo-booster' ),
 		);
 		foreach ( $statuses as $value => $label ) {
-			printf( '<option value="%s"%s>%s</option>', $value, selected( $current_status, $value, false ), $label );
+			printf(
+				'<option value="%s"%s>%s</option>',
+				esc_attr( $value ),
+				selected( $current_status, $value, false ),
+				esc_html( $label )
+			);
 		}
 		echo '</select>';
 
@@ -736,7 +751,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 		printf(
 			'<input type="text" name="s" id="search-input" value="%s" placeholder="%s" />',
 			esc_attr( $current_search ),
-			__( 'Search issues, URLs...', 'seo-booster' )
+			esc_attr__( 'Search issues, URLs...', 'seo-booster' )
 		);
 
 		submit_button( __( 'Filter', 'seo-booster' ), 'button', 'filter_action', false );
@@ -744,7 +759,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 		// Clear filters button
 		if ( $current_severity || $current_status || $current_search ) {
 			$clear_url = remove_query_arg( array( 'severity', 'status', 's' ) );
-			printf( '<a href="%s" class="button">%s</a>', esc_url( $clear_url ), __( 'Clear Filters', 'seo-booster' ) );
+			printf( '<a href="%s" class="button">%s</a>', esc_url( $clear_url ), esc_html__( 'Clear Filters', 'seo-booster' ) );
 		}
 
 		echo '</div>';

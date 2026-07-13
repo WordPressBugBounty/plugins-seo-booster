@@ -143,7 +143,7 @@ class SEO_Analysis {
 
 		if ( 'start' === $step ) {
 			$this->context->refresh_seo_data();
-			$this->results = new Result_Set();
+			$this->results       = new Result_Set();
 			$result['message']   = __( 'Starting analysis...', 'seo-booster' );
 			$result['next_step'] = 'download';
 		} elseif ( 'download' === $step ) {
@@ -250,7 +250,7 @@ class SEO_Analysis {
 	private function save_analysis_results( $is_full_page = false ) {
 		$payload = $this->results->to_array();
 
-		$scope_html = $this->context->has_full_page ? $this->context->full_page_content : $this->context->rendered_content;
+		$scope_html          = $this->context->has_full_page ? $this->context->full_page_content : $this->context->rendered_content;
 		$payload['metadata'] = array(
 			'timestamp'      => time(),
 			'is_full_page'   => $is_full_page,

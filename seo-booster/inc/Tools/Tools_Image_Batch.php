@@ -2,7 +2,7 @@
 
 namespace Cleverplugins\SEOBooster\Tools;
 
-use Cleverplugins\SEOBooster\AI_Image_Generator;
+use Cleverplugins\SEOBooster\Media\AI_Image_Generator;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

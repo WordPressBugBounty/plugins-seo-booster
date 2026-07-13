@@ -41,10 +41,10 @@ class Llms_Faq_Extractor {
 				}
 
 				$items[ $key ] = array(
-					'question'      => $faq['question'],
-					'answer'        => $faq['answer'],
-					'source_title'  => $title,
-					'source_url'    => is_string( $url ) ? $url : '',
+					'question'     => $faq['question'],
+					'answer'       => $faq['answer'],
+					'source_title' => $title,
+					'source_url'   => is_string( $url ) ? $url : '',
 				);
 
 				if ( count( $items ) >= $max_items ) {

@@ -883,70 +883,134 @@ class Google_API {
 
 
 	/**
-	 * Display the size of SEO Booster data tables.
+	 * Human-readable labels for plugin table slugs.
 	 *
-	 * This method calculates and displays the size and record count of SEO Booster-specific
-	 * database tables. It also shows the percentage of space these tables occupy compared
-	 * to all tables in the database.
-	 *
-	 * @since 1.0.0
-	 * @access public static
-	 * @return void
+	 * @return array<string, string>
 	 */
-	public static function display_data_size() {
+	public static function get_plugin_table_labels() {
+		return array(
+			'sb2_query_keywords'         => __( 'GSC keywords', 'seo-booster' ),
+			'sb2_query_keywords_history' => __( 'GSC keyword history', 'seo-booster' ),
+			'sb2_autolink'               => __( 'Automatic links', 'seo-booster' ),
+			'sb2_404'                    => __( '404 errors', 'seo-booster' ),
+			'sb2_log'                    => __( 'Debug log', 'seo-booster' ),
+			'sb2_seo_urls'               => __( 'SEO URLs', 'seo-booster' ),
+			'sb2_seo_analysis'           => __( 'SEO analysis', 'seo-booster' ),
+			'sb2_seo_issues'             => __( 'SEO issues', 'seo-booster' ),
+			'sb2_seo_url_status'         => __( 'SEO URL status', 'seo-booster' ),
+			'sb2_ai_requests'            => __( 'AI requests', 'seo-booster' ),
+			'sb2_llm_seo_suggestions'    => __( 'LLM SEO suggestions', 'seo-booster' ),
+			'sb2_improvements_tracking'  => __( 'Improvements tracking', 'seo-booster' ),
+			'sb2_ai_bot_hits'            => __( 'AI bot hits', 'seo-booster' ),
+			'sb2_ai_referrals'           => __( 'AI referrals', 'seo-booster' ),
+		);
+	}
+
+	/**
+	 * Build HTML for the database statistics table.
+	 *
+	 * @return string
+	 */
+	public static function get_data_size_html() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
+			return '';
 		}
+
 		global $wpdb;
-		$prefix = $wpdb->prefix;
-		// Query to get all tables with the prefix
+
+		$prefix         = $wpdb->prefix;
 		$escaped_prefix = $wpdb->esc_like( $prefix ) . '%';
-		$all_tables     = $wpdb->get_results( "SHOW TABLE STATUS LIKE '{$escaped_prefix}'", ARRAY_A );
-		$our_tables     = Utils::get_plugin_table_names();
-		// Calculate total size of all tables
-		$total_size_all_tables = array_sum( array_column( $all_tables, 'Data_length' ) ) + array_sum( array_column( $all_tables, 'Index_length' ) );
-		// Start table structure
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- SHOW TABLE STATUS; prefix escaped via esc_like.
+		$all_tables = $wpdb->get_results( "SHOW TABLE STATUS LIKE '{$escaped_prefix}'", ARRAY_A );
+		if ( ! is_array( $all_tables ) ) {
+			$all_tables = array();
+		}
+
+		$status_by_name = array();
+		$total_size_all = 0;
+		foreach ( $all_tables as $row ) {
+			$name = isset( $row['Name'] ) ? $row['Name'] : '';
+			if ( '' === $name ) {
+				continue;
+			}
+			$data_length             = isset( $row['Data_length'] ) ? (float) $row['Data_length'] : 0;
+			$index_length            = isset( $row['Index_length'] ) ? (float) $row['Index_length'] : 0;
+			$total_size_all         += $data_length + $index_length;
+			$status_by_name[ $name ] = $row;
+		}
+
+		$our_tables = Utils::get_plugin_table_names();
+		$labels     = self::get_plugin_table_labels();
+
+		ob_start();
 		echo '<div class="sb-stats-table-wrap">';
 		echo '<table class="wp-list-table widefat fixed striped table-view-list sb-stats-table">';
 		echo '<thead><tr>';
-		echo '<th scope="col" class="manage-column column-primary column-table-name">' . esc_html__( 'Table Name', 'seo-booster' ) . '</th>';
-		echo '<th scope="col" class="manage-column column-records">' . esc_html__( 'Number of Records', 'seo-booster' ) . '</th>';
+		echo '<th scope="col" class="manage-column column-primary column-table-name">' . esc_html__( 'Table', 'seo-booster' ) . '</th>';
+		echo '<th scope="col" class="manage-column column-records">' . esc_html__( 'Approx. records', 'seo-booster' ) . '</th>';
 		echo '<th scope="col" class="manage-column column-size">' . esc_html__( 'Size (MB)', 'seo-booster' ) . '</th>';
 		echo '</tr></thead><tbody>';
-		$total_size_our_tables    = 0;
-		$total_records_our_tables = 0;
-		foreach ( $our_tables as $key => $table ) {
-			if ( Utils::plugin_table_exists( $table ) ) {
-				$size_query = $wpdb->prepare(
-					'SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) 
-            FROM information_schema.TABLES 
-            WHERE table_schema = %s 
-            AND table_name = %s',
-					$wpdb->dbname,
-					$table
-				);
-				$size       = (float) $wpdb->get_var( $size_query );
-				$rows       = (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$table}`" );
-			} else {
-				$size = 0;
-				$rows = 0;
+
+		$total_size_our    = 0.0;
+		$total_records_our = 0;
+
+		foreach ( $our_tables as $slug => $table ) {
+			$rows = 0;
+			$size = 0.0;
+			if ( isset( $status_by_name[ $table ] ) ) {
+				$status = $status_by_name[ $table ];
+				$rows   = isset( $status['Rows'] ) ? (int) $status['Rows'] : 0;
+				$data   = isset( $status['Data_length'] ) ? (float) $status['Data_length'] : 0;
+				$index  = isset( $status['Index_length'] ) ? (float) $status['Index_length'] : 0;
+				$size   = round( ( $data + $index ) / 1024 / 1024, 2 );
 			}
-			$total_size_our_tables    += $size;
-			$total_records_our_tables += $rows;
+
+			$total_size_our    += $size;
+			$total_records_our += $rows;
+
+			$label = isset( $labels[ $slug ] ) ? $labels[ $slug ] : $slug;
+
 			echo '<tr>';
-			echo '<td class="column-table-name"><code>' . esc_html( $key ) . '</code></td>';
+			echo '<td class="column-table-name column-primary">';
+			echo '<strong>' . esc_html( $label ) . '</strong><br>';
+			echo '<code>' . esc_html( $slug ) . '</code>';
+			echo '</td>';
 			echo '<td class="column-records">' . esc_html( number_format_i18n( $rows ) ) . '</td>';
-			echo '<td class="column-size">' . esc_html( $size ) . ' MB</td>';
+			echo '<td class="column-size">' . esc_html( (string) $size ) . ' MB</td>';
 			echo '</tr>';
 		}
-		// Calculate the percentage of our tables
-		$total_percentage = $total_size_all_tables > 0 ? $total_size_our_tables * 1024 * 1024 / $total_size_all_tables * 100 : 0;
+
+		$total_percentage = $total_size_all > 0 ? ( $total_size_our * 1024 * 1024 / $total_size_all ) * 100 : 0;
+
 		echo '<tr class="sb-stats-total-row">';
 		echo '<td class="column-table-name"><strong>' . esc_html__( 'Total', 'seo-booster' ) . '</strong></td>';
-		echo '<td class="column-records"><strong>' . esc_html( number_format_i18n( $total_records_our_tables ) ) . '</strong></td>';
-		echo '<td class="column-size"><strong>' . esc_html( $total_size_our_tables ) . ' MB (' . esc_html( number_format_i18n( $total_percentage, 2 ) ) . '% ' . esc_html__( 'of total db size', 'seo-booster' ) . ')</strong></td>';
+		echo '<td class="column-records"><strong>' . esc_html( number_format_i18n( $total_records_our ) ) . '</strong></td>';
+		echo '<td class="column-size"><strong>' . esc_html( (string) $total_size_our ) . ' MB (' . esc_html( number_format_i18n( $total_percentage, 2 ) ) . '% ' . esc_html__( 'of total db size', 'seo-booster' ) . ')</strong></td>';
 		echo '</tr>';
-		echo '</tbody></table></div>';
+		echo '</tbody></table>';
+		echo '<p class="description">' . esc_html__( 'Record counts are approximate (from MySQL table status) and avoid a full table scan.', 'seo-booster' ) . '</p>';
+		echo '</div>';
+
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * AJAX: database statistics HTML for the Settings Stats tab.
+	 *
+	 * @return void
+	 */
+	public static function ajax_settings_db_stats() {
+		check_ajax_referer( 'sb_settings_db_stats', 'security' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'seo-booster' ) ), 403 );
+		}
+
+		wp_send_json_success(
+			array(
+				'html' => self::get_data_size_html(),
+			)
+		);
 	}
 
 

@@ -1,6 +1,9 @@
 <?php
 
-namespace Cleverplugins\SEOBooster;
+namespace Cleverplugins\SEOBooster\Media;
+
+use Cleverplugins\SEOBooster\Credits_Service;
+use Cleverplugins\SEOBooster\LLM_Helper;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles AI-powered image description generation (ALT text, caption, description)
  * for WordPress media attachments using WordPress 7 Connectors (or SEO Booster Credits).
  *
- * @package Cleverplugins\SEOBooster
+ * @package Cleverplugins\SEOBooster\Media
  * @since 7.0.0
  */
 class AI_Image_Generator {

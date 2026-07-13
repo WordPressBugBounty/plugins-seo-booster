@@ -108,9 +108,7 @@ class SB_GSC_List_Table extends \WP_List_Table {
 			'impressions',
 			'ctr',
 			'position',
-			// 'first_seen_date',
 			'latest_date',
-			'unique_landing_pages', // Add new column
 		);
 
 		if ( in_array( $orderby, $valid_column_names, true ) ) {
@@ -502,9 +500,12 @@ class SB_GSC_List_Table extends \WP_List_Table {
 
 		$do_search = '';
 		if ( ! empty( $search ) ) {
-			$do_search = $is_exact_match
-				? $wpdb->prepare( ' AND qk.query = %s ', $search )
-				: $wpdb->prepare( ' AND (qk.query LIKE %s OR qk.page LIKE %s OR qk.first_seen_date LIKE %s OR qk.latest_date LIKE %s) ', "%{$search}%", "%{$search}%", "%{$search}%", "%{$search}%" );
+			if ( $is_exact_match ) {
+				$do_search = $wpdb->prepare( ' AND qk.query = %s ', $search );
+			} else {
+				$like      = '%' . $wpdb->esc_like( $search ) . '%';
+				$do_search = $wpdb->prepare( ' AND (qk.query LIKE %s OR qk.page LIKE %s OR qk.first_seen_date LIKE %s OR qk.latest_date LIKE %s) ', $like, $like, $like, $like );
+			}
 		}
 
 		$lp_filter_query = '';
@@ -556,7 +557,8 @@ class SB_GSC_List_Table extends \WP_List_Table {
 		$order = strtoupper( $order ); // Convert to uppercase for comparison
 		$order = in_array( $order, array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
 
-		$orderby = isset( $_GET['orderby'] ) ? esc_sql( sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) ) : 'impressions';
+		$orderby = isset( $_GET['orderby'] ) ? sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) : 'impressions';
+		$orderby = $this->sanitize_orderby( $orderby );
 
 		// Fetch the filtered and searched count of items
 		$total_filtered_query = "SELECT COUNT(DISTINCT qk.id) FROM {$wpdb->prefix}sb2_query_keywords AS qk LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh ON qk.id = qkh.query_keywords_id WHERE 1=1 $do_search $lp_filter_query $traffic_filter_query";

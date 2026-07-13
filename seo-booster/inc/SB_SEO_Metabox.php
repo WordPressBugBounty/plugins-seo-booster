@@ -3,6 +3,7 @@
 namespace Cleverplugins\SEOBooster;
 
 use Cleverplugins\SEOBooster\Analysis\Ai_Readiness_Registry;
+use Cleverplugins\SEOBooster\Media\AI_Image_Generator;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -165,63 +166,72 @@ class SB_SEO_Metabox {
 		}
 		?>
 		<div id="sb-seo-metabox" class="sb-seo-metabox" data-object-id="<?php echo esc_attr( (string) $item_id ); ?>" data-object-type="<?php echo esc_attr( $item_type ); ?>">
-			<!-- Exclusion Checkbox -->
-			<?php if ( ! $is_term && $item_type === 'post' ) : ?>
-			<div class="sb-exclusion-control" style="margin-bottom: 15px; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
-				<label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-					<input type="checkbox" id="sb-exclude-from-analysis" name="sb_exclude_from_analysis" value="1" <?php checked( $is_excluded, true ); ?>>
-					<strong><?php esc_html_e( 'Exclude from SEO Analysis', 'seo-booster' ); ?></strong>
-				</label>
-				<?php if ( $exclusion_reason ) : ?>
-				<p style="margin: 8px 0 0 0; font-size: 12px; color: #666; font-style: italic;">
-					<?php echo esc_html( $exclusion_reason ); ?>
-				</p>
-				<?php endif; ?>
-				<p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">
-					<?php esc_html_e( 'When checked, this page will not appear in SEO analysis results and will be excluded from the global SEO possibilities page.', 'seo-booster' ); ?>
-				</p>
-			</div>
-			<?php endif; ?>
-			
-			<!-- Row 1: Score circle on top, centered -->
-			<div class="sb-seo-score-header">
-				<div class="sb-seo-score">
-					<div class="sb-score-circle" id="sb-score-circle">
-						<span class="sb-score-number" id="sb-score-number">-</span>
-						<span class="sb-score-label"><?php esc_html_e( 'SEO Score', 'seo-booster' ); ?></span>
-					</div>
-					<div class="sb-score-loading" id="sb-score-loading" style="display: none;">
-						<small class="sb-analysis-timestamp"></small>
-					</div>
-				</div>
-			</div>
-			
-			<!-- Row 2: Full-width issues list -->
-			<div class="sb-seo-issues-container">
-				<div class="sb-analysis-results" id="sb-analysis-results">
-					<div class="sb-loading"><?php esc_html_e( 'Loading...', 'seo-booster' ); ?></div>
-				</div>
-			</div>
+			<?php
+			$show_page_settings = ( ! $is_term && $item_type === 'post' );
+			if ( ! $show_page_settings ) {
+				$seo_plug_preview   = Google_API::identify_active_seo_plugin();
+				$show_page_settings = ! empty( $seo_plug_preview['name'] );
+			}
+			?>
+			<?php if ( $show_page_settings ) : ?>
+			<div class="sb-seo-page-settings">
+				<strong class="sb-seo-page-settings-title"><?php esc_html_e( 'Page settings', 'seo-booster' ); ?></strong>
+				<?php self::render_context_strip( $is_term ? 0 : $item_id, $item_type ); ?>
 
-			<?php if ( ! $is_term && $item_type === 'post' ) : ?>
-				<?php AI_Readiness::render_classic_sections( $item_id ); ?>
+				<?php if ( ! $is_term && $item_type === 'post' ) : ?>
+					<?php self::render_autolink_control( $post_or_term ); ?>
+					<?php self::render_exclusion_control( $is_excluded, $exclusion_reason ); ?>
+				<?php endif; ?>
+			</div>
 			<?php endif; ?>
-			
-			<!-- SEO Analysis: local analysis + AI actions and results (single section) -->
-			<div class="sb-seo-analysis-section">
-				<div class="sb-seo-analysis-actions">
+
+			<nav class="sb-seo-tabs" role="tablist" aria-label="<?php esc_attr_e( 'SEO Booster sections', 'seo-booster' ); ?>">
+				<button type="button" class="sb-seo-tab active" role="tab" aria-selected="true" aria-controls="sb-seo-analysis" id="sb-seo-tab-analysis" data-tab="analysis">
+					<span class="dashicons dashicons-chart-pie" aria-hidden="true"></span>
+					<?php esc_html_e( 'Analysis', 'seo-booster' ); ?>
+				</button>
+				<button type="button" class="sb-seo-tab" role="tab" aria-selected="false" aria-controls="sb-seo-ai" id="sb-seo-tab-ai" data-tab="ai">
+					<span class="dashicons dashicons-lightbulb" aria-hidden="true"></span>
+					<?php esc_html_e( 'AI tools', 'seo-booster' ); ?>
+				</button>
+				<button type="button" class="sb-seo-tab" role="tab" aria-selected="false" aria-controls="sb-seo-keywords" id="sb-seo-tab-keywords" data-tab="keywords">
+					<span class="dashicons dashicons-chart-line" aria-hidden="true"></span>
+					<?php esc_html_e( 'Keywords', 'seo-booster' ); ?>
+				</button>
+			</nav>
+
+			<div id="sb-seo-analysis" class="sb-seo-tab-panel active" role="tabpanel" aria-labelledby="sb-seo-tab-analysis">
+				<!-- Row 1: Score circle on top, centered -->
+				<div class="sb-seo-score-header">
+					<div class="sb-seo-score">
+						<div class="sb-score-circle" id="sb-score-circle">
+							<span class="sb-score-number" id="sb-score-number">-</span>
+							<span class="sb-score-label"><?php esc_html_e( 'SEO Score', 'seo-booster' ); ?></span>
+						</div>
+						<div class="sb-score-loading" id="sb-score-loading" style="display: none;">
+							<small class="sb-analysis-timestamp"></small>
+						</div>
+					</div>
+				</div>
+
+				<!-- Row 2: Full-width issues list -->
+				<div class="sb-seo-issues-container">
+					<div class="sb-analysis-results" id="sb-analysis-results">
+						<div class="sb-loading"><?php esc_html_e( 'Loading...', 'seo-booster' ); ?></div>
+					</div>
+				</div>
+
+				<?php if ( ! $is_term && $item_type === 'post' ) : ?>
+					<?php AI_Readiness::render_classic_sections( $item_id ); ?>
+				<?php endif; ?>
+
+				<div id="sb-seo-full-review-actions" class="sb-seo-full-review-actions">
 					<h3><?php esc_html_e( 'SEO Analysis', 'seo-booster' ); ?></h3>
 					<div class="sb-seo-analysis-buttons">
-					<?php if ( ! $is_term && $item_type === 'post' ) : ?>
-					<button type="button" id="sb-quick-review" class="button button-secondary">
-						<span class="dashicons dashicons-update"></span>
-						<?php esc_html_e( 'Run quick review', 'seo-booster' ); ?>
-					</button>
-					<?php endif; ?>
-					<button type="button" id="sb-download-and-analyze" class="button button-primary">
-						<span class="dashicons dashicons-download"></span>
-						<?php esc_html_e( 'SEO review entire page', 'seo-booster' ); ?>
-					</button>
+						<button type="button" id="sb-download-and-analyze" class="button button-primary">
+							<span class="dashicons dashicons-download"></span>
+							<?php esc_html_e( 'SEO review entire page', 'seo-booster' ); ?>
+						</button>
 					</div>
 					<div class="sb-analysis-info">
 						<?php
@@ -237,13 +247,20 @@ class SB_SEO_Metabox {
 							echo '<small id="sb-last-download-info" class="sb-hidden"></small>';
 						}
 						?>
-						<small>
+						<small class="sb-full-review-help">
 							<?php esc_html_e( 'We analyze the full page output including widgets, footer, and theme elements.', 'seo-booster' ); ?>
 							<a href="<?php echo esc_url( Utils::generate_cp_web_link( 'post_metabox', 'docs/seo-analysis/seo-analysis-overview/' ) ); ?>" target="_blank">
 								<?php esc_html_e( 'Learn more', 'seo-booster' ); ?>
 							</a>
 						</small>
 					</div>
+				</div>
+			</div>
+
+			<div id="sb-seo-ai" class="sb-seo-tab-panel" role="tabpanel" aria-labelledby="sb-seo-tab-ai">
+			<div class="sb-seo-analysis-section">
+				<div class="sb-seo-analysis-actions">
+					<h3><?php esc_html_e( 'AI tools', 'seo-booster' ); ?></h3>
 					<?php
 					$ai_provider   = LLM_Helper::get_selected_ai_provider();
 					$is_wc_product = ! $is_term && isset( $post_or_term->post_type ) && $post_or_term->post_type === 'product' && function_exists( 'wc_get_product' );
@@ -315,10 +332,10 @@ class SB_SEO_Metabox {
 
 				<?php
 				if ( $ai_provider !== 'disabled' ) :
-					$has_saved_suggestions   = false;
-					$saved_comprehensive_ui  = null;
+					$has_saved_suggestions  = false;
+					$saved_comprehensive_ui = null;
 					if ( ! $is_term && $item_type === 'post' && $item_id ) {
-						$saved_llm = LLM_Helper::get_saved_suggestions( $item_id );
+						$saved_llm              = LLM_Helper::get_saved_suggestions( $item_id );
 						$has_saved_suggestions  = is_array( $saved_llm )
 							&& ! empty( $saved_llm['titles'] )
 							&& ! empty( $saved_llm['descriptions'] );
@@ -375,12 +392,134 @@ class SB_SEO_Metabox {
 				</div>
 				<?php endif; ?>
 			</div>
+			</div>
+
+			<div id="sb-seo-keywords" class="sb-seo-tab-panel" role="tabpanel" aria-labelledby="sb-seo-tab-keywords">
+				<?php SB_GSC_Metaboxes::render_embedded_section( $post_or_term ); ?>
+			</div>
 		</div>
 
 		<input type="hidden" id="sb-seo-item-id" value="<?php echo esc_attr( $item_id ); ?>">
 		<input type="hidden" id="sb-seo-item-type" value="<?php echo esc_attr( $item_type ); ?>">
 		<input type="hidden" id="sb-seo-current-url" value="<?php echo esc_attr( $current_url ); ?>">
 		<input type="hidden" id="sb-seo-site-name" value="<?php echo esc_attr( $site_name ); ?>">
+		<?php
+	}
+
+	/**
+	 * Render always-visible SEO plugin / focus keyword context above the tabs.
+	 *
+	 * @since 7.3.2
+	 * @param int    $item_id   Post ID (0 for terms).
+	 * @param string $item_type 'post' or 'term'.
+	 * @return void
+	 */
+	public static function render_context_strip( $item_id, $item_type ) {
+		$seo_plug = Google_API::identify_active_seo_plugin();
+		if ( empty( $seo_plug ) || empty( $seo_plug['name'] ) ) {
+			return;
+		}
+		?>
+		<p class="sb-seo-context-strip">
+			<?php
+			echo esc_html__( 'Detected SEO plugin: ', 'seo-booster' ) . esc_html( $seo_plug['name'] );
+
+			if ( 'post' === $item_type && $item_id > 0 ) {
+				$focus_keywords = Google_API::get_focus_keywords( $item_id );
+				if ( $focus_keywords ) {
+					echo ' | ' . esc_html__( 'Focus keyword(s)', 'seo-booster' ) . ': ';
+					foreach ( $focus_keywords as $focus_keyword ) {
+						echo '<span class="label">' . esc_html( $focus_keyword ) . '</span> ';
+					}
+				} else {
+					echo ' | ' . esc_html__( 'No focus keyword found.', 'seo-booster' );
+				}
+			}
+			?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Render the Automatic Linking checkbox (inside Page settings chrome).
+	 *
+	 * @since 7.3.2
+	 * @param \WP_Post $post Post object.
+	 * @return void
+	 */
+	public static function render_autolink_control( $post ) {
+		if ( ! is_object( $post ) || empty( $post->ID ) ) {
+			return;
+		}
+
+		wp_nonce_field( 'sbp_autolink', 'sbp_nonce' );
+		$sbp_stored_meta = get_post_meta( $post->ID, '_sbp-autolink', true );
+
+		// First time — default to yes so keywords become links automatically.
+		if ( 'auto-draft' === $post->post_status ) {
+			$sbp_stored_meta = 'yes';
+		}
+		if ( ! $sbp_stored_meta ) {
+			update_post_meta( $post->ID, '_sbp-autolink', 'yes' );
+			$sbp_stored_meta = 'yes';
+		}
+		?>
+		<div class="sb-seo-page-settings-row sb-autolink-control">
+			<label for="sbp-autolink">
+				<input type="checkbox" name="sbp-autolink" id="sbp-autolink" value="yes"
+					<?php checked( $sbp_stored_meta, 'yes' ); ?>
+				/>
+				<strong><?php esc_html_e( 'Automatic Linking', 'seo-booster' ); ?></strong>
+				<span class="sb-seo-page-settings-label"><?php esc_html_e( 'Change keywords on this page to links.', 'seo-booster' ); ?></span>
+			</label>
+			<?php
+			$seobooster_internal_linking = get_option( 'seobooster_internal_linking' );
+			if ( ! $seobooster_internal_linking ) {
+				?>
+				<small class="sb-seo-page-settings-note">
+					<?php esc_html_e( 'Feature is disabled. Enable in SEO Booster settings.', 'seo-booster' ); ?>
+				</small>
+				<?php
+			} else {
+				$autolink_url = admin_url( 'admin.php?page=sb2_autolink' );
+				?>
+				<small class="sb-seo-page-settings-note">
+					<?php
+					// translators: 1: opening link tag, 2: closing link tag
+					printf( esc_html__( 'Change keywords and links in %1$sAutolink%2$s', 'seo-booster' ), '<a href="' . esc_url( $autolink_url ) . '" target="_blank">', '</a>' );
+					?>
+				</small>
+				<?php
+			}
+			?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render Exclude from SEO Analysis (inside Page settings chrome).
+	 *
+	 * @since 7.3.2
+	 * @param bool   $is_excluded      Whether the post is excluded.
+	 * @param string $exclusion_reason Optional auto-exclusion reason.
+	 * @return void
+	 */
+	public static function render_exclusion_control( $is_excluded, $exclusion_reason = '' ) {
+		?>
+		<div class="sb-seo-page-settings-row sb-exclusion-control">
+			<label for="sb-exclude-from-analysis">
+				<input type="checkbox" id="sb-exclude-from-analysis" name="sb_exclude_from_analysis" value="1" <?php checked( $is_excluded, true ); ?>>
+				<strong><?php esc_html_e( 'Exclude from SEO Analysis', 'seo-booster' ); ?></strong>
+			</label>
+			<?php if ( $exclusion_reason ) : ?>
+			<small class="sb-seo-page-settings-note sb-exclusion-reason">
+				<?php echo esc_html( $exclusion_reason ); ?>
+			</small>
+			<?php endif; ?>
+			<small class="sb-seo-page-settings-note sb-exclusion-help">
+				<?php esc_html_e( 'Hidden from SEO analysis results and the global SEO possibilities page.', 'seo-booster' ); ?>
+			</small>
+		</div>
 		<?php
 	}
 
@@ -643,8 +782,8 @@ class SB_SEO_Metabox {
 		if ( ! is_array( $saved_comprehensive ) || empty( $saved_comprehensive ) ) {
 			$saved_comprehensive = null;
 		}
-		$saved_llm_meta        = $post_id ? LLM_Helper::get_saved_suggestions( $post_id ) : false;
-		$has_saved_suggestions = is_array( $saved_llm_meta )
+		$saved_llm_meta         = $post_id ? LLM_Helper::get_saved_suggestions( $post_id ) : false;
+		$has_saved_suggestions  = is_array( $saved_llm_meta )
 			&& ! empty( $saved_llm_meta['titles'] )
 			&& ! empty( $saved_llm_meta['descriptions'] );
 		$has_recent_request_ids = ! empty( $recent_request_ids );
@@ -659,8 +798,6 @@ class SB_SEO_Metabox {
 				'credits'                      => $credits_data,
 				'post_id'                      => $post_id,
 				'ai_readiness_keys'            => Ai_Readiness_Registry::get_issue_keys(),
-				'readiness_nonce'              => wp_create_nonce( AI_Readiness::NONCE_ACTION ),
-				'readiness_action'             => 'sb_ai_readiness_score',
 				'pending_request_id'           => $pending_request_id ?: '',
 				'pending_request_type'         => $pending_request_type,
 				'recent_request_ids'           => $recent_request_ids,
@@ -699,8 +836,6 @@ class SB_SEO_Metabox {
 					'request_type_analysis'     => __( 'Full analysis', 'seo-booster' ),
 					'request_type_image'        => __( 'Image descriptions', 'seo-booster' ),
 					'no_recent_requests'        => __( 'No recent requests for this page.', 'seo-booster' ),
-					'quick_review'              => __( 'Run quick review', 'seo-booster' ),
-					'quick_review_running'      => __( 'Running quick review…', 'seo-booster' ),
 					'readiness_not_analyzed'    => __( 'Not analyzed yet.', 'seo-booster' ),
 				),
 			)

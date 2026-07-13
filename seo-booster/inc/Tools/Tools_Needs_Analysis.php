@@ -65,14 +65,15 @@ class Tools_Needs_Analysis {
 				'ajax_url' => admin_url( 'admin-ajax.php' ),
 				'nonce'    => wp_create_nonce( 'sb_tools_needs_analysis_nonce' ),
 				'strings'  => array(
-					'scanning'      => __( 'Scanning…', 'seo-booster' ),
-					'no_results'    => __( 'No matching content found.', 'seo-booster' ),
-					'queue_confirm' => __( 'Queue SEO analysis for all matching items?', 'seo-booster' ),
-					'queue_title'   => __( 'Queue SEO analysis', 'seo-booster' ),
-					'queued'        => __( 'SEO analysis queued.', 'seo-booster' ),
-					'queued_title'  => __( 'Analysis queued', 'seo-booster' ),
-					'queue_status'  => __( '%d items queued for SEO analysis.', 'seo-booster' ),
-					'error'         => __( 'Error', 'seo-booster' ),
+					'scanning'           => __( 'Scanning…', 'seo-booster' ),
+					'no_results'         => __( 'No matching content found.', 'seo-booster' ),
+					'queue_confirm'      => __( 'Queue SEO analysis for all matching items?', 'seo-booster' ),
+					'queue_title'        => __( 'Queue SEO analysis', 'seo-booster' ),
+					'queued'             => __( 'SEO analysis queued.', 'seo-booster' ),
+					'queued_title'       => __( 'Analysis queued', 'seo-booster' ),
+					'queue_status'       => __( '%d items queued for SEO analysis.', 'seo-booster' ),
+					'view_possibilities' => __( 'View in SEO Possibilities', 'seo-booster' ),
+					'error'              => __( 'Error', 'seo-booster' ),
 				),
 			)
 		);
@@ -195,17 +196,24 @@ class Tools_Needs_Analysis {
 						continue;
 					}
 
-					$matching[] = array(
+					$view_url = get_permalink( $post_id ) ?: '';
+					$item     = array(
 						'id'          => $post_id,
 						'title'       => get_the_title( $post_id ),
 						'post_type'   => get_post_type( $post_id ),
 						'slug'        => get_post_field( 'post_name', $post_id ),
 						'edit_url'    => get_edit_post_link( $post_id, 'raw' ) ?: '',
-						'view_url'    => get_permalink( $post_id ) ?: '',
+						'view_url'    => $view_url,
 						'status'      => $status['label'],
 						'issues'      => $status['issue_summary'],
 						'issue_count' => $status['issue_count'],
 					);
+					if ( $status['issue_count'] > 0 && $view_url !== '' ) {
+						$item['possibilities_url'] = admin_url(
+							'admin.php?page=sb2_seo_issues&s=' . rawurlencode( $view_url )
+						);
+					}
+					$matching[] = $item;
 				}
 
 				$count = count( $query->posts );
@@ -226,10 +234,12 @@ class Tools_Needs_Analysis {
 	}
 
 	/**
+	 * Public analysis status for a post (also used by Content decay).
+	 *
 	 * @param int $post_id Post ID.
 	 * @return array
 	 */
-	private static function get_analysis_status( $post_id ) {
+	public static function get_analysis_status( $post_id ) {
 		$comprehensive = get_post_meta( $post_id, '_sb_comprehensive_analysis_result', true );
 		$last_download = (int) get_post_meta( $post_id, '_sb_last_page_download', true );
 		$saved         = SEO_Analysis::get_saved_analysis( $post_id, 'post' );

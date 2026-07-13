@@ -204,8 +204,8 @@ abstract class Abstract_Checks implements Check_Interface {
 	 * @return bool
 	 */
 	protected function is_internal_url( $url ) {
-		$home      = home_url();
-		$home_http = str_replace( 'https://', 'http://', $home );
+		$home       = home_url();
+		$home_http  = str_replace( 'https://', 'http://', $home );
 		$home_https = str_replace( 'http://', 'https://', $home );
 
 		return (
@@ -381,11 +381,48 @@ abstract class Abstract_Checks implements Check_Interface {
 		}
 
 		$question_words = array(
-			'por qué', 'what', 'how', 'why', 'when', 'where', 'who', 'which', 'whose', 'whom',
-			'qué', 'cómo', 'cuándo', 'dónde', 'quién', 'cuál', 'cuáles',
-			'hvad', 'hvordan', 'hvorfor', 'hvornår', 'hvor', 'hvem', 'hvilken', 'hvilket',
-			'vad', 'hur', 'varför', 'när', 'var', 'vem', 'vilken', 'vilket',
-			'was', 'wie', 'warum', 'wann', 'wo', 'wer', 'welcher', 'welche', 'welches',
+			'por qué',
+			'what',
+			'how',
+			'why',
+			'when',
+			'where',
+			'who',
+			'which',
+			'whose',
+			'whom',
+			'qué',
+			'cómo',
+			'cuándo',
+			'dónde',
+			'quién',
+			'cuál',
+			'cuáles',
+			'hvad',
+			'hvordan',
+			'hvorfor',
+			'hvornår',
+			'hvor',
+			'hvem',
+			'hvilken',
+			'hvilket',
+			'vad',
+			'hur',
+			'varför',
+			'när',
+			'var',
+			'vem',
+			'vilken',
+			'vilket',
+			'was',
+			'wie',
+			'warum',
+			'wann',
+			'wo',
+			'wer',
+			'welcher',
+			'welche',
+			'welches',
 		);
 
 		$question_words = apply_filters( 'seobooster_question_words', $question_words );

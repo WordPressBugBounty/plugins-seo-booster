@@ -55,14 +55,14 @@
             });
 
             // Modal close
-            $(document).on('click', '.sb-modal-close, #sb-cancel-analysis', function(e) {
+            $(document).on('click', '.sb-issues-modal-close, #sb-cancel-analysis', function(e) {
                 e.preventDefault();
                 self.closeModal();
             });
 
 
             // Click outside modal to close
-            $(document).on('click', '.sb-modal', function(e) {
+            $(document).on('click', '.sb-issues-modal-overlay', function(e) {
                 if (e.target === this) {
                     self.closeModal();
                 }
@@ -309,7 +309,7 @@
          */
         showModal: function() {
             $('#sb-progress-modal').fadeIn(300);
-            $('body').addClass('sb-modal-open');
+            $('body').addClass('sb-issues-modal-open');
         },
 
         /**
@@ -321,7 +321,7 @@
             
             // Hide modal if it's showing
             $('#sb-progress-modal').hide();
-            $('body').removeClass('sb-modal-open');
+            $('body').removeClass('sb-issues-modal-open');
             
             // Show initial progress display
             var $content = $('<div class="sb-inline-progress">');
@@ -367,7 +367,7 @@
          */
         closeModal: function() {
             $('#sb-progress-modal').fadeOut(300);
-            $('body').removeClass('sb-modal-open');
+            $('body').removeClass('sb-issues-modal-open');
             this.stopProgressTracking();
         },
 

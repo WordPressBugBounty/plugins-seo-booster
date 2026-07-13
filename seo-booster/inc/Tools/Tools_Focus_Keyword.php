@@ -37,13 +37,13 @@ class Tools_Focus_Keyword {
 	 * @return void
 	 */
 	public static function render_admin() {
-		$seo_target            = SEO_Meta_Writer::get_target();
-		$seo_target_label      = SEO_Meta_Writer::get_target_label();
-		$seo_focus_supported   = SEO_Plugin_Registry::supports_focus_keyword();
-		$has_gsc               = Tools_GSC_Helper::has_gsc_data();
-		$has_revertable        = SEO_Meta_Writer::has_revertable_focus_keyword_batch();
-		$post_types            = self::get_user_post_types();
-		$selectable            = Tools_Meta_Scanner::get_selectable_post_types();
+		$seo_target          = SEO_Meta_Writer::get_target();
+		$seo_target_label    = SEO_Meta_Writer::get_target_label();
+		$seo_focus_supported = SEO_Plugin_Registry::supports_focus_keyword();
+		$has_gsc             = Tools_GSC_Helper::has_gsc_data();
+		$has_revertable      = SEO_Meta_Writer::has_revertable_focus_keyword_batch();
+		$post_types          = self::get_user_post_types();
+		$selectable          = Tools_Meta_Scanner::get_selectable_post_types();
 
 		include SEOBOOSTER_PLUGINPATH . 'inc/Tools/views/focus-keyword-tool.php';
 	}

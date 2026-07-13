@@ -71,3 +71,7 @@
         animation: none;
     }
 }
+
+body.sb-modal-open {
+    overflow: hidden;
+}

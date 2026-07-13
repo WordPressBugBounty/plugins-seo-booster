@@ -4,6 +4,173 @@
 
 jQuery(document).ready(function($) {
     'use strict';
+
+    var botBlockStatsLoading = false;
+    var botBlockStatsObserver = null;
+    var dbStatsLoading = false;
+
+    function formatVisitCountsCaption(days) {
+        var template = (sbSettings.strings && sbSettings.strings.visitCountsLoaded) || 'Visit counts for the last %d days.';
+        return template.replace('%d', String(days));
+    }
+
+    function applyVisitedOnlyFilter() {
+        var visitedOnly = $('#sb-bot-visited-only').is(':checked');
+        $('#sb-toggle-bot-list .sb-bot-block-row').each(function() {
+            var $row = $(this);
+            var visits = parseInt($row.attr('data-visits'), 10) || 0;
+            var blocked = $row.attr('data-blocked') === '1';
+            var show = !visitedOnly || visits > 0 || blocked;
+            $row.toggleClass('is-filtered-out', !show);
+        });
+    }
+
+    function sortBotBlockRows() {
+        var $rowsWrap = $('#sb-toggle-bot-list .sb-bot-block-rows');
+        if (!$rowsWrap.length) {
+            return;
+        }
+        var $rows = $rowsWrap.children('.sb-bot-block-row').get();
+        $rows.sort(function(a, b) {
+            var visitsA = parseInt($(a).attr('data-visits'), 10) || 0;
+            var visitsB = parseInt($(b).attr('data-visits'), 10) || 0;
+            if (visitsB !== visitsA) {
+                return visitsB - visitsA;
+            }
+            var nameA = ($(a).attr('data-bot-name') || '').toLowerCase();
+            var nameB = ($(b).attr('data-bot-name') || '').toLowerCase();
+            if (nameA < nameB) {
+                return -1;
+            }
+            if (nameA > nameB) {
+                return 1;
+            }
+            return 0;
+        });
+        $.each($rows, function(_, row) {
+            $rowsWrap.append(row);
+        });
+    }
+
+    function disconnectBotBlockStatsObserver() {
+        if (botBlockStatsObserver) {
+            botBlockStatsObserver.disconnect();
+            botBlockStatsObserver = null;
+        }
+    }
+
+    function enrichBotBlockStats(bots, days) {
+        var emDash = (sbSettings.strings && sbSettings.strings.emDash) || '—';
+        $('#sb-toggle-bot-list .sb-bot-block-row').each(function() {
+            var $row = $(this);
+            var name = $row.attr('data-bot-name');
+            var data = bots && bots[name] ? bots[name] : null;
+            var visits = data ? (parseInt(data.visits, 10) || 0) : 0;
+            var lastAgo = data && data.last_seen_ago ? data.last_seen_ago : emDash;
+            $row.attr('data-visits', String(visits));
+            $row.find('[data-role="visits"]').text(visits.toLocaleString());
+            $row.find('[data-role="last-seen"]').text(visits > 0 && lastAgo ? lastAgo : emDash);
+        });
+        sortBotBlockRows();
+        applyVisitedOnlyFilter();
+        $('#sb-bot-block-stats-caption').text(formatVisitCountsCaption(days));
+        $('#sb-toggle-bot-list').attr('data-stats-loaded', '1');
+        $('#sb-bot-visited-only').prop('disabled', false);
+        disconnectBotBlockStatsObserver();
+    }
+
+    function loadBotBlockStats() {
+        var $list = $('#sb-toggle-bot-list');
+        if (!$list.length || $list.attr('data-stats-loaded') === '1' || botBlockStatsLoading) {
+            return;
+        }
+        if (!$('#ai-llm-tab').hasClass('sb-tab-active')) {
+            return;
+        }
+        if (!sbSettings.botBlockStatsNonce) {
+            return;
+        }
+
+        botBlockStatsLoading = true;
+        $('#sb-bot-block-stats-caption').text((sbSettings.strings && sbSettings.strings.loadingVisitCounts) || 'Loading visit counts…');
+
+        $.post(sbSettings.ajaxurl, {
+            action: 'sb_ai_bot_block_stats',
+            security: sbSettings.botBlockStatsNonce
+        }).done(function(response) {
+            if (response && response.success && response.data) {
+                enrichBotBlockStats(response.data.bots || {}, response.data.days || 90);
+            } else {
+                $('#sb-bot-block-stats-caption').text((sbSettings.strings && sbSettings.strings.visitCountsError) || 'Could not load visit counts.');
+                window.setTimeout(loadBotBlockStats, 2500);
+            }
+        }).fail(function() {
+            $('#sb-bot-block-stats-caption').text((sbSettings.strings && sbSettings.strings.visitCountsError) || 'Could not load visit counts.');
+            window.setTimeout(loadBotBlockStats, 2500);
+        }).always(function() {
+            botBlockStatsLoading = false;
+        });
+    }
+
+    function setupBotBlockStatsObserver() {
+        var list = document.getElementById('sb-toggle-bot-list');
+        if (!list || botBlockStatsObserver) {
+            return;
+        }
+        if (!sbSettings.botBlockStatsNonce) {
+            return;
+        }
+
+        if (!('IntersectionObserver' in window)) {
+            loadBotBlockStats();
+            return;
+        }
+
+        botBlockStatsObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    loadBotBlockStats();
+                }
+            });
+        }, { root: null, rootMargin: '80px', threshold: 0.01 });
+
+        botBlockStatsObserver.observe(list);
+    }
+
+    function maybeStartBotBlockStats() {
+        if (!$('#ai-llm-tab').hasClass('sb-tab-active')) {
+            return;
+        }
+        setupBotBlockStatsObserver();
+    }
+
+    function loadDbStats() {
+        var $container = $('#sb-db-stats-container');
+        if (!$container.length || $container.attr('data-loaded') === '1' || dbStatsLoading) {
+            return;
+        }
+        if (!$('#stats-tab').hasClass('sb-tab-active')) {
+            return;
+        }
+
+        dbStatsLoading = true;
+        $container.html('<p class="description">' + ((sbSettings.strings && sbSettings.strings.loadingDbStats) || 'Loading database statistics…') + '</p>');
+
+        $.post(sbSettings.ajaxurl, {
+            action: 'sb_settings_db_stats',
+            security: sbSettings.dbStatsNonce
+        }).done(function(response) {
+            if (response && response.success && response.data && response.data.html) {
+                $container.html(response.data.html).attr('data-loaded', '1');
+            } else {
+                $container.html('<p class="description">' + ((sbSettings.strings && sbSettings.strings.dbStatsError) || 'Could not load database statistics.') + '</p>');
+            }
+        }).fail(function() {
+            $container.html('<p class="description">' + ((sbSettings.strings && sbSettings.strings.dbStatsError) || 'Could not load database statistics.') + '</p>');
+        }).always(function() {
+            dbStatsLoading = false;
+        });
+    }
     
     // Tab Navigation - Only for our custom tabs, not Freemius tabs
     function activateSettingsTab(tabSlug, updateHash) {
@@ -28,6 +195,13 @@ jQuery(document).ready(function($) {
             }
         }
 
+        if (tabSlug === 'ai-llm') {
+            maybeStartBotBlockStats();
+        }
+        if (tabSlug === 'stats') {
+            loadDbStats();
+        }
+
         return true;
     }
 
@@ -35,6 +209,16 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         e.stopPropagation();
         activateSettingsTab($(this).data('tab'), true);
+    });
+
+    $(document).on('change', '#sb-bot-visited-only', function() {
+        applyVisitedOnlyFilter();
+    });
+
+    $(document).on('change', '#sb-toggle-bot-list .sb-bot-block-row input[type="checkbox"]', function() {
+        var $row = $(this).closest('.sb-bot-block-row');
+        $row.attr('data-blocked', $(this).is(':checked') ? '1' : '0');
+        applyVisitedOnlyFilter();
     });
 
     // Restore tab after form submission (?current_tab=...)
@@ -57,6 +241,15 @@ jQuery(document).ready(function($) {
     if (!tabActivated) {
         activateSettingsTab('ai-llm', true);
     }
+
+    // Retention FYI link uses #stats — ensure tab switch when clicked from same page
+    $(document).on('click', 'a[href*="page=sb2_settings#stats"]', function(e) {
+        if (window.location.search.indexOf('page=sb2_settings') === -1 && window.location.href.indexOf('page=sb2_settings') === -1) {
+            return;
+        }
+        e.preventDefault();
+        activateSettingsTab('stats', true);
+    });
     
     // Content Types Collapsible Functionality
     $('.sb-content-type-header').on('click', function(e) {

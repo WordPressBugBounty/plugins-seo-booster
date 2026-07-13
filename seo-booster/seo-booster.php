@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name: SEO Booster
- * Version: 7.3.1
+ * Version: 7.3.2
  * Plugin URI: https://seoboosterpro.com/
  * Description: SEO Booster integrates with Google Search Console data - bringing the data to life on your website like never before. Optimize keywords and content, track your rankings, and get actionable insights to improve your SEO.
  * Author: seoboosterpro.com
@@ -80,20 +80,20 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         'premium_suffix'   => 'Premium',
                         'has_addons'       => false,
                         'has_paid_plans'   => true,
+                        'is_org_compliant' => true,
                         'trial'            => array(
                             'days'               => 30,
                             'is_require_payment' => true,
                         ),
-                        'has_affiliation'  => false,
+                        'has_affiliation'  => 'all',
                         'menu'             => array(
                             'slug'         => 'sb2_dashboard',
-                            'first-path'   => 'admin.php?page=sb2_dashboard',
+                            'first-path'   => 'admin.php?page=sb2_dashboard&welcome=true',
                             'support'      => false,
                             'contact'      => false,
                             'is_top_level' => true,
                         ),
                         'is_live'          => true,
-                        'is_org_compliant' => true,
                     ) );
                 } catch ( \Exception $e ) {
                     $seobooster_fs = false;
@@ -199,6 +199,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 add_action( 'wp_ajax_fetch_chart_data', array(Google_API::class, 'fetch_chart_data_ajax') );
                 add_action( 'wp_ajax_sb_gsc_import_data', array(Google_API::class, 'sb_gsc_import_data') );
                 add_action( 'wp_ajax_manual_token_refresh', array(Google_API::class, 'ajax_manual_token_refresh') );
+                add_action( 'wp_ajax_sb_settings_db_stats', array(Google_API::class, 'ajax_settings_db_stats') );
                 add_action( 'wp_ajax_sb_log_table', array(__CLASS__, 'sb_log_table') );
                 add_action( 'wp_ajax_sb_gsc_table', array(__CLASS__, 'sb_gsc_table') );
                 add_action( 'wp_ajax_weeklyemailsignup', array(Utils::class, 'process_weekly_email_signup') );
@@ -210,11 +211,11 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 // Initialize AI Writing Outline
                 AI_Writing_Outline::init();
                 // Initialize AI Image Generator
-                AI_Image_Generator::init();
+                \Cleverplugins\SEOBooster\Media\AI_Image_Generator::init();
                 // Initialize Credits REST Controller
                 Credits_REST_Controller::init();
                 // Initialize Media Library Enhancements
-                Media_Library_Enhancements::init();
+                \Cleverplugins\SEOBooster\Media\Media_Library_Enhancements::init();
                 // Initialize Bulk SEO Analysis
                 Bulk_SEO_Analysis::init();
                 // Initialize Tools page
@@ -386,22 +387,34 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 $page_size = ( isset( $_GET['per_page'] ) ? absint( $_GET['per_page'] ) : 50 );
                 $offset = ($page - 1) * $page_size;
                 // Set up sorting parameters
-                $orderby = ( isset( $_GET['sort_field'] ) ? sanitize_text_field( $_GET['sort_field'] ) : 'impressions' );
-                $order = ( isset( $_GET['sort_order'] ) && in_array( strtoupper( $_GET['sort_order'] ), array('ASC', 'DESC'), true ) ? strtoupper( sanitize_text_field( $_GET['sort_order'] ) ) : 'DESC' );
+                $allowed_orderby = array(
+                    'query',
+                    'clicks',
+                    'impressions',
+                    'ctr',
+                    'position',
+                    'latest_date',
+                    'first_seen_date',
+                    'page'
+                );
+                $orderby_raw = ( isset( $_GET['sort_field'] ) ? sanitize_text_field( wp_unslash( $_GET['sort_field'] ) ) : 'impressions' );
+                $orderby = ( in_array( $orderby_raw, $allowed_orderby, true ) ? $orderby_raw : 'impressions' );
+                $order_raw = ( isset( $_GET['sort_order'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_GET['sort_order'] ) ) ) : 'DESC' );
+                $order = ( in_array( $order_raw, array('ASC', 'DESC'), true ) ? $order_raw : 'DESC' );
                 // Base query: Select all keywords
                 $query = "\n                SELECT \n                qk.id, \n                qk.query, \n                qk.page, \n                qk.first_seen_date, \n                qk.latest_date,\n                COALESCE(SUM(qkh.clicks), 0) as clicks,\n                COALESCE(SUM(qkh.impressions), 0) as impressions,\n                COALESCE(AVG(qkh.ctr), 0) as ctr,\n                COALESCE(AVG(qkh.position), 0) as position\n                FROM {$wpdb->prefix}sb2_query_keywords AS qk\n                LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh ON qk.id = qkh.query_keywords_id\n                WHERE 1=1";
                 // Conditionally append search clause
                 if ( !empty( $_GET['search'] ) ) {
-                    $search = '%' . $wpdb->esc_like( sanitize_text_field( $_GET['search'] ) ) . '%';
+                    $search = '%' . $wpdb->esc_like( sanitize_text_field( wp_unslash( $_GET['search'] ) ) ) . '%';
                     $query .= $wpdb->prepare( ' AND (qk.query LIKE %s OR qk.page LIKE %s)', $search, $search );
                 }
                 // Conditionally append filter clause
                 if ( !empty( $_GET['lp_filter'] ) ) {
-                    $lp_filter = sanitize_text_field( $_GET['lp_filter'] );
+                    $lp_filter = sanitize_text_field( wp_unslash( $_GET['lp_filter'] ) );
                     $query .= $wpdb->prepare( ' AND qk.page = %s', $lp_filter );
                 }
                 // Append group by, order by, and limit clauses
-                $query .= "GROUP BY qk.id, qk.page ORDER BY {$orderby} {$order} LIMIT %d, %d";
+                $query .= " GROUP BY qk.id, qk.page ORDER BY {$orderby} {$order} LIMIT %d, %d";
                 // Execute query and get results
                 $logs = $wpdb->get_results( $wpdb->prepare( $query, $offset, $page_size ), ARRAY_A );
                 // Process logs to include additional data/formatting as needed
@@ -533,19 +546,19 @@ if ( function_exists( 'seobooster_fs' ) ) {
             public static function handle_oauth_callback() {
                 if ( isset( $_GET['access_token'] ) ) {
                     // Validate and sanitize the access token
-                    $access_token = sanitize_text_field( $_GET['access_token'] );
+                    $access_token = sanitize_text_field( wp_unslash( $_GET['access_token'] ) );
                     if ( empty( $access_token ) ) {
                         wp_die( esc_html__( 'Missing something.', 'seo-booster' ) );
                     }
                     update_option( 'seobooster_access_token', $access_token, false );
-                    $google_email = sanitize_text_field( $_GET['google_email'] );
+                    $google_email = ( isset( $_GET['google_email'] ) ? sanitize_text_field( wp_unslash( $_GET['google_email'] ) ) : '' );
                     update_option( 'seobooster_google_email', $google_email, false );
                     // Get the list of sites
                     $sites = Google_API::fetch_sites( $access_token );
                     update_option( 'seobooster_gsc_sites', $sites, false );
                     // Delete the reauth flag since authentication was successful
                     delete_option( 'seobooster_needs_reauth' );
-                    wp_redirect( admin_url( 'admin.php?page=sb2_dashboard' ) );
+                    wp_safe_redirect( admin_url( 'admin.php?page=sb2_dashboard' ) );
                     exit;
                 }
             }
@@ -810,87 +823,13 @@ if ( function_exists( 'seobooster_fs' ) ) {
              * @access  public static
              * @return  void
              */
-            public static function do_custom_meta() {
-                $post_types = get_post_types( array(
-                    'public'   => true,
-                    '_builtin' => false,
-                ) );
-                array_push( $post_types, 'post', 'page' );
-                add_meta_box(
-                    'sbp_meta',
-                    __( 'SEO Booster', 'seo-booster' ),
-                    array(__CLASS__, 'sbp_meta_callback'),
-                    $post_types,
-                    'side',
-                    'default',
-                    null
-                );
-            }
-
             /**
-             * sbp_meta_callback.
+             * Side autolink metabox removed — control lives in the main SEO Booster metabox chrome.
              *
-             * @author  Unknown
-             * @since   v0.0.1
-             * @version v1.0.0  Tuesday, November 30th, 2021.
-             * @access  public static
-             * @param   mixed $post
-             * @return  void
+             * @return void
              */
-            public static function sbp_meta_callback( $post ) {
-                wp_nonce_field( basename( __FILE__ ), 'sbp_nonce' );
-                $sbp_stored_meta = get_post_meta( $post->ID, '_sbp-autolink', true );
-                // first time - lets set the default value to yes, so to replace keywords to links automatically.
-                if ( 'auto-draft' === $post->post_status ) {
-                    $sbp_stored_meta = 'yes';
-                }
-                if ( !$sbp_stored_meta ) {
-                    update_post_meta( $post->ID, '_sbp-autolink', 'yes' );
-                    $sbp_stored_meta = 'yes';
-                }
-                ?>
-				<strong>
-					<?php 
-                esc_html_e( 'Automatic Linking', 'seo-booster' );
-                ?>
-				</strong>
-				<p>
-					<label for="sbp-autolink">
-						<input type="checkbox" name="sbp-autolink" id="sbp-autolink" value="yes"
-							<?php 
-                if ( isset( $sbp_stored_meta ) ) {
-                    checked( $sbp_stored_meta, 'yes' );
-                }
-                ?>
-							/>
-						<?php 
-                esc_html_e( 'Change keywords on this page to links.', 'seo-booster' );
-                ?>
-					</label>
-					<?php 
-                $seobooster_internal_linking = get_option( 'seobooster_internal_linking' );
-                if ( !$seobooster_internal_linking ) {
-                    ?>
-						<small>
-							<?php 
-                    esc_html_e( 'Feature is disabled. Enable in SEO Booster settings.', 'seo-booster' );
-                    ?>
-						</small>
-						<?php 
-                } else {
-                    $autolink_url = admin_url( 'admin.php?page=sb2_autolink' );
-                    ?>
-						<small>
-							<?php 
-                    // translators: 1: opening link tag, 2: closing link tag
-                    printf( esc_html__( 'Change keywords and links in %1$sAutolink%2$s', 'seo-booster' ), '<a href="' . esc_url( $autolink_url ) . '" target="_blank">', '</a>' );
-                    ?>
-						</small>
-						<?php 
-                }
-                ?>
-				</p>
-				<?php 
+            public static function do_custom_meta() {
+                // Intentionally empty: Automatic Linking is rendered by SB_SEO_Metabox::render_autolink_control().
             }
 
             /**
@@ -903,7 +842,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 // Checks save status
                 $is_autosave = wp_is_post_autosave( $post_id );
                 $is_revision = wp_is_post_revision( $post_id );
-                $is_valid_nonce = ( isset( $_POST['sbp_nonce'] ) && wp_verify_nonce( sanitize_text_field( $_POST['sbp_nonce'] ), basename( __FILE__ ) ) ? 'true' : 'false' );
+                $is_valid_nonce = isset( $_POST['sbp_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['sbp_nonce'] ) ), 'sbp_autolink' );
                 // Exits script depending on save status
                 if ( $is_autosave || $is_revision || !$is_valid_nonce ) {
                     return;
@@ -1768,7 +1707,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     }
                     CacheManager::cleanup_old_cache_files();
                     Utils::log( 'Selected site was reset and keyword history erased.', 5 );
-                    wp_redirect( admin_url( 'admin.php?page=sb2_dashboard' ) );
+                    wp_safe_redirect( admin_url( 'admin.php?page=sb2_dashboard' ) );
                     exit;
                 }
                 // Handle settings form processing
@@ -1997,10 +1936,11 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     true
                 );
                 // Localize script with AJAX data
-                wp_localize_script( 'seobooster-settings', 'sbSettings', array(
+                $sb_settings_data = array(
                     'ajaxurl'         => admin_url( 'admin-ajax.php' ),
                     'flushNonce'      => wp_create_nonce( 'flush_rewrite_rules' ),
                     'gscImportNonce'  => wp_create_nonce( 'sb_gsc_nonce' ),
+                    'dbStatsNonce'    => wp_create_nonce( 'sb_settings_db_stats' ),
                     'gscSelectedSite' => get_option( 'seobooster_selected_site', '' ),
                     'strings'         => array(
                         'flushing'             => __( 'Flushing...', 'seo-booster' ),
@@ -2013,8 +1953,12 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         'noGscSite'            => __( 'No GSC site selected. Please select a site first.', 'seo-booster' ),
                         'importError'          => __( 'An error occurred while processing the request.', 'seo-booster' ),
                         'importGscData'        => __( 'Import GSC Data', 'seo-booster' ),
+                        'loadingDbStats'       => __( 'Loading database statistics…', 'seo-booster' ),
+                        'dbStatsError'         => __( 'Could not load database statistics.', 'seo-booster' ),
+                        'emDash'               => '—',
                     ),
-                ) );
+                );
+                wp_localize_script( 'seobooster-settings', 'sbSettings', $sb_settings_data );
                 include SEOBOOSTER_PLUGINPATH . 'views/settings.php';
             }
 

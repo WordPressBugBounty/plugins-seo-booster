@@ -1260,6 +1260,7 @@ KEY ID (ID)) $wpdb_collate";
 			'seo-booster_page_sb2_settings',
 			'seo-booster_page_sb2_seo_settings',
 			'seo-booster_page_sb2_gsc',
+			'seo-booster_page_sb2_seo_issues',
 			'seo-booster_page_sb2_404',
 			'seo-booster_page_sb2_ai_bots',
 			'seo-booster_page_sb2_autolink',
@@ -1346,8 +1347,14 @@ KEY ID (ID)) $wpdb_collate";
 				'sbModalStrings',
 				array(
 					'strings' => array(
-						'ok'     => __( 'OK', 'seo-booster' ),
-						'cancel' => __( 'Cancel', 'seo-booster' ),
+						'ok'            => __( 'OK', 'seo-booster' ),
+						'cancel'        => __( 'Cancel', 'seo-booster' ),
+						'confirm'       => __( 'Confirm', 'seo-booster' ),
+						'delete'        => __( 'Delete', 'seo-booster' ),
+						'title_error'   => __( 'Error', 'seo-booster' ),
+						'title_warning' => __( 'Warning', 'seo-booster' ),
+						'title_success' => __( 'Success', 'seo-booster' ),
+						'title_info'    => __( 'Notice', 'seo-booster' ),
 					),
 				)
 			);

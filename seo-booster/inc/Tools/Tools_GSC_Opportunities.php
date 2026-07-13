@@ -9,8 +9,6 @@
 
 namespace Cleverplugins\SEOBooster\Tools;
 
-use Cleverplugins\SEOBooster\LLM_Helper;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }

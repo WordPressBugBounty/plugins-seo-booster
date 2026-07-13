@@ -883,6 +883,102 @@
 }
 
 /* Entity Map tool */
+.sb-entity-health-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 8px;
+}
+
+.sb-entity-health-item {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    padding: 4px 10px;
+}
+
+.sb-entity-health-item--live {
+    background: #edfaef;
+    border: 1px solid #00a32a;
+    color: #1e4620;
+}
+
+.sb-entity-health-item--draft {
+    background: #f0f6fc;
+    border: 1px solid #2271b1;
+    color: #1d2327;
+}
+
+.sb-entity-health-item--shadow {
+    background: #fcf9e8;
+    border: 1px solid #dba617;
+    color: #6e4e00;
+}
+
+.sb-entity-health-item--ai {
+    background: #f6f7f7;
+    border: 1px solid #646970;
+    color: #1d2327;
+}
+
+.sb-entity-ai-status {
+    position: sticky;
+    top: 32px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    background: #fff;
+    border: 1px solid #2271b1;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.sb-entity-ai-status .spinner {
+    float: none;
+    margin: 0;
+}
+
+.sb-entity-ai-status__message {
+    color: #1d2327;
+    font-weight: 500;
+}
+
+.sb-entity-refine-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+}
+
+.sb-entity-refine-action {
+    margin: 0;
+}
+
+.sb-entity-refine-action .description {
+    margin: 6px 0 0;
+}
+
+.sb-entity-refine-action--meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.sb-entity-refine-empty {
+    margin-top: -8px;
+}
+
 .sb-entity-map-steps {
     list-style: none;
     margin: 16px 0 8px;

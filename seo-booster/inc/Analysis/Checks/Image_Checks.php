@@ -160,7 +160,7 @@ class Image_Checks extends Abstract_Checks {
 				continue;
 			}
 
-			$image_url = Html_Document::resolve_image_url( $node );
+			$image_url  = Html_Document::resolve_image_url( $node );
 			$normalized = $this->normalize_image_url( $image_url );
 			if ( false === $normalized ) {
 				continue;
@@ -192,7 +192,10 @@ class Image_Checks extends Abstract_Checks {
 				if ( count( $broken_images_list ) < $max_examples ) {
 					$html      = Html_Document::node_to_html( $node );
 					$pos       = strpos( $scope_html, $html );
-					$line_info = false !== $pos ? $this->get_line_number_and_context( $scope_html, $pos ) : array( 'line' => 0, 'context' => '' );
+					$line_info = false !== $pos ? $this->get_line_number_and_context( $scope_html, $pos ) : array(
+						'line'    => 0,
+						'context' => '',
+					);
 					$error     = $image_status['error'] ?? '';
 					if ( ! empty( $image_status['status_code'] ) ) {
 						$error = sprintf( __( 'HTTP %1$d: %2$s', 'seo-booster' ), $image_status['status_code'], $error );
@@ -249,9 +252,9 @@ class Image_Checks extends Abstract_Checks {
 	 */
 	private function check_image_dimensions( Content_Context $context, Html_Document $document, Result_Set $results, $scope, $scope_html ) {
 		$images                         = $document->images( $scope );
-		$images_without_dimensions        = 0;
-		$images_without_dimensions_list   = array();
-		$max_examples                     = 50;
+		$images_without_dimensions      = 0;
+		$images_without_dimensions_list = array();
+		$max_examples                   = 50;
 
 		foreach ( $images as $node ) {
 			if ( $this->is_hidden_node( $node ) || Html_Document::is_placeholder_image( $node ) ) {

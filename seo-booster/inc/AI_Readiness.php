@@ -76,25 +76,25 @@ class AI_Readiness {
 
 		foreach ( $post_items as $item ) {
 			$max += (int) $item['points'];
-			$pass  = Ai_Readiness_Registry::item_passes( $item, $key_sets['pass'], $key_sets['fail'], $analysis );
+			$pass = Ai_Readiness_Registry::item_passes( $item, $key_sets['pass'], $key_sets['fail'], $analysis );
 
 			if ( $pass === true ) {
 				$score += (int) $item['points'];
 			}
 
 			$details[] = array(
-				'key'    => $item['key'],
-				'label'  => $item['label'],
-				'pass'   => $pass === true,
-				'unknown'=> $pass === null,
-				'points' => (int) $item['points'],
-				'scope'  => 'post',
+				'key'     => $item['key'],
+				'label'   => $item['label'],
+				'pass'    => $pass === true,
+				'unknown' => $pass === null,
+				'points'  => (int) $item['points'],
+				'scope'   => 'post',
 			);
 		}
 
 		$sitewide_details = array();
 		foreach ( Ai_Readiness_Registry::get_sitewide_items() as $item ) {
-			$pass = Ai_Readiness_Registry::item_passes( $item, $site_keys['pass'], $site_keys['fail'], null );
+			$pass               = Ai_Readiness_Registry::item_passes( $item, $site_keys['pass'], $site_keys['fail'], null );
 			$sitewide_details[] = array(
 				'key'     => $item['key'],
 				'label'   => $item['label'],
@@ -108,20 +108,20 @@ class AI_Readiness {
 		$seo_score       = isset( $analysis['score'] ) ? (int) $analysis['score'] : null;
 
 		return array(
-			'score'              => $readiness_score,
-			'max'                => $max,
-			'grade'              => self::grade( $max > 0 ? (int) round( ( $readiness_score / $max ) * 100 ) : 0 ),
-			'details'            => $details,
-			'sitewide'           => $sitewide_details,
-			'seo_score'          => $seo_score,
-			'seo_score_grade'    => $seo_score !== null ? self::grade( $seo_score ) : null,
-			'top_possibilities'  => self::get_top_possibilities( $analysis ),
-			'analyzed_at'        => self::get_analyzed_at( $analysis ),
-			'has_analysis'       => ! empty( $analysis ) && ( $seo_score !== null || ! empty( $key_sets['all'] ) ),
-			'issues_url'         => admin_url( 'admin.php?page=sb2_seo_issues' ),
-			'tools_url'          => admin_url( 'admin.php?page=sb2_tools' ),
-			'ai_bots_url'        => admin_url( 'admin.php?page=sb2_ai_bots' ),
-			'settings_url'       => admin_url( 'admin.php?page=sb2_settings' ),
+			'score'             => $readiness_score,
+			'max'               => $max,
+			'grade'             => self::grade( $max > 0 ? (int) round( ( $readiness_score / $max ) * 100 ) : 0 ),
+			'details'           => $details,
+			'sitewide'          => $sitewide_details,
+			'seo_score'         => $seo_score,
+			'seo_score_grade'   => $seo_score !== null ? self::grade( $seo_score ) : null,
+			'top_possibilities' => self::get_top_possibilities( $analysis ),
+			'analyzed_at'       => self::get_analyzed_at( $analysis ),
+			'has_analysis'      => ! empty( $analysis ) && ( $seo_score !== null || ! empty( $key_sets['all'] ) ),
+			'issues_url'        => admin_url( 'admin.php?page=sb2_seo_issues' ),
+			'tools_url'         => admin_url( 'admin.php?page=sb2_tools' ),
+			'ai_bots_url'       => admin_url( 'admin.php?page=sb2_ai_bots' ),
+			'settings_url'      => admin_url( 'admin.php?page=sb2_settings' ),
 		);
 	}
 
@@ -328,23 +328,23 @@ class AI_Readiness {
 	 */
 	private static function get_editor_strings() {
 		return array(
-			'title'              => __( 'SEO Booster', 'seo-booster' ),
-			'seoScore'           => __( 'SEO Score', 'seo-booster' ),
-			'aiReadiness'        => __( 'AI Readiness', 'seo-booster' ),
-			'siteChecks'         => __( 'Site checks', 'seo-booster' ),
-			'topPossibilities'   => __( 'Top possibilities', 'seo-booster' ),
-			'quickLinks'         => __( 'Quick links', 'seo-booster' ),
-			'refresh'            => __( 'Run quick review', 'seo-booster' ),
-			'loading'            => __( 'Loading…', 'seo-booster' ),
-			'error'              => __( 'Could not refresh.', 'seo-booster' ),
-			'pass'               => __( 'Pass', 'seo-booster' ),
-			'fail'               => __( 'Missing', 'seo-booster' ),
-			'unknown'            => __( 'Not analyzed', 'seo-booster' ),
-			'noAnalysis'         => __( 'Save draft and run a quick review to see SEO score and possibilities.', 'seo-booster' ),
-			'viewAllIssues'      => __( 'View all on SEO Possibilities', 'seo-booster' ),
-			'tools'              => __( 'Tools', 'seo-booster' ),
-			'aiBots'             => __( 'AI Bots', 'seo-booster' ),
-			'settings'           => __( 'Settings', 'seo-booster' ),
+			'title'            => __( 'SEO Booster', 'seo-booster' ),
+			'seoScore'         => __( 'SEO Score', 'seo-booster' ),
+			'aiReadiness'      => __( 'AI Readiness', 'seo-booster' ),
+			'siteChecks'       => __( 'Site checks', 'seo-booster' ),
+			'topPossibilities' => __( 'Top possibilities', 'seo-booster' ),
+			'quickLinks'       => __( 'Quick links', 'seo-booster' ),
+			'refresh'          => __( 'Run quick review', 'seo-booster' ),
+			'loading'          => __( 'Loading…', 'seo-booster' ),
+			'error'            => __( 'Could not refresh.', 'seo-booster' ),
+			'pass'             => __( 'Pass', 'seo-booster' ),
+			'fail'             => __( 'Missing', 'seo-booster' ),
+			'unknown'          => __( 'Not analyzed', 'seo-booster' ),
+			'noAnalysis'       => __( 'Save draft and run a quick review to see SEO score and possibilities.', 'seo-booster' ),
+			'viewAllIssues'    => __( 'View all on SEO Possibilities', 'seo-booster' ),
+			'tools'            => __( 'Tools', 'seo-booster' ),
+			'aiBots'           => __( 'AI Bots', 'seo-booster' ),
+			'settings'         => __( 'Settings', 'seo-booster' ),
 		);
 	}
 
@@ -381,11 +381,11 @@ class AI_Readiness {
 			'sb-editor-panel',
 			'sbEditorPanelData',
 			array(
-				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
-				'nonce'            => wp_create_nonce( self::NONCE_ACTION ),
-				'view'             => $view,
-				'aiReadinessKeys'  => Ai_Readiness_Registry::get_issue_keys(),
-				'strings'          => self::get_editor_strings(),
+				'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+				'nonce'           => wp_create_nonce( self::NONCE_ACTION ),
+				'view'            => $view,
+				'aiReadinessKeys' => Ai_Readiness_Registry::get_issue_keys(),
+				'strings'         => self::get_editor_strings(),
 			)
 		);
 	}

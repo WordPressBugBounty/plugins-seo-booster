@@ -105,11 +105,18 @@ jQuery(document).ready(function ($) {
         // Hide existing table controls and refresh button if they exist
         $('#table-controls, #refresh-keywords, #copy-all, #reanalyze').remove();
 
+        // Tabulator inside form#edittag can break; move the whole SEO taxonomy shell
+        // (or standalone #sbtablecont) after the form so Keywords stay inside their tab.
         var $sbTableCont = $('#sbtablecont');
         var $form = $sbTableCont.closest('form#edittag');
 
         if ($form.length > 0) {
-            $sbTableCont.insertAfter($form);
+            var $taxonomyShell = $sbTableCont.closest('.sb-seo-taxonomy-metabox');
+            if ($taxonomyShell.length > 0) {
+                $taxonomyShell.insertAfter($form);
+            } else {
+                $sbTableCont.insertAfter($form);
+            }
         }
         $('#sb-gsc-keywords-container').html('<p><span class="spinner is-active" style="margin-left:10px;float:left;"></span> ' + sb_gsc_metabox_data.strings.analyzing + '<span class="sb_timeload"></span></p>');
         var startTime = new Date().getTime();
@@ -174,6 +181,14 @@ jQuery(document).ready(function ($) {
 
                     // Store the Tabulator instance in a variable for easy access
                     var table; // Declare the table variable
+                    if (window.sbGscKeywordsTable) {
+                        try {
+                            window.sbGscKeywordsTable.destroy();
+                        } catch (e) {
+                            // Ignore destroy errors on stale instances
+                        }
+                        window.sbGscKeywordsTable = null;
+                    }
 
                     // Initialize Tabulator
                     table = new Tabulator("#sb-gsc-keywords-container", {
@@ -239,9 +254,11 @@ jQuery(document).ready(function ($) {
                         ajaxProgressiveLoad: "scroll",
                         tableBuilt: function() {
                             this.element.classList.add("wp-list-table", "widefat", "fixed", "striped");
+                            window.sbGscKeywordsTable = this;
                         }
                     });
 
+                    window.sbGscKeywordsTable = table;
                     function updateResponseCount() {
                         var totalRows = table.getDataCount("active"); // Get the count of rows after filtering
                         var totalKeywords = response.data.keywords.length; // Total keywords from the response

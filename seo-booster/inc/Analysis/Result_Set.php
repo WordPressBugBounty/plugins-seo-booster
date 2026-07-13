@@ -151,9 +151,9 @@ class Result_Set {
 	 * @return void
 	 */
 	public function calculate_score() {
-		$error_count        = 0;
-		$warning_count      = 0;
-		$opportunity_count  = 0;
+		$error_count       = 0;
+		$warning_count     = 0;
+		$opportunity_count = 0;
 
 		foreach ( $this->items as $item ) {
 			switch ( $item['severity'] ) {
@@ -169,9 +169,9 @@ class Result_Set {
 			}
 		}
 
-		$error_deduction        = min( Severity::score_deduction_cap( Severity::ERROR ), $error_count * Severity::score_deduction( Severity::ERROR ) );
-		$warning_deduction      = min( Severity::score_deduction_cap( Severity::WARNING ), $warning_count * Severity::score_deduction( Severity::WARNING ) );
-		$opportunity_deduction  = min( Severity::score_deduction_cap( Severity::OPPORTUNITY ), $opportunity_count * Severity::score_deduction( Severity::OPPORTUNITY ) );
+		$error_deduction       = min( Severity::score_deduction_cap( Severity::ERROR ), $error_count * Severity::score_deduction( Severity::ERROR ) );
+		$warning_deduction     = min( Severity::score_deduction_cap( Severity::WARNING ), $warning_count * Severity::score_deduction( Severity::WARNING ) );
+		$opportunity_deduction = min( Severity::score_deduction_cap( Severity::OPPORTUNITY ), $opportunity_count * Severity::score_deduction( Severity::OPPORTUNITY ) );
 
 		$score       = 100 - $error_deduction - $warning_deduction - $opportunity_deduction;
 		$this->score = max( 0, min( 100, (int) round( $score ) ) );
@@ -183,11 +183,11 @@ class Result_Set {
 	 * @return array<string, mixed>
 	 */
 	public function to_array() {
-		$issues           = array();
-		$improvements     = array();
-		$opportunities    = array();
-		$good             = array();
-		$not_applicable   = array();
+		$issues         = array();
+		$improvements   = array();
+		$opportunities  = array();
+		$good           = array();
+		$not_applicable = array();
 
 		foreach ( $this->items as $item ) {
 			$row = array(
@@ -223,12 +223,12 @@ class Result_Set {
 		}
 
 		$output = array(
-			'score'            => $this->score,
-			'issues'           => $issues,
-			'improvements'     => $improvements,
-			'opportunities'    => $opportunities,
-			'good'             => $good,
-			'not_applicable'   => $not_applicable,
+			'score'          => $this->score,
+			'issues'         => $issues,
+			'improvements'   => $improvements,
+			'opportunities'  => $opportunities,
+			'good'           => $good,
+			'not_applicable' => $not_applicable,
 		);
 
 		if ( ! empty( $this->meta ) ) {

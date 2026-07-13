@@ -219,7 +219,7 @@ class Bulk_SEO_Analysis {
 			// Run SEO analysis with full page content
 			$analysis = new SEO_Analysis( $post_id, 'post' );
 			$analysis->set_bulk_mode( true );
-			$results  = $analysis->analyze( true, false );
+			$results = $analysis->analyze( true, false );
 
 			self::update_batch_status( $batch_id, 'processed', $post_id );
 

@@ -1,6 +1,9 @@
 <?php
 
-namespace Cleverplugins\SEOBooster;
+namespace Cleverplugins\SEOBooster\Media;
+
+use Cleverplugins\SEOBooster\LLM_Helper;
+use Cleverplugins\SEOBooster\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -11,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles media library enhancements: Alt text column and bulk AI generation.
  *
- * @package Cleverplugins\SEOBooster
+ * @package Cleverplugins\SEOBooster\Media
  * @since 7.0.2
  */
 class Media_Library_Enhancements {
