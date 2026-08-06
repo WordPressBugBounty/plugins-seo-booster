@@ -44,7 +44,6 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'C' =>
         array (
             'Composer\\Installers\\' => 20,
-            'Cleverplugins\\SEOBooster\\Reports\\' => 33,
             'Cleverplugins\\SEOBooster\\' => 25,
         ),
     );
@@ -103,10 +102,6 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         array (
             0 => __DIR__ . '/..' . '/composer/installers/src/Composer/Installers',
         ),
-        'Cleverplugins\\SEOBooster\\Reports\\' =>
-        array (
-            0 => __DIR__ . '/../..' . '/inc/Reports',
-        ),
         'Cleverplugins\\SEOBooster\\' =>
         array (
             0 => __DIR__ . '/../..' . '/inc',
@@ -116,9 +111,11 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
     public static $classMap = array (
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'Cleverplugins\\SEOBooster\\AI_Bot_Tracker' => __DIR__ . '/../..' . '/inc/AI_Bot_Tracker.php',
+        'Cleverplugins\\SEOBooster\\AI_Page_Assistant' => __DIR__ . '/../..' . '/inc/AI_Page_Assistant.php',
+        'Cleverplugins\\SEOBooster\\AI_Plugin_Knowledge' => __DIR__ . '/../..' . '/inc/AI_Plugin_Knowledge.php',
         'Cleverplugins\\SEOBooster\\AI_Readiness' => __DIR__ . '/../..' . '/inc/AI_Readiness.php',
         'Cleverplugins\\SEOBooster\\AI_Referral_Tracker' => __DIR__ . '/../..' . '/inc/AI_Referral_Tracker.php',
-        'Cleverplugins\\SEOBooster\\AI_Requests_Manager' => __DIR__ . '/../..' . '/inc/AI_Requests_Manager.php',
+        'Cleverplugins\\SEOBooster\\AI_Site_Assistant' => __DIR__ . '/../..' . '/inc/AI_Site_Assistant.php',
         'Cleverplugins\\SEOBooster\\AI_Writing_Outline' => __DIR__ . '/../..' . '/inc/AI_Writing_Outline.php',
         'Cleverplugins\\SEOBooster\\Admin_Columns' => __DIR__ . '/../..' . '/inc/Admin_Columns.php',
         'Cleverplugins\\SEOBooster\\Analysis\\Abstract_Checks' => __DIR__ . '/../..' . '/inc/Analysis/Abstract_Checks.php',
@@ -134,6 +131,7 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'Cleverplugins\\SEOBooster\\Analysis\\Content_Context' => __DIR__ . '/../..' . '/inc/Analysis/Content_Context.php',
         'Cleverplugins\\SEOBooster\\Analysis\\Gsc_Inspection_Cache' => __DIR__ . '/../..' . '/inc/Analysis/Gsc_Inspection_Cache.php',
         'Cleverplugins\\SEOBooster\\Analysis\\Html_Document' => __DIR__ . '/../..' . '/inc/Analysis/Html_Document.php',
+        'Cleverplugins\\SEOBooster\\Analysis\\Page_Reachability' => __DIR__ . '/../..' . '/inc/Analysis/Page_Reachability.php',
         'Cleverplugins\\SEOBooster\\Analysis\\Result_Set' => __DIR__ . '/../..' . '/inc/Analysis/Result_Set.php',
         'Cleverplugins\\SEOBooster\\Analysis\\Severity' => __DIR__ . '/../..' . '/inc/Analysis/Severity.php',
         'Cleverplugins\\SEOBooster\\Analysis\\Url_Status_Cache' => __DIR__ . '/../..' . '/inc/Analysis/Url_Status_Cache.php',
@@ -143,6 +141,7 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'Cleverplugins\\SEOBooster\\ContentProcessing' => __DIR__ . '/../..' . '/inc/ContentProcessing.php',
         'Cleverplugins\\SEOBooster\\Credits_REST_Controller' => __DIR__ . '/../..' . '/inc/Credits_REST_Controller.php',
         'Cleverplugins\\SEOBooster\\Credits_Service' => __DIR__ . '/../..' . '/inc/Credits_Service.php',
+        'Cleverplugins\\SEOBooster\\Dashboard_Actions' => __DIR__ . '/../..' . '/inc/Dashboard_Actions.php',
         'Cleverplugins\\SEOBooster\\Form_Processor' => __DIR__ . '/../..' . '/inc/Form_Processor.php',
         'Cleverplugins\\SEOBooster\\Google_API' => __DIR__ . '/../..' . '/inc/Google_API.php',
         'Cleverplugins\\SEOBooster\\LLM_Content_Condenser' => __DIR__ . '/../..' . '/inc/LLM_Content_Condenser.php',
@@ -150,11 +149,11 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'Cleverplugins\\SEOBooster\\LLM_WP_Connector_Service' => __DIR__ . '/../..' . '/inc/LLM_WP_Connector_Service.php',
         'Cleverplugins\\SEOBooster\\Media\\AI_Image_Generator' => __DIR__ . '/../..' . '/inc/Media/AI_Image_Generator.php',
         'Cleverplugins\\SEOBooster\\Media\\Media_Library_Enhancements' => __DIR__ . '/../..' . '/inc/Media/Media_Library_Enhancements.php',
-        'Cleverplugins\\SEOBooster\\Reports' => __DIR__ . '/../..' . '/inc/Reports.php',
         'Cleverplugins\\SEOBooster\\SB404_Errors' => __DIR__ . '/../..' . '/inc/SB404_Errors.php',
         'Cleverplugins\\SEOBooster\\SB_AI_Bots_Ajax' => __DIR__ . '/../..' . '/inc/SB_AI_Bots_Ajax.php',
         'Cleverplugins\\SEOBooster\\SB_AI_Bots_List_Table' => __DIR__ . '/../..' . '/inc/SB_AI_Bots_List_Table.php',
         'Cleverplugins\\SEOBooster\\SB_AI_Referrals_List_Table' => __DIR__ . '/../..' . '/inc/SB_AI_Referrals_List_Table.php',
+        'Cleverplugins\\SEOBooster\\SB_Adminbar_Ajax' => __DIR__ . '/../..' . '/inc/SB_Adminbar_Ajax.php',
         'Cleverplugins\\SEOBooster\\SB_Autolink_Ajax' => __DIR__ . '/../..' . '/inc/SB_Autolink_Ajax.php',
         'Cleverplugins\\SEOBooster\\SB_Autolink_Bulk_Actions' => __DIR__ . '/../..' . '/inc/SB_Autolink_Bulk_Actions.php',
         'Cleverplugins\\SEOBooster\\SB_Autolink_Columns' => __DIR__ . '/../..' . '/inc/SB_Autolink_Columns.php',
@@ -166,7 +165,6 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'Cleverplugins\\SEOBooster\\SB_GSC_Metaboxes' => __DIR__ . '/../..' . '/inc/SB_GSC_Metaboxes.php',
         'Cleverplugins\\SEOBooster\\SB_GSC_Processor' => __DIR__ . '/../..' . '/inc/SB_GSC_Processor.php',
         'Cleverplugins\\SEOBooster\\SB_SEO_Metabox' => __DIR__ . '/../..' . '/inc/SB_SEO_Metabox.php',
-        'Cleverplugins\\SEOBooster\\SEO_AI_Config' => __DIR__ . '/../..' . '/inc/SEO_AI_Config.php',
         'Cleverplugins\\SEOBooster\\SEO_Analysis' => __DIR__ . '/../..' . '/inc/SEO_Analysis.php',
         'Cleverplugins\\SEOBooster\\SEO_Issues_Ajax' => __DIR__ . '/../..' . '/inc/SEO_Issues_Ajax.php',
         'Cleverplugins\\SEOBooster\\SEO_Issues_List_Table' => __DIR__ . '/../..' . '/inc/SEO_Issues_List_Table.php',
@@ -183,9 +181,12 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'Cleverplugins\\SEOBooster\\SEO_Plugins\\Yoast_Adapter' => __DIR__ . '/../..' . '/inc/SEO_Plugins/Yoast_Adapter.php',
         'Cleverplugins\\SEOBooster\\SEO_Sitewide_Analysis' => __DIR__ . '/../..' . '/inc/SEO_Sitewide_Analysis.php',
         'Cleverplugins\\SEOBooster\\Settings_Utils' => __DIR__ . '/../..' . '/inc/Settings_Utils.php',
+        'Cleverplugins\\SEOBooster\\Setup_Wizard' => __DIR__ . '/../..' . '/inc/Setup_Wizard.php',
         'Cleverplugins\\SEOBooster\\Tools\\Entity_Map_Ai_Generator' => __DIR__ . '/../..' . '/inc/Tools/Entity_Map_Ai_Generator.php',
         'Cleverplugins\\SEOBooster\\Tools\\Entity_Map_Builder' => __DIR__ . '/../..' . '/inc/Tools/Entity_Map_Builder.php',
+        'Cleverplugins\\SEOBooster\\Tools\\Entity_Map_Org_Importer' => __DIR__ . '/../..' . '/inc/Tools/Entity_Map_Org_Importer.php',
         'Cleverplugins\\SEOBooster\\Tools\\Entity_Map_Schema' => __DIR__ . '/../..' . '/inc/Tools/Entity_Map_Schema.php',
+        'Cleverplugins\\SEOBooster\\Tools\\Html_To_Markdown' => __DIR__ . '/../..' . '/inc/Tools/Html_To_Markdown.php',
         'Cleverplugins\\SEOBooster\\Tools\\Llms_Directory_Rules' => __DIR__ . '/../..' . '/inc/Tools/Llms_Directory_Rules.php',
         'Cleverplugins\\SEOBooster\\Tools\\Llms_Faq_Extractor' => __DIR__ . '/../..' . '/inc/Tools/Llms_Faq_Extractor.php',
         'Cleverplugins\\SEOBooster\\Tools\\SEO_Meta_Writer' => __DIR__ . '/../..' . '/inc/Tools/SEO_Meta_Writer.php',
@@ -202,6 +203,7 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Image_Batch' => __DIR__ . '/../..' . '/inc/Tools/Tools_Image_Batch.php',
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Image_Scanner' => __DIR__ . '/../..' . '/inc/Tools/Tools_Image_Scanner.php',
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Llms_Txt' => __DIR__ . '/../..' . '/inc/Tools/Tools_Llms_Txt.php',
+        'Cleverplugins\\SEOBooster\\Tools\\Tools_Markdown' => __DIR__ . '/../..' . '/inc/Tools/Tools_Markdown.php',
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Meta_Batch' => __DIR__ . '/../..' . '/inc/Tools/Tools_Meta_Batch.php',
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Meta_Scanner' => __DIR__ . '/../..' . '/inc/Tools/Tools_Meta_Scanner.php',
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Needs_Analysis' => __DIR__ . '/../..' . '/inc/Tools/Tools_Needs_Analysis.php',

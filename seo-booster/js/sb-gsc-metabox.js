@@ -5,6 +5,42 @@ jQuery(document).ready(function ($) {
     globalTooltip.className = 'sb-uplot-tooltip';
     document.body.appendChild(globalTooltip);
 
+    /**
+     * Sync the Keywords tab presence dot after a full data load.
+     *
+     * @param {boolean} hasData Whether keywords were returned.
+     */
+    function updateKeywordsTabPresence(hasData) {
+        var $tab = $('#sb-seo-tab-keywords');
+        if (!$tab.length) {
+            return;
+        }
+
+        var $dot = $tab.find('.sb-seo-tab-dot');
+        var label = hasData
+            ? (sb_gsc_metabox_data.strings.keywordDataAvailable || 'Keyword data available')
+            : (sb_gsc_metabox_data.strings.noKeywordDataYet || 'No keyword data yet');
+        var className = hasData ? 'sb-seo-tab-dot sb-seo-tab-dot--has' : 'sb-seo-tab-dot sb-seo-tab-dot--empty';
+
+        if ($dot.length) {
+            $dot.attr({
+                class: className,
+                title: label,
+                'aria-label': label
+            });
+            return;
+        }
+
+        $tab.append(
+            $('<span></span>')
+                .attr({
+                    class: className,
+                    title: label,
+                    'aria-label': label
+                })
+        );
+    }
+
     // Handle the "Load Data" button click
     $(document).on('click', '#sb-gsc-load-data-btn', function() {
         var $btn = $(this);
@@ -148,6 +184,7 @@ jQuery(document).ready(function ($) {
                 $('#sb-gsc-keywords-container').html('<p>' + response.data.message + '</p>');
             } else {
                 if (response.data.keywords && response.data.keywords.length > 0) {
+                    updateKeywordsTabPresence(true);
                     // Add table controls after the existing content
                     $('#sb-gsc-keywords-container').before(`
                         <div id="table-controls" class="tablenav">
@@ -424,6 +461,7 @@ jQuery(document).ready(function ($) {
                 } else {
                     // Hide spinner and show message if no keywords found
                     $('.spinner.is-active').hide();
+                    updateKeywordsTabPresence(false);
                     
                     // Create a more visually appealing and informative "no keywords" message
                     const noKeywordsContainer = document.createElement('div');

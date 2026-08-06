@@ -279,7 +279,7 @@ class SEO_Meta_Writer {
 	 */
 	public static function write( $post_id, array $values, array $apply_fields, $overwrite = false ) {
 		if ( ! self::get_target() ) {
-			throw new \Exception( __( 'No supported SEO plugin is active.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'No supported SEO plugin is active.', 'seo-booster' ) );
 		}
 
 		$before = self::read( $post_id );
@@ -304,7 +304,7 @@ class SEO_Meta_Writer {
 		}
 
 		if ( empty( $after ) ) {
-			throw new \Exception( __( 'No metadata was saved for this item. Enable overwrite or choose empty fields.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'No metadata was saved for this item. Enable overwrite or choose empty fields.', 'seo-booster' ) );
 		}
 
 		return $after;
@@ -453,17 +453,17 @@ class SEO_Meta_Writer {
 	 */
 	public static function write_focus_keyword( $post_id, $keyword, $overwrite = false ) {
 		if ( ! SEO_Plugin_Registry::supports_focus_keyword() ) {
-			throw new \Exception( __( 'No supported SEO plugin is active.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'No supported SEO plugin is active.', 'seo-booster' ) );
 		}
 
 		$keyword = sanitize_text_field( trim( (string) $keyword ) );
 		if ( $keyword === '' ) {
-			throw new \Exception( __( 'Focus keyword is empty.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Focus keyword is empty.', 'seo-booster' ) );
 		}
 
 		$current = self::read_focus_keyword( $post_id );
 		if ( ! $overwrite && trim( $current ) !== '' ) {
-			throw new \Exception( __( 'Focus keyword already set. Enable overwrite to replace.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Focus keyword already set. Enable overwrite to replace.', 'seo-booster' ) );
 		}
 
 		SEO_Plugin_Registry::write_focus_keyword( $post_id, $keyword );

@@ -60,7 +60,7 @@ class Link_Checks extends Abstract_Checks {
 			}
 		}
 
-		$word_count = str_word_count( $document->text( $scope ) );
+		$word_count = $this->count_words( $document->text( $scope ) );
 		if ( 0 === $internal && $word_count > 500 ) {
 			$results->add_opportunity( 'no_internal_links', __( 'Consider adding internal links to other relevant pages.', 'seo-booster' ) );
 			return;
@@ -175,8 +175,9 @@ class Link_Checks extends Abstract_Checks {
 
 			if ( 'broken' === $status['status'] ) {
 				$broken[] = array(
-					'url'   => $url,
-					'error' => $status['error'] ?? '',
+					'url'         => $url,
+					'error'       => $status['error'] ?? '',
+					'status_code' => (int) ( $status['status_code'] ?? 404 ),
 				);
 			} elseif ( 'redirected' === $status['status'] ) {
 				$redirected[] = array(
@@ -190,7 +191,7 @@ class Link_Checks extends Abstract_Checks {
 		if ( ! empty( $broken ) ) {
 			$results->add_error(
 				'broken_external_links',
-				sprintf( __( '%d broken external link(s) found. These links return errors and should be fixed or removed.', 'seo-booster' ), count( $broken ) ),
+				sprintf( __( '%d broken external link(s) found. These links return a 404 and should be fixed or removed.', 'seo-booster' ), count( $broken ) ),
 				array(
 					'broken_links'  => $broken,
 					'total_checked' => $checked,
@@ -258,6 +259,7 @@ class Link_Checks extends Abstract_Checks {
 					'url'          => $href,
 					'absolute_url' => $url,
 					'error'        => $status['error'] ?? '',
+					'status_code'  => (int) ( $status['status_code'] ?? 404 ),
 				);
 			} elseif ( 'redirected' === $status['status'] ) {
 				$redirected[] = array(
@@ -272,7 +274,7 @@ class Link_Checks extends Abstract_Checks {
 		if ( ! empty( $broken ) ) {
 			$results->add_error(
 				'broken_internal_links',
-				sprintf( __( '%d broken internal link(s) found. These links return errors and should be fixed or removed.', 'seo-booster' ), count( $broken ) ),
+				sprintf( __( '%d broken internal link(s) found. These links return a 404 and should be fixed or removed.', 'seo-booster' ), count( $broken ) ),
 				array(
 					'broken_links'  => $broken,
 					'total_checked' => $checked,

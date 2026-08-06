@@ -38,12 +38,14 @@ class Utils extends Seobooster2 {
 		);
 
 		// Delete entries older than 14 days
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 		$deleted_old = $wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$table_name_log} WHERE logtime < DATE_SUB(NOW(), INTERVAL %d DAY)",
 				14
 			)
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		// If still more than 10000 entries, delete oldest entries
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table prefix only; aggregate count query.
@@ -51,12 +53,14 @@ class Utils extends Seobooster2 {
 		$deleted_excess = 0;
 		if ( $current_count > 10000 ) {
 			$entries_to_delete = $current_count - 5000;
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 			$deleted_excess    = $wpdb->query(
 				$wpdb->prepare(
 					"DELETE FROM {$table_name_log} ORDER BY logtime ASC LIMIT %d",
 					$entries_to_delete
 				)
 			);
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		}
 
 		// Get final table size
@@ -118,13 +122,8 @@ class Utils extends Seobooster2 {
 		require_once SEOBOOSTER_PLUGINPATH . 'inc/Tools/Tools_Image_Scanner.php';
 		require_once SEOBOOSTER_PLUGINPATH . 'inc/Tools/Tools_Meta_Scanner.php';
 
-		$images_missing = count( \Cleverplugins\SEOBooster\Tools\Tools_Image_Scanner::get_matching_attachment_ids( array( 'empty_alt' ) ) );
-		$posts_missing  = count(
-			\Cleverplugins\SEOBooster\Tools\Tools_Meta_Scanner::get_matching_post_ids(
-				array( 'missing_title', 'missing_description' ),
-				\Cleverplugins\SEOBooster\Tools\Tools_Meta_Scanner::get_default_post_types()
-			)
-		);
+		$images_missing = \Cleverplugins\SEOBooster\Tools\Tools_Image_Scanner::count_empty_alt();
+		$posts_missing  = \Cleverplugins\SEOBooster\Tools\Tools_Meta_Scanner::count_missing_title_or_description();
 
 		set_transient(
 			'sb_dashboard_tools_counts',
@@ -291,7 +290,6 @@ class Utils extends Seobooster2 {
 			'sb2_seo_analysis',
 			'sb2_seo_issues',
 			'sb2_seo_url_status',
-			'sb2_ai_requests',
 			'sb2_llm_seo_suggestions',
 			'sb2_improvements_tracking',
 			'sb2_ai_bot_hits',
@@ -383,12 +381,14 @@ class Utils extends Seobooster2 {
 			$table_name_escaped  = esc_sql( $table_name );
 			$column_name_escaped = esc_sql( 'query' );
 			// Check if query column is varchar (could be 191 or 1000)
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 			$column_info = $wpdb->get_row(
 				$wpdb->prepare(
 					"SHOW COLUMNS FROM `{$table_name_escaped}` LIKE %s",
 					$column_name_escaped
 				)
 			);
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			if ( $column_info && ( strpos( $column_info->Type, 'varchar(1000)' ) !== false || strpos( $column_info->Type, 'varchar(191)' ) !== false ) ) {
 				// Drop indexes first to avoid conflicts
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DDL migration; table name escaped with esc_sql().
@@ -496,13 +496,19 @@ KEY ID (ID)) $wpdb_collate";
 			post_title varchar(255) DEFAULT NULL,
 			last_analyzed timestamp NULL DEFAULT NULL,
 			analysis_count int(11) DEFAULT 0,
+			reachability varchar(20) DEFAULT NULL,
+			http_status smallint DEFAULT NULL,
+			redirect_to varchar(1000) DEFAULT NULL,
+			reachability_checked_at timestamp NULL DEFAULT NULL,
 			created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
 			UNIQUE KEY url_hash (url_hash),
 			KEY url (url(191)),
 			KEY object_id (object_id),
 			KEY object_type (object_type),
-			KEY last_analyzed (last_analyzed)
+			KEY last_analyzed (last_analyzed),
+			KEY reachability (reachability),
+			KEY reachability_checked_at (reachability_checked_at)
 		) $wpdb_collate";
 
 		dbDelta( $sql );
@@ -570,30 +576,6 @@ KEY ID (ID)) $wpdb_collate";
 			UNIQUE KEY url_hash_kind (url_hash, kind),
 			KEY kind (kind),
 			KEY checked_at (checked_at)
-		) $wpdb_collate";
-
-		dbDelta( $sql );
-
-		// AI Requests table - Track AI endpoint requests
-		$table_name = $wpdb->prefix . 'sb2_ai_requests';
-		$sql        = "CREATE TABLE {$table_name} (
-			id bigint(20) NOT NULL AUTO_INCREMENT,
-			url_id bigint(20) NOT NULL,
-			object_id bigint(20) DEFAULT NULL,
-			object_type varchar(20) DEFAULT NULL,
-			request_type varchar(50) NOT NULL,
-			request_data longtext DEFAULT NULL,
-			response_data longtext DEFAULT NULL,
-			status varchar(20) DEFAULT 'pending',
-			error_message text DEFAULT NULL,
-			created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			processed_at timestamp NULL DEFAULT NULL,
-			PRIMARY KEY (id),
-			KEY url_id (url_id),
-			KEY object_id (object_id),
-			KEY request_type (request_type),
-			KEY status (status),
-			KEY created_at (created_at)
 		) $wpdb_collate";
 
 		dbDelta( $sql );
@@ -708,6 +690,9 @@ KEY ID (ID)) $wpdb_collate";
 		// If columns are still missing after dbDelta(), the safety checks in
 		// get_sitewide_issues() and get_sitewide_stats() will trigger migration.
 
+		self::cleanup_invalid_query_keywords();
+		self::cleanup_non_html_file_url_issues();
+
 		self::log( 'Updated database tables', 10 );
 		$previous_db_version = get_option( 'SEOBOOSTER_INSTALLED_DB_VERSION', '0' );
 		update_option( 'SEOBOOSTER_INSTALLED_DB_VERSION', SEOBOOSTER_DB_VERSION );
@@ -715,6 +700,94 @@ KEY ID (ID)) $wpdb_collate";
 			update_option( 'seobooster_scanner_polish_notice', '1' );
 			delete_transient( 'sb_seo_analysis_stats' );
 		}
+	}
+
+	/**
+	 * Remove per-URL possibilities stored for direct file URLs (PDF, images, archives).
+	 *
+	 * Earlier versions ran HTML content checks against raw file bytes from GSC URLs,
+	 * producing meaningless issues. Files stay in sb2_seo_urls but carry no possibilities.
+	 *
+	 * @since 7.4.1
+	 * @return int Number of URLs cleaned.
+	 */
+	public static function cleanup_non_html_file_url_issues() {
+		global $wpdb;
+
+		$urls_table   = $wpdb->prefix . 'sb2_seo_urls';
+		$issues_table = $wpdb->prefix . 'sb2_seo_issues';
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prefixed table names only; no user input.
+		$rows = $wpdb->get_results( "SELECT id, url FROM {$urls_table}" );
+		if ( empty( $rows ) ) {
+			return 0;
+		}
+
+		$file_url_ids = array();
+		foreach ( $rows as $row ) {
+			if ( \Cleverplugins\SEOBooster\Analysis\Page_Reachability::is_non_html_file_url( (string) $row->url ) ) {
+				$file_url_ids[] = (int) $row->id;
+			}
+		}
+
+		if ( empty( $file_url_ids ) ) {
+			return 0;
+		}
+
+		$ids_sql = implode( ',', array_map( 'intval', $file_url_ids ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- IDs are integers built above.
+		$wpdb->query( "DELETE FROM {$issues_table} WHERE url_id IN ({$ids_sql}) AND is_sitewide = 0" );
+
+		delete_transient( 'sb_seo_analysis_stats' );
+		self::log( sprintf( 'Removed stored possibilities for %d direct file URLs (PDF, images, etc.)', count( $file_url_ids ) ), 5 );
+
+		return count( $file_url_ids );
+	}
+
+	/**
+	 * Remove keyword rows that cannot be processed (empty query) and their history.
+	 *
+	 * Empty queries were previously insertable by the scheduled GSC batch path.
+	 * They cannot be reconstructed and block keyword processing from completing.
+	 *
+	 * @since 7.4.0
+	 * @return int Number of keyword rows removed.
+	 */
+	public static function cleanup_invalid_query_keywords() {
+		global $wpdb;
+
+		$table_keywords = $wpdb->prefix . 'sb2_query_keywords';
+		$table_history  = $wpdb->prefix . 'sb2_query_keywords_history';
+
+		$invalid_ids = $wpdb->get_col(
+			"SELECT id FROM {$table_keywords} WHERE query IS NULL OR TRIM(query) = ''" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prefixed table names only; no user input.
+		);
+
+		if ( empty( $invalid_ids ) ) {
+			return 0;
+		}
+
+		$invalid_ids = array_map( 'absint', $invalid_ids );
+		$invalid_ids = array_filter( $invalid_ids );
+		if ( empty( $invalid_ids ) ) {
+			return 0;
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $invalid_ids ), '%d' ) );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Placeholder count matches $invalid_ids; values prepared via splat.
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$table_history} WHERE query_keywords_id IN ({$placeholders})", ...$invalid_ids ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Placeholder count matches $invalid_ids; values prepared via splat.
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$table_keywords} WHERE id IN ({$placeholders})", ...$invalid_ids ) );
+
+		$count = count( $invalid_ids );
+
+		self::log(
+			sprintf( 'Removed %d invalid GSC keyword row(s) with empty query.', $count ),
+			3
+		);
+
+		return $count;
 	}
 
 
@@ -1181,7 +1254,7 @@ KEY ID (ID)) $wpdb_collate";
 			$limit
 		);
 
-		return $wpdb->get_results( $query, ARRAY_A );
+		return $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
 	}
 
 	/**
@@ -1267,6 +1340,7 @@ KEY ID (ID)) $wpdb_collate";
 			'seo-booster_page_sb2_tools',
 			'sb2_dashboard',
 			'admin_page_seo-booster-oauth2',
+			'admin_page_sb2_setup',
 		);
 
 		if ( in_array( $screen->id, $admin_pages ) ) {
@@ -1320,6 +1394,101 @@ KEY ID (ID)) $wpdb_collate";
 			}
 		}
 		return $is_local_url;
+	}
+
+	/**
+	 * Whether the current user can edit a post, attachment, or term.
+	 *
+	 * @param int    $object_id   Object ID.
+	 * @param string $object_type post|attachment|term|taxonomy.
+	 * @return bool
+	 */
+	public static function user_can_edit_object( $object_id, $object_type = 'post' ) {
+		$object_id = absint( $object_id );
+		if ( ! $object_id ) {
+			return false;
+		}
+		if ( 'term' === $object_type || 'taxonomy' === $object_type ) {
+			return current_user_can( 'edit_term', $object_id );
+		}
+		return current_user_can( 'edit_post', $object_id );
+	}
+
+	/**
+	 * Whether a GSC property URL is in the connected site list.
+	 *
+	 * @param string $site_url Site URL to validate.
+	 * @return bool
+	 */
+	public static function is_allowed_gsc_site( $site_url ) {
+		$site_url = (string) $site_url;
+		if ( '' === $site_url ) {
+			return false;
+		}
+		$sites   = get_option( 'seobooster_gsc_sites', array() );
+		$allowed = array();
+		if ( is_array( $sites ) ) {
+			foreach ( $sites as $site ) {
+				if ( is_string( $site ) ) {
+					$allowed[] = $site;
+				} elseif ( is_array( $site ) && ! empty( $site['siteUrl'] ) ) {
+					$allowed[] = $site['siteUrl'];
+				} elseif ( is_object( $site ) && ! empty( $site->siteUrl ) ) {
+					$allowed[] = $site->siteUrl;
+				}
+			}
+		}
+		return in_array( $site_url, $allowed, true );
+	}
+
+	/**
+	 * Whether a URL is safe for outbound HTTP from the plugin (SSRF guard).
+	 *
+	 * @param string $url  URL to check.
+	 * @param array  $args {
+	 *     @type bool $allow_same_host Allow URLs whose host matches home_url().
+	 * }
+	 * @return bool
+	 */
+	public static function is_safe_outbound_url( $url, $args = array() ) {
+		$args = wp_parse_args(
+			$args,
+			array(
+				'allow_same_host' => false,
+			)
+		);
+
+		if ( ! wp_http_validate_url( $url ) ) {
+			return false;
+		}
+
+		$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+		if ( '' === $host ) {
+			return false;
+		}
+
+		// Same-site fetches (analysis, page probe) must work on local/dev hosts.
+		$site_host = strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+		if ( ! empty( $args['allow_same_host'] ) && $site_host && $host === $site_host ) {
+			return true;
+		}
+
+		$blocked_hosts = array( 'localhost', '127.0.0.1', '::1', '0.0.0.0', '169.254.169.254' );
+		if ( in_array( $host, $blocked_hosts, true ) ) {
+			return false;
+		}
+
+		if ( preg_match( '/\.(local|localhost|test|invalid)$/', $host ) ) {
+			return false;
+		}
+
+		if ( filter_var( $host, FILTER_VALIDATE_IP ) ) {
+			if ( ! filter_var( $host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

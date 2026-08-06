@@ -19,22 +19,52 @@ class Gsc_Inspection_Cache {
 
 	/**
 	 * @param string $url Page URL.
-	 * @return array|\WP_Error|null Cached inspection payload, WP_Error, or null if missing.
+	 * @return string
+	 */
+	private static function cache_key( $url ) {
+		return 'sb_gsc_inspect_' . md5( (string) $url );
+	}
+
+	/**
+	 * @param string $url Page URL.
+	 * @return array|null Cached inspection payload, or null if missing.
 	 */
 	public static function get( $url ) {
-		$key    = 'sb_gsc_inspect_' . md5( $url );
-		$cached = get_transient( $key );
+		$cached = get_transient( self::cache_key( $url ) );
 		return false === $cached ? null : $cached;
 	}
 
 	/**
 	 * @param string $url Page URL.
-	 * @param mixed  $data Inspection data or WP_Error marker.
+	 * @param mixed  $data Inspection data (arrays only; never WP_Error).
 	 * @return void
 	 */
 	public static function set( $url, $data ) {
-		$key = 'sb_gsc_inspect_' . md5( $url );
-		set_transient( $key, $data, self::TTL_SECONDS );
+		if ( is_wp_error( $data ) || ! is_array( $data ) ) {
+			return;
+		}
+		set_transient( self::cache_key( $url ), $data, self::TTL_SECONDS );
+	}
+
+	/**
+	 * Drop cached inspection for a URL (forced re-analyze).
+	 *
+	 * @param string $url Page URL.
+	 * @return void
+	 */
+	public static function invalidate( $url ) {
+		delete_transient( self::cache_key( $url ) );
+	}
+
+	/**
+	 * BCP-47 language code for Inspection API messages.
+	 *
+	 * @return string
+	 */
+	public static function language_code_for_site() {
+		$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
+		$locale = str_replace( '_', '-', (string) $locale );
+		return $locale !== '' ? $locale : 'en-US';
 	}
 
 	/**
@@ -63,8 +93,11 @@ class Gsc_Inspection_Cache {
 			return null;
 		}
 
-		$data = Google_API::inspect_url( $url, $site_url );
-		self::set( $url, $data );
+		$data = Google_API::inspect_url( $url, $site_url, self::language_code_for_site() );
+		if ( ! is_wp_error( $data ) && is_array( $data ) ) {
+			self::set( $url, $data );
+		}
+
 		return $data;
 	}
 }

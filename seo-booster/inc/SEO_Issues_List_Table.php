@@ -78,6 +78,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 
 		$issues_table = $wpdb->prefix . 'sb2_seo_issues';
 		$results      = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed internal table; no user input.
 			"SELECT DISTINCT issue_key, message FROM {$issues_table} ORDER BY issue_key"
 		);
 
@@ -120,10 +121,10 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 		$current_page = $this->get_pagenum();
 		$offset       = ( $current_page - 1 ) * $per_page;
 
-		// Get filters from request
+		// Get filters from request (default status: active).
 		$filters = array(
 			'severity'       => isset( $_GET['severity'] ) ? sanitize_text_field( wp_unslash( $_GET['severity'] ) ) : '',
-			'status'         => isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '',
+			'status'         => isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : 'active',
 			'issue_type'     => isset( $_GET['issue_type'] ) ? sanitize_text_field( wp_unslash( $_GET['issue_type'] ) ) : '',
 			'issue_category' => isset( $_GET['issue_category'] ) ? sanitize_text_field( wp_unslash( $_GET['issue_category'] ) ) : '',
 			'search'         => isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '',
@@ -132,14 +133,14 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 		// Remove empty filters
 		$filters = array_filter( $filters );
 
-		// Get sort parameters
-		$orderby = isset( $_GET['orderby'] ) ? sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) : 'total_issues';
+		// Get sort parameters (default: severity then GSC traffic).
+		$orderby = isset( $_GET['orderby'] ) ? sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) : 'severity_traffic';
 		$order   = isset( $_GET['order'] ) ? sanitize_text_field( wp_unslash( $_GET['order'] ) ) : 'DESC';
 
 		// Validate orderby
-		$allowed_orderby = array( 'url', 'score', 'total_issues' );
-		if ( ! in_array( $orderby, $allowed_orderby ) ) {
-			$orderby = 'total_issues';
+		$allowed_orderby = array( 'url', 'score', 'total_issues', 'severity_traffic' );
+		if ( ! in_array( $orderby, $allowed_orderby, true ) ) {
+			$orderby = 'severity_traffic';
 		}
 
 		// Validate order
@@ -218,12 +219,15 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 
 		$where_clause = implode( ' AND ', $where_conditions );
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed table; where clause built from internal fragments with placeholders.
 		$sql = "SELECT COUNT(*) FROM {$issues_table} WHERE {$where_clause}";
 
 		if ( ! empty( $where_values ) ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Placeholders defined in fragments above.
 			$sql = $wpdb->prepare( $sql, $where_values );
 		}
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prepared above when values exist.
 		return (int) $wpdb->get_var( $sql );
 	}
 
@@ -293,18 +297,19 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 		}
 
 		// Validate order
-		if ( ! in_array( strtoupper( $order ), array( 'ASC', 'DESC' ) ) ) {
-			$order = 'DESC';
-		}
+		$order = strtoupper( $order ) === 'ASC' ? 'ASC' : 'DESC';
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed table; orderby/order validated against allowlists above; values use placeholders.
 		$sql = "SELECT * FROM {$issues_table} 
                 WHERE {$where_clause} 
                 ORDER BY {$orderby} {$order}
                 LIMIT %d OFFSET %d";
 
 		$values = array_merge( $where_values, array( $per_page, $offset ) );
-		$sql    = $wpdb->prepare( $sql, $values );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Placeholders defined in query above.
+		$sql = $wpdb->prepare( $sql, $values );
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prepared above.
 		return $wpdb->get_results( $sql );
 	}
 
@@ -316,9 +321,24 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 	 * @return string URL HTML.
 	 */
 	public function column_url( $item ) {
-		$url   = esc_url( $item->url );
-		$title = ! empty( $item->post_title ) ? $item->post_title : basename( $item->url );
-		$title = esc_html( $title );
+		$url      = esc_url( $item->url );
+		$title    = ! empty( $item->post_title ) ? $item->post_title : basename( $item->url );
+		$title    = esc_html( $title );
+		$slug     = '';
+		$url_path = wp_parse_url( $item->url, PHP_URL_PATH );
+
+		if ( $item->object_id && 'post' === $item->object_type ) {
+			$slug = (string) get_post_field( 'post_name', $item->object_id );
+		} elseif ( $item->object_id && 'term' === $item->object_type ) {
+			$term = get_term( $item->object_id );
+			if ( $term && ! is_wp_error( $term ) ) {
+				$slug = $term->slug;
+			}
+		}
+
+		if ( '' === $slug ) {
+			$slug = basename( untrailingslashit( (string) $url_path ) );
+		}
 
 		// Try to get edit link
 		$edit_link = null;
@@ -336,26 +356,26 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 
 		$links[] = sprintf( '<a href="%s" target="_blank">%s</a>', $url, __( 'View', 'seo-booster' ) );
 
-		// Check for GSC inspection data
-		$gsc_badges = '';
+		$reachability_badges = '';
+		$reachability        = isset( $item->reachability ) ? (string) $item->reachability : '';
+		if ( 'unreachable' === $reachability ) {
+			$reachability_badges = '<span class="sb-reachability-badge sb-reachability-badge--unreachable">' . esc_html__( 'Not found', 'seo-booster' ) . '</span>';
+		} elseif ( 'redirected' === $reachability ) {
+			$reachability_badges = '<span class="sb-reachability-badge sb-reachability-badge--redirected">' . esc_html__( 'Redirected', 'seo-booster' ) . '</span>';
+			if ( ! empty( $item->redirect_to ) ) {
+				$reachability_badges .= ' <span class="sb-reachability-target" title="' . esc_attr( $item->redirect_to ) . '">' . esc_html( $item->redirect_to ) . '</span>';
+			}
+		}
 
 		$html = sprintf(
-			'<strong><a href="%s" target="_blank">%s</a></strong>%s<div class="row-actions">%s</div>',
+			'<strong class="sb-url-title"><a href="%s" target="_blank">%s</a></strong>%s<div class="sb-url-meta"><span class="sb-url-slug" title="%s">%s</span></div><div class="row-actions">%s</div>',
 			$url,
 			$title,
-			$gsc_badges ? '<div class="sb-gsc-status-badges">' . $gsc_badges . '</div>' : '',
+			$reachability_badges ? '<div class="sb-reachability-badges">' . $reachability_badges . '</div>' : '',
+			esc_attr( $item->url ),
+			esc_html( '/' === $url_path ? '/' : '/' . $slug . '/' ),
 			implode( ' | ', $links )
 		);
-
-		// Add expandable indicator
-		$html .= '<div class="sb-url-expand" data-url-id="' . esc_attr( (string) $item->id ) . '">';
-		$html .= '<span class="dashicons dashicons-arrow-down-alt2"></span> ';
-		$html .= sprintf(
-			/* translators: %d: number of SEO possibilities */
-			esc_html( _n( '%d possibility', '%d possibilities', (int) $item->total_issues, 'seo-booster' ) ),
-			(int) $item->total_issues
-		);
-		$html .= '</div>';
 
 		return $html;
 	}
@@ -371,7 +391,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 		$score = isset( $item->score ) ? intval( $item->score ) : null;
 
 		if ( $score === null ) {
-			return '<span class="sb-seo-score-null">—</span>';
+			return '<span class="sb-seo-score-null">-</span>';
 		}
 
 		// Determine score class based on thresholds
@@ -385,7 +405,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 		}
 
 		return sprintf(
-			'<span class="%s" title="%s">%d%%</span>',
+			'<span class="%s" title="%s"><span aria-hidden="true">📊</span> %d%%</span>',
 			esc_attr( $score_class ),
 			esc_attr__( 'SEO Analysis Score', 'seo-booster' ),
 			esc_html( $score )
@@ -445,11 +465,30 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 	 * @return string Actions HTML.
 	 */
 	public function column_actions( $item ) {
-		$html  = '<div class="sb-url-actions">';
+		$html = '<div class="sb-url-actions">';
+
+		$edit_link = null;
+		if ( ! empty( $item->object_id ) && 'post' === $item->object_type ) {
+			$edit_link = get_edit_post_link( $item->object_id );
+		} elseif ( ! empty( $item->object_id ) && 'term' === $item->object_type ) {
+			$edit_link = get_edit_term_link( $item->object_id );
+			if ( is_wp_error( $edit_link ) ) {
+				$edit_link = null;
+			}
+		}
+
+		if ( $edit_link ) {
+			$html .= sprintf(
+				'<a class="button button-small sb-edit-url" href="%s">%s</a> ',
+				esc_url( $edit_link ),
+				esc_html__( 'Edit', 'seo-booster' )
+			);
+		}
+
 		$html .= sprintf(
-			'<button type="button" class="button button-small sb-expand-url" data-url-id="%d">%s</button>',
-			$item->id,
-			__( 'View Issues', 'seo-booster' )
+			'<button type="button" class="button button-small sb-expand-url" data-url-id="%d" aria-expanded="false">%s</button>',
+			(int) $item->id,
+			esc_html__( 'View possibilities', 'seo-booster' )
 		);
 		$html .= '</div>';
 
@@ -591,6 +630,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 				$class = "class='" . join( ' ', $class ) . "'";
 			}
 
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Mirrors WP core print_column_headers(); parts are internally built and escaped above.
 			echo "<$tag $scope $id $class>$column_display_name</$tag>";
 		}
 	}
@@ -608,7 +648,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 
 		$this->screen->render_screen_reader_content( 'heading_list' );
 		?>
-		<table class="wp-list-table <?php echo implode( ' ', $this->get_table_classes() ); ?>">
+		<table class="wp-list-table <?php echo esc_attr( implode( ' ', $this->get_table_classes() ) ); ?>">
 			<thead>
 			<tr>
 				<?php $this->print_column_headers(); ?>
@@ -618,7 +658,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 			<tbody id="the-list"
 			<?php
 			if ( $singular ) {
-				echo " data-wp-lists='list:$singular'";
+				echo " data-wp-lists='list:" . esc_attr( $singular ) . "'";
 			}
 			?>
 			>
@@ -649,14 +689,14 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 			if ( ! is_array( $issue_types ) ) {
 				$issue_types = array();
 			}
-			$current_issue_type = isset( $_GET['issue_type'] ) ? $_GET['issue_type'] : '';
+			$current_issue_type = isset( $_GET['issue_type'] ) ? sanitize_text_field( wp_unslash( $_GET['issue_type'] ) ) : '';
 			$current_category   = isset( $_GET['issue_category'] ) ? sanitize_text_field( wp_unslash( $_GET['issue_category'] ) ) : '';
-			$current_severity   = isset( $_GET['severity'] ) ? $_GET['severity'] : '';
-			$current_status     = isset( $_GET['status'] ) ? $_GET['status'] : '';
+			$current_severity   = isset( $_GET['severity'] ) ? sanitize_text_field( wp_unslash( $_GET['severity'] ) ) : '';
+			$current_status     = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
 			?>
 			<div class="alignleft actions">
 				<select name="issue_type" id="issue_type_filter">
-					<option value=""><?php _e( 'All Possibility Types', 'seo-booster' ); ?></option>
+					<option value=""><?php esc_html_e( 'All Possibility Types', 'seo-booster' ); ?></option>
 					<?php foreach ( $issue_types as $key => $message ) : ?>
 						<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $current_issue_type, $key ); ?>>
 							<?php echo esc_html( $message ); ?>
@@ -685,14 +725,14 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 				</select>
 				 */
 				?>
-				<input type="submit" class="button" value="<?php _e( 'Filter', 'seo-booster' ); ?>" />
+				<input type="submit" class="button" value="<?php esc_attr_e( 'Filter', 'seo-booster' ); ?>" />
 			</div>
 			<?php
 		}
 	}
 
 	public function no_items() {
-		_e( 'No SEO issues found.', 'seo-booster' );
+		esc_html_e( 'No SEO possibilities found.', 'seo-booster' );
 	}
 
 

@@ -12,7 +12,7 @@ if ( !current_user_can( 'manage_options' ) ) {
 }
 global $wpdb, $seobooster_fs;
 ?>
-<div class="wrap sb-wrap">
+<div class="wrap sb-wrap sb-dashboard">
 	<?php 
 global $wpdb;
 $dbliste = array_values( Utils::get_plugin_table_names() );
@@ -43,17 +43,13 @@ if ( $missing ) {
     ?>
 
 			<form id="fixdatabase" method="post">
-				<input type="hidden" name="page" value="
-				<?php 
+				<input type="hidden" name="page" value="<?php 
     echo esc_attr( ( isset( $_REQUEST['page'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['page'] ) ) : '' ) );
-    ?>
-	" />
+    ?>" />
 				<input type="hidden" name="action" value="sbp_fixdatabasetables" />
-				<input type="hidden" name="_wpnonce" value=" 
-				<?php 
+				<input type="hidden" name="_wpnonce" value="<?php 
     echo esc_attr( wp_create_nonce( 'fixdbtables' ) );
-    ?>
-	">
+    ?>">
 				<?php 
     submit_button(
         __( 'Click here to fix', 'seo-booster' ),
@@ -87,37 +83,16 @@ if ( $ai_provider === 'disabled' ) {
     $show_ai_notice = true;
     $ai_notice_text = __( 'Connect your SEO Booster Credits account in Settings to use AI features.', 'seo-booster' );
 }
-if ( $show_ai_notice ) {
-    ?>
-<div class="notice notice-info is-dismissible seobooster-notice" style="margin: 20px 0; padding: 15px; border-left: 4px solid #0073aa;">
-	<h3 style="margin-top: 0; color: #0073aa;"><?php 
-    esc_html_e( 'Unlock AI-Powered SEO Features', 'seo-booster' );
-    ?></h3>
-	<p style="margin-bottom: 10px;"><?php 
-    echo esc_html( $ai_notice_text );
-    ?></p>
-	<p style="margin-bottom: 0;">
-		<a href="<?php 
-    echo esc_url( $ai_notice_link );
-    ?>" class="button button-primary">
-			<?php 
-    echo ( $ai_provider === 'WordPress' && !$wp_ai_ready ? esc_html__( 'Open Settings → Connectors', 'seo-booster' ) : esc_html__( 'SEO Booster Settings', 'seo-booster' ) );
-    ?>
-		</a>
-	</p>
-</div>
-<?php 
-}
-?>
-
-		<?php 
 $selected_site = get_option( 'seobooster_selected_site' );
 $access_token = get_option( 'seobooster_access_token' );
-$oauth_auth_params = Google_API::get_oauth_auth_params( admin_url( 'admin.php?page=sb2_dashboard&auth=1' ) );
-$install_id = $oauth_auth_params['install_id'];
-$authentication_string = $oauth_auth_params['auth_token'];
-$return_to = $oauth_auth_params['return_to'];
+$show_setup_cta = class_exists( __NAMESPACE__ . '\\Setup_Wizard' ) && Setup_Wizard::should_show_dashboard_cta( $access_token );
+$wizard_resume_url = ( class_exists( __NAMESPACE__ . '\\Setup_Wizard' ) ? Setup_Wizard::get_wizard_url() : admin_url( 'admin.php?page=sb2_settings#gsc' ) );
+$wizard_restart_url = ( class_exists( __NAMESPACE__ . '\\Setup_Wizard' ) ? Setup_Wizard::get_restart_url() : $wizard_resume_url );
+// “Run setup wizard” always restarts from welcome; “Continue setup” resumes the saved step.
+$wizard_url = ( $access_token ? $wizard_resume_url : $wizard_restart_url );
 /*
+
+
 // check if authentication is set
 if ( !seobooster_fs()->is_registered() ) {
 echo '<div class="card">';
@@ -160,65 +135,317 @@ $first_history_date = $stats['first_history_date'];
 $latest_history_date = $stats['latest_history_date'];
 $first_history_date_str = ( $first_history_date ? date_i18n( get_option( 'date_format' ), strtotime( $first_history_date ) ) : __( 'N/A', 'seo-booster' ) );
 $latest_history_date_str = ( $latest_history_date ? date_i18n( get_option( 'date_format' ), strtotime( $latest_history_date ) ) : __( 'N/A', 'seo-booster' ) );
-$dashboard_kpis = array();
 $dashboard_summary = sprintf(
-    /* translators: 1: keyword count, 2: page count, 3: day count, 4: first date, 5: last date */
-    __( '%1$s keywords across %2$s pages · %3$s days of GSC data (%4$s – %5$s).', 'seo-booster' ),
+    /* translators: 1: keyword count, 2: page count, 3: distinct day count, 4: first date, 5: last date */
+    __( '%1$s keywords across %2$s pages · %3$s days with data (%4$s – %5$s).', 'seo-booster' ),
     number_format_i18n( $total_keywords ),
     number_format_i18n( $unique_pages ),
     number_format_i18n( $unique_days ),
     $first_history_date_str,
     $latest_history_date_str
 );
-// First, get the latest date with data
-$latest_date = $wpdb->get_var( $wpdb->prepare( "SELECT MAX(date)\n\t\tFROM {$wpdb->prefix}sb2_query_keywords_history\n\t\tWHERE %s = %s", '1', '1' ) );
-if ( $latest_date ) {
-    $past_30_days_data = $wpdb->get_results( $wpdb->prepare( "SELECT\n\t\t\t\tSUM(h.impressions) AS total_impressions,\n\t\t\t\tSUM(h.clicks) AS total_clicks,\n\t\t\t\tAVG(h.position) AS avg_position,\n\t\t\t\tAVG(h.ctr) AS avg_ctr\n\t\t\tFROM\n\t\t\t\t{$wpdb->prefix}sb2_query_keywords_history AS h\n\t\t\tWHERE\n\t\t\t\th.date BETWEEN DATE_SUB(%s, INTERVAL 30 DAY) AND %s", $latest_date, $latest_date ), OBJECT );
-    $previous_30_days_data = $wpdb->get_results( $wpdb->prepare( "SELECT\n\t\t\t\tSUM(h.impressions) AS total_impressions,\n\t\t\t\tSUM(h.clicks) AS total_clicks,\n\t\t\t\tAVG(h.position) AS avg_position,\n\t\t\t\tAVG(h.ctr) AS avg_ctr\n\t\t\tFROM\n\t\t\t\t{$wpdb->prefix}sb2_query_keywords_history AS h\n\t\t\tWHERE\n\t\t\t\th.date BETWEEN DATE_SUB(%s, INTERVAL 60 DAY) AND DATE_SUB(%s, INTERVAL 30 DAY)", $latest_date, $latest_date ), OBJECT );
-    if ( $past_30_days_data && $previous_30_days_data ) {
-        $past_30_days = $past_30_days_data[0];
-        $previous_30_days = $previous_30_days_data[0];
-        $impressions_change = $past_30_days->total_impressions - $previous_30_days->total_impressions;
-        $clicks_change = $past_30_days->total_clicks - $previous_30_days->total_clicks;
-        $position_change = $past_30_days->avg_position - $previous_30_days->avg_position;
-        $ctr_change = ($past_30_days->avg_ctr - $previous_30_days->avg_ctr) * 100;
-        $impressions_percentage = ( $previous_30_days->total_impressions > 0 ? round( $impressions_change / $previous_30_days->total_impressions * 100, 1 ) : 0 );
-        $clicks_percentage = ( $previous_30_days->total_clicks > 0 ? round( $clicks_change / $previous_30_days->total_clicks * 100, 1 ) : 0 );
-        $position_percentage = ( $previous_30_days->avg_position > 0 ? round( $position_change / $previous_30_days->avg_position * 100, 1 ) : 0 );
-        $ctr_percentage = ( $previous_30_days->avg_ctr > 0 ? round( $ctr_change / ($previous_30_days->avg_ctr * 100) * 100, 1 ) : 0 );
-        $dashboard_kpis = array(
-            'clicks'      => array(
-                'value'      => (float) $past_30_days->total_clicks,
-                'change'     => (float) $clicks_change,
-                'percentage' => (float) $clicks_percentage,
-                'invert'     => false,
-                'decimals'   => 0,
-            ),
-            'impressions' => array(
-                'value'      => (float) $past_30_days->total_impressions,
-                'change'     => (float) $impressions_change,
-                'percentage' => (float) $impressions_percentage,
-                'invert'     => false,
-                'decimals'   => 0,
-            ),
-            'position'    => array(
-                'value'      => (float) $past_30_days->avg_position,
-                'change'     => (float) $position_change,
-                'percentage' => (float) $position_percentage,
-                'invert'     => true,
-                'decimals'   => 1,
-            ),
-            'ctr'         => array(
-                'value'      => (float) ($past_30_days->avg_ctr * 100),
-                'change'     => (float) $ctr_change,
-                'percentage' => (float) $ctr_percentage,
-                'invert'     => false,
-                'decimals'   => 2,
-                'suffix'     => '%',
-            ),
-        );
-    }
+$search_perf = Dashboard_Actions::get_search_performance_kpis( 30 );
+$dashboard_kpis = ( isset( $search_perf['kpis'] ) ? $search_perf['kpis'] : array() );
+require_once SEOBOOSTER_PLUGINPATH . 'inc/SEO_Issues_Manager.php';
+$do_next_stats = SEO_Issues_Manager::get_analysis_stats();
+$do_next_items = Dashboard_Actions::get_blocker_items( array(
+    'access_token'        => $access_token,
+    'selected_site'       => $selected_site,
+    'unique_days'         => (int) $unique_days,
+    'needs_reauth'        => (bool) get_option( 'seobooster_needs_reauth' ),
+    'show_ai_notice'      => $show_ai_notice,
+    'ai_notice_link'      => $ai_notice_link,
+    'wizard_url'          => $wizard_url,
+    'wizard_restart_url'  => $wizard_restart_url,
+    'possibilities_total' => ( isset( $do_next_stats['total_issues'] ) ? (int) $do_next_stats['total_issues'] : 0 ),
+    'omit_gsc_connect'    => !empty( $show_setup_cta ),
+) );
+?>
+		<?php 
+if ( !empty( $show_setup_cta ) ) {
+    ?>
+			<?php 
+    $setup_cta_primary = ( $access_token ? __( 'Continue setup', 'seo-booster' ) : __( 'Run setup wizard', 'seo-booster' ) );
+    $setup_cta_href = ( $access_token ? $wizard_resume_url : $wizard_restart_url );
+    $setup_cta_lead = ( $access_token ? __( 'A few setup steps are still open. The wizard walks you through Search Console and the recommended plugin features.', 'seo-booster' ) : __( 'The setup wizard connects Search Console and configures the recommended features so you get the most from SEO Booster.', 'seo-booster' ) );
+    ?>
+	<section class="sb-ui-cta" aria-labelledby="sb-dashboard-setup-cta-title">
+		<div class="sb-ui-cta__body">
+			<h2 class="sb-ui-cta__title" id="sb-dashboard-setup-cta-title"><?php 
+    esc_html_e( 'Set up SEO Booster for the full benefits', 'seo-booster' );
+    ?></h2>
+			<p class="sb-ui-cta__lead"><?php 
+    echo esc_html( $setup_cta_lead );
+    ?></p>
+			<div class="sb-ui-cta__actions">
+				<a class="button button-primary button-hero" href="<?php 
+    echo esc_url( $setup_cta_href );
+    ?>">
+					<?php 
+    echo esc_html( $setup_cta_primary );
+    ?>
+				</a>
+			</div>
+		</div>
+	</section>
+		<?php 
 }
+?>
+		<?php 
+$show_ask_card = false;
+$show_ask_upsell = true;
+$ask_readiness = array(
+    'ready'   => false,
+    'message' => '',
+);
+// seobooster_fs() is namespaced; bare function_exists( 'seobooster_fs' ) always fails.
+if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) ) {
+}
+$ask_upgrade_url = 'https://seoboosterpro.com/pricing/';
+?>
+	<section class="sb-ui-panel" id="sb-dashboard-do-next" aria-labelledby="sb-dashboard-do-next-title">
+		<h2 class="sb-ui-title" id="sb-dashboard-do-next-title"><?php 
+esc_html_e( 'Here’s what to do next', 'seo-booster' );
+?></h2>
+		<p class="sb-ui-lead"><?php 
+esc_html_e( 'Quick wins and setup items for your site. Open a tool when you’re ready. Nothing runs from here.', 'seo-booster' );
+?></p>
+		<div class="sb-action-cards" id="sb-dashboard-do-next-cards">
+			<div class="sb-action-cards__group" id="sb-dashboard-ask">
+				<?php 
+if ( $show_ask_card ) {
+    ?>
+					<article class="sb-action-card sb-action-card--ask" data-action-id="ask_seo">
+						<div class="sb-action-card__num sb-action-card__num--ok"><?php 
+    esc_html_e( 'Advisor', 'seo-booster' );
+    ?></div>
+						<h3 class="sb-action-card__title">
+							<?php 
+    esc_html_e( 'Ask about your SEO', 'seo-booster' );
+    ?>
+							<span class="sb-action-card__badge sb-action-card__badge--beta"><?php 
+    esc_html_e( 'Beta', 'seo-booster' );
+    ?></span>
+							<span class="sb-action-card__badge sb-action-card__badge--ai" title="<?php 
+    esc_attr_e( 'Uses WordPress Connectors AI', 'seo-booster' );
+    ?>"><?php 
+    esc_html_e( 'AI', 'seo-booster' );
+    ?></span>
+						</h3>
+						<a href="#ai" class="sb-action-card__link sb-site-assistant-open" id="sb-site-assistant-open">
+							<?php 
+    esc_html_e( 'Open', 'seo-booster' );
+    ?>
+						</a>
+					</article>
+				<?php 
+} elseif ( $show_ask_upsell ) {
+    ?>
+					<article class="sb-action-card sb-action-card--ask" data-action-id="ask_seo_upsell">
+						<div class="sb-action-card__num"><?php 
+    esc_html_e( 'Advisor', 'seo-booster' );
+    ?></div>
+						<h3 class="sb-action-card__title">
+							<?php 
+    esc_html_e( 'Ask about your SEO', 'seo-booster' );
+    ?>
+							<span class="sb-action-card__badge sb-action-card__badge--beta"><?php 
+    esc_html_e( 'Beta', 'seo-booster' );
+    ?></span>
+							<span class="sb-action-card__badge sb-action-card__badge--pro"><?php 
+    esc_html_e( 'Pro', 'seo-booster' );
+    ?></span>
+							<span class="sb-action-card__badge sb-action-card__badge--ai" title="<?php 
+    esc_attr_e( 'Uses WordPress Connectors AI', 'seo-booster' );
+    ?>"><?php 
+    esc_html_e( 'AI', 'seo-booster' );
+    ?></span>
+						</h3>
+						<a class="sb-action-card__link" href="<?php 
+    echo esc_url( $ask_upgrade_url );
+    ?>" target="_blank" rel="noopener noreferrer">
+							<?php 
+    esc_html_e( 'Upgrade', 'seo-booster' );
+    ?>
+						</a>
+					</article>
+				<?php 
+}
+?>
+			</div>
+			<div class="sb-action-cards__group" id="sb-dashboard-blockers">
+				<?php 
+foreach ( $do_next_items as $item ) {
+    ?>
+					<article class="sb-action-card<?php 
+    echo ( 'blocker' === $item['kind'] ? ' sb-action-card--blocker' : '' );
+    ?>" data-action-id="<?php 
+    echo esc_attr( $item['id'] );
+    ?>">
+						<div class="sb-action-card__num<?php 
+    echo ( !empty( $item['warn'] ) ? ' sb-action-card__num--warn' : '' );
+    ?>"><?php 
+    echo esc_html( $item['num'] );
+    ?></div>
+						<h3 class="sb-action-card__title"><?php 
+    echo esc_html( $item['title'] );
+    ?></h3>
+						<a
+							class="sb-action-card__link<?php 
+    echo ( !empty( $item['oauth_destination'] ) ? ' sb-oauth-start' : '' );
+    ?>"
+							href="<?php 
+    echo ( !empty( $item['oauth_destination'] ) ? '#' : esc_url( $item['url'] ) );
+    ?>"
+							<?php 
+    if ( !empty( $item['oauth_destination'] ) ) {
+        ?>
+								data-sb-oauth-destination="<?php 
+        echo esc_attr( $item['oauth_destination'] );
+        ?>"
+							<?php 
+    }
+    ?>
+						><?php 
+    echo esc_html( $item['cta'] );
+    ?></a>
+					</article>
+				<?php 
+}
+?>
+			</div>
+			<div class="sb-action-cards__group" id="sb-dashboard-health-cards">
+				<article class="sb-action-card" data-health="missing_focus_keyword">
+					<div class="sb-action-card__num sb-action-card__num--loading" aria-busy="true">
+						<span class="sb-action-card__spinner" aria-hidden="true"></span>
+						<span class="sb-action-card__loading-label"><?php 
+esc_html_e( 'Loading…', 'seo-booster' );
+?></span>
+					</div>
+					<h3 class="sb-action-card__title"><?php 
+esc_html_e( 'Pages without a focus keyword', 'seo-booster' );
+?></h3>
+					<a class="sb-action-card__link" href="#" data-tool-link="focus"><?php 
+esc_html_e( 'Open tool', 'seo-booster' );
+?></a>
+				</article>
+				<article class="sb-action-card" data-health="empty_alt">
+					<div class="sb-action-card__num sb-action-card__num--loading" aria-busy="true">
+						<span class="sb-action-card__spinner" aria-hidden="true"></span>
+						<span class="sb-action-card__loading-label"><?php 
+esc_html_e( 'Loading…', 'seo-booster' );
+?></span>
+					</div>
+					<h3 class="sb-action-card__title"><?php 
+esc_html_e( 'Images missing alt text', 'seo-booster' );
+?></h3>
+					<a class="sb-action-card__link" href="#" data-tool-link="image"><?php 
+esc_html_e( 'Open tool', 'seo-booster' );
+?></a>
+				</article>
+				<article class="sb-action-card" data-health="missing_meta">
+					<div class="sb-action-card__num sb-action-card__num--loading" aria-busy="true">
+						<span class="sb-action-card__spinner" aria-hidden="true"></span>
+						<span class="sb-action-card__loading-label"><?php 
+esc_html_e( 'Loading…', 'seo-booster' );
+?></span>
+					</div>
+					<h3 class="sb-action-card__title"><?php 
+esc_html_e( 'Pages missing title or description', 'seo-booster' );
+?></h3>
+					<a class="sb-action-card__link" href="#" data-tool-link="meta"><?php 
+esc_html_e( 'Open tool', 'seo-booster' );
+?></a>
+				</article>
+				<article class="sb-action-card" data-health="llms">
+					<div class="sb-action-card__num sb-action-card__num--loading" aria-busy="true">
+						<span class="sb-action-card__spinner" aria-hidden="true"></span>
+						<span class="sb-action-card__loading-label"><?php 
+esc_html_e( 'Loading…', 'seo-booster' );
+?></span>
+					</div>
+					<h3 class="sb-action-card__title"><?php 
+esc_html_e( 'llms.txt for AI crawlers', 'seo-booster' );
+?></h3>
+					<a class="sb-action-card__link" href="#" data-tool-link="llms"><?php 
+esc_html_e( 'Open tool', 'seo-booster' );
+?></a>
+				</article>
+			</div>
+			<div class="sb-action-cards__group" id="sb-dashboard-health-pro" hidden></div>
+		</div>
+		<p class="sb-ui-empty" id="sb-dashboard-do-next-empty" hidden><?php 
+esc_html_e( 'You’re in good shape. No quick wins waiting right now.', 'seo-booster' );
+?></p>
+	</section>
+		<?php 
+if ( $show_ask_card ) {
+    ?>
+	<section class="sb-ui-panel sb-site-assistant" id="ai" aria-labelledby="sb-site-assistant-title">
+		<h2 class="sb-ui-title sb-site-assistant__heading" id="sb-site-assistant-title">
+			<span class="sb-site-assistant__title">
+				<?php 
+    esc_html_e( 'Ask about your SEO', 'seo-booster' );
+    ?>
+				<span class="sb-action-card__badge sb-action-card__badge--beta"><?php 
+    esc_html_e( 'Beta', 'seo-booster' );
+    ?></span>
+				<span class="sb-action-card__badge sb-action-card__badge--ai" title="<?php 
+    esc_attr_e( 'Uses WordPress Connectors AI', 'seo-booster' );
+    ?>"><?php 
+    esc_html_e( 'AI', 'seo-booster' );
+    ?></span>
+			</span>
+		</h2>
+		<div class="sb-site-assistant__body" id="sb-site-assistant-body">
+			<p class="sb-site-assistant__lead"><?php 
+    esc_html_e( 'Ask about priorities, Search Console trends, or how to use SEO Booster.', 'seo-booster' );
+    ?></p>
+			<p class="sb-site-assistant__disclaimer"><?php 
+    esc_html_e( 'For site results and rankings it uses data already in SEO Booster. It can also explain SEO Booster features and basic SEO ideas. It does not crawl live pages, change Google, or run tools for you. If unsure, it should say so.', 'seo-booster' );
+    ?></p>
+			<?php 
+    if ( empty( $ask_readiness['ready'] ) && !empty( $ask_readiness['message'] ) ) {
+        ?>
+			<p class="sb-site-assistant__note" id="sb-site-assistant-setup-notice"><?php 
+        echo esc_html( (string) $ask_readiness['message'] );
+        ?></p>
+			<?php 
+    }
+    ?>
+			<div class="sb-site-assistant__chips" id="sb-site-assistant-chips" role="group" aria-label="<?php 
+    esc_attr_e( 'Suggested questions', 'seo-booster' );
+    ?>"></div>
+			<form class="sb-site-assistant__form" id="sb-site-assistant-form">
+				<label for="sb-site-assistant-input" class="screen-reader-text"><?php 
+    esc_html_e( 'Your question', 'seo-booster' );
+    ?></label>
+				<input type="text" id="sb-site-assistant-input" class="sb-site-assistant__input" maxlength="500" autocomplete="off" <?php 
+    echo ( empty( $ask_readiness['ready'] ) ? 'disabled' : '' );
+    ?> />
+				<button type="submit" class="button button-primary" id="sb-site-assistant-submit" <?php 
+    echo ( empty( $ask_readiness['ready'] ) ? 'disabled' : '' );
+    ?>><?php 
+    esc_html_e( 'Ask', 'seo-booster' );
+    ?></button>
+			</form>
+			<div class="sb-site-assistant__history" id="sb-site-assistant-history" hidden>
+				<h3 class="sb-site-assistant__subheading"><?php 
+    esc_html_e( 'Recent answers', 'seo-booster' );
+    ?></h3>
+				<div class="sb-site-assistant__history-items" id="sb-site-assistant-history-items"></div>
+			</div>
+			<div class="sb-site-assistant__loading" id="sb-site-assistant-loading" hidden>
+				<span class="sb-action-card__spinner" aria-hidden="true"></span>
+				<span id="sb-site-assistant-loading-text"></span>
+			</div>
+			<div class="sb-site-assistant__result" id="sb-site-assistant-result" hidden aria-live="polite"></div>
+		</div>
+	</section>
+		<?php 
+}
+?>
+		<?php 
 $seobooster_weekly_email = get_option( 'seobooster_weekly_email' );
 if ( isset( $_GET['gsc_updated'] ) && $_GET['gsc_updated'] == '1' && !$seobooster_weekly_email ) {
     ?>
@@ -255,18 +482,14 @@ if ( isset( $_GET['gsc_updated'] ) && $_GET['gsc_updated'] == '1' && !$seobooste
     ?>
 	</p>
 									<p>
-										<input type="text" name="seobooster_email" id="seobooster_email" class="regular-text" value="
-										<?php 
-    echo esc_html( $current_user->user_email );
-    ?>
-	" autocomplete="off" data-1p-ignore>
+										<input type="text" name="seobooster_email" id="seobooster_email" class="regular-text" value="<?php 
+    echo esc_attr( $current_user->user_email );
+    ?>" autocomplete="off" data-1p-ignore>
 									</p>
 									<p>
-										<input type="submit" name="submit" value="
-										<?php 
+										<input type="submit" name="submit" value="<?php 
     esc_attr_e( 'Confirm Email for Weekly Reports', 'seo-booster' );
-    ?>
-	" class="button button-primary">
+    ?>" class="button button-primary">
 									</p>
 									<p class="description">
 									<?php 
@@ -297,34 +520,29 @@ if ( isset( $_GET['gsc_updated'] ) && $_GET['gsc_updated'] == '1' && !$seobooste
 							<ul class="sb2weeklybenefits">
 								<li>
 								<?php 
-    esc_html_e( 'Your top-performing keywords driving traffic', 'seo-booster' );
+    esc_html_e( 'Week-over-week Google Search clicks and impressions', 'seo-booster' );
     ?>
 	</li>
 								<li>
 								<?php 
-    esc_html_e( 'Emerging keyword opportunities specific to your site', 'seo-booster' );
+    esc_html_e( 'Top SEO possibilities to fix', 'seo-booster' );
     ?>
 	</li>
 								<li>
 								<?php 
-    esc_html_e( 'Significant changes in your rankings', 'seo-booster' );
+    esc_html_e( 'New keyword discoveries from Search Console', 'seo-booster' );
     ?>
 	</li>
-								<li>
+								<li>Pro:
 								<?php 
-    esc_html_e( 'Content areas requiring your attention', 'seo-booster' );
-    ?>
-	</li>
-								<li>Pro: 
-								<?php 
-    esc_html_e( '404 errors - content that is not found', 'seo-booster' );
+    esc_html_e( 'Pages losing clicks and GSC opportunity counts', 'seo-booster' );
     ?>
 	</li>
 
 							</ul>
 							<p>
 							<?php 
-    esc_html_e( 'Your data privacy is our priority. All information is processed locally on your server and sent to your email address from your own server — we never access your data.', 'seo-booster' );
+    esc_html_e( 'Your data privacy is our priority. All information is processed locally on your server and sent to your email address from your own server. We never access your data.', 'seo-booster' );
     ?>
 	</p>
 						</div>
@@ -363,11 +581,7 @@ if ( $selected_site && 0 < $unique_days ) {
         echo '</p>';
         echo '<p>';
         echo '<button type="button" id="try-validate-token" class="button button-secondary" style="margin-right: 10px;">' . esc_html__( 'Try Again', 'seo-booster' ) . '</button>';
-        echo '<a href="' . esc_url( add_query_arg( array(
-            'install_id' => $install_id,
-            'auth_token' => $authentication_string,
-            'return_to'  => $return_to,
-        ), 'https://seoboosterauth.com/auth' ) ) . '" target="_blank" class="button button-primary">' . esc_html__( 'Re-authenticate with Google', 'seo-booster' ) . '</a>';
+        echo '<button type="button" class="button button-primary sb-oauth-start" data-sb-oauth-destination="dashboard">' . esc_html__( 'Re-authenticate with Google', 'seo-booster' ) . '</button>';
         echo '</p>';
         echo '<div id="validation-status" style="display:none; margin-top: 10px;"></div>';
         echo '</div>';
@@ -414,7 +628,7 @@ if ( $selected_site && 0 < $unique_days ) {
     );
     require_once SEOBOOSTER_PLUGINPATH . 'inc/SEO_Issues_Manager.php';
     $top_possibilities = SEO_Issues_Manager::get_top_possibilities_for_dashboard( 5 );
-    $possibilities_stats = SEO_Issues_Manager::get_analysis_stats();
+    $possibilities_stats = ( isset( $do_next_stats ) ? $do_next_stats : SEO_Issues_Manager::get_analysis_stats() );
     $top_keywords = Utils::get_top_keywords( 30, 7 );
     $autolink_rules = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sb2_autolink" );
     $ai_bot_summary = AI_Bot_Tracker::get_summary( 30 );
@@ -424,7 +638,6 @@ if ( $selected_site && 0 < $unique_days ) {
     ) );
     $ai_bot_ratio = AI_Bot_Tracker::get_content_vs_noise_ratio( 30 );
     $ai_bot_top_content = AI_Bot_Tracker::get_top_content_pages( 30, 3 );
-    $tools_counts = get_transient( 'sb_dashboard_tools_counts' );
     $show_credits_card = 'seobooster' === $ai_provider && Credits_Service::is_registered();
     $credits_balance = ( $show_credits_card ? Credits_Service::get_balance() : 0 );
     $severity_labels = array(
@@ -437,11 +650,32 @@ if ( $selected_site && 0 < $unique_days ) {
     );
     ?>
 
-	<div class="sbpanel sb-dashboard-kpis">
-		<h2><?php 
+	<section class="sb-ui-panel sb-dashboard-kpis" aria-labelledby="sb-dashboard-search-title">
+		<h2 class="sb-ui-title" id="sb-dashboard-search-title"><?php 
     esc_html_e( 'Search performance', 'seo-booster' );
     ?></h2>
-			<?php 
+		<?php 
+    if ( !empty( $search_perf['label_current'] ) ) {
+        ?>
+			<p class="sb-kpi-period">
+				<?php 
+        echo esc_html( $search_perf['label_current'] );
+        ?>
+				<?php 
+        if ( !empty( $search_perf['label_compare'] ) ) {
+            ?>
+					<span class="sb-kpi-period__sep" aria-hidden="true">·</span>
+					<span class="sb-kpi-period__compare"><?php 
+            echo esc_html( $search_perf['label_compare'] );
+            ?></span>
+				<?php 
+        }
+        ?>
+			</p>
+		<?php 
+    }
+    ?>
+		<?php 
     if ( !empty( $dashboard_kpis ) ) {
         ?>
 			<div class="sb-kpi-row">
@@ -449,13 +683,10 @@ if ( $selected_site && 0 < $unique_days ) {
         foreach ( $dashboard_kpis as $kpi_key => $kpi ) {
             ?>
 					<?php 
-            $is_positive = ( !empty( $kpi['invert'] ) ? $kpi['change'] <= 0 : $kpi['change'] >= 0 );
-            $delta_class = ( $is_positive ? 'positive' : 'negative' );
-            $sign = ( $kpi['change'] >= 0 ? '+' : '' );
-            $display_change = ( !empty( $kpi['invert'] ) ? abs( $kpi['change'] ) : $kpi['change'] );
             $suffix = ( isset( $kpi['suffix'] ) ? $kpi['suffix'] : '' );
+            $has_kpi_compare = !empty( $kpi['has_comparison'] ) && null !== $kpi['change'];
             ?>
-					<div class="sb-card sb-kpi">
+					<div class="sb-kpi">
 						<span class="sb-kpi__label"><?php 
             echo esc_html( $kpi_labels[$kpi_key] );
             ?></span>
@@ -463,17 +694,35 @@ if ( $selected_site && 0 < $unique_days ) {
             echo esc_html( number_format_i18n( $kpi['value'], $kpi['decimals'] ) . $suffix );
             ?></div>
 						<div class="sb-kpi__delta">
-							<span class="change <?php 
-            echo esc_attr( $delta_class );
-            ?>">
+							<?php 
+            if ( $has_kpi_compare ) {
+                ?>
 								<?php 
-            echo esc_html( $sign . number_format_i18n( $display_change, $kpi['decimals'] ) . $suffix );
-            echo ' (' . esc_html( number_format_i18n( $kpi['percentage'], 1 ) ) . '%)';
+                $is_positive = ( !empty( $kpi['invert'] ) ? $kpi['change'] <= 0 : $kpi['change'] >= 0 );
+                $delta_class = ( 0.0 === (float) $kpi['change'] ? 'neutral' : (( $is_positive ? 'positive' : 'negative' )) );
+                $sign = ( $kpi['change'] > 0 ? '+' : '' );
+                $display_change = ( !empty( $kpi['invert'] ) ? abs( $kpi['change'] ) : $kpi['change'] );
+                $pct_text = ( null !== $kpi['percentage'] ? ' (' . (( $kpi['percentage'] > 0 ? '+' : '' )) . number_format_i18n( $kpi['percentage'], 1 ) . '%)' : '' );
+                ?>
+								<span class="change <?php 
+                echo esc_attr( $delta_class );
+                ?>">
+									<?php 
+                echo esc_html( $sign . number_format_i18n( $display_change, $kpi['decimals'] ) . $suffix . $pct_text );
+                ?>
+								</span>
+								<span class="sb-kpi__delta-note"><?php 
+                esc_html_e( 'vs prior period', 'seo-booster' );
+                ?></span>
+							<?php 
+            } else {
+                ?>
+								<span class="change neutral"><?php 
+                esc_html_e( 'No prior period yet', 'seo-booster' );
+                ?></span>
+							<?php 
+            }
             ?>
-							</span>
-							<span class="screen-reader-text"><?php 
-            esc_html_e( 'vs previous 30 days', 'seo-booster' );
-            ?></span>
 						</div>
 					</div>
 				<?php 
@@ -489,11 +738,8 @@ if ( $selected_site && 0 < $unique_days ) {
 		<p class="description"><?php 
     esc_html_e( 'Based on Google Search Console data. Does not represent full site traffic.', 'seo-booster' );
     ?></p>
-	</div>
-
-	<div class="sbpanel sb-dashboard-chart">
-		<div class="flexrow">
-			<div id="sb2canvascont" style="height:550px;display:block;margin:0 0 20px 0;width:100%;">
+		<div class="sb-dashboard-chart">
+			<div id="sb2canvascont" style="height:320px;display:block;margin:16px 0 0;width:100%;">
 				<canvas id="seobooster-gsc-chart"><?php 
     esc_html_e( 'Chart', 'seo-booster' );
     ?></canvas>
@@ -502,110 +748,109 @@ if ( $selected_site && 0 < $unique_days ) {
 				</div>
 			</div>
 		</div>
-	</div>
+	</section>
 
-	<div class="sbpanel sb-dashboard-working">
-		<div class="flexrow">
-			<div class="col1 sb-card">
-				<h3><?php 
+	<div class="sb-ui-grid sb-ui-grid--2">
+		<section class="sb-ui-panel" aria-labelledby="sb-dashboard-keywords-title">
+			<h2 class="sb-ui-title" id="sb-dashboard-keywords-title"><?php 
     esc_html_e( 'Top 7 Keywords (Past 30 Days)', 'seo-booster' );
-    ?></h3>
-						<?php 
+    ?></h2>
+			<?php 
     if ( !empty( $top_keywords ) ) {
         ?>
-					<table class="widefat fixed striped">
-						<thead>
-							<tr>
-								<th><?php 
+				<table class="widefat fixed striped">
+					<thead>
+						<tr>
+							<th><?php 
         esc_html_e( 'Keyword', 'seo-booster' );
         ?></th>
-								<th><?php 
+							<th><?php 
         esc_html_e( 'Views', 'seo-booster' );
         ?></th>
-								<th><?php 
+							<th><?php 
         esc_html_e( 'Clicks', 'seo-booster' );
         ?></th>
-							</tr>
-						</thead>
-						<tbody>
-							<?php 
+						</tr>
+					</thead>
+					<tbody>
+						<?php 
         foreach ( $top_keywords as $keyword ) {
             ?>
-								<tr>
-									<td><?php 
+							<tr>
+								<td><?php 
             echo esc_html( $keyword['keyword'] );
             ?></td>
-									<td><?php 
+								<td><?php 
             echo esc_html( number_format_i18n( $keyword['views'] ) );
             ?></td>
-									<td><?php 
+								<td><?php 
             echo esc_html( number_format_i18n( $keyword['clicks'] ) );
             ?></td>
-								</tr>
-							<?php 
+							</tr>
+						<?php 
         }
         ?>
-						</tbody>
-					</table>
-				<?php 
+					</tbody>
+				</table>
+			<?php 
     } else {
         ?>
-					<p><?php 
+				<p class="sb-card__meta"><?php 
         esc_html_e( 'No keyword data available for the past 30 days.', 'seo-booster' );
         ?></p>
-				<?php 
+			<?php 
     }
     ?>
-				<p class="sb-card__footer">
-					<a href="<?php 
+			<p class="sb-card__footer">
+				<a href="<?php 
     echo esc_url( $gsc_link );
     ?>" class="button button-secondary"><?php 
     esc_html_e( 'GSC Overview', 'seo-booster' );
     ?></a>
-				</p>
-			</div>
-			<div class="col2 sb-card">
-				<h3><?php 
+			</p>
+		</section>
+		<section class="sb-ui-panel" aria-labelledby="sb-dashboard-possibilities-title">
+			<h2 class="sb-ui-title" id="sb-dashboard-possibilities-title"><?php 
     esc_html_e( 'SEO Possibilities', 'seo-booster' );
-    ?></h3>
-						<?php 
+    ?></h2>
+			<?php 
     if ( $possibilities_stats['total_issues'] > 0 ) {
         ?>
-					<p class="sb-card__meta">
-							<?php 
+				<p class="sb-card__meta">
+					<?php 
         printf( esc_html__( '%1$s possibilities detected. Top items to address:', 'seo-booster' ), esc_html( number_format_i18n( $possibilities_stats['total_issues'] ) ) );
         ?>
-					</p>
-				<?php 
+				</p>
+			<?php 
     }
     ?>
-						<?php 
+			<?php 
     if ( !empty( $top_possibilities ) ) {
         ?>
-					<div class="sb-possibilities-list">
-							<?php 
+				<div class="sb-possibilities-list">
+					<?php 
         foreach ( array_slice( $top_possibilities, 0, 3 ) as $possibility ) {
             ?>
-								<?php 
+						<?php 
             $severity = $possibility['severity'];
             $severity_label = ( isset( $severity_labels[$severity] ) ? $severity_labels[$severity] : ucfirst( $severity ) );
             $severity_class = ( isset( $severity_labels[$severity] ) ? $severity : 'low' );
             ?>
-							<div class="sb-possibility-item sb-possibility-item--<?php 
+						<div class="sb-possibility-item sb-possibility-item--<?php 
             echo esc_attr( $severity_class );
             ?>">
-								<div class="sb-possibility-item__header">
-									<h4 class="sb-possibility-item__title"><?php 
+							<div class="sb-possibility-item__header">
+								<h3 class="sb-possibility-item__title"><?php 
             echo esc_html( $possibility['message'] );
-            ?></h4>
-									<span class="sb-severity-chip sb-severity-chip--<?php 
+            ?></h3>
+								<span class="sb-severity-chip sb-severity-chip--<?php 
             echo esc_attr( $severity_class );
             ?>"><?php 
             echo esc_html( $severity_label );
             ?></span>
-								</div>
-								<p class="sb-possibility-item__meta">
-									<?php 
+							</div>
+							<p class="sb-possibility-item__meta">
+								<?php 
             printf( esc_html( _n(
                 'Affects %1$s page',
                 'Affects %1$s pages',
@@ -613,78 +858,82 @@ if ( $selected_site && 0 < $unique_days ) {
                 'seo-booster'
             ) ), esc_html( number_format_i18n( $possibility['affected_urls'] ) ) );
             ?>
-								</p>
-							</div>
-						<?php 
+								·
+								<a href="<?php 
+            echo esc_url( admin_url( 'admin.php?page=sb2_seo_issues' ) );
+            ?>"><?php 
+            esc_html_e( 'Review', 'seo-booster' );
+            ?></a>
+							</p>
+						</div>
+					<?php 
         }
         ?>
-					</div>
-				<?php 
+				</div>
+			<?php 
     } else {
         ?>
-					<p class="sb-card__meta"><?php 
+				<p class="sb-card__meta"><?php 
         esc_html_e( 'No specific possibilities detected yet. Run an analysis to discover SEO opportunities.', 'seo-booster' );
         ?></p>
-				<?php 
+			<?php 
     }
     ?>
-				<p class="sb-card__footer">
-					<a href="<?php 
+			<p class="sb-card__footer">
+				<a href="<?php 
     echo esc_url( admin_url( 'admin.php?page=sb2_seo_issues' ) );
     ?>" class="button button-primary"><?php 
     esc_html_e( 'View All Possibilities', 'seo-booster' );
     ?></a>
-				</p>
-			</div>
-		</div>
+			</p>
+		</section>
 	</div>
 
-	<div class="sbpanel sb-dashboard-secondary">
-		<div class="sb-card-grid">
-			<div class="sb-card">
-				<h3><?php 
+	<div class="sb-ui-grid sb-ui-grid--2">
+		<section class="sb-ui-panel" aria-labelledby="sb-dashboard-autolink-title">
+			<h2 class="sb-ui-title" id="sb-dashboard-autolink-title"><?php 
     esc_html_e( 'Automatic Links', 'seo-booster' );
-    ?></h3>
-				<p class="sb-card__metric"><?php 
+    ?></h2>
+			<p class="sb-card__metric"><?php 
     echo esc_html( number_format_i18n( $autolink_rules ) );
     ?></p>
-				<p class="sb-card__meta"><?php 
+			<p class="sb-card__meta"><?php 
     esc_html_e( 'Active autolink rules defined.', 'seo-booster' );
     ?></p>
-				<p class="sb-card__footer">
-					<a href="<?php 
+			<p class="sb-card__footer">
+				<a href="<?php 
     echo esc_url( admin_url( 'admin.php?page=sb2_autolink' ) );
     ?>" class="button button-secondary"><?php 
     esc_html_e( 'Manage links', 'seo-booster' );
     ?></a>
-				</p>
-			</div>
+			</p>
+		</section>
 
-			<div class="sb-card">
-				<h3><?php 
+		<section class="sb-ui-panel" aria-labelledby="sb-dashboard-ai-bots-title">
+			<h2 class="sb-ui-title" id="sb-dashboard-ai-bots-title"><?php 
     esc_html_e( 'AI Bots', 'seo-booster' );
-    ?></h3>
-						<?php 
+    ?></h2>
+			<?php 
     if ( !AI_Bot_Tracker::is_tracking_enabled() ) {
         ?>
-					<p class="sb-card__meta">
-							<?php 
+				<p class="sb-card__meta">
+					<?php 
         esc_html_e( 'AI bot tracking is disabled.', 'seo-booster' );
         ?>
-						<a href="<?php 
+					<a href="<?php 
         echo esc_url( admin_url( 'admin.php?page=sb2_settings#ai-llm' ) );
         ?>"><?php 
         esc_html_e( 'Enable in Settings', 'seo-booster' );
         ?></a>
-					</p>
-				<?php 
+				</p>
+			<?php 
     } else {
         ?>
-					<p class="sb-card__metric"><?php 
+				<p class="sb-card__metric"><?php 
         echo esc_html( number_format_i18n( (int) $ai_bot_summary['total_visits'] ) );
         ?></p>
-					<p class="sb-card__meta">
-						<?php 
+				<p class="sb-card__meta">
+					<?php 
         printf(
             esc_html__( '%1$s pages crawled · %2$s%% mapped content · %3$s research · %4$s citation', 'seo-booster' ),
             esc_html( number_format_i18n( (int) $ai_bot_summary['unique_content_pages'] ) ),
@@ -693,133 +942,100 @@ if ( $selected_site && 0 < $unique_days ) {
             esc_html( number_format_i18n( (int) $ai_bot_purpose['citation'] ) )
         );
         ?>
-					</p>
-					<?php 
+				</p>
+				<?php 
         if ( !empty( $ai_bot_top_content ) ) {
             ?>
-						<ul class="sb-card-list">
-							<?php 
+					<ul class="sb-card-list">
+						<?php 
             foreach ( $ai_bot_top_content as $ai_row ) {
                 ?>
-								<?php 
+							<?php 
                 $ai_label = AI_Bot_Tracker::resolve_object_label( (int) $ai_row['object_id'], $ai_row['object_type'] );
                 ?>
-								<li><?php 
+							<li><?php 
                 echo esc_html( $ai_label['title'] );
                 ?> <em>(<?php 
                 echo esc_html( number_format_i18n( (int) $ai_row['visits'] ) );
                 ?>)</em></li>
-							<?php 
+						<?php 
             }
             ?>
-						</ul>
-					<?php 
+					</ul>
+				<?php 
         }
         ?>
-				<?php 
+			<?php 
     }
     ?>
-				<p class="sb-card__footer">
-					<a href="<?php 
+			<p class="sb-card__footer">
+				<a href="<?php 
     echo esc_url( admin_url( 'admin.php?page=sb2_ai_bots&view=content' ) );
     ?>" class="button button-secondary"><?php 
     esc_html_e( 'View AI Bots report', 'seo-booster' );
     ?></a>
-				</p>
-			</div>
+			</p>
+		</section>
 
-			<div class="sb-card">
-				<h3><?php 
-    esc_html_e( 'Tools quick wins', 'seo-booster' );
-    ?></h3>
-						<?php 
-    if ( is_array( $tools_counts ) ) {
-        ?>
-					<p class="sb-card__meta">
-							<?php 
-        printf( esc_html__( '%1$s images missing alt text · %2$s posts missing SEO meta', 'seo-booster' ), esc_html( number_format_i18n( (int) $tools_counts['images_missing_alt'] ) ), esc_html( number_format_i18n( (int) $tools_counts['posts_missing_meta'] ) ) );
-        ?>
-					</p>
-				<?php 
-    } else {
-        ?>
-					<p class="sb-card__meta"><?php 
-        esc_html_e( 'Scan for missing image alt text and SEO titles or descriptions across your site.', 'seo-booster' );
-        ?></p>
-				<?php 
-    }
-    ?>
-				<p class="sb-card__footer">
-					<a href="<?php 
-    echo esc_url( admin_url( 'admin.php?page=sb2_tools' ) );
-    ?>" class="button button-secondary"><?php 
-    esc_html_e( 'Open Tools', 'seo-booster' );
-    ?></a>
-				</p>
-			</div>
-
-					<?php 
+		<?php 
     if ( $show_credits_card ) {
         ?>
-				<div class="sb-card">
-					<h3><?php 
+			<section class="sb-ui-panel" aria-labelledby="sb-dashboard-credits-title">
+				<h2 class="sb-ui-title" id="sb-dashboard-credits-title"><?php 
         esc_html_e( 'AI Credits', 'seo-booster' );
-        ?></h3>
-					<p class="sb-card__metric"><?php 
+        ?></h2>
+				<p class="sb-card__metric"><?php 
         echo esc_html( number_format_i18n( (int) $credits_balance ) );
         ?></p>
-					<p class="sb-card__meta"><?php 
+				<p class="sb-card__meta"><?php 
         esc_html_e( 'Remaining SEO Booster Credits balance.', 'seo-booster' );
         ?></p>
-					<p class="sb-card__footer">
-						<a href="<?php 
+				<p class="sb-card__footer">
+					<a href="<?php 
         echo esc_url( admin_url( 'admin.php?page=sb2_settings#ai-llm' ) );
         ?>" class="button button-secondary"><?php 
         esc_html_e( 'AI settings', 'seo-booster' );
         ?></a>
-					</p>
-				</div>
-			<?php 
+				</p>
+			</section>
+		<?php 
     }
     ?>
-		</div>
 	</div>
 
-	<div class="sbpanel sb-dashboard-quicklinks-wrap">
-		<nav class="sb-dashboard-quicklinks" aria-label="<?php 
+	<nav class="sb-dashboard-quicklinks" aria-label="<?php 
     esc_attr_e( 'Dashboard quick links', 'seo-booster' );
     ?>">
-			<a href="<?php 
+		<a href="<?php 
     echo esc_url( admin_url( 'admin.php?page=sb2_gsc' ) );
     ?>"><?php 
     esc_html_e( 'GSC Overview', 'seo-booster' );
     ?></a>
-			<span class="sb-dashboard-quicklinks__sep" aria-hidden="true">·</span>
-			<a href="<?php 
+		<span class="sb-dashboard-quicklinks__sep" aria-hidden="true">·</span>
+		<a href="<?php 
     echo esc_url( home_url( '?seobooster_showdetails=1' ) );
     ?>" target="_blank" rel="noopener noreferrer"><?php 
-    esc_html_e( 'Front page keywords', 'seo-booster' );
+    esc_html_e( 'Front page overview', 'seo-booster' );
     ?></a>
-			<span class="sb-dashboard-quicklinks__sep" aria-hidden="true">·</span>
-			<a href="<?php 
+		<span class="sb-dashboard-quicklinks__sep" aria-hidden="true">·</span>
+		<a href="<?php 
     echo esc_url( admin_url( 'admin.php?page=sb2_seo_issues' ) );
     ?>"><?php 
     esc_html_e( 'SEO Possibilities', 'seo-booster' );
     ?></a>
-			<span class="sb-dashboard-quicklinks__sep" aria-hidden="true">·</span>
-			<a href="<?php 
+		<span class="sb-dashboard-quicklinks__sep" aria-hidden="true">·</span>
+		<a href="<?php 
     echo esc_url( admin_url( 'admin.php?page=sb2_autolink' ) );
     ?>"><?php 
     esc_html_e( 'Automatic Links', 'seo-booster' );
     ?></a>
-			<span class="sb-dashboard-quicklinks__sep" aria-hidden="true">·</span>
-			<a href="<?php 
+		<span class="sb-dashboard-quicklinks__sep" aria-hidden="true">·</span>
+		<a href="<?php 
     echo esc_url( admin_url( 'admin.php?page=sb2_tools' ) );
     ?>"><?php 
     esc_html_e( 'Tools', 'seo-booster' );
     ?></a>
-		</nav>
-	</div>
+	</nav>
 
 			<?php 
     $show_pro_card = true;
@@ -833,27 +1049,25 @@ if ( $selected_site && 0 < $unique_days ) {
         ));
         $pro_feature = $pro_features[wp_rand( 0, count( $pro_features ) - 1 )];
         $pro_upgrade_url = 'https://seoboosterpro.com';
-        if ( function_exists( 'seobooster_fs' ) && method_exists( seobooster_fs(), 'get_upgrade_url' ) ) {
+        if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) && method_exists( seobooster_fs(), 'get_upgrade_url' ) ) {
             $pro_upgrade_url = seobooster_fs()->get_upgrade_url();
         }
         ?>
-		<div class="sbpanel sb-dashboard-pro">
-			<div class="sb-card sb-card--locked">
-				<h3><?php 
+		<section class="sb-ui-panel sb-dashboard-pro sb-card--locked" aria-labelledby="sb-dashboard-pro-title">
+			<h2 class="sb-ui-title" id="sb-dashboard-pro-title"><?php 
         echo esc_html( $pro_feature['title'] );
-        ?></h3>
-				<p class="sb-card__meta"><?php 
+        ?></h2>
+			<p class="sb-card__meta"><?php 
         echo esc_html( $pro_feature['description'] );
         ?></p>
-				<p class="sb-card__footer">
-					<a href="<?php 
+			<p class="sb-card__footer">
+				<a href="<?php 
         echo esc_url( $pro_upgrade_url );
         ?>" class="button button-secondary" target="_blank" rel="noopener noreferrer"><?php 
         esc_html_e( 'Upgrade to SEO Booster Pro', 'seo-booster' );
         ?></a>
-				</p>
-			</div>
-		</div>
+			</p>
+		</section>
 				<?php 
     }
     $timestamp_output = '';
@@ -862,7 +1076,7 @@ if ( $selected_site && 0 < $unique_days ) {
         $timestamp = gmdate( 'Y-m-d H:i:s', $timestamp );
         $current_time = current_time( 'timestamp' );
         $time_diff = human_time_diff( $current_time, strtotime( $timestamp ) );
-        $timestamp_output = ' — <small>' . esc_html__( 'Next scheduled update:', 'seo-booster' ) . ' ' . esc_html( $timestamp ) . ' (' . sprintf( esc_html__( 'in %s', 'seo-booster' ), esc_html( $time_diff ) ) . ')</small>';
+        $timestamp_output = ' <small>' . esc_html__( 'Next scheduled update:', 'seo-booster' ) . ' ' . esc_html( $timestamp ) . ' (' . sprintf( esc_html__( 'in %s', 'seo-booster' ), esc_html( $time_diff ) ) . ')</small>';
     }
     ?>
 	<p class="sb-dashboard-status">
@@ -871,302 +1085,6 @@ if ( $selected_site && 0 < $unique_days ) {
     ?>
 	</p>
 
-			<?php 
-}
-if ( !($selected_site && 0 < $unique_days) ) {
-    ?>
-	<div class="sbpanel">
-		<div id="inner-welcome">
-			<?php 
-}
-// Show appropriate interface based on authentication and site selection status
-if ( !$access_token ) {
-    // Check if we're on a local development domain
-    $is_local = false;
-    $local_domains = array(
-        '.local',
-        '.test',
-        '.dev',
-        '.localhost',
-        'localhost',
-        '127.0.0.1'
-    );
-    foreach ( $local_domains as $local_domain ) {
-        if ( strpos( site_url(), $local_domain ) !== false ) {
-            $is_local = true;
-            break;
-        }
-    }
-    $google_email = get_option( 'seobooster_google_email' );
-    ?>
-		<div class="flexrow">
-			<div class="col1">
-				<h3>
-						<?php 
-    if ( !empty( $google_email ) ) {
-        esc_html_e( 'Reauthenticate with Google', 'seo-booster' );
-    } else {
-        esc_html_e( 'Authenticate with Google', 'seo-booster' );
-    }
-    ?>
-				</h3>
-				
-				<?php 
-    if ( !empty( $google_email ) ) {
-        ?>
-					<p><?php 
-        echo esc_html( $google_email );
-        ?></p>
-				<?php 
-    } else {
-        ?>
-					<p><?php 
-        esc_html_e( 'You need to connect your Google account to use this feature.', 'seo-booster' );
-        ?></p>
-				<?php 
-    }
-    ?>
-
-				<p>
-					<a href="
-					<?php 
-    echo esc_url( add_query_arg( array(
-        'install_id' => $install_id,
-        'auth_token' => $authentication_string,
-        'return_to'  => $return_to,
-    ), 'https://seoboosterauth.com/auth' ) );
-    ?>
-					" class="button button-primary button-hero">
-								<?php 
-    esc_html_e( 'Start Authentication', 'seo-booster' );
-    ?>
-					</a>
-				</p>
-				<p><?php 
-    esc_html_e( 'You will be taken to Google to authorize your account.', 'seo-booster' );
-    ?></p>
-				<p><?php 
-    esc_html_e( 'Connect to the API to gather data from GSC via seoboosterauth.com.', 'seo-booster' );
-    ?></p>
-				
-						<?php 
-    // Display warning and help for local domains
-    if ( $is_local ) {
-        echo '<div class="notice seobooster-notice">';
-        echo '<p><strong>' . esc_html__( 'Warning: Local Development Domain Detected', 'seo-booster' ) . '</strong></p>';
-        echo '<p>' . esc_html__( 'Authentication with Google may fail because you are using a local development domain. OAuth services typically reject callbacks to non-public domains for security reasons.', 'seo-booster' ) . '</p>';
-        echo '<p><a href="#" class="button show-local-domain-info">' . esc_html__( 'Show More Information', 'seo-booster' ) . '</a></p>';
-        echo '<div class="local-domain-details" style="display:none;">';
-        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- get_local_domain_info() returns pre-escaped HTML.
-        echo Google_API::get_local_domain_info();
-        echo '</div>';
-        echo '</div>';
-    }
-    ?>
-			</div>
-		</div>
-			<?php 
-} elseif ( $access_token && !$selected_site ) {
-    // Check if we're on a local development domain
-    $is_local = false;
-    $local_domains = array(
-        '.local',
-        '.test',
-        '.dev',
-        '.localhost',
-        'localhost',
-        '127.0.0.1'
-    );
-    foreach ( $local_domains as $local_domain ) {
-        if ( strpos( site_url(), $local_domain ) !== false ) {
-            $is_local = true;
-            break;
-        }
-    }
-    $google_email = get_option( 'seobooster_google_email' );
-    // Site selection form - only show when we have access token, Google email, and sites
-    if ( !empty( $google_email ) ) {
-        // Try to fetch sites if not already done
-        $sites = Google_API::fetch_sites();
-        // Handle different scenarios
-        if ( is_wp_error( $sites ) ) {
-            ?>
-			<div class="notice notice-error seobooster-notice">
-				<p><?php 
-            echo esc_html( $sites->get_error_message() );
-            ?></p>
-				<p><a href="
-					<?php 
-            echo esc_url( add_query_arg( array(
-                'install_id' => $install_id,
-                'auth_token' => $authentication_string,
-                'return_to'  => $return_to,
-            ), 'https://seoboosterauth.com/auth' ) );
-            ?>
-				" class="button button-primary">
-							<?php 
-            esc_html_e( 'Re-authenticate with Google', 'seo-booster' );
-            ?>
-				</a></p>
-			</div>
-			
-				<?php 
-        } elseif ( empty( $sites ) ) {
-            ?>
-			<div class="notice notice-warning seobooster-notice">
-				<p><?php 
-            esc_html_e( 'No sites found in your Google Search Console account. Make sure you have added and verified at least one site in Google Search Console.', 'seo-booster' );
-            ?></p>
-				<p><a href="https://search.google.com/search-console/welcome" target="_blank" class="button">
-					<?php 
-            esc_html_e( 'Open Google Search Console', 'seo-booster' );
-            ?>
-				</a></p>
-			</div>
-			
-		<?php 
-        } else {
-            ?>
-			<div class="seobooster-notice">
-				<h3><?php 
-            esc_html_e( 'Select Google Search Console Site', 'seo-booster' );
-            ?></h3>
-				<p class="great-connected">
-					<?php 
-            printf( esc_html__( 'Great, you have now connected your Google account (%s).', 'seo-booster' ), '<strong>' . esc_html( $google_email ) . '</strong>' );
-            ?>
-				</p>
-				
-				<form method="post">
-					<div id="choosecont">
-						<div class="col">
-							<?php 
-            $site_url = esc_url( site_url( '/' ) );
-            ?>
-							<select name="seobooster_selected_site">
-								<option value="" disabled selected><?php 
-            esc_html_e( 'Please select a site to continue', 'seo-booster' );
-            ?></option>
-								
-								<?php 
-            // Group sites by permission level
-            $available_sites = array();
-            $unavailable_sites = array();
-            foreach ( $sites as $site ) {
-                if ( empty( $site ) ) {
-                    continue;
-                }
-                // Handle both array and string formats
-                $site_data = array();
-                $site_data['url'] = ( is_array( $site ) ? $site['siteUrl'] : $site );
-                $site_data['permission'] = ( is_array( $site ) && isset( $site['permissionLevel'] ) ? $site['permissionLevel'] : '' );
-                // Sites with siteUnverifiedUser permission don't have enough access
-                if ( $site_data['permission'] === 'siteUnverifiedUser' ) {
-                    $unavailable_sites[] = $site_data;
-                } else {
-                    $available_sites[] = $site_data;
-                }
-            }
-            // Sort both arrays alphabetically
-            usort( $available_sites, function ( $a, $b ) {
-                $a_clean = str_replace( 'sc-domain:', '', $a['url'] );
-                $b_clean = str_replace( 'sc-domain:', '', $b['url'] );
-                return strcasecmp( $a_clean, $b_clean );
-            } );
-            usort( $unavailable_sites, function ( $a, $b ) {
-                $a_clean = str_replace( 'sc-domain:', '', $a['url'] );
-                $b_clean = str_replace( 'sc-domain:', '', $b['url'] );
-                return strcasecmp( $a_clean, $b_clean );
-            } );
-            // Display available sites first
-            foreach ( $available_sites as $site_data ) {
-                $value = $site_data['url'];
-                $permission = $site_data['permission'];
-                // Remove 'sc-domain:' from display label
-                $label = str_replace( 'sc-domain:', '', $value );
-                // Add domain verified text if it's a domain property
-                if ( strpos( $value, 'sc-domain:' ) === 0 ) {
-                    $label .= ' ' . esc_html__( '(domain verified)', 'seo-booster' );
-                }
-                ?>
-									<option value="<?php 
-                echo esc_attr( $value );
-                ?>" <?php 
-                selected( $value, $site_url );
-                ?>>
-										<?php 
-                echo esc_html( $label );
-                ?>
-									</option>
-									<?php 
-            }
-            // Only add divider and unavailable sites if there are any
-            if ( !empty( $unavailable_sites ) ) {
-                // Add a divider
-                ?>
-									<option disabled>───────────────────</option>
-									<option value="" disabled><?php 
-                esc_html_e( 'Insufficient Permissions', 'seo-booster' );
-                ?></option>
-									<?php 
-                // Display unavailable sites
-                foreach ( $unavailable_sites as $site_data ) {
-                    $value = $site_data['url'];
-                    $permission = $site_data['permission'];
-                    // Remove 'sc-domain:' from display label
-                    $label = str_replace( 'sc-domain:', '', $value );
-                    // Add domain verified text if it's a domain property
-                    if ( strpos( $value, 'sc-domain:' ) === 0 ) {
-                        $label .= ' ' . esc_html__( '(domain verified)', 'seo-booster' );
-                    }
-                    // Add permission level if available
-                    if ( !empty( $permission ) ) {
-                        $label .= ' - ' . esc_html( $permission );
-                    }
-                    ?>
-										<option value="<?php 
-                    echo esc_attr( $value );
-                    ?>" <?php 
-                    selected( $value, $site_url );
-                    ?>>
-											<?php 
-                    echo esc_html( $label );
-                    ?>
-										</option>
-										<?php 
-                }
-            }
-            ?>
-							</select>
-						</div>
-
-						<div class="col">
-							<?php 
-            wp_nonce_field( 'seobooster_save_selected_site', 'seobooster_selected_site_nonce' );
-            ?>
-							<input type="hidden" name="seobooster_selected_days" value="90">
-							<input type="submit" name="submit" value="<?php 
-            esc_attr_e( 'Get keyword data', 'seo-booster' );
-            ?>" class="button button-primary" id="seobooster2selectsite">
-						</div>
-					</div>
-				</form>
-
-				<div id="seobooster-api-error"></div>
-				<div id="seobooster-api-status"><span class="spinner is-active"></span></div>
-			</div>
-		<?php 
-        }
-        ?>
-			<?php 
-    }
-    ?>
-			<?php 
-}
-if ( !($selected_site && 0 < $unique_days) ) {
-    ?>
-	</div><!-- #inner-welcome -->
-	</div><!-- .sbpanel -->
 			<?php 
 }
 if ( (!isset( $total_keywords ) || '0' === $total_keywords || 0 >= $unique_days) && seobooster_fs()->is_registered() && seobooster_fs()->is_tracking_allowed() && $access_token && $selected_site ) {
@@ -1222,23 +1140,32 @@ if ( (!isset( $total_keywords ) || '0' === $total_keywords || 0 >= $unique_days)
 } elseif ( $access_token && $selected_site && (!isset( $total_keywords ) || '0' === $total_keywords || 0 >= $unique_days) ) {
     // Show message when authenticated and site selected but no data
     ?>
-	<div class="sbpanel">
-		<div class="flexrow">
-			<div class="col1">
-				<h3><?php 
+	<section class="sb-ui-panel" aria-labelledby="sb-dashboard-no-data-title">
+		<h2 class="sb-ui-title" id="sb-dashboard-no-data-title"><?php 
     esc_html_e( 'No Data Available', 'seo-booster' );
-    ?></h3>
-				<p><?php 
+    ?></h2>
+		<p><?php 
     esc_html_e( 'You are authenticated and have selected a site, but no data has been imported yet.', 'seo-booster' );
     ?></p>
-				<p><a href="<?php 
+		<p><a href="<?php 
     echo esc_url( admin_url( 'admin.php?page=sb2_settings#manualupdate' ) );
     ?>" class="button button-primary"><?php 
     esc_html_e( 'Import Data from Settings', 'seo-booster' );
     ?></a></p>
-			</div>
-		</div>
-	</div>
+	</section>
+			<?php 
+}
+if ( empty( $show_setup_cta ) && class_exists( __NAMESPACE__ . '\\Setup_Wizard' ) && current_user_can( 'manage_options' ) ) {
+    ?>
+	<p class="description sb-dashboard-setup-link sb-dashboard-setup-link--footer">
+		<a href="<?php 
+    echo esc_url( Setup_Wizard::get_restart_url() );
+    ?>">
+			<?php 
+    esc_html_e( 'Run setup wizard', 'seo-booster' );
+    ?>
+		</a>
+	</p>
 			<?php 
 }
 ?>

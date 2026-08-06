@@ -108,7 +108,7 @@ class Admin_Columns {
 
 		// Exclude private posts and WooCommerce special pages
 		if ( \Cleverplugins\SEOBooster\SEO_Issues_Manager::should_exclude_from_analysis( $post_id ) ) {
-			echo '<span class="sb-seo-default">— EXCLUDED</span>';
+			echo '<span class="sb-seo-default">- EXCLUDED</span>';
 			return;
 		}
 
@@ -122,6 +122,11 @@ class Admin_Columns {
 		}
 
 		$status_indicators = array();
+
+		$noindex = SEO_Plugin_Registry::read_post_noindex( (int) $post_id );
+		if ( true === $noindex ) {
+			$status_indicators[] = '<span class="sb-seo-noindex" title="' . esc_attr__( 'Noindexed', 'seo-booster' ) . '">🚫</span>';
+		}
 
 		// Add SEO analysis score if available
 		if ( $seo_score !== null ) {
@@ -138,8 +143,9 @@ class Admin_Columns {
 		}
 
 		if ( empty( $status_indicators ) ) {
-			echo '<span class="sb-seo-default">—</span>';
+			echo '<span class="sb-seo-default">-</span>';
 		} else {
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Indicators built from esc_attr()/esc_html() parts above.
 			echo implode( ' ', $status_indicators );
 		}
 	}
@@ -168,8 +174,8 @@ class Admin_Columns {
 
 		$status_indicators = array();
 
-		// Add noindex indicator
-		if ( ! empty( $seo_data['noindex'] ) ) {
+		$noindex = SEO_Plugin_Registry::read_term_noindex( (int) $term_id );
+		if ( true === $noindex ) {
 			$status_indicators[] = '<span class="sb-seo-noindex" title="' . esc_attr__( 'Noindexed', 'seo-booster' ) . '">🚫</span>';
 		}
 
@@ -188,7 +194,7 @@ class Admin_Columns {
 		}
 
 		if ( empty( $status_indicators ) ) {
-			return '<span class="sb-seo-default">—</span>';
+			return '<span class="sb-seo-default">-</span>';
 		} else {
 			return implode( ' ', $status_indicators );
 		}

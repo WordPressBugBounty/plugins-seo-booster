@@ -76,6 +76,62 @@ class SB_GSC_Metaboxes {
 	}
 
 	/**
+	 * Cheap check: whether any GSC keyword rows exist for a page URL.
+	 *
+	 * Uses a short-lived transient so edit screens stay fast while still
+	 * reflecting fairly fresh import data (GSC updates at least daily).
+	 *
+	 * @since 7.3.5
+	 * @param string $public_url Absolute page URL.
+	 * @return bool|null True when keywords exist, false when not, null when URL is empty.
+	 */
+	public static function page_has_keyword_data( $public_url ) {
+		$public_url = esc_url_raw( (string) $public_url );
+		if ( '' === $public_url ) {
+			return null;
+		}
+
+		$cache_key = 'sb_gsc_kw_has_' . md5( $public_url );
+		$cached    = get_transient( $cache_key );
+		if ( '1' === $cached || '0' === $cached ) {
+			return ( '1' === $cached );
+		}
+
+		global $wpdb;
+
+		$url_candidates = array_values(
+			array_unique(
+				array_filter(
+					array(
+						$public_url,
+						untrailingslashit( $public_url ),
+						trailingslashit( $public_url ),
+					)
+				)
+			)
+		);
+
+		if ( empty( $url_candidates ) ) {
+			return null;
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $url_candidates ), '%s' ) );
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- IN() placeholders from array_fill; table from prefix; values prepared.
+		$found = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT 1 FROM {$wpdb->prefix}sb2_query_keywords WHERE page IN ( {$placeholders} ) LIMIT 1",
+				...$url_candidates
+			)
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+
+		$has_data = null !== $found && false !== $found && '' !== (string) $found;
+		set_transient( $cache_key, $has_data ? '1' : '0', 6 * HOUR_IN_SECONDS );
+
+		return $has_data;
+	}
+
+	/**
 	 * Render the Google Search Console keyword analysis content.
 	 *
 	 * @since 0.0.1
@@ -139,8 +195,15 @@ class SB_GSC_Metaboxes {
 			$output .= '<h3>' . esc_html__( 'SEO Booster Keyword Analysis', 'seo-booster' ) . '</h3>';
 		}
 
+		$keyword_presence = self::page_has_keyword_data( $public_url );
+
 		// Add the "click to load data" button instead of immediately showing the container
 		$output .= '<div id="sb-gsc-load-button-container" class="sb-gsc-load-button-wrapper">';
+		if ( true === $keyword_presence ) {
+			$output .= '<p class="sb-gsc-presence sb-gsc-presence--has"><span class="sb-gsc-presence-dot" aria-hidden="true"></span> ' . esc_html__( 'Keyword data is available for this URL.', 'seo-booster' ) . '</p>';
+		} elseif ( false === $keyword_presence ) {
+			$output .= '<p class="sb-gsc-presence sb-gsc-presence--empty"><span class="sb-gsc-presence-dot" aria-hidden="true"></span> ' . esc_html__( 'No keyword data found for this URL yet.', 'seo-booster' ) . '</p>';
+		}
 		$output .= '<button type="button" id="sb-gsc-load-data-btn" class="button button-primary">';
 		$output .= '<span class="dashicons dashicons-chart-line"></span> ';
 		$output .= esc_html__( 'Load Keyword Analysis Data', 'seo-booster' );
@@ -274,6 +337,8 @@ class SB_GSC_Metaboxes {
 					'refresh_text'             => esc_js( __( 'Refresh Analysis', 'seo-booster' ) ),
 					'loadData'                 => __( 'Load Keyword Analysis Data', 'seo-booster' ),
 					'loadingData'              => __( 'Loading data...', 'seo-booster' ),
+					'keywordDataAvailable'     => __( 'Keyword data available', 'seo-booster' ),
+					'noKeywordDataYet'         => __( 'No keyword data yet', 'seo-booster' ),
 				),
 			)
 		);
@@ -332,6 +397,13 @@ class SB_GSC_Metaboxes {
 
 		if ( ! $item_id && empty( $public_url ) ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid ID or URL', 'seo-booster' ) ) );
+		}
+
+		if ( $item_id > 0 ) {
+			$cap_type = ( 'term' === $content_type || 'taxonomy' === $content_type ) ? 'term' : 'post';
+			if ( ! Utils::user_can_edit_object( $item_id, $cap_type ) ) {
+				wp_send_json_error( array( 'message' => __( 'You do not have permission to perform this action', 'seo-booster' ) ) );
+			}
 		}
 
 		global $wpdb;

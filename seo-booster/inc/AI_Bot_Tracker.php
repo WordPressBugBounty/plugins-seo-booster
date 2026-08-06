@@ -551,6 +551,7 @@ class AI_Bot_Tracker {
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
         $has_kind = self::table_has_request_kind_column();
         if ( $has_kind ) {
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
             $wpdb->query( $wpdb->prepare(
                 "INSERT INTO {$table}\n\t\t\t\t\t(bot_name, bot_purpose, request_path, normalized_url, url_hash, object_id, object_type, status_code, request_kind, hit_date, first_seen, last_seen, visits)\n\t\t\t\t\tVALUES (%s, %s, %s, %s, %s, %d, %s, %d, %s, %s, NOW(), NOW(), 1)\n\t\t\t\t\tON DUPLICATE KEY UPDATE\n\t\t\t\t\tvisits = visits + 1,\n\t\t\t\t\tlast_seen = NOW(),\n\t\t\t\t\tstatus_code = %d,\n\t\t\t\t\trequest_kind = %s,\n\t\t\t\t\tnormalized_url = IF(normalized_url = '' OR normalized_url IS NULL, %s, normalized_url),\n\t\t\t\t\tobject_id = IF(object_id IS NULL OR object_id = 0, %d, object_id),\n\t\t\t\t\tobject_type = IF(object_type IS NULL OR object_type = '', %s, object_type)",
                 $bot_name,
@@ -569,8 +570,10 @@ class AI_Bot_Tracker {
                 $object_id,
                 $object_type
             ) );
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             return;
         }
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $wpdb->query( $wpdb->prepare(
             "INSERT INTO {$table}\n\t\t\t\t(bot_name, bot_purpose, request_path, normalized_url, url_hash, object_id, object_type, status_code, hit_date, first_seen, last_seen, visits)\n\t\t\t\tVALUES (%s, %s, %s, %s, %s, %d, %s, %d, %s, NOW(), NOW(), 1)\n\t\t\t\tON DUPLICATE KEY UPDATE\n\t\t\t\tvisits = visits + 1,\n\t\t\t\tlast_seen = NOW(),\n\t\t\t\tstatus_code = %d,\n\t\t\t\tnormalized_url = IF(normalized_url = '' OR normalized_url IS NULL, %s, normalized_url),\n\t\t\t\tobject_id = IF(object_id IS NULL OR object_id = 0, %d, object_id),\n\t\t\t\tobject_type = IF(object_type IS NULL OR object_type = '', %s, object_type)",
             $bot_name,
@@ -587,6 +590,7 @@ class AI_Bot_Tracker {
             $object_id,
             $object_type
         ) );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     }
 
     /**
@@ -757,7 +761,9 @@ class AI_Bot_Tracker {
         global $wpdb;
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
         $since = self::get_since_date( $days );
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $row = $wpdb->get_row( $wpdb->prepare( "SELECT\n\t\t\t\t\tCOALESCE(SUM(visits), 0) AS total_visits,\n\t\t\t\t\tCOUNT(DISTINCT bot_name) AS unique_bots,\n\t\t\t\t\tCOUNT(DISTINCT url_hash) AS unique_urls,\n\t\t\t\t\tCOUNT(DISTINCT CASE WHEN object_id > 0 THEN CONCAT(object_type, ':', object_id) ELSE NULL END) AS unique_content_pages,\n\t\t\t\t\tCOUNT(DISTINCT CASE WHEN object_id IS NULL OR object_id = 0 THEN url_hash ELSE NULL END) AS unique_noise_urls\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE hit_date >= %s", $since ), ARRAY_A );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         if ( !is_array( $row ) ) {
             $row = array(
                 'total_visits'         => 0,
@@ -781,7 +787,9 @@ class AI_Bot_Tracker {
         global $wpdb;
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
         $since = self::get_since_date( $days );
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT CONCAT(object_type, ':', object_id))\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE hit_date >= %s AND object_id > 0", $since ) );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     }
 
     /**
@@ -796,9 +804,13 @@ class AI_Bot_Tracker {
         $since = self::get_since_date( $days );
         $has_kind = self::table_has_request_kind_column();
         if ( $has_kind ) {
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
             $row = $wpdb->get_row( $wpdb->prepare( "SELECT\n\t\t\t\t\t\tCOALESCE(SUM(CASE WHEN request_kind = 'content' THEN visits ELSE 0 END), 0) AS content_visits,\n\t\t\t\t\t\tCOALESCE(SUM(CASE WHEN request_kind IN ('search', 'junk', 'unmapped', 'redirect') OR (object_id IS NULL OR object_id = 0) THEN visits ELSE 0 END), 0) AS noise_visits\n\t\t\t\t\tFROM {$table}\n\t\t\t\t\tWHERE hit_date >= %s", $since ), ARRAY_A );
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         } else {
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
             $row = $wpdb->get_row( $wpdb->prepare( "SELECT\n\t\t\t\t\t\tCOALESCE(SUM(CASE WHEN object_id > 0 THEN visits ELSE 0 END), 0) AS content_visits,\n\t\t\t\t\t\tCOALESCE(SUM(CASE WHEN object_id IS NULL OR object_id = 0 THEN visits ELSE 0 END), 0) AS noise_visits\n\t\t\t\t\tFROM {$table}\n\t\t\t\t\tWHERE hit_date >= %s", $since ), ARRAY_A );
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         }
         $content_visits = ( isset( $row['content_visits'] ) ? (int) $row['content_visits'] : 0 );
         $noise_visits = ( isset( $row['noise_visits'] ) ? (int) $row['noise_visits'] : 0 );
@@ -867,6 +879,7 @@ class AI_Bot_Tracker {
             $count_sql = "SELECT COUNT(*) FROM (\n\t\t\t\tSELECT object_type, object_id\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE {$where_sql}\n\t\t\t\tGROUP BY object_type, object_id\n\t\t\t\tHAVING {$having_sql}\n\t\t\t) grouped";
             $count_prepare = array_merge( $prepare, array((int) $args['min_visits'], (int) $args['min_visits']) );
             $total = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $count_prepare ) );
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
             $allowed_orderby = array(
                 'visits'      => $content_visits_expr,
                 'last_seen'   => 'MAX(last_seen)',
@@ -883,6 +896,7 @@ class AI_Bot_Tracker {
                 (int) $args['per_page']
             ) );
             $items = $wpdb->get_results( $wpdb->prepare( $query_sql, $query_prepare ), ARRAY_A );
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
             return array(
                 'items' => ( is_array( $items ) ? $items : array() ),
                 'total' => $total,
@@ -891,6 +905,7 @@ class AI_Bot_Tracker {
         $count_sql = "SELECT COUNT(*) FROM (\n\t\t\tSELECT object_type, object_id\n\t\t\tFROM {$table}\n\t\t\tWHERE {$where_sql}\n\t\t\tGROUP BY object_type, object_id\n\t\t\tHAVING SUM(visits) >= %d\n\t\t) grouped";
         $count_prepare = array_merge( $prepare, array((int) $args['min_visits']) );
         $total = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $count_prepare ) );
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
         $allowed_orderby = array(
             'visits'      => 'SUM(visits)',
             'last_seen'   => 'MAX(last_seen)',
@@ -902,6 +917,7 @@ class AI_Bot_Tracker {
         $query_sql = "SELECT\n\t\t\tobject_type,\n\t\t\tobject_id,\n\t\t\tSUM(visits) AS visits,\n\t\t\t0 AS redirect_visits,\n\t\t\tMAX(last_seen) AS last_seen,\n\t\t\tMAX(normalized_url) AS normalized_url,\n\t\t\tSUM(CASE WHEN bot_purpose = 'research' THEN visits ELSE 0 END) AS research_visits,\n\t\t\tSUM(CASE WHEN bot_purpose = 'citation' THEN visits ELSE 0 END) AS citation_visits,\n\t\t\tMAX(status_code) AS status_code,\n\t\t\tGROUP_CONCAT(DISTINCT bot_name ORDER BY bot_name SEPARATOR ', ') AS bot_names\n\t\t\tFROM {$table}\n\t\t\tWHERE {$where_sql}\n\t\t\tGROUP BY object_type, object_id\n\t\t\tHAVING SUM(visits) >= %d\n\t\t\tORDER BY {$order_sql} {$order}\n\t\t\tLIMIT %d, %d";
         $query_prepare = array_merge( $prepare, array((int) $args['min_visits'], (int) $args['offset'], (int) $args['per_page']) );
         $items = $wpdb->get_results( $wpdb->prepare( $query_sql, $query_prepare ), ARRAY_A );
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
         return array(
             'items' => ( is_array( $items ) ? $items : array() ),
             'total' => $total,
@@ -942,6 +958,7 @@ class AI_Bot_Tracker {
         $where_sql = implode( ' AND ', $where );
         $count_sql = "SELECT COUNT(*) FROM (\n\t\t\tSELECT bot_name, bot_purpose FROM {$table} WHERE {$where_sql} GROUP BY bot_name, bot_purpose\n\t\t) grouped";
         $total = ( empty( $prepare ) ? (int) $wpdb->get_var( $count_sql ) : (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $prepare ) ) );
+        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
         $allowed_orderby = array(
             'visits'    => 'SUM(visits)',
             'last_seen' => 'MAX(last_seen)',
@@ -953,6 +970,7 @@ class AI_Bot_Tracker {
         $query_sql = "SELECT\n\t\t\tbot_name,\n\t\t\tbot_purpose,\n\t\t\tSUM(visits) AS visits,\n\t\t\tMAX(last_seen) AS last_seen,\n\t\t\tSUM(CASE WHEN object_id > 0 THEN visits ELSE 0 END) AS content_visits,\n\t\t\tSUM(CASE WHEN object_id IS NULL OR object_id = 0 THEN visits ELSE 0 END) AS noise_visits\n\t\t\tFROM {$table}\n\t\t\tWHERE {$where_sql}\n\t\t\tGROUP BY bot_name, bot_purpose\n\t\t\tORDER BY {$order_sql} {$order}\n\t\t\tLIMIT %d, %d";
         $query_prepare = array_merge( $prepare, array((int) $args['offset'], (int) $args['per_page']) );
         $items = $wpdb->get_results( $wpdb->prepare( $query_sql, $query_prepare ), ARRAY_A );
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
         return array(
             'items' => ( is_array( $items ) ? $items : array() ),
             'total' => $total,
@@ -1005,6 +1023,7 @@ class AI_Bot_Tracker {
         $where_sql = implode( ' AND ', $where );
         $count_sql = "SELECT COUNT(*) FROM {$table} WHERE {$where_sql}";
         $total = ( empty( $prepare ) ? (int) $wpdb->get_var( $count_sql ) : (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $prepare ) ) );
+        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
         $allowed_orderby = array(
             'visits'       => 'visits',
             'last_seen'    => 'last_seen',
@@ -1017,6 +1036,7 @@ class AI_Bot_Tracker {
         $query_sql = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY {$order_sql} {$order} LIMIT %d, %d";
         $query_prepare = array_merge( $prepare, array((int) $args['offset'], (int) $args['per_page']) );
         $items = $wpdb->get_results( $wpdb->prepare( $query_sql, $query_prepare ), ARRAY_A );
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
         return array(
             'items' => ( is_array( $items ) ? $items : array() ),
             'total' => $total,
@@ -1038,7 +1058,9 @@ class AI_Bot_Tracker {
         }
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
         $since = self::get_since_date( (int) $days );
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $rows = $wpdb->get_results( $wpdb->prepare( "SELECT bot_name, SUM(visits) AS visits, MAX(last_seen) AS last_seen\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE hit_date >= %s\n\t\t\t\tGROUP BY bot_name", $since ), ARRAY_A );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $stats = array();
         if ( !is_array( $rows ) ) {
             return $stats;
@@ -1067,7 +1089,9 @@ class AI_Bot_Tracker {
         global $wpdb;
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
         $since = self::get_since_date( $days );
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         return $wpdb->get_results( $wpdb->prepare( "SELECT bot_name, bot_purpose, SUM(visits) AS visits\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE hit_date >= %s\n\t\t\t\tGROUP BY bot_name, bot_purpose\n\t\t\t\tORDER BY visits DESC\n\t\t\t\tLIMIT %d", $since, absint( $limit ) ), ARRAY_A );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     }
 
     /**
@@ -1131,7 +1155,9 @@ class AI_Bot_Tracker {
         global $wpdb;
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
         $since = self::get_since_date( $days );
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $rows = $wpdb->get_results( $wpdb->prepare( "SELECT bot_purpose, SUM(visits) AS visits\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE hit_date >= %s\n\t\t\t\tGROUP BY bot_purpose", $since ), ARRAY_A );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $breakdown = array(
             'research' => 0,
             'citation' => 0,
@@ -1162,6 +1188,7 @@ class AI_Bot_Tracker {
             $sql = "SELECT hit_date,\n\t\t\t\tSUM(CASE WHEN object_id > 0 THEN visits ELSE 0 END) AS content_visits,\n\t\t\t\tSUM(CASE WHEN object_id IS NULL OR object_id = 0 THEN visits ELSE 0 END) AS noise_visits,\n\t\t\t\tSUM(visits) AS total_visits\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE hit_date >= %s\n\t\t\t\tGROUP BY hit_date\n\t\t\t\tORDER BY hit_date ASC";
         }
         $rows = $wpdb->get_results( $wpdb->prepare( $sql, $since ), ARRAY_A );
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
         return ( is_array( $rows ) ? $rows : array() );
     }
 
@@ -1177,7 +1204,9 @@ class AI_Bot_Tracker {
         $url_hash = hash( 'sha256', untrailingslashit( strtolower( esc_url_raw( $url ) ) ) );
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
         $since = self::get_since_date( $days );
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         return $wpdb->get_results( $wpdb->prepare( "SELECT bot_name, bot_purpose, SUM(visits) AS visits, MAX(last_seen) AS last_seen\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE url_hash = %s AND hit_date >= %s\n\t\t\t\tGROUP BY bot_name, bot_purpose\n\t\t\t\tORDER BY visits DESC", $url_hash, $since ), ARRAY_A );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     }
 
     /**
@@ -1194,19 +1223,23 @@ class AI_Bot_Tracker {
         $since = self::get_since_date( $days );
         $has_kind = self::table_has_request_kind_column();
         if ( $has_kind ) {
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
             return $wpdb->get_results( $wpdb->prepare(
                 "SELECT\n\t\t\t\t\t\tbot_name,\n\t\t\t\t\t\tbot_purpose,\n\t\t\t\t\t\tSUM(CASE WHEN request_kind = 'content' THEN visits ELSE 0 END) AS content_visits,\n\t\t\t\t\t\tSUM(CASE WHEN request_kind = 'redirect' THEN visits ELSE 0 END) AS redirect_visits,\n\t\t\t\t\t\tMAX(last_seen) AS last_seen,\n\t\t\t\t\t\tCAST(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN request_kind = 'content' THEN status_code END ORDER BY last_seen DESC SEPARATOR ','), ',', 1) AS UNSIGNED) AS status_code\n\t\t\t\t\tFROM {$table}\n\t\t\t\t\tWHERE object_id = %d AND object_type = %s AND hit_date >= %s\n\t\t\t\t\tAND request_kind IN ('content', 'redirect')\n\t\t\t\t\tGROUP BY bot_name, bot_purpose\n\t\t\t\t\tHAVING (content_visits + redirect_visits) > 0\n\t\t\t\t\tORDER BY (content_visits + redirect_visits) DESC",
                 $object_id,
                 $object_type,
                 $since
             ), ARRAY_A );
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         }
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         return $wpdb->get_results( $wpdb->prepare(
             "SELECT bot_name, bot_purpose, SUM(visits) AS visits, MAX(last_seen) AS last_seen\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE object_id = %d AND object_type = %s AND hit_date >= %s\n\t\t\t\tGROUP BY bot_name, bot_purpose\n\t\t\t\tORDER BY visits DESC",
             $object_id,
             $object_type,
             $since
         ), ARRAY_A );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     }
 
     /**
@@ -1223,12 +1256,14 @@ class AI_Bot_Tracker {
         $since = self::get_since_date( $days );
         $has_kind = self::table_has_request_kind_column();
         $kind_sql = ( $has_kind ? " AND request_kind = 'content'" : '' );
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Internal SQL fragment + prefixed tables; values use placeholders.
         $row = $wpdb->get_row( $wpdb->prepare(
             "SELECT object_type, object_id, SUM(visits) AS visits, MAX(normalized_url) AS normalized_url\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE bot_name = %s AND bot_purpose = %s AND hit_date >= %s AND object_id > 0{$kind_sql}\n\t\t\t\tGROUP BY object_type, object_id\n\t\t\t\tORDER BY SUM(visits) DESC\n\t\t\t\tLIMIT 1",
             $bot_name,
             $bot_purpose,
             $since
         ), ARRAY_A );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         return ( is_array( $row ) ? $row : null );
     }
 
@@ -1246,7 +1281,9 @@ class AI_Bot_Tracker {
         }
         $issues_table = $wpdb->prefix . 'sb2_seo_issues';
         $urls_table = $wpdb->prefix . 'sb2_seo_urls';
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*)\n\t\t\t\tFROM {$issues_table} AS i\n\t\t\t\tINNER JOIN {$urls_table} AS u ON i.url_id = u.id\n\t\t\t\tWHERE u.object_id = %d AND u.object_type = %s AND i.user_status = 'active'", $object_id, $object_type ) );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     }
 
     /**
@@ -1272,7 +1309,9 @@ class AI_Bot_Tracker {
     public static function get_recent_activity( $limit = 10 ) {
         global $wpdb;
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         return $wpdb->get_results( $wpdb->prepare( "SELECT bot_name, bot_purpose, request_path, normalized_url, visits, last_seen, object_id, object_type\n\t\t\t\tFROM {$table}\n\t\t\t\tWHERE object_id > 0\n\t\t\t\tORDER BY last_seen DESC\n\t\t\t\tLIMIT %d", absint( $limit ) ), ARRAY_A );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     }
 
     /**
@@ -1283,7 +1322,9 @@ class AI_Bot_Tracker {
     public static function table_has_request_kind_column() {
         global $wpdb;
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $column = $wpdb->get_var( $wpdb->prepare( "SHOW COLUMNS FROM {$table} LIKE %s", 'request_kind' ) );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         return !empty( $column );
     }
 
@@ -1299,10 +1340,18 @@ class AI_Bot_Tracker {
         }
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
         $updated = 0;
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $wpdb->query( "UPDATE {$table} SET request_kind = 'content' WHERE object_id > 0 AND (request_kind = '' OR request_kind = 'unmapped')" );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $wpdb->query( $wpdb->prepare( "UPDATE {$table} SET request_kind = 'search'\n\t\t\t\tWHERE (object_id IS NULL OR object_id = 0)\n\t\t\t\tAND (request_path LIKE %s OR request_path LIKE %s)", '%/search%', '%page2page%' ) );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $wpdb->query( "UPDATE {$table} SET request_kind = 'junk'\n\t\t\tWHERE (object_id IS NULL OR object_id = 0)\n\t\t\tAND request_kind NOT IN ('search', 'content')\n\t\t\tAND (CHAR_LENGTH(request_path) > 120 OR request_path REGEXP '(page[0-9]+){4,}')" );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $wpdb->query( "UPDATE {$table} SET request_kind = 'unmapped'\n\t\t\tWHERE (object_id IS NULL OR object_id = 0)\n\t\t\tAND (request_kind = '' OR request_kind IS NULL)" );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $updated = (int) $wpdb->get_var( 'SELECT ROW_COUNT()' );
         return $updated;
     }
@@ -1318,7 +1367,9 @@ class AI_Bot_Tracker {
             return 0;
         }
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $wpdb->query( "UPDATE {$table}\n\t\t\tSET request_kind = 'redirect'\n\t\t\tWHERE request_kind = 'content'\n\t\t\tAND status_code >= 300\n\t\t\tAND status_code < 400" );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         return (int) $wpdb->rows_affected;
     }
 
@@ -1333,9 +1384,13 @@ class AI_Bot_Tracker {
         $has_kind = self::table_has_request_kind_column();
         $deleted = 0;
         if ( $has_kind ) {
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
             $wpdb->query( "DELETE FROM {$table}\n\t\t\t\tWHERE object_id IS NULL OR object_id = 0 OR request_kind IN ('search', 'junk', 'unmapped')" );
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         } else {
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
             $wpdb->query( "DELETE FROM {$table} WHERE object_id IS NULL OR object_id = 0" );
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         }
         $deleted = (int) $wpdb->rows_affected;
         return $deleted;
@@ -1350,7 +1405,9 @@ class AI_Bot_Tracker {
         global $wpdb;
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
         $days = self::get_retention_days();
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE hit_date < DATE_SUB(CURDATE(), INTERVAL %d DAY)", $days ) );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         return (int) $wpdb->rows_affected;
     }
 

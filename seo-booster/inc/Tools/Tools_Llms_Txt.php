@@ -5,6 +5,7 @@ namespace Cleverplugins\SEOBooster\Tools;
 use Cleverplugins\SEOBooster\AI_Bot_Tracker;
 use Cleverplugins\SEOBooster\LLM_Helper;
 use Cleverplugins\SEOBooster\SEO_Plugin_Registry;
+use Cleverplugins\SEOBooster\Utils;
 use WordPress\AiClient\Providers\Http\DTO\RequestOptions;
 use function Cleverplugins\SEOBooster\seobooster_fs;
 if ( !defined( 'ABSPATH' ) ) {
@@ -211,6 +212,9 @@ class Tools_Llms_Txt {
         $bot_gaps = self::get_bot_crawl_gaps( 30, 20, $settings );
         $ai_available = Tools_Meta_Scanner::ai_is_available();
         $ai_message = Tools_Meta_Scanner::get_ai_unavailable_message();
+        $show_markdown = false;
+        if ( function_exists( 'Cleverplugins\\SEOBooster\\seobooster_fs' ) ) {
+        }
         include SEOBOOSTER_PLUGINPATH . 'inc/Tools/views/llms-txt-tool.php';
     }
 
@@ -246,6 +250,7 @@ class Tools_Llms_Txt {
                 'suggested_intro' => __( 'Suggested intro', 'seo-booster' ),
                 'suggested_pages' => __( 'Suggested pages', 'seo-booster' ),
                 'apply_selected'  => __( 'Apply selected', 'seo-booster' ),
+                'cache_cleared'   => __( 'Markdown cache cleared.', 'seo-booster' ),
             ),
         ) );
     }
@@ -282,6 +287,7 @@ class Tools_Llms_Txt {
      * @return array
      */
     private static function parse_settings_from_request() {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in Tools_Llms_Txt::ajax_save_settings() before this runs.
         $enabled = !empty( $_POST['enabled'] );
         $intro = ( isset( $_POST['intro'] ) ? sanitize_textarea_field( wp_unslash( $_POST['intro'] ) ) : '' );
         $max = ( isset( $_POST['max_links'] ) ? max( 1, min( 100, (int) $_POST['max_links'] ) ) : 20 );
@@ -305,6 +311,7 @@ class Tools_Llms_Txt {
             'faq_max_items'   => ( isset( $_POST['faq_max_items'] ) ? max( 1, min( 50, (int) $_POST['faq_max_items'] ) ) : 10 ),
             'pinned_post_ids' => $pinned_post_ids,
         );
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
     }
 
     /**
@@ -325,6 +332,8 @@ class Tools_Llms_Txt {
         delete_option( 'sb_tools_llms_rewrite_flushed' );
         flush_rewrite_rules( false );
         update_option( 'sb_tools_llms_rewrite_flushed', 1, false );
+        if ( function_exists( 'Cleverplugins\\SEOBooster\\seobooster_fs' ) ) {
+        }
         wp_send_json_success( array(
             'message'          => __( 'Settings saved.', 'seo-booster' ),
             'preview'          => self::build_file_content( $settings, true ),
@@ -390,8 +399,9 @@ class Tools_Llms_Txt {
         try {
             $result = self::generate_ai_suggestions( $settings );
         } catch ( \Exception $e ) {
+            Utils::log( 'llms.txt AI suggestions failed: ' . $e->getMessage(), 2 );
             wp_send_json_error( array(
-                'message' => $e->getMessage(),
+                'message' => __( 'Something went wrong. Check the SEO Booster debug log for details.', 'seo-booster' ),
             ) );
             return;
         }
@@ -407,7 +417,7 @@ class Tools_Llms_Txt {
      */
     public static function generate_ai_suggestions( array $settings ) {
         if ( !function_exists( 'wp_ai_client_prompt' ) || !LLM_Helper::wp_ai_is_available() ) {
-            throw new \Exception(Tools_Meta_Scanner::get_ai_unavailable_message());
+            throw new \Exception(esc_html( Tools_Meta_Scanner::get_ai_unavailable_message() ));
         }
         $candidates = self::get_post_curation_scores( $settings, 30 );
         $gaps = self::get_bot_crawl_gaps( 30, 10, $settings );
@@ -455,14 +465,14 @@ class Tools_Llms_Txt {
                 RequestOptions::KEY_TIMEOUT => 60.0,
             ) ) );
         }
-        $response = $builder->generate_text();
+        $response = LLM_Helper::generate_ai_text( $builder, 'llms-txt' );
         if ( is_wp_error( $response ) ) {
-            throw new \Exception($response->get_error_message());
+            throw new \Exception(esc_html( $response->get_error_message() ));
         }
         $response = preg_replace( '#^```(?:json)?\\s*|\\s*```$#', '', trim( (string) $response ) );
         $data = json_decode( $response, true );
         if ( json_last_error() !== JSON_ERROR_NONE || !is_array( $data ) ) {
-            throw new \Exception(__( 'Unable to parse AI response.', 'seo-booster' ));
+            throw new \Exception(esc_html__( 'Unable to parse AI response.', 'seo-booster' ));
         }
         $intro_out = trim( (string) ($data['intro'] ?? '') );
         $suggestions_out = array();
@@ -654,6 +664,7 @@ class Tools_Llms_Txt {
             return;
         }
         $url = esc_url( home_url( '/llms.txt' ) );
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $url escaped with esc_url() above.
         echo "\n" . '<link rel="alternate" type="text/plain" href="' . $url . '">' . "\n";
     }
 
@@ -776,6 +787,12 @@ class Tools_Llms_Txt {
         if ( $entity_section !== '' ) {
             $lines[] = rtrim( $entity_section );
         }
+        $full_section = '';
+        if ( function_exists( 'Cleverplugins\\SEOBooster\\seobooster_fs' ) ) {
+        }
+        if ( $full_section !== '' ) {
+            $lines[] = rtrim( $full_section );
+        }
         return implode( "\n", $lines ) . "\n";
     }
 
@@ -788,7 +805,8 @@ class Tools_Llms_Txt {
     public static function get_curated_posts( array $settings ) {
         $post_types = ( isset( $settings['post_types'] ) && is_array( $settings['post_types'] ) ? self::parse_post_types( $settings['post_types'] ) : array('post', 'page') );
         $max_links = ( isset( $settings['max_links'] ) ? (int) $settings['max_links'] : 20 );
-        $max_links = max( 1, min( 100, $max_links ) );
+        // llms.txt UI caps at 100; Pro llms-full.txt may request up to 250.
+        $max_links = max( 1, min( 250, $max_links ) );
         $rules = Llms_Directory_Rules::sanitize_rules( $settings['directory_rules'] ?? array() );
         $pinned_ids = self::parse_pinned_post_ids( $settings['pinned_post_ids'] ?? array() );
         $pinned = array();
@@ -849,7 +867,9 @@ class Tools_Llms_Txt {
         if ( !$keywords_exists || !$history_exists ) {
             return array();
         }
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $urls_clicks = $wpdb->get_results( "SELECT k.page, SUM(h.clicks) AS total_clicks\n\t\t\tFROM {$keywords_table} AS k\n\t\t\tINNER JOIN {$history_table} AS h ON k.id = h.query_keywords_id\n\t\t\tGROUP BY k.page\n\t\t\tORDER BY total_clicks DESC\n\t\t\tLIMIT 500", ARRAY_A );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $clicks = array();
         if ( empty( $urls_clicks ) ) {
             return $clicks;

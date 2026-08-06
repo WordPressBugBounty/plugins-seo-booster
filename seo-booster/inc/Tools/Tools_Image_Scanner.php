@@ -397,4 +397,38 @@ class Tools_Image_Scanner {
 
 		return $labels[ $issue ] ?? $issue;
 	}
+
+	/**
+	 * Count processable images with empty alt text (setup wizard).
+	 *
+	 * Fast SQL estimate for JPEG/PNG/WebP attachments missing or empty alt meta.
+	 *
+	 * @return int
+	 */
+	public static function count_empty_alt() {
+		global $wpdb;
+
+		$mimes = self::get_processable_mime_types();
+		if ( empty( $mimes ) ) {
+			return 0;
+		}
+
+		$placeholders = implode( ', ', array_fill( 0, count( $mimes ), '%s' ) );
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- IN() placeholders from array_fill; values prepared.
+		$sql = $wpdb->prepare(
+			"SELECT COUNT(p.ID)
+			FROM {$wpdb->posts} p
+			LEFT JOIN {$wpdb->postmeta} pm
+				ON p.ID = pm.post_id AND pm.meta_key = '_wp_attachment_image_alt'
+			WHERE p.post_type = 'attachment'
+				AND p.post_status = 'inherit'
+				AND p.post_mime_type IN ({$placeholders})
+				AND (pm.meta_value IS NULL OR pm.meta_value = '')",
+			$mimes
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+
+		return (int) $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql from $wpdb->prepare() above with MIME placeholders.
+	}
 }

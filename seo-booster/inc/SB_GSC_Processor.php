@@ -44,22 +44,26 @@ class SB_GSC_Processor {
 		}
 
 		try {
-			// Get keywords for this URL
+			self::remove_invalid_keywords_for_page( $post_url );
+
+			// Get keywords for this URL that still need a content check.
 			$keywords = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT * FROM {$wpdb->prefix}sb2_query_keywords WHERE page = %s",
+					"SELECT * FROM {$wpdb->prefix}sb2_query_keywords
+					WHERE page = %s
+					AND query <> ''
+					AND (
+						last_checked IS NULL
+						OR last_checked = '0000-00-00 00:00:00'
+						OR last_checked < DATE_SUB(NOW(), INTERVAL 1 DAY)
+					)",
 					$post_url
 				),
 				ARRAY_A
 			);
 
 			if ( empty( $keywords ) ) {
-				Utils::log(
-					sprintf(
-						'Completed processing all keywords for URL: %s',
-						$post_url
-					)
-				);
+				self::trigger_seo_analysis_for_url( $post_url );
 				return;
 			}
 
@@ -79,8 +83,8 @@ class SB_GSC_Processor {
 			$post_content = $cache_response['content'];
 
 			foreach ( $keywords as $keyword ) {
-				if ( empty( $keyword['id'] ) || empty( $keyword['query'] ) ) {
-					Utils::log( 'Invalid keyword data: ' . wp_json_encode( $keyword ), 2 );
+				if ( empty( $keyword['id'] ) || '' === trim( (string) ( $keyword['query'] ?? '' ) ) ) {
+					self::delete_keyword_row( (int) ( $keyword['id'] ?? 0 ) );
 					continue;
 				}
 
@@ -110,9 +114,14 @@ class SB_GSC_Processor {
 			// Check if there are more keywords that need processing
 			$remaining_keywords = $wpdb->get_var(
 				$wpdb->prepare(
-					"SELECT COUNT(*) FROM {$wpdb->prefix}sb2_query_keywords 
-                WHERE page = %s 
-                AND (last_checked IS NULL OR last_checked < DATE_SUB(NOW(), INTERVAL 1 DAY))",
+					"SELECT COUNT(*) FROM {$wpdb->prefix}sb2_query_keywords
+					WHERE page = %s
+					AND query <> ''
+					AND (
+						last_checked IS NULL
+						OR last_checked = '0000-00-00 00:00:00'
+						OR last_checked < DATE_SUB(NOW(), INTERVAL 1 DAY)
+					)",
 					$post_url
 				)
 			);
@@ -132,9 +141,80 @@ class SB_GSC_Processor {
 			return true;
 
 		} catch ( \Exception $e ) {
-			Utils::log( 'Error in process_url_keywords: ' . $e->getMessage(), 2 );
+			Utils::log( sprintf( 'Keyword processing failed for %s: %s', $post_url, $e->getMessage() ), 2 );
 			throw $e;
 		}
+	}
+
+	/**
+	 * Delete keyword rows for a page that have an empty query (and their history).
+	 *
+	 * @since 7.4.0
+	 * @param string $page_url Page URL.
+	 * @return void
+	 */
+	private static function remove_invalid_keywords_for_page( $page_url ) {
+		global $wpdb;
+
+		$invalid_ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT id FROM {$wpdb->prefix}sb2_query_keywords
+				WHERE page = %s AND (query IS NULL OR TRIM(query) = '')",
+				$page_url
+			)
+		);
+
+		if ( empty( $invalid_ids ) ) {
+			return;
+		}
+
+		$removed = 0;
+		foreach ( $invalid_ids as $keyword_id ) {
+			if ( self::delete_keyword_row( (int) $keyword_id ) ) {
+				++$removed;
+			}
+		}
+
+		if ( $removed > 0 ) {
+			Utils::log(
+				sprintf(
+					'Removed %d invalid GSC keyword row(s) with empty query for URL: %s',
+					$removed,
+					$page_url
+				),
+				3
+			);
+		}
+	}
+
+	/**
+	 * Delete a keyword parent row and its history.
+	 *
+	 * @since 7.4.0
+	 * @param int $keyword_id Keyword row ID.
+	 * @return bool Whether a parent row was deleted.
+	 */
+	private static function delete_keyword_row( $keyword_id ) {
+		global $wpdb;
+
+		$keyword_id = absint( $keyword_id );
+		if ( ! $keyword_id ) {
+			return false;
+		}
+
+		$wpdb->delete(
+			$wpdb->prefix . 'sb2_query_keywords_history',
+			array( 'query_keywords_id' => $keyword_id ),
+			array( '%d' )
+		);
+
+		$deleted = $wpdb->delete(
+			$wpdb->prefix . 'sb2_query_keywords',
+			array( 'id' => $keyword_id ),
+			array( '%d' )
+		);
+
+		return false !== $deleted && $deleted > 0;
 	}
 
 	/**
@@ -149,24 +229,28 @@ class SB_GSC_Processor {
 	public static function schedule_keyword_processing_for_all_pages() {
 		global $wpdb;
 
+		Utils::cleanup_invalid_query_keywords();
+
 		// Get unique pages that have keywords
 		$unique_pages = $wpdb->get_col(
-			"SELECT DISTINCT page 
-            FROM {$wpdb->prefix}sb2_query_keywords"
+			"SELECT DISTINCT page
+			FROM {$wpdb->prefix}sb2_query_keywords
+			WHERE query <> ''"
 		);
 
 		// Clear all keyword statuses in one query
 		$wpdb->query(
-			"UPDATE {$wpdb->prefix}sb2_query_keywords 
-            SET is_used_in_content = NULL, 
-                last_checked = NULL"
+			"UPDATE {$wpdb->prefix}sb2_query_keywords
+			SET is_used_in_content = NULL,
+				last_checked = NULL
+			WHERE query <> ''"
 		);
 
 		// Delete all existing scheduled actions for our hook, except those currently being processed
-		$sql = "DELETE FROM {$wpdb->prefix}actionscheduler_actions 
-            WHERE (hook = 'sb_gsc_process_url_keywords' OR hook = 'sb_gsc_process_keywords_batch')
-            AND status != 'in-progress'";
-		$wpdb->query( $sql );
+		$sql = "DELETE FROM {$wpdb->prefix}actionscheduler_actions
+			WHERE (hook = 'sb_gsc_process_url_keywords' OR hook = 'sb_gsc_process_keywords_batch')
+			AND status != 'in-progress'";
+		$wpdb->query( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
 
 		// Schedule new actions for each URL
 		foreach ( $unique_pages as $page_url ) {
@@ -189,13 +273,15 @@ class SB_GSC_Processor {
 
 		global $wpdb;
 
+		self::remove_invalid_keywords_for_page( $post_url );
+
 		// Clear keyword statuses for this URL in one query
 		$wpdb->query(
 			$wpdb->prepare(
-				"UPDATE {$wpdb->prefix}sb2_query_keywords 
-            SET is_used_in_content = NULL, 
-                last_checked = NULL 
-            WHERE page = %s",
+				"UPDATE {$wpdb->prefix}sb2_query_keywords
+			SET is_used_in_content = NULL,
+				last_checked = NULL
+			WHERE page = %s AND query <> ''",
 				$post_url
 			)
 		);
@@ -203,9 +289,9 @@ class SB_GSC_Processor {
 		// Clear scheduled actions for this URL in one query
 		$wpdb->query(
 			$wpdb->prepare(
-				"DELETE FROM {$wpdb->actionscheduler_actions} 
-            WHERE hook = 'sb_gsc_process_url_keywords' 
-            AND args LIKE %s",
+				"DELETE FROM {$wpdb->actionscheduler_actions}
+			WHERE hook = 'sb_gsc_process_url_keywords'
+			AND args LIKE %s",
 				'%' . $wpdb->esc_like( '"post_url":"' . $post_url . '"' ) . '%'
 			)
 		);
@@ -235,51 +321,44 @@ class SB_GSC_Processor {
 		$urls_table     = $wpdb->prefix . 'sb2_seo_urls';
 
 		// Check if analysis already exists and is recent (within 24 hours)
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 		$existing_analysis = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT a.id, a.analyzed_at FROM {$analysis_table} a
-             JOIN {$urls_table} u ON a.url_id = u.id
-             WHERE u.url = %s AND a.status = 'analyzed' 
-             AND a.analyzed_at > DATE_SUB(NOW(), INTERVAL 1 DAY)
-             ORDER BY a.analyzed_at DESC LIMIT 1",
+			 JOIN {$urls_table} u ON a.url_id = u.id
+			 WHERE u.url = %s AND a.status = 'analyzed'
+			 AND a.analyzed_at > DATE_SUB(NOW(), INTERVAL 1 DAY)
+			 ORDER BY a.analyzed_at DESC LIMIT 1",
 				$url
 			)
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		if ( $existing_analysis ) {
 			// Analysis is recent, no need to re-analyze
 			return;
 		}
 
-		// Try to find object_id and object_type from URL
-		$object_id   = null;
-		$object_type = null;
+		$resolved    = SEO_Issues_Manager::resolve_object_from_url( $url );
+		$object_id   = $resolved['object_id'];
+		$object_type = $resolved['object_type'];
 
-		// Check if it's a post URL
-		$post_id = url_to_postid( $url );
-		if ( $post_id ) {
-			$object_id   = $post_id;
-			$object_type = 'post';
-		} else {
-			// Check if it's a term URL
-			$term = get_term_by( 'slug', basename( $url ) );
-			if ( $term && ! is_wp_error( $term ) ) {
-				$object_id   = $term->term_id;
-				$object_type = 'term';
-			}
+		if ( $object_id && 'post' === $object_type && SEO_Issues_Manager::should_exclude_from_analysis( $object_id ) ) {
+			return;
 		}
 
-		// Schedule SEO analysis
-		as_schedule_single_action(
-			time() + 10, // Schedule 10 seconds from now
-			'sb_analyze_seo_for_url',
-			array(
+		// Schedule SEO analysis (deduped helper; slight delay to finish keyword write).
+		if ( function_exists( 'as_schedule_single_action' ) ) {
+			$args = array(
 				'url'         => $url,
 				'object_id'   => $object_id,
 				'object_type' => $object_type,
-			),
-			'seo-booster'
-		);
+			);
+			if ( function_exists( 'as_has_scheduled_action' ) && as_has_scheduled_action( 'sb_analyze_seo_for_url', $args, 'seo-booster' ) ) {
+				return;
+			}
+			as_schedule_single_action( time() + 10, 'sb_analyze_seo_for_url', $args, 'seo-booster' );
+		}
 	}
 }
 

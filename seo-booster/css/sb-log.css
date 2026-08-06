@@ -1,0 +1,46 @@
+/**
+ * Debug Log page — builds on sb-ui.css tokens.
+ *
+ * @package Cleverplugins\SEOBooster
+ */
+
+.sb-log-page .sb-log-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	width: 100%;
+	margin: 0 0 12px;
+}
+
+.sb-log-page .sb-log-toolbar__search {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+}
+
+.sb-log-page .sb-log-toolbar__actions {
+	margin-left: auto;
+}
+
+.sb-log-page .sb-log-pagination {
+	margin-bottom: 8px;
+}
+
+.sb-log-page .sb-log-table-wrap {
+	margin-top: 4px;
+	overflow-x: auto;
+}
+
+.sb-log-page #seobooster_tabulator {
+	width: 100%;
+}
+
+.sb-log-page .sb-log-results-count {
+	margin: 10px 0 0;
+	font-size: 13px;
+	color: var(--sb-ui-muted);
+}

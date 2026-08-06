@@ -39,7 +39,11 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 	 * @return bool
 	 */
 	public function is_active() {
-		return class_exists( 'AIOSEO' ) && function_exists( 'aioseo' );
+		if ( function_exists( 'aioseo' ) ) {
+			return true;
+		}
+
+		return class_exists( '\AIOSEO\Plugin\AIOSEO' ) || ( defined( 'AIOSEO_VERSION' ) && class_exists( 'AIOSEO' ) );
 	}
 
 	/**
@@ -73,6 +77,45 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 			'title'       => sanitize_text_field( (string) ( $record->title ?? '' ) ),
 			'description' => sanitize_textarea_field( (string) ( $record->description ?? '' ) ),
 		);
+	}
+
+	/**
+	 * @param int $post_id Post ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_post_seo_resolved( $post_id ) {
+		$raw = $this->read_post_seo( $post_id );
+		if ( ! function_exists( 'aioseo' ) ) {
+			return $raw;
+		}
+
+		try {
+			$aioseo = aioseo();
+			if ( ! is_object( $aioseo ) || ! isset( $aioseo->meta ) || ! is_object( $aioseo->meta ) ) {
+				return $raw;
+			}
+
+			$meta  = $aioseo->meta;
+			$title = '';
+			$desc  = '';
+
+			if ( isset( $meta->title ) && is_object( $meta->title ) && method_exists( $meta->title, 'getTitle' ) ) {
+				$title = (string) $meta->title->getTitle( (int) $post_id );
+			}
+			if ( isset( $meta->description ) && is_object( $meta->description ) && method_exists( $meta->description, 'getDescription' ) ) {
+				$desc = (string) $meta->description->getDescription( (int) $post_id );
+			}
+
+			if ( $title !== '' || $desc !== '' ) {
+				return array(
+					'title'       => sanitize_text_field( $title !== '' ? $title : $raw['title'] ),
+					'description' => sanitize_textarea_field( $desc !== '' ? $desc : $raw['description'] ),
+				);
+			}
+		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Keep raw.
+		}
+
+		return $raw;
 	}
 
 	/**
@@ -113,18 +156,7 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 			return array();
 		}
 
-		$keywords = explode( ',', (string) $record->keywords );
-
-		return array_values(
-			array_filter(
-				array_map(
-					static function ( $keyword ) {
-						return sanitize_text_field( trim( $keyword ) );
-					},
-					$keywords
-				)
-			)
-		);
+		return $this->parse_keyword_list( (string) $record->keywords );
 	}
 
 	/**
@@ -133,14 +165,11 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 	 * @return void
 	 */
 	public function write_focus_keyword( $post_id, $keyword, $append_if_missing = false ) {
-		$keywords = sanitize_text_field( $keyword );
-		if ( $append_if_missing ) {
-			$existing = $this->read_focus_keywords( $post_id );
-			if ( ! empty( $existing ) && ! in_array( trim( $keyword ), $existing, true ) ) {
-				array_unshift( $existing, trim( $keyword ) );
-				$keywords = implode( ', ', array_unique( $existing ) );
-			}
-		}
+		$keywords = $this->resolve_aioseo_keywords_value(
+			$this->read_focus_keywords( $post_id ),
+			$keyword,
+			$append_if_missing
+		);
 
 		$this->update_aioseo_post_fields(
 			$post_id,
@@ -183,6 +212,14 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 	}
 
 	/**
+	 * @param int $term_id Term ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_term_seo_resolved( $term_id ) {
+		return $this->read_term_seo( $term_id );
+	}
+
+	/**
 	 * @param int    $term_id Term ID.
 	 * @param string $title   Title.
 	 * @return void
@@ -220,18 +257,7 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 			return array();
 		}
 
-		$keywords = explode( ',', (string) $record->keywords );
-
-		return array_values(
-			array_filter(
-				array_map(
-					static function ( $keyword ) {
-						return sanitize_text_field( trim( $keyword ) );
-					},
-					$keywords
-				)
-			)
-		);
+		return $this->parse_keyword_list( (string) $record->keywords );
 	}
 
 	/**
@@ -241,14 +267,11 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 	 * @return void
 	 */
 	public function write_focus_keyword_for_term( $term_id, $keyword, $append_if_missing = false ) {
-		$keywords = sanitize_text_field( $keyword );
-		if ( $append_if_missing ) {
-			$existing = $this->read_focus_keywords_for_term( $term_id );
-			if ( ! empty( $existing ) && ! in_array( trim( $keyword ), $existing, true ) ) {
-				array_unshift( $existing, trim( $keyword ) );
-				$keywords = implode( ', ', array_unique( $existing ) );
-			}
-		}
+		$keywords = $this->resolve_aioseo_keywords_value(
+			$this->read_focus_keywords_for_term( $term_id ),
+			$keyword,
+			$append_if_missing
+		);
 
 		$this->update_aioseo_term_fields(
 			$term_id,
@@ -335,7 +358,8 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 			return array();
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Column from hardcoded title|description allowlist; table from prefix.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		return $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT p.ID, p.post_title, 'post_seo' AS type
@@ -348,6 +372,7 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 				$exclude_id
 			)
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	}
 
 	public function find_duplicate_terms( $field, $value, $exclude_id ) {
@@ -372,7 +397,8 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 			return array();
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Column from hardcoded title|description allowlist; table from prefix.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		return $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT t.term_id, t.name, tt.taxonomy, 'term_seo' AS type
@@ -385,6 +411,7 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 				$exclude_id
 			)
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	}
 
 	/**
@@ -446,13 +473,15 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 			return null;
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		return $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT term_id, title, description, keywords FROM {$table} WHERE term_id = %d LIMIT 1",
 				(int) $term_id
 			)
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	}
 
 	/**
@@ -586,5 +615,56 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 	 */
 	public function get_focus_keyword_term_meta_key() {
 		return null;
+	}
+
+	/**
+	 * Build comma-separated keywords for AIOSEO, preserving siblings on append.
+	 *
+	 * @param string[] $existing          Existing keywords.
+	 * @param string   $keyword           New primary keyword.
+	 * @param bool     $append_if_missing When true, prepend if missing; keep list if already present.
+	 * @return string
+	 */
+	private function resolve_aioseo_keywords_value( array $existing, $keyword, $append_if_missing ) {
+		$keyword = sanitize_text_field( trim( (string) $keyword ) );
+		if ( ! $append_if_missing ) {
+			return $keyword;
+		}
+
+		if ( $keyword === '' ) {
+			return implode( ', ', $existing );
+		}
+
+		if ( in_array( $keyword, $existing, true ) ) {
+			return implode( ', ', $existing );
+		}
+
+		array_unshift( $existing, $keyword );
+
+		return implode( ', ', array_values( array_unique( $existing ) ) );
+	}
+
+	/**
+	 * @param string $raw Comma-separated keywords.
+	 * @return string[]
+	 */
+	private function parse_keyword_list( $raw ) {
+		$raw = trim( (string) $raw );
+		if ( $raw === '' ) {
+			return array();
+		}
+
+		$keywords = preg_split( '/\s*,\s*/', $raw );
+
+		return array_values(
+			array_filter(
+				array_map(
+					static function ( $keyword ) {
+						return sanitize_text_field( trim( (string) $keyword ) );
+					},
+					is_array( $keywords ) ? $keywords : array()
+				)
+			)
+		);
 	}
 }

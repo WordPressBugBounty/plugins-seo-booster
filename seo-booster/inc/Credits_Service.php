@@ -290,6 +290,7 @@ class Credits_Service {
 			$body['callback_url'] = $callback_url;
 		}
 
+		LLM_Helper::log_ai_request( 'seo-booster-credits', $type );
 		$result = self::api_request( 'POST', '/requests', $body );
 
 		if ( $result['success'] && ! empty( $result['data']['request_id'] ) ) {
@@ -402,6 +403,6 @@ class Credits_Service {
 			return false;
 		}
 
-		return get_option( 'seobooster_ai_provider', 'disabled' ) === 'seobooster';
+		return LLM_Helper::get_selected_ai_provider() === 'seobooster';
 	}
 }

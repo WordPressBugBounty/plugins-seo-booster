@@ -102,22 +102,20 @@ class LLM_Helper {
 	}
 
 	/**
-	 * Convert WPML 2-letter language code to WordPress locale format.
+	 * Map of ISO language codes to WordPress locales.
 	 *
-	 * WordPress doesn't provide built-in functionality to convert language codes to locales,
-	 * so we use a mapping as fallback when wpml_post_language_details only returns language_code.
-	 *
-	 * @since 6.1.26
-	 * @param string $language_code 2-letter language code (e.g., 'en', 'da', 'fr').
-	 * @return string WordPress locale format (e.g., 'en_US', 'da_DK').
+	 * @since 7.3.3
+	 * @return array<string, string>
 	 */
-	private static function convert_language_code_to_locale( $language_code ) {
-		// Mapping for common languages (WordPress doesn't provide this conversion)
-		$code_to_locale = array(
+	private static function get_language_code_map() {
+		return array(
 			'en' => 'en_US',
 			'da' => 'da_DK',
 			'sv' => 'sv_SE',
-			'no' => 'no_NO',
+			'no' => 'nb_NO',
+			'nb' => 'nb_NO',
+			'nn' => 'nn_NO',
+			'fi' => 'fi',
 			'de' => 'de_DE',
 			'fr' => 'fr_FR',
 			'es' => 'es_ES',
@@ -126,9 +124,60 @@ class LLM_Helper {
 			'nl' => 'nl_NL',
 			'pl' => 'pl_PL',
 			'ru' => 'ru_RU',
+			'cs' => 'cs_CZ',
+			'sk' => 'sk_SK',
+			'hu' => 'hu_HU',
+			'ro' => 'ro_RO',
+			'bg' => 'bg_BG',
+			'hr' => 'hr',
+			'sl' => 'sl_SI',
+			'et' => 'et',
+			'lv' => 'lv',
+			'lt' => 'lt_LT',
+			'el' => 'el',
+			'tr' => 'tr_TR',
+			'uk' => 'uk',
+			'ar' => 'ar',
+			'he' => 'he_IL',
+			'hi' => 'hi_IN',
+			'ja' => 'ja',
+			'ko' => 'ko_KR',
+			'zh' => 'zh_CN',
+			'th' => 'th',
+			'vi' => 'vi',
+			'id' => 'id_ID',
+			'ms' => 'ms_MY',
+			'ca' => 'ca',
+			'eu' => 'eu',
+			'gl' => 'gl_ES',
+			'is' => 'is_IS',
+			'af' => 'af',
+			'sw' => 'sw',
 		);
+	}
 
-		return $code_to_locale[ $language_code ] ?? 'en_US';
+	/**
+	 * Convert WPML/Polylang 2-letter language code to WordPress locale format.
+	 *
+	 * Unknown codes fall back to the site locale (never silently to en_US).
+	 *
+	 * @since 6.1.26
+	 * @param string $language_code 2-letter language code (e.g., 'en', 'da', 'fr').
+	 * @return string WordPress locale format (e.g., 'en_US', 'da_DK').
+	 */
+	private static function convert_language_code_to_locale( $language_code ) {
+		$language_code = strtolower( trim( (string) $language_code ) );
+		if ( $language_code === '' ) {
+			return get_locale();
+		}
+
+		$code_to_locale = self::get_language_code_map();
+
+		if ( isset( $code_to_locale[ $language_code ] ) ) {
+			return $code_to_locale[ $language_code ];
+		}
+
+		return get_locale();
 	}
 
 	/**
@@ -139,10 +188,22 @@ class LLM_Helper {
 	 * @return string Normalized locale.
 	 */
 	private static function normalize_locale( $locale ) {
-		// Normalize common variants
+		$locale = trim( (string) $locale );
+		if ( $locale === '' ) {
+			return get_locale();
+		}
+
+		// Bare ISO codes → full locales from the shared map.
+		$code_map = self::get_language_code_map();
+		if ( isset( $code_map[ $locale ] ) ) {
+			return $code_map[ $locale ];
+		}
+
 		$normalizations = array(
-			'en_GB' => 'en_US', // Normalize British English to US English
-			'da'    => 'da_DK',    // Normalize 2-letter code to full locale
+			'en_GB' => 'en_US',
+			'no_NO' => 'nb_NO',
+			'nn'    => 'nn_NO',
+			'nb'    => 'nb_NO',
 		);
 
 		return $normalizations[ $locale ] ?? $locale;
@@ -150,6 +211,8 @@ class LLM_Helper {
 
 	/**
 	 * Get language name from locale code.
+	 *
+	 * Names are English identifiers for AI prompts (not translated UI strings).
 	 *
 	 * @since 6.1.26
 	 * @param string $locale WordPress locale code (e.g., 'da_DK', 'en_US').
@@ -160,19 +223,151 @@ class LLM_Helper {
 			'da_DK' => 'Danish',
 			'en_US' => 'English',
 			'sv_SE' => 'Swedish',
+			'nb_NO' => 'Norwegian',
+			'nn_NO' => 'Norwegian Nynorsk',
 			'no_NO' => 'Norwegian',
+			'fi'    => 'Finnish',
 			'de_DE' => 'German',
+			'de_AT' => 'German',
+			'de_CH' => 'German',
 			'fr_FR' => 'French',
+			'fr_BE' => 'French',
+			'fr_CA' => 'French',
 			'es_ES' => 'Spanish',
+			'es_MX' => 'Spanish',
+			'es_AR' => 'Spanish',
 			'it_IT' => 'Italian',
 			'pt_PT' => 'Portuguese',
+			'pt_BR' => 'Portuguese',
 			'nl_NL' => 'Dutch',
+			'nl_BE' => 'Dutch',
 			'pl_PL' => 'Polish',
 			'ru_RU' => 'Russian',
+			'cs_CZ' => 'Czech',
+			'sk_SK' => 'Slovak',
+			'hu_HU' => 'Hungarian',
+			'ro_RO' => 'Romanian',
+			'bg_BG' => 'Bulgarian',
+			'hr'    => 'Croatian',
+			'sl_SI' => 'Slovenian',
+			'et'    => 'Estonian',
+			'lv'    => 'Latvian',
+			'lt_LT' => 'Lithuanian',
+			'el'    => 'Greek',
+			'tr_TR' => 'Turkish',
+			'uk'    => 'Ukrainian',
+			'ar'    => 'Arabic',
+			'he_IL' => 'Hebrew',
+			'hi_IN' => 'Hindi',
+			'ja'    => 'Japanese',
+			'ko_KR' => 'Korean',
+			'zh_CN' => 'Chinese',
+			'zh_TW' => 'Chinese',
+			'th'    => 'Thai',
+			'vi'    => 'Vietnamese',
+			'id_ID' => 'Indonesian',
+			'ms_MY' => 'Malay',
+			'ca'    => 'Catalan',
+			'eu'    => 'Basque',
+			'gl_ES' => 'Galician',
+			'is_IS' => 'Icelandic',
+			'af'    => 'Afrikaans',
+			'sw'    => 'Swahili',
 		);
 
-		// Return language name if found, otherwise return locale code
-		return $language_names[ $locale ] ?? $locale;
+		if ( isset( $language_names[ $locale ] ) ) {
+			return $language_names[ $locale ];
+		}
+
+		// Try language portion only (e.g. de_CH → de_DE map miss → "de").
+		$parts = explode( '_', $locale );
+		if ( count( $parts ) > 1 ) {
+			$code_map = self::get_language_code_map();
+			$lang     = strtolower( $parts[0] );
+			if ( isset( $code_map[ $lang ] ) && isset( $language_names[ $code_map[ $lang ] ] ) ) {
+				return $language_names[ $code_map[ $lang ] ];
+			}
+		}
+
+		return $locale;
+	}
+
+	/**
+	 * Ensure a string is valid UTF-8 safe for JSON encoding (AI connectors).
+	 *
+	 * Invalid sequences are stripped; never returns bytes that break json_encode.
+	 *
+	 * @since 7.3.3
+	 * @param mixed $value Input value (cast to string).
+	 * @return string Valid UTF-8 string.
+	 */
+	public static function ensure_utf8( $value ) {
+		$string = (string) $value;
+		if ( $string === '' ) {
+			return '';
+		}
+
+		// Null bytes break JSON and some HTTP clients.
+		$string = str_replace( "\0", '', $string );
+
+		if ( function_exists( 'wp_check_invalid_utf8' ) ) {
+			$checked = wp_check_invalid_utf8( $string, true );
+			if ( is_string( $checked ) ) {
+				$string = $checked;
+			}
+		}
+
+		if ( function_exists( 'mb_check_encoding' ) && mb_check_encoding( $string, 'UTF-8' ) ) {
+			return $string;
+		}
+
+		if ( function_exists( 'mb_convert_encoding' ) ) {
+			$converted = @mb_convert_encoding( $string, 'UTF-8', 'UTF-8' );
+			if ( is_string( $converted ) ) {
+				$string = $converted;
+			}
+		} elseif ( function_exists( 'iconv' ) ) {
+			$converted = @iconv( 'UTF-8', 'UTF-8//IGNORE', $string );
+			if ( is_string( $converted ) ) {
+				$string = $converted;
+			}
+		}
+
+		// Last resort: strip non-UTF-8 via json_encode round-trip with substitute.
+		$encoded = wp_json_encode( $string );
+		if ( false === $encoded ) {
+			$string  = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $string );
+			$encoded = wp_json_encode( $string );
+		}
+		if ( is_string( $encoded ) ) {
+			$decoded = json_decode( $encoded );
+			if ( is_string( $decoded ) ) {
+				return $decoded;
+			}
+		}
+
+		return $string;
+	}
+
+	/**
+	 * Ensure every string in an array is valid UTF-8.
+	 *
+	 * @since 7.3.3
+	 * @param array $values List of values.
+	 * @return array
+	 */
+	public static function ensure_utf8_array( array $values ) {
+		$out = array();
+		foreach ( $values as $key => $value ) {
+			if ( is_array( $value ) ) {
+				$out[ $key ] = self::ensure_utf8_array( $value );
+			} elseif ( is_string( $value ) ) {
+				$out[ $key ] = self::ensure_utf8( $value );
+			} else {
+				$out[ $key ] = $value;
+			}
+		}
+		return $out;
 	}
 
 	/**
@@ -309,6 +504,52 @@ class LLM_Helper {
 	 */
 	public static function ai_prompt( $prompt ) {
 		return self::call_optional_wp_function( 'wp_ai_client_prompt', $prompt );
+	}
+
+	/**
+	 * Record and send a WordPress Connectors AI request.
+	 *
+	 * Logs metadata only. Prompt content, URLs, IDs, and credentials are never
+	 * included in the debug log entry.
+	 *
+	 * @since 7.4.0
+	 * @param mixed  $builder Prepared WordPress AI prompt builder.
+	 * @param string $source  Fixed feature identifier for the request origin.
+	 * @return mixed AI response.
+	 */
+	public static function generate_ai_text( $builder, $source ) {
+		self::log_ai_request( 'wordpress-connectors', $source );
+
+		return $builder->generate_text();
+	}
+
+	/**
+	 * Record an outbound AI generation request without sensitive request data.
+	 *
+	 * @since 7.4.0
+	 * @param string $provider AI transport or provider identifier.
+	 * @param string $source   Fixed feature identifier for the request origin.
+	 * @return void
+	 */
+	public static function log_ai_request( $provider, $source ) {
+		$provider = sanitize_key( $provider );
+		$source   = sanitize_key( $source );
+
+		if ( '' === $provider ) {
+			$provider = 'unknown';
+		}
+		if ( '' === $source ) {
+			$source = 'unknown';
+		}
+
+		Utils::log(
+			sprintf(
+				'AI request sent: provider=%s source=%s',
+				$provider,
+				$source
+			),
+			5
+		);
 	}
 
 	/**
@@ -590,6 +831,39 @@ class LLM_Helper {
 	}
 
 	/**
+	 * Normalize a raw AI provider value to a canonical option string.
+	 *
+	 * Accepts form slugs and legacy values case-insensitively, e.g. "wordpress",
+	 * "WordPress", and legacy "openai" all map to "WordPress".
+	 *
+	 * @since 7.4.0
+	 * @param mixed $provider Raw option or form value.
+	 * @return string One of disabled, WordPress, seobooster, or empty string if unknown.
+	 */
+	public static function normalize_ai_provider( $provider ) {
+		if ( ! is_string( $provider ) ) {
+			return '';
+		}
+
+		$lower = strtolower( trim( $provider ) );
+
+		if ( 'disabled' === $lower ) {
+			return 'disabled';
+		}
+
+		// Form radio historically posted "wordpress"; legacy installs used "openai".
+		if ( 'wordpress' === $lower || 'openai' === $lower ) {
+			return 'WordPress';
+		}
+
+		if ( 'seobooster' === $lower ) {
+			return 'seobooster';
+		}
+
+		return '';
+	}
+
+	/**
 	 * Effective AI provider for UI and runtime (normalized from the stored option).
 	 *
 	 * Treats unavailable Credits selection and legacy values the same way as Settings.
@@ -598,18 +872,13 @@ class LLM_Helper {
 	 * @return string One of disabled, WordPress, seobooster.
 	 */
 	public static function get_selected_ai_provider() {
-		$provider = get_option( 'seobooster_ai_provider', 'disabled' );
+		$provider = self::normalize_ai_provider( get_option( 'seobooster_ai_provider', 'disabled' ) );
 
-		// Normalize legacy and case-variant values to the canonical 'WordPress'.
-		if ( $provider === 'openai' || strtolower( (string) $provider ) === 'WordPress' ) {
-			$provider = 'WordPress';
-		}
-
-		if ( $provider === 'seobooster' && ! Credits_Service::is_ai_provider_available() ) {
+		if ( '' === $provider ) {
 			return 'disabled';
 		}
 
-		if ( ! in_array( $provider, array( 'disabled', 'WordPress', 'seobooster' ), true ) ) {
+		if ( 'seobooster' === $provider && ! Credits_Service::is_ai_provider_available() ) {
 			return 'disabled';
 		}
 

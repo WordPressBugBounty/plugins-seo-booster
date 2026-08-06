@@ -2,6 +2,8 @@
 
 namespace Cleverplugins\SEOBooster\Tools;
 
+use Cleverplugins\SEOBooster\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -88,6 +90,20 @@ abstract class Tools_Batch_Base {
 	 * @return array{item_ids: int[], config: array}
 	 */
 	abstract protected static function prepare_batch_from_request();
+
+	/**
+	 * Whether the current user may process this batch item.
+	 *
+	 * Default: object-level edit capability on the item ID (post or attachment).
+	 *
+	 * @param int   $item_id Item ID.
+	 * @param array $config  Batch config.
+	 * @return bool
+	 */
+	protected static function current_user_can_process_item( $item_id, array $config ) {
+		unset( $config );
+		return \Cleverplugins\SEOBooster\Utils::user_can_edit_object( (int) $item_id );
+	}
 
 	/**
 	 * Process one item.
@@ -232,10 +248,14 @@ abstract class Tools_Batch_Base {
 			wp_send_json_error( array( 'message' => __( 'Item not in batch', 'seo-booster' ) ) );
 		}
 
+		$config = isset( $batch['config'] ) && is_array( $batch['config'] ) ? $batch['config'] : array();
+		if ( ! static::current_user_can_process_item( $item_id, $config ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied', 'seo-booster' ) ) );
+		}
+
 		static::update_batch_status( $batch_id, 'processing', $item_id );
 
 		try {
-			$config  = isset( $batch['config'] ) && is_array( $batch['config'] ) ? $batch['config'] : array();
 			$payload = static::process_single( $item_id, $config );
 			static::update_batch_status( $batch_id, 'processed', $item_id );
 			static::on_item_processed( $batch_id, $item_id, $payload, $config );
@@ -245,10 +265,8 @@ abstract class Tools_Batch_Base {
 
 			wp_send_json_success( $payload );
 		} catch ( \Throwable $e ) {
-			$message = $e->getMessage();
-			if ( $message === '' ) {
-				$message = __( 'Processing failed.', 'seo-booster' );
-			}
+			Utils::log( 'Tools batch item failed: ' . $e->getMessage(), 2 );
+			$message = __( 'Something went wrong. Check the SEO Booster debug log for details.', 'seo-booster' );
 
 			static::update_batch_status( $batch_id, 'failed', $item_id, $message );
 			$batch = static::get_batch( $batch_id );

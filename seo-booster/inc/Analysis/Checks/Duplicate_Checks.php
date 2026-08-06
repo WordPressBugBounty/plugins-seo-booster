@@ -7,6 +7,7 @@ use Cleverplugins\SEOBooster\Analysis\Content_Context;
 use Cleverplugins\SEOBooster\Analysis\Html_Document;
 use Cleverplugins\SEOBooster\Analysis\Result_Set;
 use Cleverplugins\SEOBooster\SEO_Plugin_Registry;
+use Cleverplugins\SEOBooster\SEO_Plugins\Abstract_Post_Meta_Adapter;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -40,8 +41,9 @@ class Duplicate_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_duplicate_titles( Content_Context $context, Result_Set $results ) {
-		$title = $context->seo_data['title'] ?? '';
-		if ( empty( $title ) ) {
+		$raw = $this->get_raw_seo_fields( $context );
+		$title = $raw['title'];
+		if ( $title === '' || Abstract_Post_Meta_Adapter::looks_like_seo_template( $title ) ) {
 			return;
 		}
 
@@ -83,8 +85,9 @@ class Duplicate_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_duplicate_meta_descriptions( Content_Context $context, Result_Set $results ) {
-		$description = $context->seo_data['description'] ?? '';
-		if ( empty( $description ) ) {
+		$raw         = $this->get_raw_seo_fields( $context );
+		$description = $raw['description'];
+		if ( $description === '' || Abstract_Post_Meta_Adapter::looks_like_seo_template( $description ) ) {
 			return;
 		}
 
@@ -100,6 +103,26 @@ class Duplicate_Checks extends Abstract_Checks {
 		$message        .= '<br><small>Used by: ' . $duplicate_links . '</small>';
 
 		$results->add_warning( 'duplicate_meta_description', $message );
+	}
+
+	/**
+	 * Raw stored SEO fields for duplicate SQL (not resolved templates).
+	 *
+	 * @param Content_Context $context Context.
+	 * @return array{title: string, description: string}
+	 */
+	private function get_raw_seo_fields( Content_Context $context ) {
+		if ( $context->object_type === 'post' && $context->object_id > 0 ) {
+			return SEO_Plugin_Registry::read_post_seo( $context->object_id );
+		}
+		if ( $context->object_type === 'term' && $context->object_id > 0 ) {
+			return SEO_Plugin_Registry::read_term_seo( $context->object_id );
+		}
+
+		return array(
+			'title'       => '',
+			'description' => '',
+		);
 	}
 
 	/**

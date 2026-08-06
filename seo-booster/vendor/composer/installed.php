@@ -3,7 +3,7 @@
         'name' => 'cleverplugins/seo-booster',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '53597eef5bb885910c38cdf22ffe3dfc3590f6a4',
+        'reference' => '8319ccd21fd1486936c6a68f8d82fe74471244a8',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'cleverplugins/seo-booster' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '53597eef5bb885910c38cdf22ffe3dfc3590f6a4',
+            'reference' => '8319ccd21fd1486936c6a68f8d82fe74471244a8',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

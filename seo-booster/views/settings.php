@@ -30,13 +30,19 @@ $seo_analysis_batch_size = get_option( 'seobooster_seo_analysis_batch_size', 1 )
 $seo_possibilities_enabled = get_option( 'seobooster_seo_possibilities_enabled', 'on' );
 $seo_possibilities_frequency = get_option( 'seobooster_seo_possibilities_frequency', 60 );
 // Form processing is now handled by Form_Processor class in admin_init() method
+?>
+<div class="wrap sb-wrap sb-dashboard sb-settings-page">
+	<?php 
 echo wp_kses_post( Utils::show_plugin_headline( __( 'Settings', 'seo-booster' ), true ) );
 settings_errors( 'seobooster_messages' );
 echo '<div class="sb-admin-seo-compat-wrap">';
 require SEOBOOSTER_PLUGINPATH . 'inc/views/seo-plugin-compat-notice.php';
 echo '</div>';
 ?>
-<div class="seo-booster-settings-page">
+	<section class="sb-ui-panel seo-booster-settings-page" aria-labelledby="sb-settings-panel-title">
+		<h2 class="sb-ui-title screen-reader-text" id="sb-settings-panel-title"><?php 
+esc_html_e( 'Settings', 'seo-booster' );
+?></h2>
 	<!-- Tab Navigation -->
 	<div class="sb-seo-tabs">
 		<nav class="nav-tab-wrapper">
@@ -119,7 +125,7 @@ if ( 'on' === $seobooster_weekly_email ) {
 									<span class="sb-toggle-slider"></span>
 								</div>
 								<span><?php 
-esc_html_e( 'Send a weekly email with new information from the past week.', 'seo-booster' );
+esc_html_e( 'Send a weekly email with Google Search performance and SEO opportunities.', 'seo-booster' );
 ?></span>
 							</label>
 							<?php 
@@ -143,11 +149,9 @@ esc_html_e( 'Recipient(s)', 'seo-booster' );
 ?>
 						</th>
 						<td>
-							<input type="text" id="seobooster_weekly_email_recipient" name="seobooster_weekly_email_recipient" value="
-							<?php 
+							<input type="text" id="seobooster_weekly_email_recipient" name="seobooster_weekly_email_recipient" value="<?php 
 echo esc_attr( $seobooster_weekly_email_recipient );
-?>
-							" class="regular-text">
+?>" class="regular-text">
 							<p class="description">
 								<label for="seobooster_weekly_email_recipient">
 									<?php 
@@ -169,6 +173,25 @@ submit_button( esc_html__( 'Send Weekly Email', 'seo-booster' ), 'secondary', 's
 ?>
 							<p class="description"><?php 
 esc_html_e( 'Manually send the weekly email update now.', 'seo-booster' );
+?></p>
+						</td>
+					</tr>
+					<tr valign="top">
+						<th scope="row" valign="top">
+							<?php 
+esc_html_e( 'Setup Wizard', 'seo-booster' );
+?>
+						</th>
+						<td>
+							<a class="button" href="<?php 
+echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=sb_setup_restart' ), 'sb_setup_restart' ) );
+?>">
+								<?php 
+esc_html_e( 'Run setup again', 'seo-booster' );
+?>
+							</a>
+							<p class="description"><?php 
+esc_html_e( 'Walk through connecting Search Console, email, automatic links, and more. Your existing data stays intact.', 'seo-booster' );
 ?></p>
 						</td>
 					</tr>
@@ -330,10 +353,13 @@ $excluded_elements = get_option( 'seobooster_excluded_elements', array(
     'blockquote' => 1,
 ) );
 $mandatory_elements = array(
-    'a'      => __( 'Existing links', 'seo-booster' ),
-    'script' => __( 'Scripts', 'seo-booster' ),
-    'style'  => __( 'Style tags', 'seo-booster' ),
-    'head'   => __( 'Head section', 'seo-booster' ),
+    'a'        => __( 'Existing links', 'seo-booster' ),
+    'code'     => __( 'Code & preformatted blocks', 'seo-booster' ),
+    'script'   => __( 'Scripts', 'seo-booster' ),
+    'style'    => __( 'Style tags', 'seo-booster' ),
+    'head'     => __( 'Head section', 'seo-booster' ),
+    'textarea' => __( 'Form fields & controls', 'seo-booster' ),
+    'svg'      => __( 'SVG graphics', 'seo-booster' ),
 );
 $element_groups = array(
     'headings' => array(
@@ -443,7 +469,7 @@ esc_html_e( 'Why wasn\'t my keyword linked?', 'seo-booster' );
 esc_html_e( '404 error monitoring', 'seo-booster' );
 ?></h3>
 							<p class="description"><?php 
-esc_html_e( 'Optional Pro feature — track broken links visitors hit on your site.', 'seo-booster' );
+esc_html_e( 'Optional Pro feature: track broken links visitors hit on your site.', 'seo-booster' );
 ?></p>
 						</th>
 					</tr>
@@ -594,61 +620,11 @@ esc_html_e( 'Import GSC Data', 'seo-booster' );
 esc_html_e( 'Change GSC Site', 'seo-booster' );
 ?>
 								</button>
-								<?php 
-// Generate authentication parameters for re-authentication
-$install_id = '';
-$site_private_key = '';
-// Try to get from Freemius first
-if ( function_exists( 'seobooster_fs' ) && seobooster_fs()->is_registered() ) {
-    try {
-        $install_id = seobooster_fs()->get_site()->id;
-        $site_private_key = seobooster_fs()->get_site()->secret_key;
-    } catch ( \Exception $e ) {
-        // Fall through to alternative methods
-    }
-}
-// Fallback to alternative ID if Freemius not available
-if ( empty( $install_id ) ) {
-    $alt_install_id = get_option( 'seobooster_alt_install_id' );
-    if ( empty( $alt_install_id ) ) {
-        $salt = 'seobooster_' . substr( wp_generate_password( 8, false, false ), 0, 8 );
-        $site_url = site_url();
-        $alt_install_id = 'ALT_' . substr( md5( $site_url . $salt ), 0, 16 );
-        update_option( 'seobooster_alt_install_id', $alt_install_id, false );
-    }
-    $install_id = $alt_install_id;
-}
-// Fallback to alternative key if Freemius not available
-if ( empty( $site_private_key ) ) {
-    $alt_site_key = get_option( 'seobooster_alt_site_key' );
-    if ( empty( $alt_site_key ) ) {
-        $alt_site_key = wp_generate_password( 32, true, true );
-        update_option( 'seobooster_alt_site_key', $alt_site_key, false );
-    }
-    $site_private_key = $alt_site_key;
-}
-// Generate authentication string
-if ( !empty( $install_id ) && !empty( $site_private_key ) ) {
-    $nonce = gmdate( 'Y-m-d' );
-    $return_to = admin_url( 'admin.php?page=sb2_settings#gsc' );
-    $pk_hash = hash( 'sha512', $site_private_key . '|' . $nonce );
-    $authentication_string = base64_encode( $pk_hash . '|' . $nonce );
-    $auth_url = add_query_arg( array(
-        'install_id' => $install_id,
-        'auth_token' => $authentication_string,
-        'return_to'  => $return_to,
-    ), 'https://seoboosterauth.com/auth' );
-    ?>
-									<a href="<?php 
-    echo esc_url( $auth_url );
-    ?>" target="_blank" class="button">
-										<?php 
-    esc_html_e( 'Re-authenticate with Google', 'seo-booster' );
-    ?>
-									</a>
+								<button type="button" class="button sb-oauth-start" data-sb-oauth-destination="settings">
 									<?php 
-}
+esc_html_e( 'Re-authenticate with Google', 'seo-booster' );
 ?>
+								</button>
 							</div>
 						</div>
 						<div id="settings-import-status" style="margin-top: 10px;"></div>
@@ -835,7 +811,7 @@ esc_html_e( 'Disabled', 'seo-booster' );
 ?>
 							</label><br>
 							<label>
-								<input type="radio" name="seobooster_ai_provider" value="wordpress" <?php 
+								<input type="radio" name="seobooster_ai_provider" value="WordPress" <?php 
 checked( $ai_provider, 'WordPress' );
 ?>>
 								<?php 
@@ -1258,6 +1234,9 @@ esc_html_e( 'Clears all AI bot visits tracking data.', 'seo-booster' );
 							<li><strong>🗑️ <?php 
 esc_html_e( 'Removes all GSC options, including authentication, keyword data, and selected site.', 'seo-booster' );
 ?></strong></li>
+							<li>🗑️ <?php 
+esc_html_e( 'Resets the Setup Wizard so you can walk through first-run setup again.', 'seo-booster' );
+?></li>
 						</ul>
 						<?php 
 esc_html_e( "Keywords to links you've created will remain intact.", 'seo-booster' );
@@ -1266,7 +1245,7 @@ esc_html_e( "Keywords to links you've created will remain intact.", 'seo-booster
 submit_button( esc_html__( 'Clear All Data and Options', 'seo-booster' ), 'secondary', 'submit_allempty' );
 ?>
 						<p class="description" for="submit">⚠️ <?php 
-esc_html_e( "Warning: This will permanently change your database. Proceed with care—there's no going back!", 'seo-booster' );
+esc_html_e( "Warning: This will permanently change your database. Proceed with care. There's no going back!", 'seo-booster' );
 ?></p>
 					</td>
 				</tr>
@@ -1716,7 +1695,7 @@ esc_html_e( 'Save all settings across all tabs.', 'seo-booster' );
 		</table>
 	</div>
 	</form>
-</div>
+	</section>
 </div>
 
 <script type="text/javascript">

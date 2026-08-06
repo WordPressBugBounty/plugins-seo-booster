@@ -47,8 +47,8 @@
 					{
 						label: sbAiBotsData.strings.referralVisits,
 						data: referrals.visits || [],
-						borderColor: '#7c3aed',
-						backgroundColor: 'rgba(124, 58, 237, 0.12)',
+						borderColor: '#00824c',
+						backgroundColor: 'rgba(0, 130, 76, 0.12)',
 						fill: true,
 						tension: 0.2
 					}
@@ -83,8 +83,8 @@
 					{
 						label: sbAiBotsData.strings.contentVisits,
 						data: daily.content || [],
-						borderColor: '#2271b1',
-						backgroundColor: 'rgba(34, 113, 177, 0.15)',
+						borderColor: '#0073aa',
+						backgroundColor: 'rgba(0, 115, 170, 0.12)',
 						fill: true,
 						tension: 0.2
 					},
@@ -132,13 +132,22 @@
 						purpose.research || 0,
 						purpose.citation || 0
 					],
-					backgroundColor: ['#72aee6', '#00a32a']
+					backgroundColor: ['#0073aa', '#00824c']
 				}]
 			},
 			options: {
 				responsive: true,
 				maintainAspectRatio: true,
 				plugins: { legend: { display: false } }
+			}
+		});
+	}
+
+	function bindPeriodFilter() {
+		$('#filter-days').on('change', function () {
+			var form = document.getElementById('sb-ai-bots-days-form');
+			if (form) {
+				form.submit();
 			}
 		});
 	}
@@ -185,6 +194,7 @@
 		if (!$('.sb-ai-bots-page').length) {
 			return;
 		}
+		bindPeriodFilter();
 		fetchChartData();
 		bindBreakdownToggles();
 	});

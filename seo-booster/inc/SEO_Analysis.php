@@ -10,7 +10,9 @@ use Cleverplugins\SEOBooster\Analysis\Checks\Image_Checks;
 use Cleverplugins\SEOBooster\Analysis\Checks\Link_Checks;
 use Cleverplugins\SEOBooster\Analysis\Checks\Meta_Checks;
 use Cleverplugins\SEOBooster\Analysis\Content_Context;
+use Cleverplugins\SEOBooster\Analysis\Gsc_Inspection_Cache;
 use Cleverplugins\SEOBooster\Analysis\Html_Document;
+use Cleverplugins\SEOBooster\Analysis\Page_Reachability;
 use Cleverplugins\SEOBooster\Analysis\Result_Set;
 use Cleverplugins\SEOBooster\Analysis\Url_Status_Cache;
 
@@ -50,11 +52,12 @@ class SEO_Analysis {
 	 * Initialize the analysis.
 	 *
 	 * @since 6.1.26
-	 * @param int    $object_id Object ID.
-	 * @param string $object_type Object type (post, term).
+	 * @param int         $object_id Object ID.
+	 * @param string      $object_type Object type (post, term, url).
+	 * @param string|null $url Optional URL override for URL-only analysis.
 	 */
-	public function __construct( $object_id, $object_type = 'post' ) {
-		$this->context  = new Content_Context( $object_id, $object_type );
+	public function __construct( $object_id, $object_type = 'post', $url = null ) {
+		$this->context  = new Content_Context( $object_id, $object_type, $url );
 		$this->results  = new Result_Set();
 		$this->registry = self::build_registry();
 	}
@@ -109,15 +112,42 @@ class SEO_Analysis {
 		$this->context->refresh_seo_data();
 		$this->context->set_current_values( $current_title, $current_description, $current_focus_keyword );
 
+		$this->results = new Result_Set();
+		Url_Status_Cache::reset_time_budget( $this->context->bulk_mode ? 4 : 8 );
+
+		$should_gate = $use_full_page || $this->context->object_type === 'url';
+
+		// Direct files (PDF, images, archives) are not HTML pages: record an empty
+		// analysis so they leave the Possibilities queue without fake content audits.
+		if ( $should_gate && $this->is_non_html_file_target() ) {
+			$this->results->calculate_score();
+			$this->save_analysis_results( false );
+			return $this->results->to_array();
+		}
+
+		if ( $should_gate && $this->apply_reachability_gate() ) {
+			$this->results->calculate_score();
+			$this->save_analysis_results( false );
+			return $this->results->to_array();
+		}
+
 		if ( $use_full_page ) {
 			$this->context->prepare_full_page_content( $force_download );
 		}
 
-		$this->results = new Result_Set();
-		Url_Status_Cache::reset_time_budget( $this->context->bulk_mode ? 4 : 8 );
+		if ( $force_download ) {
+			$inspect_url = $this->context->get_object_url();
+			if ( $inspect_url !== '' ) {
+				Gsc_Inspection_Cache::invalidate( $inspect_url );
+			}
+		}
 
 		$document = $this->build_document();
 		$this->registry->run_all( $this->context, $document, $this->results );
+
+		$this->context->reachability = Page_Reachability::STATUS_LIVE;
+		$this->context->http_status  = 200;
+		$this->context->redirect_to  = '';
 
 		$this->results->calculate_score();
 		$this->save_analysis_results( $this->context->has_full_page );
@@ -147,7 +177,31 @@ class SEO_Analysis {
 			$result['message']   = __( 'Starting analysis...', 'seo-booster' );
 			$result['next_step'] = 'download';
 		} elseif ( 'download' === $step ) {
+			$this->context->refresh_seo_data();
+			if ( $this->is_non_html_file_target() ) {
+				$this->results->calculate_score();
+				$this->save_analysis_results( false );
+				$result['message']   = __( 'This URL is a file, not a page; on-page checks do not apply.', 'seo-booster' );
+				$result['next_step'] = null;
+				$result['results']   = $this->results->to_array();
+				$result['elapsed']   = round( microtime( true ) - $start_time, 2 );
+				return $result;
+			}
+			// Each AJAX step constructs a fresh SEO_Analysis; save immediately when gated.
+			if ( $this->apply_reachability_gate() ) {
+				$this->results->calculate_score();
+				$this->save_analysis_results( false );
+				$result['message']   = __( 'URL is unavailable or redirects; on-page checks skipped.', 'seo-booster' );
+				$result['next_step'] = null;
+				$result['results']   = $this->results->to_array();
+				$result['elapsed']   = round( microtime( true ) - $start_time, 2 );
+				return $result;
+			}
 			$this->context->download_full_page_content();
+			$inspect_url = $this->context->get_object_url();
+			if ( $inspect_url !== '' ) {
+				Gsc_Inspection_Cache::invalidate( $inspect_url );
+			}
 			$result['message']   = __( 'Downloading page content...', 'seo-booster' );
 			$result['next_step'] = 'headers';
 		} elseif ( 'cache' === $step ) {
@@ -157,6 +211,8 @@ class SEO_Analysis {
 			$result['next_step'] = null;
 			$result['results']   = $this->results->to_array();
 		} else {
+			// Fresh SEO_Analysis instance per AJAX step: reload plugin meta before checks.
+			$this->context->refresh_seo_data();
 			$document = $this->build_document();
 			$next     = $this->registry->run_step( $step, $this->context, $document, $this->results );
 
@@ -228,16 +284,68 @@ class SEO_Analysis {
 
 		if ( $full_html ) {
 			$document->set_scope_html( Html_Document::SCOPE_FULL_PAGE, $full_html );
-			$document->set_scope_html(
-				Html_Document::SCOPE_PAGE_MAIN,
-				Html_Document::build_page_main_html( $full_html )
-			);
+			$page_main = Html_Document::build_page_main_html( $full_html );
+			// One shared scope for content/links/images: never keep an empty page_main
+			// when rendered post content is available.
+			if ( Html_Document::count_words( $page_main ) < 1 && $content_html !== '' ) {
+				$page_main = $content_html;
+			}
+			$document->set_scope_html( Html_Document::SCOPE_PAGE_MAIN, $page_main );
 		} else {
 			$document->set_scope_html( Html_Document::SCOPE_PAGE_MAIN, $content_html );
 		}
 
 		$this->document = $document;
 		return $document;
+	}
+
+	/**
+	 * Whether the analyzed URL is a direct file (PDF, image, archive) rather than an HTML page.
+	 *
+	 * @since 7.4.1
+	 * @return bool
+	 */
+	private function is_non_html_file_target() {
+		// Attachment posts are already excluded elsewhere; this covers URL-only analysis
+		// of raw file paths coming from Search Console history.
+		if ( $this->context->object_type === 'post' && $this->context->object_id ) {
+			return false;
+		}
+
+		return Page_Reachability::is_non_html_file_url( $this->context->get_object_url() );
+	}
+
+	/**
+	 * Probe the target URL and short-circuit with a single reachability issue when not live.
+	 *
+	 * @since 7.4.1
+	 * @return bool True when analysis should stop (unreachable or redirected).
+	 */
+	private function apply_reachability_gate() {
+		$page_url = $this->context->get_object_url();
+		if ( '' === $page_url ) {
+			$probe = array(
+				'status'      => Page_Reachability::STATUS_UNREACHABLE,
+				'status_code' => 0,
+				'redirect_to' => '',
+				'error'       => __( 'Empty URL', 'seo-booster' ),
+			);
+		} else {
+			$probe = Page_Reachability::probe( $page_url, true );
+		}
+
+		$this->context->reachability = $probe['status'];
+		$this->context->http_status  = (int) $probe['status_code'];
+		$this->context->redirect_to  = (string) $probe['redirect_to'];
+
+		$issue = Page_Reachability::issue_for_probe( $probe );
+		if ( null === $issue ) {
+			return false;
+		}
+
+		$this->results = new Result_Set();
+		$this->results->add_error( $issue['key'], $issue['message'], $issue['extra_data'] );
+		return true;
 	}
 
 	/**
@@ -262,16 +370,20 @@ class SEO_Analysis {
 			$payload['gsc_checks_status'] = $this->context->gsc_checks_status;
 		}
 
+		$url         = $this->context->get_object_url();
 		$analysis_id = SEO_Issues_Manager::save_analysis_to_db(
 			$this->context->object_id,
 			$this->context->object_type,
-			$this->context->get_object_url(),
+			$url,
 			$payload
 		);
 
 		if ( ! $analysis_id ) {
-			Utils::log( 'Failed to save analysis results', 2 );
-			return false;
+			// Excluded posts return false from the save helper without being a hard failure.
+			if ( $this->context->object_type === 'post' && $this->context->object_id && SEO_Issues_Manager::should_exclude_from_analysis( $this->context->object_id ) ) {
+				return false;
+			}
+			throw new \RuntimeException( 'Could not save analysis results' );
 		}
 
 		return true;

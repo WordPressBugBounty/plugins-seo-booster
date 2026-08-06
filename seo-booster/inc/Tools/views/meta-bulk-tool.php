@@ -37,7 +37,7 @@ $docs_url = \Cleverplugins\SEOBooster\Utils::generate_cp_web_link( 'tools_bulk_m
 				<?php
 				printf(
 					/* translators: %s: SEO plugin name */
-					esc_html__( 'Writing to %s — generated titles and descriptions will be saved to this plugin’s SEO fields.', 'seo-booster' ),
+					esc_html__( 'Writing to %s: generated titles and descriptions will be saved to this plugin’s SEO fields.', 'seo-booster' ),
 					esc_html( $seo_target_label )
 				);
 				?>
@@ -139,30 +139,26 @@ $docs_url = \Cleverplugins\SEOBooster\Utils::generate_cp_web_link( 'tools_bulk_m
 				<div class="sb-toggle-group">
 					<label class="sb-toggle-label">
 						<div class="sb-toggle-switch">
-							<input type="checkbox" name="apply_field" value="title" <?php checked( ! empty( $apply_fields['title'] ) ); ?> <?php disabled( ! $seo_target || ! $ai_available ); ?> />
+							<input type="checkbox" name="apply_field" value="title" <?php checked( ! empty( $apply_fields['title'] ) ); ?> <?php disabled( ! $seo_target ); ?> />
 							<span class="sb-toggle-slider"></span>
 						</div>
 						<span class="sb-toggle-text"><?php esc_html_e( 'SEO title', 'seo-booster' ); ?></span>
 					</label>
 					<label class="sb-toggle-label">
 						<div class="sb-toggle-switch">
-							<input type="checkbox" name="apply_field" value="description" <?php checked( ! empty( $apply_fields['description'] ) ); ?> <?php disabled( ! $seo_target || ! $ai_available ); ?> />
+							<input type="checkbox" name="apply_field" value="description" <?php checked( ! empty( $apply_fields['description'] ) ); ?> <?php disabled( ! $seo_target ); ?> />
 							<span class="sb-toggle-slider"></span>
 						</div>
 						<span class="sb-toggle-text"><?php esc_html_e( 'Meta description', 'seo-booster' ); ?></span>
 					</label>
 					<label class="sb-toggle-label">
 						<div class="sb-toggle-switch">
-							<input type="checkbox" id="sb-tools-meta-overwrite" <?php disabled( ! $seo_target || ! $ai_available ); ?> />
+							<input type="checkbox" id="sb-tools-meta-overwrite" <?php disabled( ! $seo_target ); ?> />
 							<span class="sb-toggle-slider"></span>
 						</div>
 						<span class="sb-toggle-text"><?php esc_html_e( 'Overwrite existing values (default: fill empty fields only)', 'seo-booster' ); ?></span>
 					</label>
 				</div>
-				<p class="sb-tools-process-actions" id="sb-tools-meta-process-actions" hidden>
-					<button type="button" class="button button-primary" id="sb-tools-meta-process-selected" disabled><?php esc_html_e( 'Process selected', 'seo-booster' ); ?></button>
-					<button type="button" class="button" id="sb-tools-meta-process-all-matching" disabled><?php esc_html_e( 'Process all matching (0)', 'seo-booster' ); ?></button>
-				</p>
 				<?php if ( $has_revertable ) : ?>
 				<p class="sb-tools-revert-actions">
 					<button type="button" class="button" id="sb-tools-meta-revert-batch"><?php esc_html_e( 'Revert last bulk run', 'seo-booster' ); ?></button>
@@ -210,6 +206,13 @@ $docs_url = \Cleverplugins\SEOBooster\Utils::generate_cp_web_link( 'tools_bulk_m
 
 	<div class="sb-tools-section sb-tools-results" id="sb-tools-meta-results" style="display:none;">
 		<h3><?php esc_html_e( 'Results', 'seo-booster' ); ?></h3>
+		<p class="description sb-tools-process-hint"><?php esc_html_e( 'Select items in the table, then process selected, or process all matching results.', 'seo-booster' ); ?></p>
+		<p class="sb-tools-process-actions" id="sb-tools-meta-process-actions" hidden>
+			<button type="button" class="button button-primary" id="sb-tools-meta-process-selected" disabled><?php esc_html_e( 'Process selected', 'seo-booster' ); ?></button>
+			<button type="button" class="button" id="sb-tools-meta-process-all-matching" disabled><?php esc_html_e( 'Process all matching (0)', 'seo-booster' ); ?></button>
+		</p>
+		<p class="notice notice-warning inline sb-tools-process-disabled-reason" id="sb-tools-meta-process-disabled-reason" hidden></p>
+		<p class="notice notice-warning inline sb-tools-process-ai-warning" id="sb-tools-meta-process-ai-warning" hidden></p>
 		<div class="tablenav top"><div class="tablenav-pages"><span class="displaying-num" id="sb-tools-meta-displaying-num"></span></div></div>
 		<table class="wp-list-table widefat fixed striped table-view-list sb-tools-results-table">
 			<thead>

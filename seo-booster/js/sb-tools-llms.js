@@ -67,6 +67,17 @@
             serialized += '&directory_rules[' + encodeURIComponent(dir) + ']=' + encodeURIComponent(status);
         });
 
+        if ($('#sb-tools-markdown-settings').length) {
+            serialized += '&sb_markdown_ui=1';
+            serialized += '&md_enabled=' + ($('input[name="md_enabled"]').is(':checked') ? '1' : '0');
+            serialized += '&llms_full_enabled=' + ($('input[name="llms_full_enabled"]').is(':checked') ? '1' : '0');
+            serialized += '&md_head_links=' + ($('input[name="md_head_links"]').is(':checked') ? '1' : '0');
+            serialized += '&md_http_headers=' + ($('input[name="md_http_headers"]').is(':checked') ? '1' : '0');
+            serialized += '&llms_full_limit=' + encodeURIComponent($('#sb-llms-full-limit').val() || '100');
+            serialized += '&md_cache_ttl=' + encodeURIComponent($('#sb-md-cache-ttl').val() || '3600');
+            serialized += '&full_cache_ttl=' + encodeURIComponent($('#sb-full-cache-ttl').val() || '43200');
+        }
+
         return serialized;
     }
 
@@ -119,7 +130,7 @@
                 html += '<li><label><input type="checkbox" class="sb-llms-ai-pick" value="' + item.post_id + '" checked="checked" /> ';
                 html += $('<div/>').text(item.title).html();
                 if (item.reason) {
-                    html += ' — <span class="description">' + $('<div/>').text(item.reason).html() + '</span>';
+                    html += ': <span class="description">' + $('<div/>').text(item.reason).html() + '</span>';
                 }
                 html += '</label></li>';
             });
@@ -162,6 +173,25 @@
         $('body').append(form);
         form.trigger('submit');
         form.remove();
+    });
+
+    $('#sb-tools-clear-markdown-cache').on('click', function () {
+        $.ajax({
+            url: sbToolsLlms.ajax_url,
+            method: 'POST',
+            data: {
+                action: 'sb_tools_clear_markdown_cache',
+                nonce: sbToolsLlms.nonce,
+            },
+        }).done(function (response) {
+            if (response.success) {
+                window.SBTools.alert(response.data.message || sbToolsLlms.strings.cache_cleared, { tone: 'success' });
+            } else {
+                window.SBTools.alert((response.data && response.data.message) || sbToolsLlms.strings.error, { tone: 'error' });
+            }
+        }).fail(function () {
+            window.SBTools.alert(sbToolsLlms.strings.error, { tone: 'error' });
+        });
     });
 
     $(document).on('click', '.sb-llms-pin-toggle', function () {

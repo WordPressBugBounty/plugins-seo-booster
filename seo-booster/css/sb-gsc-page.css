@@ -1,0 +1,20 @@
+/**
+ * GSC Overview page — builds on sb-ui.css tokens.
+ *
+ * @package Cleverplugins\SEOBooster
+ */
+
+.sb-gsc-page .sb-gsc-results .sb-filter-container {
+	margin-bottom: 16px;
+}
+
+.sb-gsc-page .sb-gsc-table-wrap {
+	margin-top: 4px;
+	overflow-x: auto;
+}
+
+.sb-gsc-page .sb-gsc-results .wp-list-table {
+	border: 1px solid var(--sb-ui-border);
+	border-radius: 8px;
+	overflow: hidden;
+}

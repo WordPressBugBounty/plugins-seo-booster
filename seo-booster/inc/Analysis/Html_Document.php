@@ -63,6 +63,9 @@ class Html_Document {
 	/**
 	 * Build page_main scope from full page by stripping chrome and noscript.
 	 *
+	 * Prefer non-empty &lt;main&gt;, then best non-empty &lt;article&gt; (prefer one with H1),
+	 * else chrome-stripped &lt;body&gt;. Empty landmarks are never preferred over body text.
+	 *
 	 * @param string $full_page_html Full page HTML.
 	 * @return string
 	 */
@@ -71,18 +74,171 @@ class Html_Document {
 			return '';
 		}
 
-		$html = preg_replace( '/<noscript\b[^>]*>[\s\S]*?<\/noscript>/i', '', $full_page_html );
-		$html = preg_replace( '/<(header|nav|footer|aside|script|style|template)\b[^>]*>[\s\S]*?<\/\1>/i', '', $html );
+		$dom = new \DOMDocument();
+		libxml_use_internal_errors( true );
+		$dom->loadHTML( '<?xml encoding="UTF-8">' . $full_page_html, LIBXML_NOWARNING | LIBXML_NOERROR );
+		libxml_clear_errors();
 
-		if ( preg_match( '/<main\b[^>]*>([\s\S]*?)<\/main>/i', $html, $matches ) ) {
-			return $matches[1];
+		$xpath = new \DOMXPath( $dom );
+		self::remove_chrome_nodes( $xpath );
+
+		$mains = self::collect_nonempty_elements( $xpath, '//main' );
+		if ( ! empty( $mains ) ) {
+			return self::inner_html( $mains[0]['node'] );
 		}
 
-		if ( preg_match( '/<article\b[^>]*>([\s\S]*?)<\/article>/i', $html, $matches ) ) {
-			return $matches[1];
+		$articles = self::collect_nonempty_elements( $xpath, '//article' );
+		if ( ! empty( $articles ) ) {
+			usort(
+				$articles,
+				static function ( $a, $b ) {
+					if ( $a['has_h1'] !== $b['has_h1'] ) {
+						return $a['has_h1'] ? -1 : 1;
+					}
+					return $b['length'] <=> $a['length'];
+				}
+			);
+			return self::inner_html( $articles[0]['node'] );
+		}
+
+		$body_list = $dom->getElementsByTagName( 'body' );
+		if ( $body_list->length > 0 ) {
+			$body = $body_list->item( 0 );
+			self::remove_widget_regions( $xpath, $body );
+			return self::inner_html( $body );
+		}
+
+		return self::strip_chrome_regex( $full_page_html );
+	}
+
+	/**
+	 * UTF-8-aware word count for analysis text.
+	 *
+	 * @param string $text Plain text.
+	 * @return int
+	 */
+	public static function count_words( $text ) {
+		$text = trim( wp_strip_all_tags( (string) $text ) );
+		if ( $text === '' ) {
+			return 0;
+		}
+
+		$count = preg_match_all( '/\p{L}[\p{L}\p{Mn}\p{Pd}\'\x{2019}]*/u', $text );
+		return is_int( $count ) ? $count : 0;
+	}
+
+	/**
+	 * Remove nav/footer/aside/script/style/template/noscript nodes.
+	 *
+	 * @param \DOMXPath $xpath XPath.
+	 * @return void
+	 */
+	private static function remove_chrome_nodes( \DOMXPath $xpath ) {
+		$nodes = $xpath->query( '//nav|//footer|//aside|//script|//style|//template|//noscript' );
+		if ( ! $nodes ) {
+			return;
+		}
+
+		$to_remove = array();
+		foreach ( $nodes as $node ) {
+			$to_remove[] = $node;
+		}
+		foreach ( $to_remove as $node ) {
+			if ( $node->parentNode ) {
+				$node->parentNode->removeChild( $node );
+			}
+		}
+	}
+
+	/**
+	 * Strip common widget/comment regions under a body subtree.
+	 *
+	 * @param \DOMXPath  $xpath XPath.
+	 * @param \DOMNode   $body Body node.
+	 * @return void
+	 */
+	private static function remove_widget_regions( \DOMXPath $xpath, \DOMNode $body ) {
+		$query = './/*[@id="comments" or @id="respond" or @id="sidebar" or @id="secondary"'
+			. ' or contains(concat(" ", normalize-space(@class), " "), " widget-area ")'
+			. ' or contains(concat(" ", normalize-space(@class), " "), " sidebar ")]';
+		$nodes = $xpath->query( $query, $body );
+		if ( ! $nodes ) {
+			return;
+		}
+
+		$to_remove = array();
+		foreach ( $nodes as $node ) {
+			$to_remove[] = $node;
+		}
+		foreach ( $to_remove as $node ) {
+			if ( $node->parentNode ) {
+				$node->parentNode->removeChild( $node );
+			}
+		}
+	}
+
+	/**
+	 * Collect non-empty elements for an XPath query.
+	 *
+	 * @param \DOMXPath $xpath XPath.
+	 * @param string    $query Query.
+	 * @return array<int, array{node: \DOMElement, length: int, has_h1: bool}>
+	 */
+	private static function collect_nonempty_elements( \DOMXPath $xpath, $query ) {
+		$nodes = $xpath->query( $query );
+		if ( ! $nodes ) {
+			return array();
+		}
+
+		$out = array();
+		foreach ( $nodes as $node ) {
+			if ( ! $node instanceof \DOMElement ) {
+				continue;
+			}
+			$text = trim( preg_replace( '/\s+/', ' ', $node->textContent ?? '' ) );
+			if ( $text === '' ) {
+				continue;
+			}
+			$h1 = $xpath->query( './/h1', $node );
+			$out[] = array(
+				'node'   => $node,
+				'length' => strlen( $text ),
+				'has_h1' => ( $h1 && $h1->length > 0 ),
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Inner HTML of a DOM element.
+	 *
+	 * @param \DOMNode $node Node.
+	 * @return string
+	 */
+	private static function inner_html( \DOMNode $node ) {
+		if ( ! $node->ownerDocument instanceof \DOMDocument ) {
+			return '';
+		}
+
+		$html = '';
+		foreach ( $node->childNodes as $child ) {
+			$html .= $node->ownerDocument->saveHTML( $child );
 		}
 
 		return $html;
+	}
+
+	/**
+	 * Regex fallback when DOM body is missing.
+	 *
+	 * @param string $html HTML.
+	 * @return string
+	 */
+	private static function strip_chrome_regex( $html ) {
+		$html = preg_replace( '/<noscript\b[^>]*>[\s\S]*?<\/noscript>/i', '', $html );
+		$html = preg_replace( '/<(nav|footer|aside|script|style|template)\b[^>]*>[\s\S]*?<\/\1>/i', '', $html );
+		return (string) $html;
 	}
 
 	/**

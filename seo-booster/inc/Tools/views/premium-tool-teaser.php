@@ -25,7 +25,7 @@ $teaser_variant = isset( $teaser_variant ) ? (string) $teaser_variant : '';
 		<?php if ( $teaser_variant === 'entity-map' ) : ?>
 			<ul class="sb-tools-premium-teaser__list">
 				<li><?php esc_html_e( 'Serve /entitymap.json for machines and /entitymap.html for humans', 'seo-booster' ); ?></li>
-				<li><?php esc_html_e( 'Build from GSC clicks and AI bot traffic — then edit names, relations, and source chunks', 'seo-booster' ); ?></li>
+				<li><?php esc_html_e( 'Build from GSC clicks and AI bot traffic, then edit names, relations, and source chunks', 'seo-booster' ); ?></li>
 				<li><?php esc_html_e( 'Optional AI draft via WordPress Connectors; lock entities you want to keep', 'seo-booster' ); ?></li>
 				<li><?php esc_html_e( 'Link Entity Map from llms.txt under Structured knowledge when published', 'seo-booster' ); ?></li>
 			</ul>

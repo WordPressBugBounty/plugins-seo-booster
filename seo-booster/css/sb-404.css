@@ -1,0 +1,69 @@
+/**
+ * 404 & Redirects page — builds on sb-ui.css tokens.
+ *
+ * @package Cleverplugins\SEOBooster
+ */
+
+.sb-404-page .sb-404-table-wrap {
+	margin-top: 4px;
+	overflow-x: auto;
+}
+
+.sb-404-page .sb-404-results .wp-list-table {
+	border: 1px solid var(--sb-ui-border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.sb-404-page .sb-404-ignored-tip {
+	display: block;
+	margin: 0 0 32px;
+}
+
+.sb-404-page .sb-404-ignored-details {
+	margin-top: 6px;
+}
+
+.sb-404-page .sb-404-ignored-details summary {
+	cursor: pointer;
+	font-weight: 600;
+	color: var(--sb-ui-blue);
+}
+
+.sb-404-page .sb-404-ignored-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 10px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.sb-404-page .sb-404-ignored-chip {
+	display: inline-block;
+	margin: 0;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 500;
+	line-height: 1.4;
+	background: var(--sb-ui-white);
+	color: var(--sb-ui-muted);
+	border: 1px solid var(--sb-ui-border);
+	word-break: break-all;
+}
+
+.sb-404-page .sb-404-data-management .sb-404-reset-form {
+	margin: 0;
+}
+
+.sb-404-page .sb-404-data-management .sb-404-reset-form .submit {
+	margin: 0;
+	padding: 0;
+}
+
+@media screen and (max-width: 782px) {
+	.sb-404-page .sb-404-ignored-chip {
+		font-size: 11px;
+	}
+}

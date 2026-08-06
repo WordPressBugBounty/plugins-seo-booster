@@ -54,12 +54,28 @@ class Yoast_Adapter extends Abstract_Post_Meta_Adapter {
 	 * @return string[]
 	 */
 	public function read_focus_keywords( $post_id ) {
-		$focus_keyword = get_post_meta( $post_id, '_yoast_wpseo_focuskw', true );
-		if ( empty( $focus_keyword ) ) {
-			return array();
+		$keywords = $this->normalize_focus_keyword_raw(
+			get_post_meta( (int) $post_id, '_yoast_wpseo_focuskw', true )
+		);
+
+		// Yoast Premium stores additional keyphrases separately; primary stays first.
+		$extra = get_post_meta( (int) $post_id, '_yoast_wpseo_focuskeywords', true );
+		if ( is_string( $extra ) && $extra !== '' ) {
+			$decoded = json_decode( $extra, true );
+			if ( is_array( $decoded ) ) {
+				foreach ( $decoded as $entry ) {
+					if ( ! is_array( $entry ) || empty( $entry['keyword'] ) ) {
+						continue;
+					}
+					$keyword = sanitize_text_field( (string) $entry['keyword'] );
+					if ( $keyword !== '' && ! in_array( $keyword, $keywords, true ) ) {
+						$keywords[] = $keyword;
+					}
+				}
+			}
 		}
 
-		return array( sanitize_text_field( $focus_keyword ) );
+		return $keywords;
 	}
 
 	/**
@@ -83,8 +99,8 @@ class Yoast_Adapter extends Abstract_Post_Meta_Adapter {
 		}
 
 		return array(
-			'title'       => sanitize_text_field( (string) \WPSEO_Taxonomy_Meta::get_term_meta( $term_id, $taxonomy, 'wpseo_title' ) ),
-			'description' => sanitize_textarea_field( (string) \WPSEO_Taxonomy_Meta::get_term_meta( $term_id, $taxonomy, 'wpseo_desc' ) ),
+			'title'       => sanitize_text_field( (string) \WPSEO_Taxonomy_Meta::get_term_meta( $term_id, $taxonomy, 'title' ) ),
+			'description' => sanitize_textarea_field( (string) \WPSEO_Taxonomy_Meta::get_term_meta( $term_id, $taxonomy, 'desc' ) ),
 		);
 	}
 
@@ -120,7 +136,7 @@ class Yoast_Adapter extends Abstract_Post_Meta_Adapter {
 			return array();
 		}
 
-		$focus = \WPSEO_Taxonomy_Meta::get_term_meta( $term_id, $taxonomy, 'wpseo_focuskw' );
+		$focus = \WPSEO_Taxonomy_Meta::get_term_meta( $term_id, $taxonomy, 'focuskw' );
 		if ( empty( $focus ) ) {
 			return array();
 		}
@@ -216,6 +232,58 @@ class Yoast_Adapter extends Abstract_Post_Meta_Adapter {
 		}
 
 		return $keys;
+	}
+
+	/**
+	 * @param int $post_id Post ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_post_seo_resolved( $post_id ) {
+		$post_id = (int) $post_id;
+		if ( function_exists( 'YoastSEO' ) ) {
+			try {
+				$meta = YoastSEO()->meta->for_post( $post_id );
+				if ( is_object( $meta ) ) {
+					$title = isset( $meta->title ) ? (string) $meta->title : '';
+					$desc  = isset( $meta->description ) ? (string) $meta->description : '';
+					if ( $title !== '' || $desc !== '' ) {
+						return array(
+							'title'       => sanitize_text_field( $title ),
+							'description' => sanitize_textarea_field( $desc ),
+						);
+					}
+				}
+			} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Fall through to raw.
+			}
+		}
+
+		return $this->read_post_seo( $post_id );
+	}
+
+	/**
+	 * @param int $term_id Term ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_term_seo_resolved( $term_id ) {
+		$term_id = (int) $term_id;
+		if ( function_exists( 'YoastSEO' ) ) {
+			try {
+				$meta = YoastSEO()->meta->for_term( $term_id );
+				if ( is_object( $meta ) ) {
+					$title = isset( $meta->title ) ? (string) $meta->title : '';
+					$desc  = isset( $meta->description ) ? (string) $meta->description : '';
+					if ( $title !== '' || $desc !== '' ) {
+						return array(
+							'title'       => sanitize_text_field( $title ),
+							'description' => sanitize_textarea_field( $desc ),
+						);
+					}
+				}
+			} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Fall through to raw.
+			}
+		}
+
+		return $this->read_term_seo( $term_id );
 	}
 
 	/**

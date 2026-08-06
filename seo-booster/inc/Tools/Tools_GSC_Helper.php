@@ -1029,16 +1029,21 @@ class Tools_GSC_Helper {
 		$matching   = array();
 		$min_clicks = 10;
 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed table names; HAVING uses %d.
 		$page_clicks = $wpdb->get_results(
-			"SELECT qk.page, COALESCE(SUM(qkh.clicks), 0) AS clicks
+			$wpdb->prepare(
+				"SELECT qk.page, COALESCE(SUM(qkh.clicks), 0) AS clicks
             FROM {$wpdb->prefix}sb2_query_keywords AS qk
             LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh
                 ON qk.id = qkh.query_keywords_id
             GROUP BY qk.page
-            HAVING clicks >= {$min_clicks}
+            HAVING clicks >= %d
             ORDER BY clicks DESC",
+				(int) $min_clicks
+			),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		if ( ! is_array( $page_clicks ) ) {
 			$page_clicks = array();
@@ -1123,10 +1128,11 @@ class Tools_GSC_Helper {
 		$table_qk  = $wpdb->prefix . 'sb2_query_keywords';
 		$table_qkh = $wpdb->prefix . 'sb2_query_keywords_history';
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prefixed table names; read-only aggregate.
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed table name; read-only aggregate.
 		$span_days   = (int) $wpdb->get_var(
 			"SELECT DATEDIFF(MAX(date), MIN(date)) FROM {$table_qkh}"
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$has_history = $span_days >= ( $window * 2 - 1 );
 
 		if ( ! $has_history ) {
@@ -1140,25 +1146,36 @@ class Tools_GSC_Helper {
 			);
 		}
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prefixed tables; CURDATE windows match Gsc_Checks.
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed tables; INTERVAL/HAVING use %d.
 		$rows = $wpdb->get_results(
-			"SELECT
+			$wpdb->prepare(
+				"SELECT
 				qk.page,
-				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL {$window} DAY) THEN qkh.clicks ELSE 0 END) AS recent_clicks,
-				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL {$window} DAY) THEN qkh.impressions ELSE 0 END) AS recent_impressions,
-				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL " . ( $window * 2 ) . " DAY)
-					AND qkh.date < DATE_SUB(CURDATE(), INTERVAL {$window} DAY) THEN qkh.clicks ELSE 0 END) AS previous_clicks,
-				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL " . ( $window * 2 ) . " DAY)
-					AND qkh.date < DATE_SUB(CURDATE(), INTERVAL {$window} DAY) THEN qkh.impressions ELSE 0 END) AS previous_impressions
+				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY) THEN qkh.clicks ELSE 0 END) AS recent_clicks,
+				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY) THEN qkh.impressions ELSE 0 END) AS recent_impressions,
+				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
+					AND qkh.date < DATE_SUB(CURDATE(), INTERVAL %d DAY) THEN qkh.clicks ELSE 0 END) AS previous_clicks,
+				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
+					AND qkh.date < DATE_SUB(CURDATE(), INTERVAL %d DAY) THEN qkh.impressions ELSE 0 END) AS previous_impressions
 			FROM {$table_qk} AS qk
 			LEFT JOIN {$table_qkh} AS qkh
 				ON qk.id = qkh.query_keywords_id
 			WHERE qk.page IS NOT NULL AND qk.page != ''
 			GROUP BY qk.page
-			HAVING previous_clicks >= " . (int) self::DECAY_MIN_PREVIOUS_CLICKS . '
-				AND recent_impressions >= ' . (int) self::DECAY_MIN_RECENT_IMPRESSIONS,
+			HAVING previous_clicks >= %d
+				AND recent_impressions >= %d",
+				$window,
+				$window,
+				$window * 2,
+				$window,
+				$window * 2,
+				$window,
+				(int) self::DECAY_MIN_PREVIOUS_CLICKS,
+				(int) self::DECAY_MIN_RECENT_IMPRESSIONS
+			),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		if ( ! is_array( $rows ) ) {
 			$rows = array();
@@ -1246,5 +1263,130 @@ class Tools_GSC_Helper {
 			'all_ids'       => array_column( $matching, 'post_id' ),
 			'has_history'   => true,
 		);
+	}
+
+	/**
+	 * Count publishable pages matching content-decay thresholds (for weekly email).
+	 *
+	 * Same windows and thresholds as scan_content_decay(); skips UI payloads.
+	 *
+	 * @return int
+	 */
+	public static function count_content_decay_pages() {
+		global $wpdb;
+
+		$window    = (int) self::DECAY_WINDOW_DAYS;
+		$table_qk  = $wpdb->prefix . 'sb2_query_keywords';
+		$table_qkh = $wpdb->prefix . 'sb2_query_keywords_history';
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed table name; read-only aggregate.
+		$span_days = (int) $wpdb->get_var(
+			"SELECT DATEDIFF(MAX(date), MIN(date)) FROM {$table_qkh}"
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( $span_days < ( $window * 2 - 1 ) ) {
+			return 0;
+		}
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed tables; INTERVAL/HAVING use %d.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT
+				qk.page,
+				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY) THEN qkh.clicks ELSE 0 END) AS recent_clicks,
+				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY) THEN qkh.impressions ELSE 0 END) AS recent_impressions,
+				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
+					AND qkh.date < DATE_SUB(CURDATE(), INTERVAL %d DAY) THEN qkh.clicks ELSE 0 END) AS previous_clicks
+			FROM {$table_qk} AS qk
+			LEFT JOIN {$table_qkh} AS qkh
+				ON qk.id = qkh.query_keywords_id
+			WHERE qk.page IS NOT NULL AND qk.page != ''
+			GROUP BY qk.page
+			HAVING previous_clicks >= %d
+				AND recent_impressions >= %d",
+				$window,
+				$window,
+				$window * 2,
+				$window,
+				(int) self::DECAY_MIN_PREVIOUS_CLICKS,
+				(int) self::DECAY_MIN_RECENT_IMPRESSIONS
+			),
+			ARRAY_A
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( ! is_array( $rows ) ) {
+			return 0;
+		}
+
+		$count     = 0;
+		$page_post = array();
+
+		foreach ( $rows as $row ) {
+			$page            = (string) ( $row['page'] ?? '' );
+			$recent_clicks   = (int) ( $row['recent_clicks'] ?? 0 );
+			$previous_clicks = (int) ( $row['previous_clicks'] ?? 0 );
+
+			if ( $page === '' || $previous_clicks <= 0 ) {
+				continue;
+			}
+
+			$decline_pct = ( ( $previous_clicks - $recent_clicks ) / $previous_clicks ) * 100;
+			if ( $decline_pct < self::DECAY_MIN_DECLINE_PCT ) {
+				continue;
+			}
+
+			if ( ! array_key_exists( $page, $page_post ) ) {
+				$page_post[ $page ] = self::resolve_publishable_post_id( $page );
+			}
+
+			if ( $page_post[ $page ] > 0 ) {
+				++$count;
+			}
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Count unique publishable pages with any GSC opportunity type (for weekly email).
+	 *
+	 * Uses the same classification as scan_opportunities() with all filters active.
+	 *
+	 * @return int
+	 */
+	public static function count_gsc_opportunity_pages() {
+		$filters   = self::get_opportunity_filter_keys();
+		$keywords  = self::get_all_keywords_with_stats();
+		$page_post = array();
+		$post_ids  = array();
+
+		foreach ( $keywords as $row ) {
+			$types = self::classify_keyword_opportunities( $row );
+			$types = array_values( array_intersect( $types, $filters ) );
+
+			if ( empty( $types ) ) {
+				continue;
+			}
+
+			$page = isset( $row['page'] ) ? (string) $row['page'] : '';
+			if ( $page === '' ) {
+				continue;
+			}
+
+			if ( ! array_key_exists( $page, $page_post ) ) {
+				$page_post[ $page ] = self::resolve_publishable_post_id( $page );
+			}
+
+			$post_id = $page_post[ $page ];
+			if ( $post_id <= 0 ) {
+				continue;
+			}
+
+			$post_ids[ $post_id ] = true;
+		}
+
+		return count( $post_ids );
 	}
 }

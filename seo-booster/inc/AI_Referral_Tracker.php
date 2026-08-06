@@ -217,6 +217,7 @@ class AI_Referral_Tracker {
 		$hit_date = current_time( 'Y-m-d' );
 		$table    = $wpdb->prefix . 'sb2_ai_referrals';
 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 		$wpdb->query(
 			$wpdb->prepare(
 				"INSERT INTO {$table}
@@ -243,6 +244,7 @@ class AI_Referral_Tracker {
 				$object_type
 			)
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	}
 
 	/**
@@ -267,6 +269,7 @@ class AI_Referral_Tracker {
 		$table = $wpdb->prefix . 'sb2_ai_referrals';
 		$since = self::get_since_date( $days );
 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT
@@ -279,7 +282,9 @@ class AI_Referral_Tracker {
 			),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 		$top = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT source, SUM(visits) AS visits
@@ -292,6 +297,7 @@ class AI_Referral_Tracker {
 			),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return array(
 			'total_visits'      => isset( $row['total_visits'] ) ? (int) $row['total_visits'] : 0,
@@ -314,6 +320,7 @@ class AI_Referral_Tracker {
 		$table = $wpdb->prefix . 'sb2_ai_referrals';
 		$since = self::get_since_date( $days );
 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 		return $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT hit_date, SUM(visits) AS visits
@@ -325,6 +332,7 @@ class AI_Referral_Tracker {
 			),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	}
 
 	/**
@@ -339,6 +347,7 @@ class AI_Referral_Tracker {
 		$table = $wpdb->prefix . 'sb2_ai_referrals';
 		$since = self::get_since_date( $days );
 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 		return $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT source, SUM(visits) AS visits, MAX(last_seen) AS last_seen
@@ -350,6 +359,7 @@ class AI_Referral_Tracker {
 			),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	}
 
 	/**
@@ -366,6 +376,7 @@ class AI_Referral_Tracker {
 		$since = self::get_since_date( $days );
 		$limit = max( 1, min( 50, (int) $limit ) );
 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 		return $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT object_id, object_type, normalized_url, landing_path,
@@ -383,6 +394,7 @@ class AI_Referral_Tracker {
 			),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	}
 
 	/**
@@ -418,7 +430,7 @@ class AI_Referral_Tracker {
 			{$where}
 			GROUP BY source, url_hash
 		) grouped";
-		$total     = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $params ) );
+		$total     = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $params ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
 
 		$sql = "SELECT source, object_id, object_type, normalized_url, landing_path,
 			SUM(visits) AS visits, MAX(last_seen) AS last_seen
@@ -432,7 +444,7 @@ class AI_Referral_Tracker {
 		$query_params[] = $limit;
 		$query_params[] = $offset;
 
-		$items = $wpdb->get_results( $wpdb->prepare( $sql, $query_params ), ARRAY_A );
+		$items = $wpdb->get_results( $wpdb->prepare( $sql, $query_params ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
 
 		return array(
 			'items' => is_array( $items ) ? $items : array(),
@@ -455,12 +467,14 @@ class AI_Referral_Tracker {
 
 		$days = AI_Bot_Tracker::get_retention_days();
 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$table} WHERE hit_date < DATE_SUB(CURDATE(), INTERVAL %d DAY)",
 				$days
 			)
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return (int) $wpdb->rows_affected;
 	}

@@ -126,10 +126,13 @@ class AI_Readiness {
 	}
 
 	/**
-	 * Load or refresh editor panel data for a post.
+	 * Load editor panel data for a post from saved SEO analysis.
+	 *
+	 * AI Readiness is a view lens only. When $refresh is true, re-run the same
+	 * full-page SEO analysis as the editor metabox, then rebuild from saved results.
 	 *
 	 * @param int  $post_id Post ID.
-	 * @param bool $refresh Run quick local analysis before building view.
+	 * @param bool $refresh Re-run full-page SEO analysis before building the view.
 	 * @return array<string, mixed>
 	 */
 	public static function get_post_view( $post_id, $refresh = false ) {
@@ -138,20 +141,16 @@ class AI_Readiness {
 			return self::build_view_from_analysis( null, SEO_Issues_Manager::get_sitewide_issues() );
 		}
 
-		$analysis = SEO_Issues_Manager::get_saved_analysis( $post_id, 'post' );
-
-		if ( $refresh || empty( $analysis ) ) {
-			if ( ! SEO_Issues_Manager::should_exclude_from_analysis( $post_id ) ) {
-				$runner   = new SEO_Analysis( $post_id, 'post' );
-				$analysis = $runner->analyze( false );
-				if ( ! empty( $analysis ) ) {
-					$saved = SEO_Issues_Manager::get_saved_analysis( $post_id, 'post' );
-					if ( ! empty( $saved ) ) {
-						$analysis = $saved;
-					}
-				}
+		if ( $refresh && ! SEO_Issues_Manager::should_exclude_from_analysis( $post_id ) ) {
+			try {
+				$runner = new SEO_Analysis( $post_id, 'post' );
+				$runner->analyze( true );
+			} catch ( \Exception $e ) {
+				Utils::log( sprintf( 'SEO analysis failed for post %d: %s', $post_id, $e->getMessage() ), 2 );
 			}
 		}
+
+		$analysis = SEO_Issues_Manager::get_saved_analysis( $post_id, 'post' );
 
 		return self::build_view_from_analysis( $analysis, SEO_Issues_Manager::get_sitewide_issues() );
 	}
@@ -298,7 +297,7 @@ class AI_Readiness {
 	 */
 	public static function render_checklist_items( $items, $show_points = true ) {
 		if ( empty( $items ) ) {
-			echo '<li class="is-unknown"><span class="sb-ai-readiness-status">—</span><span class="sb-ai-readiness-label">' . esc_html__( 'Not analyzed yet.', 'seo-booster' ) . '</span></li>';
+			echo '<li class="is-unknown"><span class="sb-ai-readiness-status">-</span><span class="sb-ai-readiness-label">' . esc_html__( 'Not analyzed yet.', 'seo-booster' ) . '</span></li>';
 			return;
 		}
 
@@ -308,7 +307,7 @@ class AI_Readiness {
 			$pass    = ! empty( $item['pass'] );
 			$unknown = ! empty( $item['unknown'] );
 			$class   = $pass ? 'is-pass' : ( $unknown ? 'is-unknown' : 'is-fail' );
-			$symbol  = $pass ? '✓' : ( $unknown ? '—' : '○' );
+			$symbol  = $pass ? '✓' : ( $unknown ? '-' : '○' );
 			?>
 			<li class="<?php echo esc_attr( $class ); ?>" data-key="<?php echo esc_attr( $key ); ?>">
 				<span class="sb-ai-readiness-status"><?php echo esc_html( $symbol ); ?></span>
@@ -334,13 +333,13 @@ class AI_Readiness {
 			'siteChecks'       => __( 'Site checks', 'seo-booster' ),
 			'topPossibilities' => __( 'Top possibilities', 'seo-booster' ),
 			'quickLinks'       => __( 'Quick links', 'seo-booster' ),
-			'refresh'          => __( 'Run quick review', 'seo-booster' ),
+			'refresh'          => __( 'Re-run analysis', 'seo-booster' ),
 			'loading'          => __( 'Loading…', 'seo-booster' ),
 			'error'            => __( 'Could not refresh.', 'seo-booster' ),
 			'pass'             => __( 'Pass', 'seo-booster' ),
 			'fail'             => __( 'Missing', 'seo-booster' ),
 			'unknown'          => __( 'Not analyzed', 'seo-booster' ),
-			'noAnalysis'       => __( 'Save draft and run a quick review to see SEO score and possibilities.', 'seo-booster' ),
+			'noAnalysis'       => __( 'Save or publish the page, then re-run analysis (or use the SEO Analysis tab) to see SEO score and possibilities.', 'seo-booster' ),
 			'viewAllIssues'    => __( 'View all on SEO Possibilities', 'seo-booster' ),
 			'tools'            => __( 'Tools', 'seo-booster' ),
 			'aiBots'           => __( 'AI Bots', 'seo-booster' ),

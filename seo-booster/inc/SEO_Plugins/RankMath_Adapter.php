@@ -39,7 +39,7 @@ class RankMath_Adapter extends Abstract_Post_Meta_Adapter {
 	 * @return bool
 	 */
 	public function is_active() {
-		return class_exists( 'RankMath' );
+		return class_exists( 'RankMath' ) || defined( 'RANK_MATH_VERSION' ) || function_exists( 'rank_math' );
 	}
 
 	/**
@@ -54,12 +54,39 @@ class RankMath_Adapter extends Abstract_Post_Meta_Adapter {
 	 * @return string[]
 	 */
 	public function read_focus_keywords( $post_id ) {
-		$focus_keyword = get_post_meta( $post_id, 'rank_math_focus_keyword', true );
-		if ( empty( $focus_keyword ) ) {
-			return array();
+		$raw = null;
+
+		// Prefer Rank Math's helper when available (handles non-string edge cases).
+		if ( class_exists( '\RankMath\Helper' ) && is_callable( array( '\RankMath\Helper', 'get_post_meta' ) ) ) {
+			$raw = \RankMath\Helper::get_post_meta( 'focus_keyword', (int) $post_id, '' );
 		}
 
-		return $this->parse_focus_keyword_list( (string) $focus_keyword );
+		if ( null === $raw || false === $raw || '' === $raw ) {
+			$raw = get_post_meta( (int) $post_id, 'rank_math_focus_keyword', true );
+		}
+
+		return $this->normalize_focus_keyword_raw( $raw );
+	}
+
+	/**
+	 * @param int $term_id Term ID.
+	 * @return string[]
+	 */
+	public function read_focus_keywords_for_term( $term_id ) {
+		$raw = null;
+
+		if ( class_exists( '\RankMath\Helper' ) && is_callable( array( '\RankMath\Helper', 'get_term_meta' ) ) ) {
+			$term = get_term( (int) $term_id );
+			if ( $term && ! is_wp_error( $term ) ) {
+				$raw = \RankMath\Helper::get_term_meta( 'focus_keyword', $term, $term->taxonomy, '' );
+			}
+		}
+
+		if ( null === $raw || false === $raw || '' === $raw ) {
+			$raw = get_term_meta( (int) $term_id, 'rank_math_focus_keyword', true );
+		}
+
+		return $this->normalize_focus_keyword_raw( $raw );
 	}
 
 	/**
@@ -83,6 +110,60 @@ class RankMath_Adapter extends Abstract_Post_Meta_Adapter {
 		}
 
 		return $keys;
+	}
+
+	/**
+	 * @param int $post_id Post ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_post_seo_resolved( $post_id ) {
+		$post = get_post( (int) $post_id );
+		if ( ! $post instanceof \WP_Post ) {
+			return $this->read_post_seo( $post_id );
+		}
+
+		if ( ! class_exists( '\RankMath\Helper' ) || ! is_callable( array( '\RankMath\Helper', 'replace_seo_fields' ) ) ) {
+			return $this->read_post_seo( $post_id );
+		}
+
+		$title = (string) \RankMath\Helper::replace_seo_fields( '%seo_title%', $post );
+		$desc  = (string) \RankMath\Helper::replace_seo_fields( '%seo_description%', $post );
+
+		return array(
+			'title'       => sanitize_text_field( $title ),
+			'description' => sanitize_textarea_field( $desc ),
+		);
+	}
+
+	/**
+	 * @param int $term_id Term ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_term_seo_resolved( $term_id ) {
+		$term = get_term( (int) $term_id );
+		if ( ! $term || is_wp_error( $term ) || ! ( $term instanceof \WP_Term ) ) {
+			return $this->read_term_seo( $term_id );
+		}
+
+		$raw = $this->read_term_seo( $term_id );
+		if ( ! class_exists( '\RankMath\Helper' ) || ! is_callable( array( '\RankMath\Helper', 'replace_vars' ) ) ) {
+			return $raw;
+		}
+
+		$title_tpl = $raw['title'];
+		$desc_tpl  = $raw['description'];
+
+		if ( $title_tpl === '' && is_callable( array( '\RankMath\Helper', 'get_settings' ) ) ) {
+			$title_tpl = (string) \RankMath\Helper::get_settings( 'titles.tax_' . $term->taxonomy . '_title', '' );
+		}
+		if ( $desc_tpl === '' && is_callable( array( '\RankMath\Helper', 'get_settings' ) ) ) {
+			$desc_tpl = (string) \RankMath\Helper::get_settings( 'titles.tax_' . $term->taxonomy . '_description', '' );
+		}
+
+		return array(
+			'title'       => sanitize_text_field( (string) \RankMath\Helper::replace_vars( $title_tpl, $term ) ),
+			'description' => sanitize_textarea_field( (string) \RankMath\Helper::replace_vars( $desc_tpl, $term ) ),
+		);
 	}
 
 	/**

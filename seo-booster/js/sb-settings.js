@@ -5,6 +5,10 @@
 jQuery(document).ready(function($) {
     'use strict';
 
+    function escapeHtml(str) {
+        return $('<div>').text(str == null ? '' : String(str)).html();
+    }
+
     var botBlockStatsLoading = false;
     var botBlockStatsObserver = null;
     var dbStatsLoading = false;
@@ -60,7 +64,7 @@ jQuery(document).ready(function($) {
     }
 
     function enrichBotBlockStats(bots, days) {
-        var emDash = (sbSettings.strings && sbSettings.strings.emDash) || '—';
+        var emDash = (sbSettings.strings && sbSettings.strings.emDash) || '-';
         $('#sb-toggle-bot-list .sb-bot-block-row').each(function() {
             var $row = $(this);
             var name = $row.attr('data-bot-name');
@@ -499,11 +503,11 @@ jQuery(document).ready(function($) {
                     // Update status with detailed information
                     var statusMessage = '<div class="notice notice-info">' +
                         '<p><strong>Import Progress:</strong></p>' +
-                        '<p>Unique Keywords Imported: ' + data.total_keywords + '</p>' +
-                        '<p>Total Entries Processed: ' + data.total_entries + '</p>' +
-                        '<p>Last Import Keyword: <code>' + data.last_keyword + '</code></p>' +
-                        '<p>Last Batch Time: ' + data.time.toFixed(2) + ' seconds</p>' +
-                        '<p>' + data.message + '</p>' +
+                        '<p>Unique Keywords Imported: ' + escapeHtml(data.total_keywords) + '</p>' +
+                        '<p>Total Entries Processed: ' + escapeHtml(data.total_entries) + '</p>' +
+                        '<p>Last Import Keyword: <code>' + escapeHtml(data.last_keyword) + '</code></p>' +
+                        '<p>Last Batch Time: ' + escapeHtml(Number(data.time).toFixed(2)) + ' seconds</p>' +
+                        '<p>' + escapeHtml(data.message) + '</p>' +
                         '</div>';
                     
                     $statusContainer.html(statusMessage);
@@ -523,7 +527,7 @@ jQuery(document).ready(function($) {
                         $button.prop('disabled', false).text('Import GSC Data');
                     }
                 } else {
-                    $error.html('<div class="notice notice-error"><p>Error: ' + response.data + '</p></div>').show();
+                    $error.html('<div class="notice notice-error"><p>Error: ' + escapeHtml(response.data) + '</p></div>').show();
                     $button.prop('disabled', false).text('Import GSC Data');
                 }
             },
@@ -548,9 +552,9 @@ jQuery(document).ready(function($) {
         sendRequest(0, selectedSite, timeRange);
     });
     
-    // AI Provider radio button handling
+    // AI Provider radio button handling (accept WordPress / wordpress form values).
     $('input[name="seobooster_ai_provider"]').on('change', function() {
-        var selectedProvider = $(this).val();
+        var selectedProvider = String($(this).val() || '').toLowerCase();
         $('#wordpress-connectors-settings, #seobooster-credits-register, #seobooster-credits-balance-row').hide();
         if (selectedProvider === 'wordpress') {
             $('#wordpress-connectors-settings').show();
@@ -558,7 +562,33 @@ jQuery(document).ready(function($) {
             $('#seobooster-credits-register, #seobooster-credits-balance-row').show();
         }
     });
-    
 
+    $(document).on('click', '.sb-oauth-start', function (e) {
+        e.preventDefault();
+        var $btn = $(this).prop('disabled', true);
+        $.post(sbSettings.ajaxurl, {
+            action: 'sb_oauth_prepare',
+            nonce: sbSettings.oauthNonce,
+            destination: $btn.data('sb-oauth-destination') || 'settings'
+        })
+            .done(function (res) {
+                if (res && res.success && res.data && res.data.auth_url) {
+                    window.location.href = res.data.auth_url;
+                    return;
+                }
+                $btn.prop('disabled', false);
+                var connectErr = (sbSettings.strings && sbSettings.strings.connectError) || 'Could not start Google authentication.';
+                if (window.SBModal && typeof window.SBModal.alert === 'function') {
+                    window.SBModal.alert(connectErr);
+                }
+            })
+            .fail(function () {
+                $btn.prop('disabled', false);
+                var connectErr = (sbSettings.strings && sbSettings.strings.connectError) || 'Could not start Google authentication.';
+                if (window.SBModal && typeof window.SBModal.alert === 'function') {
+                    window.SBModal.alert(connectErr);
+                }
+            });
+    });
 
 });

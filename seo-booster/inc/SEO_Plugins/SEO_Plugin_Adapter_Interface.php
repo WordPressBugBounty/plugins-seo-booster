@@ -57,12 +57,20 @@ interface SEO_Plugin_Adapter_Interface {
 	public function supports_focus_keyword();
 
 	/**
-	 * Read SEO title and description for a post.
+	 * Read SEO title and description for a post (raw storage, may contain templates).
 	 *
 	 * @param int $post_id Post ID.
 	 * @return array{title: string, description: string}
 	 */
 	public function read_post_seo( $post_id );
+
+	/**
+	 * Read rendered SEO title and description for a post (templates resolved).
+	 *
+	 * @param int $post_id Post ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_post_seo_resolved( $post_id );
 
 	/**
 	 * Write SEO title for a post.
@@ -109,12 +117,20 @@ interface SEO_Plugin_Adapter_Interface {
 	public function delete_focus_keyword( $post_id );
 
 	/**
-	 * Read SEO title and description for a term.
+	 * Read SEO title and description for a term (raw storage, may contain templates).
 	 *
 	 * @param int $term_id Term ID.
 	 * @return array{title: string, description: string}
 	 */
 	public function read_term_seo( $term_id );
+
+	/**
+	 * Read rendered SEO title and description for a term (templates resolved).
+	 *
+	 * @param int $term_id Term ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_term_seo_resolved( $term_id );
 
 	/**
 	 * Write SEO title for a term.

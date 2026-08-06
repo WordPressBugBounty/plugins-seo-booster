@@ -116,12 +116,31 @@ class ContentProcessing {
 			// Build XPath query - mandatory elements are always excluded
 			$xpath_conditions = array();
 
-			// Always exclude these elements for technical reasons (required)
-			$xpath_conditions[] = 'not(ancestor::a)';
-			$xpath_conditions[] = 'not(ancestor::script)';
-			$xpath_conditions[] = 'not(ancestor::style)';
-			$xpath_conditions[] = 'not(ancestor::head)';
-			$xpath_conditions[] = 'not(ancestor::title)';
+			// Always exclude these elements for technical reasons (required).
+			// These either hold non-content markup (links, code, scripts, styles,
+			// SVG), live in the document head, or are form controls where injecting
+			// an <a> would produce invalid or invisible output. Note: <span> is
+			// deliberately NOT excluded — it is a generic inline wrapper themes and
+			// page builders place around normal body text, so excluding it would
+			// stop linking across large portions of many sites.
+			$mandatory_excluded = array(
+				'a',
+				'script',
+				'style',
+				'head',
+				'title',
+				'code',
+				'pre',
+				'textarea',
+				'svg',
+				'noscript',
+				'button',
+				'select',
+				'option',
+			);
+			foreach ( $mandatory_excluded as $element ) {
+				$xpath_conditions[] = 'not(ancestor::' . $element . ')';
+			}
 
 			// Add configurable excluded elements
 			foreach ( array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'ul', 'ol', 'blockquote' ) as $element ) {

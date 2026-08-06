@@ -60,13 +60,9 @@ class Content_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_content_length( Content_Context $context, Html_Document $document, Result_Set $results ) {
-		if ( $context->object_type === 'post' && ! empty( $context->rendered_content ) ) {
-			$content = $context->rendered_content;
-		} else {
-			$content = $document->text( Html_Document::SCOPE_CONTENT );
-		}
-
-		$word_count = str_word_count( wp_strip_all_tags( $content ) );
+		$scope      = $this->content_scope( $context );
+		$content    = $document->text( $scope );
+		$word_count = $this->count_words( $content );
 		if ( $word_count < 300 ) {
 			$results->add_warning( 'content_too_short', sprintf( __( 'The content is too short (%d words detected). Aim for at least 300 words.', 'seo-booster' ), $word_count ) );
 			return;
@@ -183,7 +179,7 @@ class Content_Checks extends Abstract_Checks {
 		}
 
 		$h2_count   = count( $document->headings( $scope, 'h2' ) );
-		$word_count = str_word_count( $document->text( $scope ) );
+		$word_count = $this->count_words( $document->text( $scope ) );
 		if ( 0 === $h2_count && $word_count > 500 ) {
 			$results->add_opportunity( 'no_h2', __( 'Consider adding H2 headings to structure your content.', 'seo-booster' ) );
 		} elseif ( $h2_count > 0 ) {
@@ -205,7 +201,7 @@ class Content_Checks extends Abstract_Checks {
 		}
 
 		$content_text  = $document->text( $scope );
-		$word_count    = str_word_count( $content_text );
+		$word_count    = $this->count_words( $content_text );
 		$keyword_count = $this->count_keyword_occurrences( $content_text, $focus_keyword );
 
 		if ( $word_count <= 0 ) {
@@ -229,7 +225,7 @@ class Content_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_thin_content( Html_Document $document, Result_Set $results, $scope ) {
-		$word_count = str_word_count( $document->text( $scope ) );
+		$word_count = $this->count_words( $document->text( $scope ) );
 		if ( $word_count < 50 ) {
 			$results->add_warning( 'content_too_short_duplicate', __( 'Content is very thin. Expand the page to avoid thin-content signals.', 'seo-booster' ) );
 			return;
@@ -289,7 +285,7 @@ class Content_Checks extends Abstract_Checks {
 
 		$content_text = $document->text( $scope );
 		$sentences    = preg_split( '/[.!?]+/', $content_text );
-		$words        = str_word_count( $content_text );
+		$words        = $this->count_words( $content_text );
 
 		if ( count( $sentences ) <= 0 || $words <= 0 ) {
 			return;
@@ -322,7 +318,7 @@ class Content_Checks extends Abstract_Checks {
 				return trim( $s ) !== '';
 			}
 		);
-		$words     = str_word_count( $text_content );
+		$words = $this->count_words( $text_content );
 		if ( ! empty( $sentences ) ) {
 			$avg = $words / count( $sentences );
 			if ( $avg <= 15 ) {
@@ -348,7 +344,7 @@ class Content_Checks extends Abstract_Checks {
 				continue;
 			}
 
-			$word_count = str_word_count( $p_text );
+			$word_count = $this->count_words( $p_text );
 			if ( $word_count <= 150 ) {
 				continue;
 			}

@@ -35,6 +35,16 @@ abstract class Abstract_Post_Meta_Adapter implements SEO_Plugin_Adapter_Interfac
 	}
 
 	/**
+	 * Default: same as raw. Adapters override when the SEO plugin can resolve templates.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_post_seo_resolved( $post_id ) {
+		return $this->read_post_seo( $post_id );
+	}
+
+	/**
 	 * @param int $term_id Term ID.
 	 * @return array{title: string, description: string}
 	 */
@@ -45,6 +55,41 @@ abstract class Abstract_Post_Meta_Adapter implements SEO_Plugin_Adapter_Interfac
 			'title'       => sanitize_text_field( (string) get_term_meta( $term_id, $keys['title_key'] ?? '', true ) ),
 			'description' => sanitize_textarea_field( (string) get_term_meta( $term_id, $keys['description_key'] ?? '', true ) ),
 		);
+	}
+
+	/**
+	 * Default: same as raw. Adapters override when the SEO plugin can resolve templates.
+	 *
+	 * @param int $term_id Term ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_term_seo_resolved( $term_id ) {
+		return $this->read_term_seo( $term_id );
+	}
+
+	/**
+	 * Whether a stored SEO string looks like an unresolved template.
+	 *
+	 * @param string $value Raw value.
+	 * @return bool
+	 */
+	public static function looks_like_seo_template( $value ) {
+		$value = (string) $value;
+		if ( $value === '' ) {
+			return false;
+		}
+
+		if ( preg_match( '/%[a-z0-9_-]+%/i', $value ) ) {
+			return true;
+		}
+		if ( preg_match( '/%%[a-z0-9_-]+%%/i', $value ) ) {
+			return true;
+		}
+		if ( preg_match( '/#[a-z0-9_]+/i', $value ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -159,12 +204,7 @@ abstract class Abstract_Post_Meta_Adapter implements SEO_Plugin_Adapter_Interfac
 			return array();
 		}
 
-		$raw = get_term_meta( $term_id, $key, true );
-		if ( empty( $raw ) ) {
-			return array();
-		}
-
-		return $this->parse_focus_keyword_list( (string) $raw );
+		return $this->normalize_focus_keyword_raw( get_term_meta( $term_id, $key, true ) );
 	}
 
 	/**
@@ -293,23 +333,71 @@ abstract class Abstract_Post_Meta_Adapter implements SEO_Plugin_Adapter_Interfac
 	}
 
 	/**
+	 * Normalize raw focus-keyword storage into a string list.
+	 *
+	 * Handles comma-separated strings, arrays, and JSON tag payloads used by some editors.
+	 *
+	 * @param mixed $raw Raw focus keyword field.
+	 * @return string[]
+	 */
+	protected function normalize_focus_keyword_raw( $raw ) {
+		if ( null === $raw || false === $raw || '' === $raw ) {
+			return array();
+		}
+
+		if ( is_array( $raw ) ) {
+			$keywords = array();
+			foreach ( $raw as $entry ) {
+				if ( is_string( $entry ) || is_numeric( $entry ) ) {
+					$keywords[] = sanitize_text_field( trim( (string) $entry ) );
+					continue;
+				}
+				if ( is_array( $entry ) ) {
+					if ( isset( $entry['value'] ) ) {
+						$keywords[] = sanitize_text_field( trim( (string) $entry['value'] ) );
+					} elseif ( isset( $entry['id'] ) ) {
+						$keywords[] = sanitize_text_field( trim( (string) $entry['id'] ) );
+					}
+				}
+			}
+
+			return array_values( array_filter( $keywords ) );
+		}
+
+		if ( ! is_string( $raw ) && ! is_numeric( $raw ) ) {
+			return array();
+		}
+
+		return $this->parse_focus_keyword_list( (string) $raw );
+	}
+
+	/**
 	 * @param string $raw Raw focus keyword field.
 	 * @return string[]
 	 */
 	protected function parse_focus_keyword_list( $raw ) {
-		if ( trim( $raw ) === '' ) {
+		$raw = trim( (string) $raw );
+		if ( $raw === '' ) {
 			return array();
 		}
 
-		$keywords = explode( ',', $raw );
+		// Rank Math classic editor sometimes posts JSON tag objects before sanitize runs.
+		if ( isset( $raw[0] ) && ( $raw[0] === '[' || $raw[0] === '{' ) ) {
+			$decoded = json_decode( $raw, true );
+			if ( is_array( $decoded ) ) {
+				return $this->normalize_focus_keyword_raw( $decoded );
+			}
+		}
+
+		$keywords = preg_split( '/\s*,\s*/', $raw );
 
 		return array_values(
 			array_filter(
 				array_map(
 					static function ( $keyword ) {
-						return sanitize_text_field( trim( $keyword ) );
+						return sanitize_text_field( trim( (string) $keyword ) );
 					},
-					$keywords
+					is_array( $keywords ) ? $keywords : array()
 				)
 			)
 		);

@@ -37,6 +37,10 @@ class AI_Writing_Outline {
 			wp_send_json_error( array( 'message' => __( 'Invalid request', 'seo-booster' ) ) );
 		}
 
+		if ( ! Utils::user_can_edit_object( $post_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied', 'seo-booster' ) ) );
+		}
+
 		// Process in steps
 		$result = self::process_outline_step( $post_id, $user_prompt, $step );
 		wp_send_json_success( $result );
@@ -157,23 +161,23 @@ class AI_Writing_Outline {
 
 		$ai_provider = LLM_Helper::get_selected_ai_provider();
 		if ( $ai_provider === 'disabled' ) {
-			throw new \Exception( __( 'AI provider is disabled', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'AI provider is disabled', 'seo-booster' ) );
 		}
 
 		if ( $ai_provider === 'WordPress' ) {
 			if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
-				throw new \Exception( __( 'WordPress AI is not available. Use WordPress 7 or later and configure Settings → Connectors.', 'seo-booster' ) );
+				throw new \Exception( esc_html__( 'WordPress AI is not available. Use WordPress 7 or later and configure Settings → Connectors.', 'seo-booster' ) );
 			}
 			if ( ! LLM_Helper::wp_ai_is_available() ) {
-				throw new \Exception( LLM_Helper::wp_ai_unavailable_message() );
+				throw new \Exception( esc_html( LLM_Helper::wp_ai_unavailable_message() ) );
 			}
-			$text = LLM_Helper::ai_prompt( $full_prompt )
-				->using_system_instruction( __( 'You are an expert content strategist. Return only a clean, markdown outline (H2/H3 bullets) with no extra commentary.', 'seo-booster' ) )
-				->generate_text();
+			$builder = LLM_Helper::ai_prompt( $full_prompt )
+				->using_system_instruction( __( 'You are an expert content strategist. Return only a clean, markdown outline (H2/H3 bullets) with no extra commentary.', 'seo-booster' ) );
+			$text    = LLM_Helper::generate_ai_text( $builder, 'writing-outline' );
 			return is_string( $text ) ? $text : '';
 		}
 
-		throw new \Exception( __( 'Unsupported AI provider. Use WordPress (Connectors) or SEO Booster Credits.', 'seo-booster' ) );
+		throw new \Exception( esc_html__( 'Unsupported AI provider. Use WordPress (Connectors) or SEO Booster Credits.', 'seo-booster' ) );
 	}
 
 	/**
@@ -187,6 +191,9 @@ class AI_Writing_Outline {
 		$post_id = isset( $_POST['post_id'] ) ? intval( $_POST['post_id'] ) : 0;
 		if ( ! $post_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid post ID', 'seo-booster' ) ) );
+		}
+		if ( ! Utils::user_can_edit_object( $post_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied', 'seo-booster' ) ) );
 		}
 		$saved = get_post_meta( $post_id, '_sb_ai_writing_outline', true );
 		if ( empty( $saved ) ) {
@@ -210,18 +217,23 @@ class AI_Writing_Outline {
 			wp_send_json_error( array( 'message' => __( 'Invalid request', 'seo-booster' ) ) );
 		}
 
+		if ( ! Utils::user_can_edit_object( $post_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied', 'seo-booster' ) ) );
+		}
+
 		try {
 			$result = self::generate_article( $post_id, $outline, $language );
 			wp_send_json_success( $result );
 		} catch ( \Exception $e ) {
-			wp_send_json_error( array( 'message' => $e->getMessage() ) );
+			Utils::log( 'AI writing outline article generation failed: ' . $e->getMessage(), 2 );
+			wp_send_json_error( array( 'message' => __( 'Something went wrong. Check the SEO Booster debug log for details.', 'seo-booster' ) ) );
 		}
 	}
 
 	private static function generate_article( $post_id, $outline, $language ) {
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			throw new \Exception( __( 'Post not found', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Post not found', 'seo-booster' ) );
 		}
 
 		$context = self::build_context( $post_id );
@@ -241,23 +253,23 @@ class AI_Writing_Outline {
 
 		$provider = LLM_Helper::get_selected_ai_provider();
 		if ( $provider === 'disabled' ) {
-			throw new \Exception( __( 'AI provider is disabled', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'AI provider is disabled', 'seo-booster' ) );
 		}
 
 		if ( $provider === 'WordPress' ) {
 			if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
-				throw new \Exception( __( 'WordPress AI is not available. Use WordPress 7 or later and configure Settings → Connectors.', 'seo-booster' ) );
+				throw new \Exception( esc_html__( 'WordPress AI is not available. Use WordPress 7 or later and configure Settings → Connectors.', 'seo-booster' ) );
 			}
 			if ( ! LLM_Helper::wp_ai_is_available() ) {
-				throw new \Exception( LLM_Helper::wp_ai_unavailable_message() );
+				throw new \Exception( esc_html( LLM_Helper::wp_ai_unavailable_message() ) );
 			}
-			$response_text = LLM_Helper::ai_prompt( $user_prompt )
-				->using_system_instruction( $system_prompt )
-				->generate_text();
+			$builder       = LLM_Helper::ai_prompt( $user_prompt )
+				->using_system_instruction( $system_prompt );
+			$response_text = LLM_Helper::generate_ai_text( $builder, 'article-from-outline' );
 			$response_text = preg_replace( '#^```(?:json)?\s*|\s*```$#', '', trim( (string) $response_text ) );
 			$parsed        = json_decode( $response_text, true );
 			if ( json_last_error() !== JSON_ERROR_NONE || empty( $parsed['title'] ) || empty( $parsed['content_html'] ) ) {
-				throw new \Exception( __( 'Invalid AI response format', 'seo-booster' ) );
+				throw new \Exception( esc_html__( 'Invalid AI response format', 'seo-booster' ) );
 			}
 			return array(
 				'title'        => sanitize_text_field( $parsed['title'] ),
@@ -265,7 +277,7 @@ class AI_Writing_Outline {
 			);
 		}
 
-		throw new \Exception( __( 'Unsupported AI provider. Use WordPress (Connectors) or SEO Booster Credits.', 'seo-booster' ) );
+		throw new \Exception( esc_html__( 'Unsupported AI provider. Use WordPress (Connectors) or SEO Booster Credits.', 'seo-booster' ) );
 	}
 
 	/**

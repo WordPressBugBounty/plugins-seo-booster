@@ -204,32 +204,15 @@ class Google_API {
 			$processed_count = 0;
 			$skipped_count   = 0;
 			foreach ( $data['rows'] as $row_index => $row ) {
-				if ( ! isset( $row['keys'][0], $row['keys'][1], $row['keys'][2] ) ) {
-					++$skipped_count;
-					continue;
-				}
-				$query     = sanitize_text_field( $row['keys'][0] );
-				$url_parts = explode( '#', $row['keys'][1], 2 );
-				$page      = esc_url_raw( $url_parts[0] );
-				$date      = sanitize_text_field( $row['keys'][2] );
-
-				// Skip entries with empty or invalid data
-				if ( empty( $query ) || empty( $page ) || empty( $date ) ) {
+				$normalized = self::normalize_gsc_keyword_row( $row );
+				if ( false === $normalized ) {
 					++$skipped_count;
 					continue;
 				}
 
-				// Skip entries with query too long for database field (65,535 chars for TEXT field)
-				if ( mb_strlen( $query, 'UTF-8' ) > 65535 ) {
-					++$skipped_count;
-					continue;
-				}
-
-				// Skip entries with page URL too long for database field (1024 chars)
-				if ( strlen( $page ) > 1024 ) {
-					++$skipped_count;
-					continue;
-				}
+				$query               = $normalized['query'];
+				$page                = $normalized['page'];
+				$date                = $normalized['date'];
 				$cache_key           = 'sb2_keyword_id_' . md5( $query . $page );
 				$existing_keyword_id = wp_cache_get( $cache_key );
 				if ( false === $existing_keyword_id ) {
@@ -376,123 +359,185 @@ class Google_API {
 			wp_send_json_success( $response );
 		} catch ( \Exception $e ) {
 			Utils::log( 'Error fetching query keywords: ' . $e->getMessage(), 2 );
-			wp_send_json_error( esc_html( $e->getMessage() ) );
+			wp_send_json_error( __( 'Something went wrong. Check the SEO Booster debug log for details.', 'seo-booster' ) );
 		}
 	}
 
 	/**
-	 * load_adminbar_js.
+	 * Resolve current post/term context for the admin bar panel.
+	 *
+	 * @since 7.4.0
+	 * @return array{item_id: int, content_type: string, public_url: string, edit_url: string}
+	 */
+	public static function get_adminbar_context() {
+		$item_id      = 0;
+		$content_type = '';
+		$public_url   = '';
+		$edit_url     = '';
+
+		if ( is_admin() ) {
+			$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+			if ( $screen && 'post' === $screen->base ) {
+				$item_id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen context.
+				if ( ! $item_id ) {
+					global $post;
+					if ( $post instanceof \WP_Post ) {
+						$item_id = (int) $post->ID;
+					}
+				}
+				if ( $item_id ) {
+					$content_type = 'post';
+					$permalink    = get_permalink( $item_id );
+					$public_url   = is_string( $permalink ) ? $permalink : '';
+					$edit_url     = (string) get_edit_post_link( $item_id, 'raw' );
+				}
+			} elseif ( $screen && ( 'term' === $screen->base || 'edit-tags' === $screen->base ) ) {
+				$item_id = isset( $_GET['tag_ID'] ) ? absint( $_GET['tag_ID'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen context.
+				$tax     = isset( $_GET['taxonomy'] ) ? sanitize_key( wp_unslash( $_GET['taxonomy'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				if ( $item_id && $tax ) {
+					$content_type = 'term';
+					$term_link    = get_term_link( $item_id, $tax );
+					$public_url   = ( ! is_wp_error( $term_link ) && is_string( $term_link ) ) ? $term_link : '';
+					$edit_url     = (string) get_edit_term_link( $item_id, $tax );
+				}
+			}
+		} else {
+			$object = get_queried_object();
+			if ( $object instanceof \WP_Post ) {
+				$item_id      = (int) $object->ID;
+				$content_type = 'post';
+				$permalink    = get_permalink( $item_id );
+				$public_url   = is_string( $permalink ) ? $permalink : '';
+				$edit_url     = (string) get_edit_post_link( $item_id, 'raw' );
+			} elseif ( $object instanceof \WP_Term ) {
+				$item_id      = (int) $object->term_id;
+				$content_type = 'term';
+				$term_link    = get_term_link( $object );
+				$public_url   = ( ! is_wp_error( $term_link ) && is_string( $term_link ) ) ? $term_link : '';
+				$edit_url     = (string) get_edit_term_link( $item_id, $object->taxonomy );
+			}
+		}
+
+		if ( $public_url === '' ) {
+			$current_url = Utils::seobooster_currenturl( true );
+			if ( is_string( $current_url ) ) {
+				if ( strpos( $current_url, '?' ) !== false ) {
+					$current_url = substr( $current_url, 0, strpos( $current_url, '?' ) );
+				}
+				$public_url = $current_url;
+			}
+		}
+
+		return array(
+			'item_id'      => $item_id,
+			'content_type' => $content_type,
+			'public_url'   => $public_url,
+			'edit_url'     => $edit_url,
+		);
+	}
+
+	/**
+	 * Enqueue lightweight admin bar Page overview assets (WinBox + HTML panel).
 	 *
 	 * @author  Unknown
 	 * @since   v0.0.1
-	 * @version v1.0.0  Tuesday, September 10th, 2024.
+	 * @version v1.1.0  Friday, July 17th, 2026.
 	 * @access  public static
 	 * @return  void
 	 */
 	public static function load_adminbar_js() {
-		if ( ! is_admin_bar_showing() ) {
+		if ( ! is_admin_bar_showing() || ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
-		// Check if we should load winbox-related files based on GET parameter
-		$should_load_winbox = isset( $_GET['seobooster_showdetails'] ) &&
-							( $_GET['seobooster_showdetails'] === 'true' || $_GET['seobooster_showdetails'] === '1' );
+		$context = self::get_adminbar_context();
 
-		// Always load basic admin bar functionality
-		$plugin_version = Utils::get_plugin_version();
+		wp_enqueue_script(
+			'winbox',
+			SEOBOOSTER_PLUGINURL . 'js/min/winbox.bundle.min.js',
+			array( 'jquery' ),
+			filemtime( SEOBOOSTER_PLUGINPATH . 'js/min/winbox.bundle.min.js' ),
+			true
+		);
 
-		// Only load winbox-related files if the parameter is set
-		if ( $should_load_winbox ) {
-			wp_enqueue_script(
-				'winbox',
-				SEOBOOSTER_PLUGINURL . 'js/min/winbox.bundle.min.js',
-				array( 'jquery' ),
-				filemtime( SEOBOOSTER_PLUGINPATH . 'js/min/winbox.bundle.min.js' ),
-				true
-			);
+		wp_enqueue_style(
+			'seobooster-adminbar',
+			SEOBOOSTER_PLUGINURL . 'css/sb-adminbar.css',
+			array(),
+			filemtime( SEOBOOSTER_PLUGINPATH . 'css/sb-adminbar.css' )
+		);
 
-			wp_enqueue_style(
-				'tabulator',
-				SEOBOOSTER_PLUGINURL . 'js/tabulator/dist/css/tabulator.min.css',
-				array(),
-				filemtime( SEOBOOSTER_PLUGINPATH . 'js/tabulator/dist/css/tabulator.min.css' ),
-				'all'
-			);
+		wp_enqueue_script(
+			'seobooster-adminbar',
+			SEOBOOSTER_PLUGINURL . 'js/seobooster-adminbar.js',
+			array( 'jquery', 'winbox' ),
+			filemtime( SEOBOOSTER_PLUGINPATH . 'js/seobooster-adminbar.js' ),
+			true
+		);
 
-			wp_enqueue_script(
-				'tabulator',
-				SEOBOOSTER_PLUGINURL . 'js/tabulator/dist/js/tabulator.min.js',
-				array( 'jquery' ),
-				filemtime( SEOBOOSTER_PLUGINPATH . 'js/tabulator/dist/js/tabulator.min.js' ),
-				true
-			);
+		wp_localize_script(
+			'seobooster-adminbar',
+			'seobooster_adminbar',
+			self::get_adminbar_script_data( $context )
+		);
+	}
 
-			wp_enqueue_style(
-				'seobooster-adminbar',
-				SEOBOOSTER_PLUGINURL . 'css/sb-adminbar.css',
-				array(),
-				filemtime( SEOBOOSTER_PLUGINPATH . 'css/sb-adminbar.css' ),
-			);
-
-			wp_enqueue_script(
-				'seobooster-adminbar',
-				SEOBOOSTER_PLUGINURL . 'js/seobooster-adminbar.js',
-				array( 'jquery', 'winbox', 'tabulator' ),
-				filemtime( SEOBOOSTER_PLUGINPATH . 'js/seobooster-adminbar.js' ),
-				true
-			);
-
-			wp_enqueue_style( 'uPlot', SEOBOOSTER_PLUGINURL . 'js/uPlot/uPlot.min.css' );
-			wp_enqueue_script( 'uPlot', SEOBOOSTER_PLUGINURL . 'js/uPlot/uPlot.iife.min.js', array( 'jquery' ), Utils::get_plugin_version(), true );
-
-			wp_enqueue_script(
-				'clipboardjs',
-				SEOBOOSTER_PLUGINURL . 'js/min/clipboard.min.js',
-				array(),
-				filemtime( SEOBOOSTER_PLUGINPATH . 'js/min/clipboard.min.js' ),
-				true
-			);
+	/**
+	 * Localized data for the admin bar Page overview script.
+	 *
+	 * @since 7.4.0
+	 * @param array|null $context Optional precomputed context from get_adminbar_context().
+	 * @return array
+	 */
+	public static function get_adminbar_script_data( $context = null ) {
+		if ( ! is_array( $context ) ) {
+			$context = self::get_adminbar_context();
 		}
 
-		$https_on     = isset( $_SERVER['HTTPS'] ) && 'on' === sanitize_text_field( wp_unslash( $_SERVER['HTTPS'] ) );
-		$http_host    = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
-		$request_uri  = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
-		$current_page = ( $https_on ? 'https' : 'http' ) . '://' . $http_host . $request_uri;
-		$current_page = remove_query_arg( array( 'seobooster_showdetails', 'seobooster_showlinks' ), $current_page );
-
-		$current_url = Utils::seobooster_currenturl( true );
-		if ( is_string( $current_url ) && strpos( $current_url, '?' ) !== false ) {
-			$current_url = substr( $current_url, 0, strpos( $current_url, '?' ) );
-		}
-
-		// Only localize script if we're loading the adminbar script
-		if ( $should_load_winbox ) {
-			wp_localize_script(
-				'seobooster-adminbar',
-				'seobooster_adminbar',
-				array(
-					'ajax_url'     => admin_url( 'admin-ajax.php' ),
-					'security'     => wp_create_nonce( 'sb_gsc_nonce' ),
-					'public_url'   => $current_url,
-					'content_type' => '',
-					'item_id'      => '',
-					'text'         => array(
-						'search'       => __( 'Search', 'seo-booster' ),
-						'error'        => __( 'Error', 'seo-booster' ),
-						'loading'      => __( 'Loading...', 'seo-booster' ),
-						'query'        => __( 'Query', 'seo-booster' ),
-						'used'         => __( 'Used', 'seo-booster' ),
-						'stats'        => __( 'Stats', 'seo-booster' ),
-						'avg_position' => __( 'Avg. position', 'seo-booster' ),
-						'not_found'    => __( 'Not found', 'seo-booster' ),
-						'clicks'       => __( 'Clicks', 'seo-booster' ),
-						'impressions'  => __( 'Impressions', 'seo-booster' ),
-						'ctr'          => __( 'CTR', 'seo-booster' ),
-						'avg_position' => __( 'Avg. pos', 'seo-booster' ),
-					),
-				)
-			);
-		}
+		return array(
+			'ajax_url'     => admin_url( 'admin-ajax.php' ),
+			'security'     => wp_create_nonce( SB_Adminbar_Ajax::NONCE_ACTION ),
+			'public_url'   => $context['public_url'],
+			'content_type' => $context['content_type'],
+			'item_id'      => $context['item_id'],
+			'edit_url'     => $context['edit_url'],
+			'auto_open'    => isset( $_GET['seobooster_showdetails'] ) && ( '1' === $_GET['seobooster_showdetails'] || 'true' === $_GET['seobooster_showdetails'] ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Deep-link flag only.
+			'text'         => array(
+				'title'            => __( 'SEO Booster: Page overview', 'seo-booster' ),
+				'error'            => __( 'Error', 'seo-booster' ),
+				'loading'          => __( 'Loading…', 'seo-booster' ),
+				'score'            => __( 'SEO score', 'seo-booster' ),
+				'analyzed_at'      => __( 'Last analyzed', 'seo-booster' ),
+				'stale'            => __( 'Content has changed since the last analysis. Re-run analysis from the editor.', 'seo-booster' ),
+				'seo_title'        => __( 'SEO title', 'seo-booster' ),
+				'seo_description'  => __( 'Meta description', 'seo-booster' ),
+				'empty_meta'       => __( '(empty)', 'seo-booster' ),
+				'issues'           => __( 'Issues', 'seo-booster' ),
+				'opportunities'    => __( 'Opportunities', 'seo-booster' ),
+				'ai_suggestions'   => __( 'Saved AI suggestions', 'seo-booster' ),
+				'titles'           => __( 'Titles', 'seo-booster' ),
+				'descriptions'     => __( 'Descriptions', 'seo-booster' ),
+				'keywords'         => __( 'Top keywords', 'seo-booster' ),
+				'keywords_more'    => __( 'Showing top %1$d of %2$d keywords.', 'seo-booster' ),
+				'query'            => __( 'Query', 'seo-booster' ),
+				'clicks'           => __( 'Clicks', 'seo-booster' ),
+				'impressions'      => __( 'Impressions', 'seo-booster' ),
+				'ctr'              => __( 'CTR', 'seo-booster' ),
+				'position'         => __( 'Pos.', 'seo-booster' ),
+				'used'             => __( 'Used', 'seo-booster' ),
+				'copy'             => __( 'Copy', 'seo-booster' ),
+				'copied'           => __( 'Copied', 'seo-booster' ),
+				'no_analysis'      => __( 'This page has not been analyzed yet.', 'seo-booster' ),
+				'no_suggestions'   => __( 'No saved AI title or meta suggestions for this page.', 'seo-booster' ),
+				'no_keywords'      => __( 'No Search Console keywords for this page.', 'seo-booster' ),
+				'no_issues'        => __( 'No open issues.', 'seo-booster' ),
+				'no_opportunities' => __( 'No opportunities listed.', 'seo-booster' ),
+				'cta_analyze'      => __( 'Open in editor to run analysis', 'seo-booster' ),
+				'cta_suggestions'  => __( 'Open in editor to generate AI suggestions', 'seo-booster' ),
+				'cta_editor'       => __( 'Open in editor', 'seo-booster' ),
+				'unavailable'      => __( 'Page overview is only available on a post, page, or term.', 'seo-booster' ),
+			),
+		);
 	}
 
 	/**
@@ -521,11 +566,12 @@ class Google_API {
 	 * @return array An array of focus keywords.
 	 */
 	public static function get_focus_keywords( $post_id, $post_url = '' ) {
-		if ( ! is_int( $post_id ) || $post_id <= 0 ) {
+		$post_id = absint( $post_id );
+		if ( $post_id <= 0 ) {
 			return array();
 		}
 
-		return array_unique( SEO_Plugin_Registry::read_focus_keywords( $post_id ) );
+		return array_values( array_unique( SEO_Plugin_Registry::read_focus_keywords( $post_id ) ) );
 	}
 
 	/**
@@ -664,8 +710,8 @@ class Google_API {
 			}
 		}
 
-		// Check for keyword in the title tag and meta description
-		$seo_data = self::get_seo_title_and_description( absint( $post_id ) );
+		// Check for keyword in the title tag and meta description (resolved templates; no capability gate for cron).
+		$seo_data = SEO_Plugin_Registry::read_post_seo_resolved( absint( $post_id ) );
 		foreach ( $keyword_variations as $variation ) {
 			if ( stripos( $seo_data['title'], $variation ) !== false ) {
 				$occurrences[] = array(
@@ -800,6 +846,7 @@ class Google_API {
 			$start_date,
 			$end_date
 		);
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prepared above.
 		$results = $wpdb->get_results( $query );
 		$results = array_reverse( $results );
 		if ( ! $results ) {
@@ -898,7 +945,6 @@ class Google_API {
 			'sb2_seo_analysis'           => __( 'SEO analysis', 'seo-booster' ),
 			'sb2_seo_issues'             => __( 'SEO issues', 'seo-booster' ),
 			'sb2_seo_url_status'         => __( 'SEO URL status', 'seo-booster' ),
-			'sb2_ai_requests'            => __( 'AI requests', 'seo-booster' ),
 			'sb2_llm_seo_suggestions'    => __( 'LLM SEO suggestions', 'seo-booster' ),
 			'sb2_improvements_tracking'  => __( 'Improvements tracking', 'seo-booster' ),
 			'sb2_ai_bot_hits'            => __( 'AI bot hits', 'seo-booster' ),
@@ -1029,11 +1075,28 @@ class Google_API {
 		$query_keywords_history_table = $wpdb->prefix . 'sb2_query_keywords_history';
 		// Process each entry sequentially
 		foreach ( $entries as $entry ) {
-			// Sanitize and validate input data
-			$sanitized_query = sanitize_text_field( $entry['query'] );
-			$sanitized_page  = esc_url_raw( $entry['page'] );
-			$sanitized_date  = sanitize_text_field( $entry['date'] );
-			$existing_entry  = $wpdb->get_row( $wpdb->prepare( "SELECT id, latest_date FROM {$query_keywords_table} WHERE query = %s AND page = %s", $sanitized_query, $sanitized_page ), ARRAY_A );
+			$normalized = self::normalize_gsc_keyword_row(
+				array(
+					'keys'        => array(
+						$entry['query'] ?? '',
+						$entry['page'] ?? '',
+						$entry['date'] ?? '',
+					),
+					'clicks'      => $entry['clicks'] ?? 0,
+					'impressions' => $entry['impressions'] ?? 0,
+					'ctr'         => $entry['ctr'] ?? 0,
+					'position'    => $entry['position'] ?? 0,
+				)
+			);
+			if ( false === $normalized ) {
+				continue;
+			}
+
+			$sanitized_query = $normalized['query'];
+			$sanitized_page  = $normalized['page'];
+			$sanitized_date  = $normalized['date'];
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prefixed table; values use placeholders.
+			$existing_entry = $wpdb->get_row( $wpdb->prepare( "SELECT id, latest_date FROM {$query_keywords_table} WHERE query = %s AND page = %s", $sanitized_query, $sanitized_page ), ARRAY_A );
 			if ( $existing_entry ) {
 				// Update the existing keyword entry if needed
 				if ( $existing_entry['latest_date'] !== $sanitized_date ) {
@@ -1082,12 +1145,13 @@ class Google_API {
 				$query_keywords_id = $wpdb->insert_id;
 			}
 			// Check for existing history entry before inserting
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prefixed table; values use placeholders.
 			$existing_history_id = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$query_keywords_history_table} WHERE query_keywords_id = %d AND date = %s", $query_keywords_id, $sanitized_date ) );
 			$history_data        = array(
-				'clicks'      => absint( $entry['clicks'] ),
-				'impressions' => absint( $entry['impressions'] ),
-				'ctr'         => floatval( $entry['ctr'] ),
-				'position'    => floatval( $entry['position'] ),
+				'clicks'      => $normalized['clicks'],
+				'impressions' => $normalized['impressions'],
+				'ctr'         => $normalized['ctr'],
+				'position'    => $normalized['position'],
 				'date'        => $sanitized_date,
 			);
 			if ( $existing_history_id ) {
@@ -1388,9 +1452,11 @@ class Google_API {
 						break;
 					}
 				} catch ( \Exception $e ) {
-					/* translators: %s: error message from access token */
 					Utils::log( sprintf( 'Error fetching query keywords: %s', $e->getMessage() ), 2 );
-					printf( '<div class="seobooster-notice notice notice-error"><p>%s</p></div>', esc_html( $e->getMessage() ) );
+					printf(
+						'<div class="seobooster-notice notice notice-error"><p>%s</p></div>',
+						esc_html__( 'Something went wrong. Check the SEO Booster debug log for details.', 'seo-booster' )
+					);
 				}
 			} while ( true );
 			/* translators: 1: formatted number of records, 2: site URL */
@@ -1411,9 +1477,11 @@ class Google_API {
 			as_schedule_single_action( time(), 'sb_gsc_schedule_all_pages' );
 			Utils::log( 'Scheduled keyword analysis for all pages', 10 );
 		} catch ( \Exception $e ) {
-			/* translators: %s: error message from access token */
 			Utils::log( sprintf( 'Error fetching query keywords: %s', $e->getMessage() ), 2 );
-			printf( '<div class="seobooster-notice notice notice-error"><p>%s</p></div>', esc_html( $e->getMessage() ) );
+			printf(
+				'<div class="seobooster-notice notice notice-error"><p>%s</p></div>',
+				esc_html__( 'Something went wrong. Check the SEO Booster debug log for details.', 'seo-booster' )
+			);
 		}
 	}
 
@@ -1445,6 +1513,50 @@ class Google_API {
 	}
 
 	/**
+	 * Normalize and validate a GSC Search Analytics row for storage.
+	 *
+	 * Rejects empty queries/pages after sanitization. Preserves the legitimate
+	 * query string "0" (unlike empty()).
+	 *
+	 * @since 7.4.0
+	 * @param array $row Raw GSC API row (keys[0]=query, keys[1]=page, keys[2]=date).
+	 * @return array|false Normalized row data, or false if invalid.
+	 */
+	public static function normalize_gsc_keyword_row( $row ) {
+		if ( ! is_array( $row ) || ! isset( $row['keys'][0], $row['keys'][1], $row['keys'][2] ) ) {
+			return false;
+		}
+
+		$query     = sanitize_text_field( (string) $row['keys'][0] );
+		$url_parts = explode( '#', (string) $row['keys'][1], 2 );
+		$page      = esc_url_raw( $url_parts[0] );
+		$date      = sanitize_text_field( (string) $row['keys'][2] );
+
+		if ( '' === trim( $query ) || '' === $page || '' === $date ) {
+			return false;
+		}
+
+		$query_length = function_exists( 'mb_strlen' ) ? mb_strlen( $query, 'UTF-8' ) : strlen( $query );
+		if ( $query_length > 65535 || strlen( $page ) > 500 ) {
+			return false;
+		}
+
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ) {
+			return false;
+		}
+
+		return array(
+			'query'       => $query,
+			'page'        => $page,
+			'date'        => $date,
+			'clicks'      => absint( $row['clicks'] ?? 0 ),
+			'impressions' => absint( $row['impressions'] ?? 0 ),
+			'ctr'         => floatval( $row['ctr'] ?? 0 ),
+			'position'    => floatval( $row['position'] ?? 0 ),
+		);
+	}
+
+	/**
 	 * Process a batch of rows with bulk SQL operations to minimize queries
 	 *
 	 * @param array $batch Array of rows to process
@@ -1455,87 +1567,76 @@ class Google_API {
 			return;
 		}
 
-		// Prepare data for bulk operations
-		$queries     = array();
-		$pages       = array();
-		$dates       = array();
-		$clicks      = array();
-		$impressions = array();
-		$ctrs        = array();
-		$positions   = array();
-
+		$normalized_rows = array();
 		foreach ( $batch as $row ) {
-			$queries[]     = sanitize_text_field( $row['keys'][0] );
-			$url_parts     = explode( '#', $row['keys'][1], 2 );
-			$pages[]       = esc_url_raw( $url_parts[0] );
-			$dates[]       = sanitize_text_field( $row['keys'][2] );
-			$clicks[]      = absint( $row['clicks'] );
-			$impressions[] = absint( $row['impressions'] );
-			$ctrs[]        = floatval( $row['ctr'] );
-			$positions[]   = floatval( $row['position'] );
+			$normalized = self::normalize_gsc_keyword_row( $row );
+			if ( false === $normalized ) {
+				continue;
+			}
+			$normalized_rows[] = $normalized;
 		}
 
-		// Build bulk query to check existing keywords
+		if ( empty( $normalized_rows ) ) {
+			return;
+		}
+
 		$placeholders = array();
 		$values       = array();
-		foreach ( $queries as $i => $query ) {
+		foreach ( $normalized_rows as $row ) {
 			$placeholders[] = '(%s, %s)';
-			$values[]       = $query;
-			$values[]       = $pages[ $i ];
+			$values[]       = $row['query'];
+			$values[]       = $row['page'];
 		}
 
-		// Single query to get all existing keywords
 		$existing_keywords = array();
-		if ( ! empty( $placeholders ) ) {
-			$sql     = "SELECT id, query, page FROM {$wpdb->prefix}sb2_query_keywords WHERE (query, page) IN (" . implode( ',', $placeholders ) . ')';
-			$results = $wpdb->get_results( $wpdb->prepare( $sql, $values ), ARRAY_A );
+		$sql               = "SELECT id, query, page FROM {$wpdb->prefix}sb2_query_keywords WHERE (query, page) IN (" . implode( ',', $placeholders ) . ')';
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Placeholder list built from count of values; all values passed to $wpdb->prepare().
+		$results = $wpdb->get_results( $wpdb->prepare( $sql, $values ), ARRAY_A );
 
-			foreach ( $results as $result ) {
-				$key                       = $result['query'] . '|' . $result['page'];
-				$existing_keywords[ $key ] = $result['id'];
-			}
+		foreach ( (array) $results as $result ) {
+			$key                       = $result['query'] . '|' . $result['page'];
+			$existing_keywords[ $key ] = (int) $result['id'];
 		}
 
-		// Prepare bulk inserts and updates
 		$keyword_inserts = array();
 		$keyword_updates = array();
-		$history_inserts = array();
+		$history_by_key  = array();
 
-		foreach ( $queries as $i => $query ) {
-			$page = $pages[ $i ];
-			$date = $dates[ $i ];
-			$key  = $query . '|' . $page;
+		foreach ( $normalized_rows as $row ) {
+			$key = $row['query'] . '|' . $row['page'];
 
 			if ( isset( $existing_keywords[ $key ] ) ) {
-				// Will update existing
 				$keyword_updates[] = array(
 					'id'   => $existing_keywords[ $key ],
-					'date' => $date,
+					'date' => $row['date'],
 				);
 				$keyword_id        = $existing_keywords[ $key ];
 			} else {
-				// Will insert new
-				$keyword_inserts[] = array(
-					'query'           => $query,
-					'page'            => $page,
-					'first_seen_date' => $date,
-					'latest_date'     => $date,
-				);
-				$keyword_id        = 'NEW_' . count( $keyword_inserts );
+				if ( ! isset( $keyword_inserts[ $key ] ) ) {
+					$keyword_inserts[ $key ] = array(
+						'query'           => $row['query'],
+						'page'            => $row['page'],
+						'first_seen_date' => $row['date'],
+						'latest_date'     => $row['date'],
+					);
+				} elseif ( $row['date'] > $keyword_inserts[ $key ]['latest_date'] ) {
+					$keyword_inserts[ $key ]['latest_date'] = $row['date'];
+				}
+				$keyword_id = null;
 			}
 
-			// Prepare history insert
-			$history_inserts[] = array(
+			$hist_key                   = $key . '|' . $row['date'];
+			$history_by_key[ $hist_key ] = array(
+				'lookup_key'  => $key,
 				'keyword_id'  => $keyword_id,
-				'clicks'      => $clicks[ $i ],
-				'impressions' => $impressions[ $i ],
-				'ctr'         => $ctrs[ $i ],
-				'position'    => $positions[ $i ],
-				'date'        => $date,
+				'clicks'      => $row['clicks'],
+				'impressions' => $row['impressions'],
+				'ctr'         => $row['ctr'],
+				'position'    => $row['position'],
+				'date'        => $row['date'],
 			);
 		}
 
-		// Bulk insert new keywords
 		if ( ! empty( $keyword_inserts ) ) {
 			$insert_values       = array();
 			$insert_placeholders = array();
@@ -1548,23 +1649,28 @@ class Google_API {
 			}
 
 			$sql = "INSERT IGNORE INTO {$wpdb->prefix}sb2_query_keywords (query, page, first_seen_date, latest_date) VALUES " . implode( ',', $insert_placeholders );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Placeholder list built from count of values; all values passed to $wpdb->prepare().
 			$wpdb->query( $wpdb->prepare( $sql, $insert_values ) );
 
-			// Get the new IDs for history inserts
-            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table prefix only; LIMIT uses count() of local array.
-			$new_ids = $wpdb->get_col( "SELECT id FROM {$wpdb->prefix}sb2_query_keywords ORDER BY id DESC LIMIT " . count( $keyword_inserts ) );
-			$new_ids = array_reverse( $new_ids ); // Reverse to match insertion order
+			// Resolve IDs by exact (query, page) — never by "latest N ids".
+			$re_placeholders = array();
+			$re_values       = array();
+			foreach ( $keyword_inserts as $insert ) {
+				$re_placeholders[] = '(%s, %s)';
+				$re_values[]       = $insert['query'];
+				$re_values[]       = $insert['page'];
+			}
 
-			// Update history inserts with real IDs
-			foreach ( $history_inserts as $i => $history ) {
-				if ( is_string( $history['keyword_id'] ) && strpos( $history['keyword_id'], 'NEW_' ) === 0 ) {
-					$new_index                           = (int) substr( $history['keyword_id'], 4 ) - 1;
-					$history_inserts[ $i ]['keyword_id'] = $new_ids[ $new_index ];
-				}
+			$sql = "SELECT id, query, page FROM {$wpdb->prefix}sb2_query_keywords WHERE (query, page) IN (" . implode( ',', $re_placeholders ) . ')';
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Placeholder list built from count of values; all values passed to $wpdb->prepare().
+			$results = $wpdb->get_results( $wpdb->prepare( $sql, $re_values ), ARRAY_A );
+
+			foreach ( (array) $results as $result ) {
+				$key                       = $result['query'] . '|' . $result['page'];
+				$existing_keywords[ $key ] = (int) $result['id'];
 			}
 		}
 
-		// Bulk update existing keywords
 		if ( ! empty( $keyword_updates ) ) {
 			foreach ( $keyword_updates as $update ) {
 				$wpdb->update(
@@ -1577,7 +1683,25 @@ class Google_API {
 			}
 		}
 
-		// Bulk insert history (ignore duplicates)
+		$history_inserts = array();
+		foreach ( $history_by_key as $history ) {
+			$keyword_id = $history['keyword_id'];
+			if ( null === $keyword_id ) {
+				$keyword_id = $existing_keywords[ $history['lookup_key'] ] ?? null;
+			}
+			if ( ! $keyword_id ) {
+				continue;
+			}
+			$history_inserts[] = array(
+				'keyword_id'  => (int) $keyword_id,
+				'clicks'      => $history['clicks'],
+				'impressions' => $history['impressions'],
+				'ctr'         => $history['ctr'],
+				'position'    => $history['position'],
+				'date'        => $history['date'],
+			);
+		}
+
 		if ( ! empty( $history_inserts ) ) {
 			$history_values       = array();
 			$history_placeholders = array();
@@ -1592,6 +1716,7 @@ class Google_API {
 			}
 
 			$sql = "INSERT IGNORE INTO {$wpdb->prefix}sb2_query_keywords_history (query_keywords_id, clicks, impressions, ctr, position, date) VALUES " . implode( ',', $history_placeholders );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Placeholder list built from count of values; all values passed to $wpdb->prepare().
 			$wpdb->query( $wpdb->prepare( $sql, $history_values ) );
 		}
 	}
@@ -1705,7 +1830,7 @@ class Google_API {
 		$authentication_string = base64_encode( $pk_hash . '|' . $nonce );
 
 		// When making the API request, indicate if this is an alternative ID
-		$is_alternative = ! function_exists( 'seobooster_fs' ) || ! seobooster_fs()->is_registered();
+		$is_alternative = ! function_exists( __NAMESPACE__ . '\\seobooster_fs' ) || ! seobooster_fs()->is_registered();
 
 		Utils::log( 'Calling seoboosterauth.com API to get access token', 3 );
 
@@ -2040,7 +2165,7 @@ class Google_API {
 	 */
 	private static function get_installation_id() {
 		// First try to get Freemius installation ID
-		if ( function_exists( 'seobooster_fs' ) && seobooster_fs()->is_registered() ) {
+		if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) && seobooster_fs()->is_registered() ) {
 			try {
 				$site = seobooster_fs()->get_site();
 				if ( $site && ! empty( $site->id ) ) {
@@ -2076,7 +2201,7 @@ class Google_API {
 	 */
 	private static function get_site_private_key() {
 		// First try to get Freemius site key
-		if ( function_exists( 'seobooster_fs' ) && seobooster_fs()->is_registered() ) {
+		if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) && seobooster_fs()->is_registered() ) {
 			try {
 				$site = seobooster_fs()->get_site();
 				if ( $site && ! empty( $site->secret_key ) ) {
@@ -2106,6 +2231,10 @@ class Google_API {
 	/**
 	 * Build OAuth authentication parameters for seoboosterauth.com links.
 	 *
+	 * Appends CSRF params to return_to and stores a one-time state in a
+	 * user-scoped transient + HttpOnly cookie. The auth proxy may strip
+	 * nested return_to query args; the cookie is verified on callback.
+	 *
 	 * @param string|null $return_to Optional return URL after OAuth.
 	 * @return array{install_id: string, auth_token: string, return_to: string}
 	 */
@@ -2114,16 +2243,159 @@ class Google_API {
 			$return_to = admin_url( 'admin.php?page=sb2_dashboard&auth=1' );
 		}
 
+		// CSRF protection for OAuth callback (preserved on return_to when the auth proxy keeps nested args).
+		$return_to = add_query_arg( 'sb_oauth_nonce', wp_create_nonce( 'seobooster_oauth_callback' ), $return_to );
+
 		$install_id            = self::get_installation_id();
 		$site_private_key      = self::get_site_private_key();
 		$nonce                 = gmdate( 'Y-m-d' );
 		$pk_hash               = hash( 'sha512', $site_private_key . '|' . $nonce );
 		$authentication_string = base64_encode( $pk_hash . '|' . $nonce );
 
+		$oauth_state = wp_generate_password( 32, false );
+		$user_id     = get_current_user_id();
+		if ( $user_id ) {
+			set_transient( 'seobooster_oauth_state_' . $user_id, $oauth_state, 15 * MINUTE_IN_SECONDS );
+			self::set_oauth_csrf_cookie( $oauth_state );
+		}
+		$return_to = add_query_arg( 'sb_oauth_state', $oauth_state, $return_to );
+
 		return array(
 			'install_id' => $install_id,
 			'auth_token' => $authentication_string,
 			'return_to'  => $return_to,
+		);
+	}
+
+	/**
+	 * Build the full seoboosterauth.com auth URL for a return destination.
+	 *
+	 * @param string|null $return_to Optional return URL after OAuth.
+	 * @return string
+	 */
+	public static function build_oauth_auth_url( $return_to = null ) {
+		$params = self::get_oauth_auth_params( $return_to );
+
+		return add_query_arg(
+			array(
+				'install_id' => $params['install_id'],
+				'auth_token' => $params['auth_token'],
+				'return_to'  => $params['return_to'],
+			),
+			'https://seoboosterauth.com/auth'
+		);
+	}
+
+	/**
+	 * Set HttpOnly CSRF cookie for OAuth callback verification.
+	 *
+	 * @param string $oauth_state One-time state token.
+	 * @return void
+	 */
+	private static function set_oauth_csrf_cookie( $oauth_state ) {
+		if ( headers_sent() ) {
+			return;
+		}
+
+		$expire = time() + ( 15 * MINUTE_IN_SECONDS );
+		$path   = defined( 'COOKIEPATH' ) && COOKIEPATH ? COOKIEPATH : '/';
+		$domain = defined( 'COOKIE_DOMAIN' ) ? COOKIE_DOMAIN : '';
+
+		if ( PHP_VERSION_ID >= 70300 ) {
+			setcookie(
+				'seobooster_oauth_csrf',
+				$oauth_state,
+				array(
+					'expires'  => $expire,
+					'path'     => $path,
+					'domain'   => $domain,
+					'secure'   => is_ssl(),
+					'httponly' => true,
+					'samesite' => 'Lax',
+				)
+			);
+		} else {
+			setcookie( 'seobooster_oauth_csrf', $oauth_state, $expire, $path, $domain, is_ssl(), true );
+		}
+	}
+
+	/**
+	 * Clear the OAuth CSRF cookie after a successful or failed callback.
+	 *
+	 * @return void
+	 */
+	public static function clear_oauth_csrf_cookie() {
+		if ( headers_sent() ) {
+			return;
+		}
+
+		$path   = defined( 'COOKIEPATH' ) && COOKIEPATH ? COOKIEPATH : '/';
+		$domain = defined( 'COOKIE_DOMAIN' ) ? COOKIE_DOMAIN : '';
+
+		if ( PHP_VERSION_ID >= 70300 ) {
+			setcookie(
+				'seobooster_oauth_csrf',
+				'',
+				array(
+					'expires'  => time() - YEAR_IN_SECONDS,
+					'path'     => $path,
+					'domain'   => $domain,
+					'secure'   => is_ssl(),
+					'httponly' => true,
+					'samesite' => 'Lax',
+				)
+			);
+		} else {
+			setcookie( 'seobooster_oauth_csrf', '', time() - YEAR_IN_SECONDS, $path, $domain, is_ssl(), true );
+		}
+	}
+
+	/**
+	 * Map a short return destination key to an admin return URL.
+	 *
+	 * @param string $destination One of setup|dashboard|settings.
+	 * @return string
+	 */
+	public static function get_oauth_return_url_for_destination( $destination ) {
+		switch ( $destination ) {
+			case 'setup':
+				return admin_url( 'admin.php?page=sb2_setup&step=gsc&auth=1' );
+			case 'settings':
+				return admin_url( 'admin.php?page=sb2_settings&auth=1' );
+			case 'dashboard':
+			default:
+				return admin_url( 'admin.php?page=sb2_dashboard&auth=1' );
+		}
+	}
+
+	/**
+	 * AJAX: prepare a fresh OAuth auth URL (sets CSRF cookie + transient).
+	 *
+	 * @return void
+	 */
+	public static function ajax_prepare_oauth() {
+		if ( ! check_ajax_referer( 'seobooster_oauth_prepare', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'seo-booster' ) ), 403 );
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'seo-booster' ) ), 403 );
+		}
+
+		$destination = isset( $_POST['destination'] ) ? sanitize_key( wp_unslash( $_POST['destination'] ) ) : 'dashboard';
+		if ( ! in_array( $destination, array( 'setup', 'dashboard', 'settings' ), true ) ) {
+			$destination = 'dashboard';
+		}
+
+		$auth_url = self::build_oauth_auth_url( self::get_oauth_return_url_for_destination( $destination ) );
+		if ( empty( $auth_url ) ) {
+			wp_send_json_error( array( 'message' => __( 'Could not prepare Google authentication.', 'seo-booster' ) ) );
+		}
+
+		wp_send_json_success(
+			array(
+				'auth_url' => $auth_url,
+			)
 		);
 	}
 
@@ -2591,14 +2863,14 @@ class Google_API {
 	 * @return  void
 	 */
 	public static function ajax_manual_token_refresh() {
-		// Verify nonce
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'seobooster_token_refresh' ) ) {
-			wp_die( __( 'Security check failed', 'seo-booster' ) );
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+		if ( ! wp_verify_nonce( $nonce, 'seobooster_token_refresh' ) ) {
+			wp_die( esc_html__( 'Security check failed', 'seo-booster' ) );
 		}
 
 		// Check user permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( __( 'Insufficient permissions', 'seo-booster' ) );
+			wp_die( esc_html__( 'Insufficient permissions', 'seo-booster' ) );
 		}
 
 		$result = self::validate_token( true );
@@ -2721,14 +2993,21 @@ class Google_API {
 	 * @since 6.2.0
 	 * @param string $url The URL to inspect (fully qualified).
 	 * @param string $site_url The site URL as defined in Search Console.
-	 * @param string $language_code Optional language code for translated issue messages (default: 'en-US').
+	 * @param string $language_code Optional language code for translated issue messages. Empty uses the site locale.
 	 * @return array|WP_Error Inspection result data or WP_Error on failure.
 	 */
-	public static function inspect_url( $url, $site_url, $language_code = 'en-US' ) {
+	public static function inspect_url( $url, $site_url, $language_code = '' ) {
 		// Validate and sanitize inputs
 		$url           = esc_url_raw( $url );
 		$site_url      = sanitize_text_field( $site_url );
 		$language_code = sanitize_text_field( $language_code );
+		if ( $language_code === '' ) {
+			$locale        = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
+			$language_code = str_replace( '_', '-', (string) $locale );
+			if ( $language_code === '' ) {
+				$language_code = 'en-US';
+			}
+		}
 
 		if ( empty( $url ) || empty( $site_url ) ) {
 			return new \WP_Error( 'invalid_params', __( 'URL and site URL are required.', 'seo-booster' ) );

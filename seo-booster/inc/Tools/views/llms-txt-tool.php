@@ -34,7 +34,7 @@ esc_html_e( '(opens in a new tab)', 'seo-booster' );
 	</div>
 	<p class="description">
 		<?php 
-esc_html_e( 'Build a curated llms.txt file for AI crawlers and answer engines. SEO Booster generates the content for you — it does not upload a physical file to your server unless you download and place one yourself.', 'seo-booster' );
+esc_html_e( 'Build a curated llms.txt file for AI crawlers and answer engines. SEO Booster generates the content for you. It does not upload a physical file to your server unless you download and place one yourself.', 'seo-booster' );
 ?>
 	</p>
 
@@ -44,7 +44,7 @@ if ( $show_entity_map_upsell ) {
 		<div class="notice notice-info inline">
 			<p>
 				<?php 
-    esc_html_e( 'Pro: Publish a structured Entity Map (/entitymap.json + /entitymap.html) so AI systems understand your organization and content relationships — beyond the llms.txt index.', 'seo-booster' );
+    esc_html_e( 'Pro: Publish a structured Entity Map (/entitymap.json + /entitymap.html) so AI systems understand your organization and content relationships, beyond the llms.txt index.', 'seo-booster' );
     ?>
 				<a href="<?php 
     echo esc_url( admin_url( 'admin.php?page=sb2_tools&tab=entity-map' ) );
@@ -88,7 +88,7 @@ if ( !empty( $physical_status['exists'] ) ) {
     ?>
 		<div class="notice notice-info inline">
 			<p><?php 
-    esc_html_e( 'No physical llms.txt file was found in your WordPress root. When enabled, SEO Booster serves /llms.txt dynamically via WordPress (recommended — stays in sync when you publish content).', 'seo-booster' );
+    esc_html_e( 'No physical llms.txt file was found in your WordPress root. When enabled, SEO Booster serves /llms.txt dynamically via WordPress (recommended: stays in sync when you publish content).', 'seo-booster' );
     ?></p>
 		</div>
 	<?php 
@@ -349,6 +349,7 @@ if ( empty( $directories ) ) {
         $dir = $row['directory'];
         $rule = $row['rule'];
         $effective = ( $rule !== 'auto' ? $rule : $row['auto_status'] );
+        $md_url = ( !empty( $row['example_md'] ) ? $row['example_md'] : '' );
         ?>
 						<tr>
 							<td><code><?php 
@@ -366,11 +367,24 @@ if ( empty( $directories ) ) {
 							<td><code><?php 
         echo esc_html( $row['post_types'] );
         ?></code></td>
-							<td><a href="<?php 
+							<td>
+								<a href="<?php 
         echo esc_url( $row['example_url'] );
         ?>" target="_blank" rel="noopener noreferrer"><?php 
-        esc_html_e( 'View', 'seo-booster' );
-        ?></a></td>
+        esc_html_e( 'HTML', 'seo-booster' );
+        ?></a>
+								<?php 
+        if ( $md_url ) {
+            ?>
+									· <a href="<?php 
+            echo esc_url( $md_url );
+            ?>" target="_blank" rel="noopener noreferrer"><?php 
+            esc_html_e( '.md', 'seo-booster' );
+            ?></a>
+								<?php 
+        }
+        ?>
+							</td>
 							<td>
 								<select name="directory_rules[<?php 
         echo esc_attr( $dir );
@@ -402,6 +416,12 @@ if ( empty( $directories ) ) {
 			</tbody>
 		</table>
 
+		<?php 
+if ( !empty( $show_markdown ) ) {
+    \Cleverplugins\SEOBooster\Tools\Tools_Markdown::render_settings_partial();
+}
+?>
+
 		<h3><?php 
 esc_html_e( 'AI bot crawl gaps', 'seo-booster' );
 ?></h3>
@@ -430,7 +450,7 @@ esc_html_e( 'Pinned', 'seo-booster' );
 if ( empty( $bot_gaps ) ) {
     ?>
 					<tr><td colspan="4"><?php 
-    esc_html_e( 'No crawl gaps found — or bot tracking has no mapped content hits yet.', 'seo-booster' );
+    esc_html_e( 'No crawl gaps found, or bot tracking has no mapped content hits yet.', 'seo-booster' );
     ?></td></tr>
 				<?php 
 } else {

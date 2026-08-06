@@ -73,7 +73,7 @@ class LLM_Content_Condenser {
 			if ( $profile === self::PROFILE_BULK ) {
 				return $this->get_bulk_fallback_text( $post_id );
 			}
-			throw new \Exception( __( 'Unable to retrieve content for condensation', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Unable to retrieve content for condensation', 'seo-booster' ) );
 		}
 
 		$plain_text = $this->html_to_text( $html_content );
@@ -82,7 +82,7 @@ class LLM_Content_Condenser {
 			if ( $profile === self::PROFILE_BULK ) {
 				return $this->get_bulk_fallback_text( $post_id );
 			}
-			throw new \Exception( __( 'Unable to convert content to text', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Unable to convert content to text', 'seo-booster' ) );
 		}
 
 		if ( $profile !== self::PROFILE_BULK ) {
@@ -97,6 +97,8 @@ class LLM_Content_Condenser {
 			$result = $this->summarize_text( $plain_text, $estimated_tokens, $limits );
 		}
 
+		$result = LLM_Helper::ensure_utf8( $result );
+
 		if ( $profile === self::PROFILE_BULK ) {
 			/**
 			 * Filters condensed editor content for bulk meta AI prompts.
@@ -106,7 +108,7 @@ class LLM_Content_Condenser {
 			 * @param string $result  Condensed plain text.
 			 * @param int    $post_id Post ID.
 			 */
-			return (string) apply_filters( 'seobooster_bulk_meta_condensed_content', $result, $post_id );
+			return LLM_Helper::ensure_utf8( (string) apply_filters( 'seobooster_bulk_meta_condensed_content', $result, $post_id ) );
 		}
 
 		return $result;
@@ -166,7 +168,7 @@ class LLM_Content_Condenser {
 			$parts[] = trim( $post->post_excerpt );
 		}
 
-		return trim( implode( "\n\n", array_filter( $parts ) ) );
+		return LLM_Helper::ensure_utf8( trim( implode( "\n\n", array_filter( $parts ) ) ) );
 	}
 
 	/**
@@ -265,7 +267,7 @@ class LLM_Content_Condenser {
 		$text = str_replace( array( "\r\n", "\n", "\r" ), ' ', $text );
 		$text = preg_replace( '/[ \t]+/', ' ', $text );
 		$text = trim( $text );
-		return $text;
+		return LLM_Helper::ensure_utf8( $text );
 	}
 
 	/**
@@ -490,8 +492,10 @@ class LLM_Content_Condenser {
 	 * @return array Array of words.
 	 */
 	private function extract_words( $sentence ) {
-		// Convert to lowercase and extract words
-		$words = preg_split( '/\s+/', strtolower( $sentence ) );
+		$lower = function_exists( 'mb_strtolower' )
+			? mb_strtolower( $sentence, 'UTF-8' )
+			: strtolower( $sentence );
+		$words = preg_split( '/\s+/u', $lower );
 
 		// Filter out short words and common stop words
 		$stop_words = array( 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should' );
@@ -499,7 +503,8 @@ class LLM_Content_Condenser {
 		return array_filter(
 			$words,
 			function ( $word ) use ( $stop_words ) {
-				return strlen( $word ) > 2 && ! in_array( $word, $stop_words );
+				$len = function_exists( 'mb_strlen' ) ? mb_strlen( $word, 'UTF-8' ) : strlen( $word );
+				return $len > 2 && ! in_array( $word, $stop_words, true );
 			}
 		);
 	}

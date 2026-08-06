@@ -87,7 +87,7 @@ class Media_Library_Enhancements {
 		if ( ! empty( $alt_text ) ) {
 			echo '<span title="' . esc_attr( $alt_text ) . '">' . esc_html( wp_trim_words( $alt_text, 10, '...' ) ) . '</span>';
 		} else {
-			echo '<span style="color: #999;">—</span>';
+			echo '<span style="color: #999;">-</span>';
 		}
 	}
 
@@ -126,11 +126,14 @@ class Media_Library_Enhancements {
 			return add_query_arg( 'sb_bulk_error', 'no_ai_provider', $redirect_to );
 		}
 
-		// Filter to only images
+		// Filter to editable images only.
 		$image_ids = array_filter(
 			$post_ids,
 			function ( $id ) {
-				return wp_attachment_is_image( $id );
+				$id = (int) $id;
+				return $id > 0
+					&& current_user_can( 'edit_post', $id )
+					&& wp_attachment_is_image( $id );
 			}
 		);
 
@@ -204,6 +207,10 @@ class Media_Library_Enhancements {
 
 		if ( empty( $batch_id ) || $attachment_id === 0 ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid parameters', 'seo-booster' ) ) );
+		}
+
+		if ( ! Utils::user_can_edit_object( $attachment_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied', 'seo-booster' ) ) );
 		}
 
 		$transient_key = 'sb_bulk_batch_' . $batch_id;
@@ -301,7 +308,7 @@ class Media_Library_Enhancements {
 
 			wp_send_json_error(
 				array(
-					'message'       => $e->getMessage(),
+					'message'       => __( 'Something went wrong. Check the SEO Booster debug log for details.', 'seo-booster' ),
 					'attachment_id' => $attachment_id,
 				)
 			);

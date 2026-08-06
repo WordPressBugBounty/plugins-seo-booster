@@ -118,7 +118,7 @@
             var titleTpl = wasCancelled ? sbToolsMeta.strings.title_cancelled : sbToolsMeta.strings.title_complete;
             document.title = titleTpl
                 .replace('%1$d', String(processed || 0))
-                .replace('%2$d', String(failed || 0)) + ' — ' + state.originalDocumentTitle;
+                .replace('%2$d', String(failed || 0)) + ': ' + state.originalDocumentTitle;
         }
     }
 
@@ -144,17 +144,60 @@
             row.append('<td class="column-issues">' + $('<div>').text(issues).html() + '</td>');
             $body.append(row);
         });
+        $('#sb-tools-meta-select-all-header').prop('checked', false);
         updateSelectionState();
+    }
+
+    function getProcessDisabledReason() {
+        if (!sbToolsMeta.seo_target) {
+            return sbToolsMeta.strings.seo_plugin_required || '';
+        }
+        if (!hasApplyField(getApplyFields())) {
+            return sbToolsMeta.strings.select_apply || '';
+        }
+        return '';
+    }
+
+    function updateProcessNotices() {
+        var $disabled = $('#sb-tools-meta-process-disabled-reason');
+        var $aiWarn = $('#sb-tools-meta-process-ai-warning');
+
+        if (state.totalFound === 0) {
+            $disabled.attr('hidden', 'hidden').text('');
+            $aiWarn.attr('hidden', 'hidden').text('');
+            return;
+        }
+
+        var reason = getProcessDisabledReason();
+        if (reason) {
+            $disabled.text(reason).removeAttr('hidden');
+        } else {
+            $disabled.attr('hidden', 'hidden').text('');
+        }
+
+        if (!sbToolsMeta.ai_available) {
+            $aiWarn
+                .text(sbToolsMeta.ai_unavailable_message || sbToolsMeta.strings.ai_required || '')
+                .removeAttr('hidden');
+        } else {
+            $aiWarn.attr('hidden', 'hidden').text('');
+        }
     }
 
     function updateSelectionState() {
         var selected = $('.sb-tools-meta-row-cb:checked').length;
-        var canProcess = sbToolsMeta.ai_available && sbToolsMeta.seo_target && hasApplyField(getApplyFields());
-        $('#sb-tools-meta-process-selected').prop('disabled', !canProcess || selected === 0 || state.isRunning);
+        var canProcess = !!sbToolsMeta.seo_target && hasApplyField(getApplyFields());
+        var selectedLabel = selected > 0
+            ? (sbToolsMeta.strings.process_selected_n || 'Process selected (%d)').replace('%d', selected)
+            : (sbToolsMeta.strings.process_selected || 'Process selected');
+        $('#sb-tools-meta-process-selected')
+            .prop('disabled', !canProcess || selected === 0 || state.isRunning)
+            .text(selectedLabel);
         $('#sb-tools-meta-process-all-matching').prop('disabled', !canProcess || state.totalFound === 0 || state.isRunning);
         $('#sb-tools-meta-process-all-matching').text(
             sbToolsMeta.strings.process_all_matching.replace('%d', state.totalFound)
         );
+        updateProcessNotices();
     }
 
     function showProcessActions() {
@@ -200,7 +243,7 @@
             $('#sb-tools-meta-displaying-num').text(label.replace('%d', state.totalFound));
             if (state.totalFound > (data.preview_count || 0)) {
                 $('#sb-tools-meta-displaying-num').append(
-                    ' — ' + sbToolsMeta.strings.preview_sample
+                    ': ' + sbToolsMeta.strings.preview_sample
                         .replace('%1$d', data.preview_count || 0)
                         .replace('%2$d', state.totalFound)
                 );
@@ -236,7 +279,15 @@
     });
 
     function startBatch(scope) {
-        if (!sbToolsMeta.ai_available || !sbToolsMeta.seo_target) {
+        if (!sbToolsMeta.seo_target) {
+            window.SBTools.alert(sbToolsMeta.strings.seo_plugin_required || sbToolsMeta.strings.error, { tone: 'error' });
+            return;
+        }
+        if (!sbToolsMeta.ai_available) {
+            window.SBTools.alert(
+                sbToolsMeta.ai_unavailable_message || sbToolsMeta.strings.ai_required || sbToolsMeta.strings.error,
+                { tone: 'error' }
+            );
             return;
         }
         var applyFields = getApplyFields();
@@ -278,6 +329,9 @@
 
         $('#sb-tools-meta-preview-failed-list').empty();
         $('#sb-tools-meta-preview-failed').prop('hidden', true);
+        $('#sb-tools-meta-retry-failed').prop('hidden', true).text(
+            sbToolsMeta.strings.retry_failed.replace('%d', 0)
+        );
         $('#sb-tools-meta-complete').hide();
         $('#sb-tools-meta-preview').show().addClass('is-batch-active').removeClass('is-batch-complete is-batch-complete-cancelled');
         $('#sb-tools-meta-tab-warning').prop('hidden', false);
@@ -379,6 +433,41 @@
         );
     }
 
+    function getFailedPostIds() {
+        var ids = [];
+        state.lastFailedItems.forEach(function (item) {
+            var id = parseInt(item.post_id, 10);
+            if (id > 0 && ids.indexOf(id) === -1) {
+                ids.push(id);
+            }
+        });
+        return ids;
+    }
+
+    function retryFailedBatch() {
+        var failedIds = getFailedPostIds();
+        if (!failedIds.length || state.isRunning) {
+            return;
+        }
+        if (!sbToolsMeta.seo_target) {
+            window.SBTools.alert(sbToolsMeta.strings.seo_plugin_required || sbToolsMeta.strings.error, { tone: 'error' });
+            return;
+        }
+        if (!sbToolsMeta.ai_available) {
+            window.SBTools.alert(
+                sbToolsMeta.ai_unavailable_message || sbToolsMeta.strings.ai_required || sbToolsMeta.strings.error,
+                { tone: 'error' }
+            );
+            return;
+        }
+        var applyFields = getApplyFields();
+        if (!hasApplyField(applyFields)) {
+            window.SBTools.alert(sbToolsMeta.strings.select_apply);
+            return;
+        }
+        runBatch('selected', applyFields, failedIds);
+    }
+
     function finishBatch() {
         var wasCancelled = state.isCancelled;
         var batchId = state.batchId;
@@ -445,6 +534,9 @@
     });
     $('#sb-tools-meta-process-all-matching').on('click', function () {
         startBatch('all_matching');
+    });
+    $('#sb-tools-meta-retry-failed').on('click', function () {
+        retryFailedBatch();
     });
 
     $('#sb-tools-meta-cancel-batch').on('click', function () {

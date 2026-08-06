@@ -19,6 +19,26 @@ class Credits_REST_Controller {
 	const NAMESPACE = 'seo-booster/v1';
 
 	/**
+	 * Allowed callback status values from the Credits API.
+	 *
+	 * @var string[]
+	 */
+	const ALLOWED_STATUSES = array(
+		'pending',
+		'queued',
+		'processing',
+		'completed',
+		'failed',
+	);
+
+	/**
+	 * Max encoded size for callback data payload (bytes).
+	 *
+	 * @var int
+	 */
+	const MAX_DATA_BYTES = 524288; // 512 KB
+
+	/**
 	 * Initialize the REST route.
 	 */
 	public static function init() {
@@ -46,7 +66,7 @@ class Credits_REST_Controller {
 				'methods'             => 'GET',
 				'callback'            => array( __CLASS__, 'get_balance' ),
 				'permission_callback' => function () {
-					return current_user_can( 'edit_posts' );
+					return current_user_can( 'manage_options' );
 				},
 			)
 		);
@@ -94,16 +114,34 @@ class Credits_REST_Controller {
 	 * Handle async callback from the API server.
 	 */
 	public static function handle_callback( \WP_REST_Request $request ) {
-		$body       = $request->get_json_params();
-		$request_id = $body['request_id'] ?? '';
-		$status     = $body['status'] ?? '';
-		$data       = $body['data'] ?? null;
-
-		if ( empty( $request_id ) ) {
-			return new \WP_REST_Response( array( 'error' => 'Missing request_id' ), 400 );
+		$body = $request->get_json_params();
+		if ( ! is_array( $body ) ) {
+			return new \WP_REST_Response( array( 'error' => 'Invalid JSON body' ), 400 );
 		}
 
-		// Store the result for later retrieval
+		$request_id = isset( $body['request_id'] ) ? (string) $body['request_id'] : '';
+		$status     = isset( $body['status'] ) ? (string) $body['status'] : '';
+		$data       = array_key_exists( 'data', $body ) ? $body['data'] : null;
+
+		if ( ! preg_match( '/^[A-Za-z0-9_-]{1,128}$/', $request_id ) ) {
+			return new \WP_REST_Response( array( 'error' => 'Invalid request_id' ), 400 );
+		}
+
+		if ( ! in_array( $status, self::ALLOWED_STATUSES, true ) ) {
+			return new \WP_REST_Response( array( 'error' => 'Invalid status' ), 400 );
+		}
+
+		if ( null !== $data && ! is_array( $data ) ) {
+			return new \WP_REST_Response( array( 'error' => 'Invalid data' ), 400 );
+		}
+
+		if ( is_array( $data ) ) {
+			$encoded = wp_json_encode( $data );
+			if ( false === $encoded || strlen( $encoded ) > self::MAX_DATA_BYTES ) {
+				return new \WP_REST_Response( array( 'error' => 'Data payload too large' ), 400 );
+			}
+		}
+
 		$cache_key = 'sb_credit_result_' . $request_id;
 		set_transient(
 			$cache_key,

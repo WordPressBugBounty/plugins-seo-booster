@@ -275,9 +275,6 @@ class SB_GSC_List_Table extends \WP_List_Table {
 			case 'impressions':
 				return $item[ $column_name ];
 
-			case 'clicks':
-				return $item[ $column_name ];
-
 			case 'ctr':
 				$value = $item[ $column_name ];
 				return (float) $value === 0.0 ? '0' : number_format_i18n( $value, 4 );
@@ -297,8 +294,6 @@ class SB_GSC_List_Table extends \WP_List_Table {
 
 			case 'position':
 				return '<span title="' . esc_attr( $item[ $column_name ] ) . '">' . number_format_i18n( $item[ $column_name ] ) . '</span>';
-
-				return $item[ $column_name ];
 
 			case 'page':
 				$url  = $item['page'];
@@ -382,13 +377,16 @@ class SB_GSC_List_Table extends \WP_List_Table {
 		global $wpdb;
 
 		// First, get the keyword query text for this ID
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed table; value uses %d placeholder.
 		$keyword_query = $wpdb->prepare(
 			"
 			SELECT query FROM {$wpdb->prefix}sb2_query_keywords WHERE id = %d
 		",
 			$keyword_id
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prepared above.
 		$keyword_text = $wpdb->get_var( $keyword_query );
 
 		if ( empty( $keyword_text ) ) {
@@ -401,6 +399,7 @@ class SB_GSC_List_Table extends \WP_List_Table {
 		}
 
 		// Now find all pages using this same keyword query
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed tables; value uses %s placeholder.
 		$query = $wpdb->prepare(
 			"
 			SELECT 
@@ -416,7 +415,9 @@ class SB_GSC_List_Table extends \WP_List_Table {
 		",
 			$keyword_text
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prepared above.
 		$pages_data = $wpdb->get_results( $query, ARRAY_A );
 
 		if ( empty( $pages_data ) ) {
@@ -498,13 +499,16 @@ class SB_GSC_List_Table extends \WP_List_Table {
 
 		$is_exact_match = isset( $_REQUEST['exact_match'] ) && $_REQUEST['exact_match'] == 1;
 
-		$do_search = '';
+		$search_sql  = '';
+		$search_args = array();
 		if ( ! empty( $search ) ) {
 			if ( $is_exact_match ) {
-				$do_search = $wpdb->prepare( ' AND qk.query = %s ', $search );
+				$search_sql    = ' AND qk.query = %s ';
+				$search_args[] = $search;
 			} else {
-				$like      = '%' . $wpdb->esc_like( $search ) . '%';
-				$do_search = $wpdb->prepare( ' AND (qk.query LIKE %s OR qk.page LIKE %s OR qk.first_seen_date LIKE %s OR qk.latest_date LIKE %s) ', $like, $like, $like, $like );
+				$like        = '%' . $wpdb->esc_like( $search ) . '%';
+				$search_sql  = ' AND (qk.query LIKE %s OR qk.page LIKE %s OR qk.first_seen_date LIKE %s OR qk.latest_date LIKE %s) ';
+				$search_args = array( $like, $like, $like, $like );
 			}
 		}
 
@@ -560,10 +564,16 @@ class SB_GSC_List_Table extends \WP_List_Table {
 		$orderby = isset( $_GET['orderby'] ) ? sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) : 'impressions';
 		$orderby = $this->sanitize_orderby( $orderby );
 
-		// Fetch the filtered and searched count of items
-		$total_filtered_query = "SELECT COUNT(DISTINCT qk.id) FROM {$wpdb->prefix}sb2_query_keywords AS qk LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh ON qk.id = qkh.query_keywords_id WHERE 1=1 $do_search $lp_filter_query $traffic_filter_query";
+		$where_sql = "WHERE 1=1 {$search_sql} {$lp_filter_query} {$traffic_filter_query}";
 
-		$total_filtered = $wpdb->get_var( $total_filtered_query );
+		$total_filtered_query = "SELECT COUNT(DISTINCT qk.id) FROM {$wpdb->prefix}sb2_query_keywords AS qk LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh ON qk.id = qkh.query_keywords_id {$where_sql}";
+		if ( empty( $search_args ) ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Filter fragments are internally built with sanitized values; no search input here.
+			$total_filtered = $wpdb->get_var( $total_filtered_query );
+		} else {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- $search_sql uses %s placeholders passed to $wpdb->prepare().
+			$total_filtered = $wpdb->get_var( $wpdb->prepare( $total_filtered_query, $search_args ) );
+		}
 
 		$query = "SELECT qk.id, qk.query,
 		qk.is_used_in_content as kw_used, 
@@ -576,12 +586,14 @@ class SB_GSC_List_Table extends \WP_List_Table {
 			  FROM {$wpdb->prefix}sb2_query_keywords AS qk
 			  LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh 
 			  ON qk.id = qkh.query_keywords_id
-			  WHERE 1=1 $do_search $lp_filter_query $traffic_filter_query
+			  {$where_sql}
 			  GROUP BY qk.query, qk.page, qk.is_used_in_content
 			  ORDER BY {$orderby} {$order} 
 			  LIMIT %d, %d";
 
-		$data = $wpdb->get_results( $wpdb->prepare( $query, $offset, $per_page ), ARRAY_A );
+		$query_args = array_merge( $search_args, array( $offset, $per_page ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prefixed tables, sanitized orderby/order and %s/%d placeholders passed to $wpdb->prepare().
+		$data = $wpdb->get_results( $wpdb->prepare( $query, $query_args ), ARRAY_A );
 
 		$this->items = $data;
 

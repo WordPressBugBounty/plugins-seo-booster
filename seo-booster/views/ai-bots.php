@@ -11,74 +11,87 @@ $filter_days = ( isset( $_REQUEST['filter_days'] ) ? (int) $_REQUEST['filter_day
 if ( !in_array( $filter_days, array(7, 30, 90), true ) ) {
     $filter_days = 30;
 }
-$summary = AI_Bot_Tracker::get_summary( $filter_days );
-$ref_summary = AI_Referral_Tracker::get_summary( $filter_days );
-$ref_sources = AI_Referral_Tracker::get_by_source( $filter_days );
-$ref_top = AI_Referral_Tracker::get_top_landing_pages( $filter_days, 5 );
-$purpose = ( isset( $summary['purpose_breakdown'] ) ? $summary['purpose_breakdown'] : array(
+$is_referrals_view = 'referrals' === $view;
+$bot_tracking_on = AI_Bot_Tracker::is_tracking_enabled();
+$ref_tracking_on = AI_Referral_Tracker::is_tracking_enabled();
+$summary = array();
+$purpose = array(
     'research' => 0,
     'citation' => 0,
-) );
-$ratio = AI_Bot_Tracker::get_content_vs_noise_ratio( $filter_days );
-$top_content = AI_Bot_Tracker::get_top_content_pages( $filter_days, 10 );
-$noisy_bots = AI_Bot_Tracker::get_bots_mostly_noise( $filter_days, 0.8, 5 );
+);
+$ratio = array(
+    'content_percent' => 0,
+);
+$top_content = array();
+$noisy_bots = array();
+$ref_summary = array(
+    'total_visits'      => 0,
+    'unique_sources'    => 0,
+    'unique_pages'      => 0,
+    'top_source'        => '',
+    'top_source_visits' => 0,
+);
+$ref_top = array();
+if ( $is_referrals_view ) {
+    $ref_summary = AI_Referral_Tracker::get_summary( $filter_days );
+    $ref_top = AI_Referral_Tracker::get_top_landing_pages( $filter_days, 5 );
+} else {
+    $summary = AI_Bot_Tracker::get_summary( $filter_days );
+    $purpose = ( isset( $summary['purpose_breakdown'] ) ? $summary['purpose_breakdown'] : $purpose );
+    $ratio = AI_Bot_Tracker::get_content_vs_noise_ratio( $filter_days );
+    $top_content = AI_Bot_Tracker::get_top_content_pages( $filter_days, 10 );
+    $noisy_bots = AI_Bot_Tracker::get_bots_mostly_noise( $filter_days, 0.8, 5 );
+}
 $tabs = array(
     'content'   => __( 'Content crawled', 'seo-booster' ),
     'by_bot'    => __( 'By bot', 'seo-booster' ),
     'noise'     => __( 'Noise / unmapped', 'seo-booster' ),
     'referrals' => __( 'Referrals', 'seo-booster' ),
 );
+$settings_ai_url = admin_url( 'admin.php?page=sb2_settings#ai-llm' );
 settings_errors( 'sb_ai_bots' );
 ?>
-<div class="wrap sb-ai-bots-page">
+<div class="wrap sb-wrap sb-dashboard sb-ai-bots-page">
 	<?php 
 echo wp_kses_post( Utils::show_plugin_headline( __( 'AI Bots', 'seo-booster' ), true ) );
 ?>
 
 	<?php 
-if ( !AI_Bot_Tracker::is_tracking_enabled() ) {
+if ( !$bot_tracking_on || !$ref_tracking_on ) {
     ?>
-		<div class="notice notice-warning">
-			<p>
+		<section class="sb-ui-cta" aria-labelledby="sb-ai-bots-tracking-title">
+			<h2 class="sb-ui-cta__title" id="sb-ai-bots-tracking-title">
 				<?php 
-    esc_html_e( 'AI bot tracking is turned off.', 'seo-booster' );
+    esc_html_e( 'Tracking is turned off', 'seo-booster' );
     ?>
-				<a href="<?php 
-    echo esc_url( admin_url( 'admin.php?page=sb2_settings#ai-llm' ) );
+			</h2>
+			<p class="sb-ui-cta__lead">
+				<?php 
+    if ( !$bot_tracking_on && !$ref_tracking_on ) {
+        esc_html_e( 'AI bot crawler tracking and AI referral tracking are both off. Turn them on in Settings to collect data for this report.', 'seo-booster' );
+    } elseif ( !$bot_tracking_on ) {
+        esc_html_e( 'AI bot crawler tracking is turned off. Turn it on in Settings to collect crawler visits for this report.', 'seo-booster' );
+    } else {
+        esc_html_e( 'AI referral tracking is turned off. Turn it on in Settings to collect human visits from AI answer engines.', 'seo-booster' );
+    }
+    ?>
+			</p>
+			<div class="sb-ui-cta__actions">
+				<a class="button button-primary" href="<?php 
+    echo esc_url( $settings_ai_url );
     ?>">
 					<?php 
-    esc_html_e( 'Turn on in Settings', 'seo-booster' );
+    esc_html_e( 'Open AI settings', 'seo-booster' );
     ?>
 				</a>
-			</p>
-		</div>
-	<?php 
-}
-?>
-
-	<?php 
-if ( !AI_Referral_Tracker::is_tracking_enabled() ) {
-    ?>
-		<div class="notice notice-warning">
-			<p>
-				<?php 
-    esc_html_e( 'AI referral tracking is turned off.', 'seo-booster' );
-    ?>
-				<a href="<?php 
-    echo esc_url( admin_url( 'admin.php?page=sb2_settings#ai-llm' ) );
-    ?>">
-					<?php 
-    esc_html_e( 'Turn on in Settings', 'seo-booster' );
-    ?>
-				</a>
-			</p>
-		</div>
+			</div>
+		</section>
 	<?php 
 }
 ?>
 
 	<div class="sb-ai-bots-toolbar">
-		<form method="get" class="sb-ai-bots-days-form">
+		<form method="get" class="sb-ai-bots-days-form" id="sb-ai-bots-days-form">
 			<input type="hidden" name="page" value="<?php 
 echo esc_attr( $page );
 ?>" />
@@ -88,7 +101,7 @@ echo esc_attr( $view );
 			<label for="filter-days"><?php 
 esc_html_e( 'Period', 'seo-booster' );
 ?></label>
-			<select name="filter_days" id="filter-days" onchange="this.form.submit()">
+			<select name="filter_days" id="filter-days">
 				<option value="7" <?php 
 selected( $filter_days, 7 );
 ?>><?php 
@@ -109,75 +122,280 @@ esc_html_e( 'Last 90 days', 'seo-booster' );
 	</div>
 
 	<?php 
-if ( AI_Referral_Tracker::is_tracking_enabled() ) {
+if ( $is_referrals_view ) {
     ?>
-		<h2 class="sb-ai-bots-section-title"><?php 
-    esc_html_e( 'AI referrals', 'seo-booster' );
-    ?></h2>
-		<p class="description sb-ai-bots-section-intro">
-			<?php 
-    esc_html_e( 'Human visitors who clicked through from AI answer engines (separate from bot crawlers below).', 'seo-booster' );
-    ?>
-		</p>
-		<div class="sb-ai-bots-summary sb-ai-referrals-summary">
-			<div class="card sb-ai-bots-summary-card">
-				<strong><?php 
-    echo esc_html( sprintf( __( 'Referral visits (%d days)', 'seo-booster' ), $filter_days ) );
-    ?></strong>
-				<p class="sb-ai-bots-summary-value"><?php 
-    echo esc_html( number_format_i18n( (int) $ref_summary['total_visits'] ) );
-    ?></p>
-			</div>
-			<div class="card sb-ai-bots-summary-card">
-				<strong><?php 
-    esc_html_e( 'AI sources', 'seo-booster' );
-    ?></strong>
-				<p class="sb-ai-bots-summary-value"><?php 
-    echo esc_html( number_format_i18n( (int) $ref_summary['unique_sources'] ) );
-    ?></p>
-			</div>
-			<div class="card sb-ai-bots-summary-card">
-				<strong><?php 
-    esc_html_e( 'Landing pages', 'seo-booster' );
-    ?></strong>
-				<p class="sb-ai-bots-summary-value"><?php 
-    echo esc_html( number_format_i18n( (int) $ref_summary['unique_pages'] ) );
-    ?></p>
-			</div>
-			<div class="card sb-ai-bots-summary-card">
-				<strong><?php 
-    esc_html_e( 'Top source', 'seo-booster' );
-    ?></strong>
-				<p class="sb-ai-bots-summary-value">
+		<?php 
+    if ( $ref_tracking_on ) {
+        ?>
+			<section class="sb-ui-panel" aria-labelledby="sb-ai-bots-ref-overview-title">
+				<h2 class="sb-ui-title" id="sb-ai-bots-ref-overview-title"><?php 
+        esc_html_e( 'AI referrals overview', 'seo-booster' );
+        ?></h2>
+				<p class="sb-ui-lead">
 					<?php 
-    if ( !empty( $ref_summary['top_source'] ) ) {
-        echo esc_html( $ref_summary['top_source'] );
-        echo '<br /><span class="description">' . esc_html( number_format_i18n( (int) $ref_summary['top_source_visits'] ) ) . '</span>';
-    } else {
-        echo esc_html( '—' );
+        esc_html_e( 'Human visitors who clicked through from AI answer engines (separate from bot crawlers).', 'seo-booster' );
+        ?>
+				</p>
+				<div class="sb-action-cards">
+					<article class="sb-action-card">
+						<div class="sb-action-card__num"><?php 
+        echo esc_html( number_format_i18n( (int) $ref_summary['total_visits'] ) );
+        ?></div>
+						<h3 class="sb-action-card__title">
+							<?php 
+        echo esc_html( sprintf( 
+            /* translators: %d: number of days */
+            __( 'Referral visits (%d days)', 'seo-booster' ),
+            $filter_days
+         ) );
+        ?>
+						</h3>
+					</article>
+					<article class="sb-action-card">
+						<div class="sb-action-card__num"><?php 
+        echo esc_html( number_format_i18n( (int) $ref_summary['unique_sources'] ) );
+        ?></div>
+						<h3 class="sb-action-card__title"><?php 
+        esc_html_e( 'AI sources', 'seo-booster' );
+        ?></h3>
+					</article>
+					<article class="sb-action-card">
+						<div class="sb-action-card__num"><?php 
+        echo esc_html( number_format_i18n( (int) $ref_summary['unique_pages'] ) );
+        ?></div>
+						<h3 class="sb-action-card__title"><?php 
+        esc_html_e( 'Landing pages', 'seo-booster' );
+        ?></h3>
+					</article>
+					<article class="sb-action-card">
+						<div class="sb-action-card__num sb-ai-bots-top-source">
+							<?php 
+        if ( !empty( $ref_summary['top_source'] ) ) {
+            echo esc_html( $ref_summary['top_source'] );
+        } else {
+            esc_html_e( 'None', 'seo-booster' );
+        }
+        ?>
+						</div>
+						<h3 class="sb-action-card__title">
+							<?php 
+        if ( !empty( $ref_summary['top_source'] ) ) {
+            echo esc_html( sprintf( 
+                /* translators: %s: visit count */
+                __( 'Top source (%s visits)', 'seo-booster' ),
+                number_format_i18n( (int) $ref_summary['top_source_visits'] )
+             ) );
+        } else {
+            esc_html_e( 'Top source', 'seo-booster' );
+        }
+        ?>
+						</h3>
+					</article>
+				</div>
+			</section>
+
+			<div class="sb-ui-grid sb-ui-grid--2">
+				<section class="sb-ui-panel" aria-labelledby="sb-ai-bots-ref-chart-title">
+					<h2 class="sb-ui-title" id="sb-ai-bots-ref-chart-title"><?php 
+        esc_html_e( 'Referrals over time', 'seo-booster' );
+        ?></h2>
+					<div class="sb-ai-bots-chart-wrap">
+						<canvas id="sb-ai-referrals-visits-chart" height="180"></canvas>
+					</div>
+				</section>
+				<section class="sb-ui-panel" aria-labelledby="sb-ai-bots-ref-top-title">
+					<h2 class="sb-ui-title" id="sb-ai-bots-ref-top-title"><?php 
+        esc_html_e( 'Top referral landing pages', 'seo-booster' );
+        ?></h2>
+					<?php 
+        if ( !empty( $ref_top ) ) {
+            ?>
+						<div class="sb-ai-bots-table-wrap">
+							<table class="widefat striped">
+								<thead>
+									<tr>
+										<th><?php 
+            esc_html_e( 'Page', 'seo-booster' );
+            ?></th>
+										<th><?php 
+            esc_html_e( 'Visits', 'seo-booster' );
+            ?></th>
+										<th><?php 
+            esc_html_e( 'Sources', 'seo-booster' );
+            ?></th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php 
+            foreach ( $ref_top as $row ) {
+                ?>
+										<?php 
+                $label = AI_Bot_Tracker::resolve_object_label( (int) $row['object_id'], $row['object_type'] );
+                ?>
+										<tr>
+											<td>
+												<?php 
+                if ( !empty( $label['view_url'] ) && !empty( $label['title'] ) ) {
+                    ?>
+													<a href="<?php 
+                    echo esc_url( $label['view_url'] );
+                    ?>" target="_blank" rel="noopener noreferrer"><?php 
+                    echo esc_html( $label['title'] );
+                    ?></a>
+												<?php 
+                } elseif ( !empty( $row['normalized_url'] ) ) {
+                    ?>
+													<a href="<?php 
+                    echo esc_url( $row['normalized_url'] );
+                    ?>" target="_blank" rel="noopener noreferrer"><?php 
+                    echo esc_html( AI_Bot_Tracker::truncate_display( $row['normalized_url'], 60 ) );
+                    ?></a>
+												<?php 
+                } else {
+                    ?>
+													<?php 
+                    echo esc_html( AI_Bot_Tracker::truncate_display( $row['landing_path'], 60 ) );
+                    ?>
+												<?php 
+                }
+                ?>
+											</td>
+											<td><?php 
+                echo esc_html( number_format_i18n( (int) $row['visits'] ) );
+                ?></td>
+											<td><?php 
+                echo esc_html( ( isset( $row['sources'] ) ? AI_Bot_Tracker::truncate_display( $row['sources'], 40 ) : '' ) );
+                ?></td>
+										</tr>
+									<?php 
+            }
+            ?>
+								</tbody>
+							</table>
+						</div>
+					<?php 
+        } else {
+            ?>
+						<p class="sb-ui-empty"><?php 
+            esc_html_e( 'No AI referral visits in this period yet.', 'seo-booster' );
+            ?></p>
+					<?php 
+        }
+        ?>
+				</section>
+			</div>
+		<?php 
     }
     ?>
-				</p>
-			</div>
-		</div>
-
-		<div class="ai-traffic-container sb-ai-bots-insights sb-ai-referrals-insights">
-			<div class="ai-traffic-chart-section sb-ai-bots-chart-section">
-				<h3><?php 
-    esc_html_e( 'Referrals over time', 'seo-booster' );
+	<?php 
+} else {
+    ?>
+		<section class="sb-ui-panel" aria-labelledby="sb-ai-bots-overview-title">
+			<h2 class="sb-ui-title" id="sb-ai-bots-overview-title"><?php 
+    esc_html_e( 'AI bot crawlers overview', 'seo-booster' );
+    ?></h2>
+			<p class="sb-ui-lead">
+				<?php 
+    esc_html_e( 'Which AI crawlers fetch your pages, how often, and whether they hit real content or noise.', 'seo-booster' );
+    ?>
+			</p>
+			<div class="sb-action-cards">
+				<article class="sb-action-card">
+					<div class="sb-action-card__num"><?php 
+    echo esc_html( number_format_i18n( (int) ($summary['total_visits'] ?? 0) ) );
+    ?></div>
+					<h3 class="sb-action-card__title">
+						<?php 
+    echo esc_html( sprintf( 
+        /* translators: %d: number of days */
+        __( 'Visits (%d days)', 'seo-booster' ),
+        $filter_days
+     ) );
+    ?>
+					</h3>
+				</article>
+				<article class="sb-action-card">
+					<div class="sb-action-card__num"><?php 
+    echo esc_html( number_format_i18n( (int) ($summary['unique_bots'] ?? 0) ) );
+    ?></div>
+					<h3 class="sb-action-card__title"><?php 
+    esc_html_e( 'Unique bots', 'seo-booster' );
     ?></h3>
-				<div class="chart-container ai-bot-breakdown-chart">
-					<canvas id="sb-ai-referrals-visits-chart" height="180"></canvas>
+				</article>
+				<article class="sb-action-card">
+					<div class="sb-action-card__num"><?php 
+    echo esc_html( number_format_i18n( (int) ($summary['unique_content_pages'] ?? 0) ) );
+    ?></div>
+					<h3 class="sb-action-card__title"><?php 
+    esc_html_e( 'Content pages crawled', 'seo-booster' );
+    ?></h3>
+				</article>
+			</div>
+
+			<div class="sb-ai-bots-purpose">
+				<div class="sb-ai-bots-purpose-chart-wrap">
+					<canvas id="sb-ai-bots-purpose-chart" width="120" height="120" aria-hidden="true"></canvas>
+				</div>
+				<div class="sb-ai-bots-purpose-legend">
+					<p class="sb-ai-bots-purpose-legend__title">
+						<?php 
+    echo esc_html( sprintf( 
+        /* translators: %d: number of days */
+        __( 'Purpose (%d days)', 'seo-booster' ),
+        $filter_days
+     ) );
+    ?>
+					</p>
+					<p>
+						<?php 
+    printf( 
+        /* translators: %s: visit count */
+        esc_html__( 'Research / training: %s', 'seo-booster' ),
+        esc_html( number_format_i18n( (int) $purpose['research'] ) )
+     );
+    ?>
+					</p>
+					<p>
+						<?php 
+    printf( 
+        /* translators: %s: visit count */
+        esc_html__( 'Citation / answer engine: %s', 'seo-booster' ),
+        esc_html( number_format_i18n( (int) $purpose['citation'] ) )
+     );
+    ?>
+					</p>
 				</div>
 			</div>
-			<div class="ai-traffic-table-section">
-				<h3><?php 
-    esc_html_e( 'Top referral landing pages', 'seo-booster' );
-    ?></h3>
-				<div class="ai-bot-table-container">
-					<?php 
-    if ( !empty( $ref_top ) ) {
+
+			<p class="sb-ui-tip">
+				<?php 
+    printf( 
+        /* translators: 1: percent of content visits, 2: number of days */
+        esc_html__( '%1$s%% of AI bot visits hit mapped content in the last %2$d days.', 'seo-booster' ),
+        esc_html( number_format_i18n( $ratio['content_percent'], 1 ) ),
+        (int) $filter_days
+     );
+    ?>
+			</p>
+		</section>
+
+		<div class="sb-ui-grid sb-ui-grid--2">
+			<section class="sb-ui-panel" aria-labelledby="sb-ai-bots-visits-chart-title">
+				<h2 class="sb-ui-title" id="sb-ai-bots-visits-chart-title"><?php 
+    esc_html_e( 'Visits over time', 'seo-booster' );
+    ?></h2>
+				<div class="sb-ai-bots-chart-wrap sb-ai-bots-chart-wrap--tall">
+					<canvas id="sb-ai-bots-visits-chart" height="220"></canvas>
+				</div>
+			</section>
+			<section class="sb-ui-panel" aria-labelledby="sb-ai-bots-top-content-title">
+				<h2 class="sb-ui-title" id="sb-ai-bots-top-content-title"><?php 
+    esc_html_e( 'Top crawled content', 'seo-booster' );
+    ?></h2>
+				<?php 
+    if ( !empty( $top_content ) ) {
         ?>
+					<div class="sb-ai-bots-table-wrap">
 						<table class="widefat striped">
 							<thead>
 								<tr>
@@ -188,13 +406,13 @@ if ( AI_Referral_Tracker::is_tracking_enabled() ) {
         esc_html_e( 'Visits', 'seo-booster' );
         ?></th>
 									<th><?php 
-        esc_html_e( 'Sources', 'seo-booster' );
+        esc_html_e( 'Bots', 'seo-booster' );
         ?></th>
 								</tr>
 							</thead>
 							<tbody>
 								<?php 
-        foreach ( $ref_top as $row ) {
+        foreach ( $top_content as $row ) {
             ?>
 									<?php 
             $label = AI_Bot_Tracker::resolve_object_label( (int) $row['object_id'], $row['object_type'] );
@@ -202,7 +420,7 @@ if ( AI_Referral_Tracker::is_tracking_enabled() ) {
 									<tr>
 										<td>
 											<?php 
-            if ( !empty( $label['view_url'] ) && !empty( $label['title'] ) ) {
+            if ( !empty( $label['view_url'] ) ) {
                 ?>
 												<a href="<?php 
                 echo esc_url( $label['view_url'] );
@@ -210,18 +428,10 @@ if ( AI_Referral_Tracker::is_tracking_enabled() ) {
                 echo esc_html( $label['title'] );
                 ?></a>
 											<?php 
-            } elseif ( !empty( $row['normalized_url'] ) ) {
-                ?>
-												<a href="<?php 
-                echo esc_url( $row['normalized_url'] );
-                ?>" target="_blank" rel="noopener noreferrer"><?php 
-                echo esc_html( AI_Bot_Tracker::truncate_display( $row['normalized_url'], 60 ) );
-                ?></a>
-											<?php 
             } else {
                 ?>
 												<?php 
-                echo esc_html( AI_Bot_Tracker::truncate_display( $row['landing_path'], 60 ) );
+                echo esc_html( $label['title'] );
                 ?>
 											<?php 
             }
@@ -231,7 +441,7 @@ if ( AI_Referral_Tracker::is_tracking_enabled() ) {
             echo esc_html( number_format_i18n( (int) $row['visits'] ) );
             ?></td>
 										<td><?php 
-            echo esc_html( ( isset( $row['sources'] ) ? AI_Bot_Tracker::truncate_display( $row['sources'], 40 ) : '' ) );
+            echo esc_html( ( isset( $row['bot_names'] ) ? AI_Bot_Tracker::truncate_display( $row['bot_names'], 40 ) : '' ) );
             ?></td>
 									</tr>
 								<?php 
@@ -239,277 +449,136 @@ if ( AI_Referral_Tracker::is_tracking_enabled() ) {
         ?>
 							</tbody>
 						</table>
-					<?php 
+					</div>
+				<?php 
     } else {
         ?>
-						<p class="description"><?php 
-        esc_html_e( 'No AI referral visits in this period yet.', 'seo-booster' );
+					<p class="sb-ui-empty"><?php 
+        esc_html_e( 'No mapped content visits in this period.', 'seo-booster' );
         ?></p>
-					<?php 
+				<?php 
     }
     ?>
-				</div>
-			</div>
+
+				<?php 
+    if ( !empty( $noisy_bots ) ) {
+        ?>
+					<h3 class="sb-ai-bots-subheading"><?php 
+        esc_html_e( 'Bots mostly hitting noise', 'seo-booster' );
+        ?></h3>
+					<div class="sb-ai-bots-table-wrap">
+						<table class="widefat striped">
+							<thead>
+								<tr>
+									<th><?php 
+        esc_html_e( 'Bot', 'seo-booster' );
+        ?></th>
+									<th><?php 
+        esc_html_e( 'Noise %', 'seo-booster' );
+        ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php 
+        foreach ( $noisy_bots as $bot_row ) {
+            ?>
+									<tr>
+										<td><?php 
+            echo esc_html( $bot_row['bot_name'] );
+            ?></td>
+										<td><?php 
+            echo esc_html( number_format_i18n( (float) $bot_row['noise_ratio'], 1 ) );
+            ?>%</td>
+									</tr>
+								<?php 
+        }
+        ?>
+							</tbody>
+						</table>
+					</div>
+					<?php 
+        $show_blocking_upsell = true;
+        if ( $show_blocking_upsell ) {
+            ?>
+						<p class="sb-ui-tip sb-ai-bots-upsell">
+							<?php 
+            esc_html_e( 'Upgrade to Pro to block noisy AI bots at the server.', 'seo-booster' );
+            ?>
+						</p>
+					<?php 
+        }
+        ?>
+				<?php 
+    }
+    ?>
+			</section>
 		</div>
 	<?php 
 }
 ?>
 
-	<h2 class="sb-ai-bots-section-title"><?php 
-esc_html_e( 'AI bot crawlers', 'seo-booster' );
-?></h2>
-
-	<div class="sb-ai-bots-summary">
-		<div class="card sb-ai-bots-summary-card">
-			<strong><?php 
-echo esc_html( sprintf( __( 'Visits (%d days)', 'seo-booster' ), $filter_days ) );
-?></strong>
-			<p class="sb-ai-bots-summary-value"><?php 
-echo esc_html( number_format_i18n( (int) $summary['total_visits'] ) );
-?></p>
-		</div>
-		<div class="card sb-ai-bots-summary-card">
-			<strong><?php 
-esc_html_e( 'Unique bots', 'seo-booster' );
-?></strong>
-			<p class="sb-ai-bots-summary-value"><?php 
-echo esc_html( number_format_i18n( (int) $summary['unique_bots'] ) );
-?></p>
-		</div>
-		<div class="card sb-ai-bots-summary-card">
-			<strong><?php 
-esc_html_e( 'Content pages crawled', 'seo-booster' );
-?></strong>
-			<p class="sb-ai-bots-summary-value"><?php 
-echo esc_html( number_format_i18n( (int) $summary['unique_content_pages'] ) );
-?></p>
-		</div>
-		<div class="card sb-ai-bots-summary-card sb-ai-bots-purpose-card">
-			<strong><?php 
-echo esc_html( sprintf( __( 'Purpose (%d days)', 'seo-booster' ), $filter_days ) );
-?></strong>
-			<div class="sb-ai-bots-purpose-chart-wrap">
-				<canvas id="sb-ai-bots-purpose-chart" width="120" height="120" aria-hidden="true"></canvas>
-			</div>
-			<p>
-				<?php 
-printf( 
-    /* translators: %s: visit count */
-    esc_html__( 'Research / training: %s', 'seo-booster' ),
-    esc_html( number_format_i18n( (int) $purpose['research'] ) )
- );
-?>
-			</p>
-			<p>
-				<?php 
-printf( 
-    /* translators: %s: visit count */
-    esc_html__( 'Citation / answer engine: %s', 'seo-booster' ),
-    esc_html( number_format_i18n( (int) $purpose['citation'] ) )
- );
-?>
-			</p>
-		</div>
-	</div>
-
-	<div class="notice notice-info inline sb-ai-bots-insight">
-		<p>
+	<section class="sb-ui-panel sb-ai-bots-results" aria-labelledby="sb-ai-bots-results-title">
+		<h2 class="sb-ui-title" id="sb-ai-bots-results-title">
 			<?php 
-printf( 
-    /* translators: 1: percent of content visits, 2: number of days */
-    esc_html__( '%1$s%% of AI bot visits hit mapped content in the last %2$d days.', 'seo-booster' ),
-    esc_html( number_format_i18n( $ratio['content_percent'], 1 ) ),
-    (int) $filter_days
- );
-?>
-		</p>
-	</div>
-
-	<div class="ai-traffic-container sb-ai-bots-insights">
-		<div class="ai-traffic-chart-section sb-ai-bots-chart-section">
-			<h2><?php 
-esc_html_e( 'Visits over time', 'seo-booster' );
-?></h2>
-			<div class="chart-container ai-bot-breakdown-chart">
-				<canvas id="sb-ai-bots-visits-chart" height="220"></canvas>
-			</div>
-		</div>
-		<div class="ai-traffic-table-section">
-			<h2><?php 
-esc_html_e( 'Top crawled content', 'seo-booster' );
-?></h2>
-			<div class="ai-bot-table-container">
-				<?php 
-if ( !empty( $top_content ) ) {
-    ?>
-					<table class="widefat striped">
-						<thead>
-							<tr>
-								<th><?php 
-    esc_html_e( 'Page', 'seo-booster' );
-    ?></th>
-								<th><?php 
-    esc_html_e( 'Visits', 'seo-booster' );
-    ?></th>
-								<th><?php 
-    esc_html_e( 'Bots', 'seo-booster' );
-    ?></th>
-							</tr>
-						</thead>
-						<tbody>
-							<?php 
-    foreach ( $top_content as $row ) {
-        ?>
-								<?php 
-        $label = AI_Bot_Tracker::resolve_object_label( (int) $row['object_id'], $row['object_type'] );
-        ?>
-								<tr>
-									<td>
-										<?php 
-        if ( !empty( $label['view_url'] ) ) {
-            ?>
-											<a href="<?php 
-            echo esc_url( $label['view_url'] );
-            ?>" target="_blank" rel="noopener noreferrer"><?php 
-            echo esc_html( $label['title'] );
-            ?></a>
-										<?php 
-        } else {
-            ?>
-											<?php 
-            echo esc_html( $label['title'] );
-            ?>
-										<?php 
-        }
-        ?>
-									</td>
-									<td><?php 
-        echo esc_html( number_format_i18n( (int) $row['visits'] ) );
-        ?></td>
-									<td><?php 
-        echo esc_html( ( isset( $row['bot_names'] ) ? AI_Bot_Tracker::truncate_display( $row['bot_names'], 40 ) : '' ) );
-        ?></td>
-								</tr>
-							<?php 
-    }
-    ?>
-						</tbody>
-					</table>
-				<?php 
+if ( $is_referrals_view ) {
+    esc_html_e( 'Referral log', 'seo-booster' );
 } else {
-    ?>
-					<p class="description"><?php 
-    esc_html_e( 'No mapped content visits in this period.', 'seo-booster' );
-    ?></p>
-				<?php 
+    esc_html_e( 'Crawler log', 'seo-booster' );
 }
 ?>
-			</div>
-
+		</h2>
+		<p class="sb-ui-lead">
 			<?php 
-if ( !empty( $noisy_bots ) ) {
-    ?>
-				<h3><?php 
-    esc_html_e( 'Bots mostly hitting noise', 'seo-booster' );
-    ?></h3>
-				<div class="ai-bot-table-container">
-					<table class="widefat striped">
-						<thead>
-							<tr>
-								<th><?php 
-    esc_html_e( 'Bot', 'seo-booster' );
-    ?></th>
-								<th><?php 
-    esc_html_e( 'Noise %', 'seo-booster' );
-    ?></th>
-							</tr>
-						</thead>
-						<tbody>
-							<?php 
-    foreach ( $noisy_bots as $bot_row ) {
-        ?>
-								<tr>
-									<td><?php 
-        echo esc_html( $bot_row['bot_name'] );
-        ?></td>
-									<td><?php 
-        echo esc_html( number_format_i18n( (float) $bot_row['noise_ratio'], 1 ) );
-        ?>%</td>
-								</tr>
-							<?php 
-    }
-    ?>
-						</tbody>
-					</table>
-				</div>
-				<?php 
-    $show_blocking_upsell = true;
-    if ( $show_blocking_upsell ) {
-        ?>
-					<p class="description ai-bot-note">
-						<?php 
-        esc_html_e( 'Upgrade to Pro to block noisy AI bots at the server.', 'seo-booster' );
-        ?>
-					</p>
-				<?php 
-    }
-    ?>
-			<?php 
-}
-?>
-		</div>
-	</div>
-
-	<p class="description sb-ai-bots-intro">
-		<?php 
-if ( 'referrals' === $view ) {
+if ( $is_referrals_view ) {
     esc_html_e( 'Full log of human visits referred from AI answer engines.', 'seo-booster' );
 } else {
     esc_html_e( 'See which real pages AI crawlers fetch on your site. Use Content crawled for actionable pages, By bot for crawler totals, Noise for search traps and unmapped URLs, and Referrals for human traffic from AI engines.', 'seo-booster' );
 }
 ?>
-	</p>
+		</p>
 
-	<nav class="nav-tab-wrapper sb-ai-bots-tabs">
-		<?php 
+		<nav class="nav-tab-wrapper sb-ai-bots-tabs">
+			<?php 
 foreach ( $tabs as $tab_key => $tab_label ) {
     ?>
-			<a href="
-			<?php 
+				<a
+					href="<?php 
     echo esc_url( add_query_arg( array(
         'page'        => $page,
         'view'        => $tab_key,
         'filter_days' => $filter_days,
     ), admin_url( 'admin.php' ) ) );
-    ?>
-						" class="nav-tab <?php 
+    ?>"
+					class="nav-tab <?php 
     echo ( $view === $tab_key ? 'nav-tab-active' : '' );
-    ?>">
-				<?php 
+    ?>"
+				>
+					<?php 
     echo esc_html( $tab_label );
     ?>
-			</a>
-		<?php 
+				</a>
+			<?php 
 }
 ?>
-	</nav>
+		</nav>
 
-	<form id="ai-bots-filter" method="get">
-		<input type="hidden" name="page" value="<?php 
+		<form id="ai-bots-filter" method="get">
+			<input type="hidden" name="page" value="<?php 
 echo esc_attr( $page );
 ?>" />
-		<input type="hidden" name="view" value="<?php 
+			<input type="hidden" name="view" value="<?php 
 echo esc_attr( $view );
 ?>" />
-		<input type="hidden" name="filter_days" value="<?php 
+			<input type="hidden" name="filter_days" value="<?php 
 echo esc_attr( (string) $filter_days );
 ?>" />
-		<?php 
+			<?php 
 $ai_bots_list_table->search_box( __( 'Search', 'seo-booster' ), 'ai-bots-search' );
 ?>
-		<?php 
+			<?php 
 $ai_bots_list_table->display();
 ?>
-	</form>
+		</form>
+	</section>
 </div>
 <?php 

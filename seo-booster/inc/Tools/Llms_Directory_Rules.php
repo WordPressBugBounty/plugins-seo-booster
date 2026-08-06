@@ -272,11 +272,16 @@ class Llms_Directory_Rules {
 
 			$dir = self::directory_from_path( trim( $path, '/' ) );
 			if ( ! isset( $dirs[ $dir ] ) ) {
+				$example_md = '';
+				if ( class_exists( Tools_Markdown::class ) && Tools_Markdown::is_md_enabled() ) {
+					$example_md = Tools_Markdown::md_permalink( $url );
+				}
 				$dirs[ $dir ] = array(
 					'directory'   => $dir,
 					'count'       => 0,
 					'post_types'  => array(),
 					'example_url' => $url,
+					'example_md'  => $example_md,
 					'auto_status' => self::auto_status_for_directory( $dir ),
 					'rule'        => $rules[ $dir ] ?? 'auto',
 				);

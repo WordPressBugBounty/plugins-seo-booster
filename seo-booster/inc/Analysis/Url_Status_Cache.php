@@ -15,6 +15,7 @@ class Url_Status_Cache {
 
 	public const KIND_LINK  = 'link';
 	public const KIND_IMAGE = 'image';
+	public const KIND_PAGE  = 'page';
 
 	public const TTL_SECONDS = 86400;
 
@@ -56,7 +57,7 @@ class Url_Status_Cache {
 	 * Get cached status row.
 	 *
 	 * @param string $url URL.
-	 * @param string $kind link|image.
+	 * @param string $kind link|image|page.
 	 * @return array|null
 	 */
 	public static function get( $url, $kind ) {
@@ -67,6 +68,7 @@ class Url_Status_Cache {
 		$table = $wpdb->prefix . 'sb2_seo_url_status';
 		$hash  = self::hash_url( $url );
 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$table} WHERE url_hash = %s AND kind = %s AND checked_at >= DATE_SUB(NOW(), INTERVAL %d SECOND) LIMIT 1",
@@ -76,6 +78,7 @@ class Url_Status_Cache {
 			),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return $row ? $row : null;
 	}
@@ -84,7 +87,7 @@ class Url_Status_Cache {
 	 * Store cached status row.
 	 *
 	 * @param string $url URL.
-	 * @param string $kind link|image.
+	 * @param string $kind link|image|page.
 	 * @param array  $data Status data.
 	 * @return void
 	 */
@@ -116,7 +119,7 @@ class Url_Status_Cache {
 	 * Queue uncached URLs for background validation.
 	 *
 	 * @param string[] $urls URLs.
-	 * @param string   $kind link|image.
+	 * @param string   $kind link|image|page.
 	 * @return void
 	 */
 	public static function queue_background_checks( array $urls, $kind ) {
@@ -150,7 +153,9 @@ class Url_Status_Cache {
 		$kind = isset( $args['kind'] ) ? (string) $args['kind'] : self::KIND_LINK;
 
 		foreach ( $urls as $url ) {
-			if ( self::KIND_IMAGE === $kind ) {
+			if ( self::KIND_PAGE === $kind ) {
+				$status = Page_Reachability::probe( $url, false );
+			} elseif ( self::KIND_IMAGE === $kind ) {
 				$status = Abstract_Checks::check_image_status( $url );
 			} else {
 				$status = Abstract_Checks::check_link_status( $url );

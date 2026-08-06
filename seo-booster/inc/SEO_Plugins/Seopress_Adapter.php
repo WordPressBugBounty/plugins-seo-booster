@@ -54,12 +54,9 @@ class Seopress_Adapter extends Abstract_Post_Meta_Adapter {
 	 * @return string[]
 	 */
 	public function read_focus_keywords( $post_id ) {
-		$focus_keyword = get_post_meta( $post_id, '_seopress_analysis_target_kw', true );
-		if ( empty( $focus_keyword ) ) {
-			return array();
-		}
-
-		return $this->parse_focus_keyword_list( (string) $focus_keyword );
+		return $this->normalize_focus_keyword_raw(
+			get_post_meta( (int) $post_id, '_seopress_analysis_target_kw', true )
+		);
 	}
 
 	/**
@@ -83,6 +80,37 @@ class Seopress_Adapter extends Abstract_Post_Meta_Adapter {
 		}
 
 		return $keys;
+	}
+
+	/**
+	 * @param int $post_id Post ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_post_seo_resolved( $post_id ) {
+		$raw = $this->read_post_seo( $post_id );
+		if ( ! function_exists( 'seopress_get_service' ) ) {
+			return $raw;
+		}
+
+		try {
+			$service = seopress_get_service( 'TitleMeta' );
+			if ( is_object( $service ) && method_exists( $service, 'getValue' ) ) {
+				$title = (string) $service->getValue( (int) $post_id );
+				if ( $title !== '' ) {
+					$raw['title'] = sanitize_text_field( $title );
+				}
+			}
+			$desc_service = seopress_get_service( 'DescriptionMeta' );
+			if ( is_object( $desc_service ) && method_exists( $desc_service, 'getValue' ) ) {
+				$desc = (string) $desc_service->getValue( (int) $post_id );
+				if ( $desc !== '' ) {
+					$raw['description'] = sanitize_textarea_field( $desc );
+				}
+			}
+		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Keep raw.
+		}
+
+		return $raw;
 	}
 
 	/**

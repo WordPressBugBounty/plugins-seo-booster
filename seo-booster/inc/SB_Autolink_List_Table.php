@@ -381,47 +381,44 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 
 		$search = ( isset( $_REQUEST['s'] ) ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : false;
 
+		$search_sql  = '';
+		$search_args = array();
 		if ( $search ) {
-			$do_search = $wpdb->prepare(
-				' AND (keyword LIKE %s OR url LIKE %s) ',
-				'%' . $wpdb->esc_like( $search ) . '%',
-				'%' . $wpdb->esc_like( $search ) . '%'
-			);
-		} else {
-			$do_search = '';
+			$like        = '%' . $wpdb->esc_like( $search ) . '%';
+			$search_sql  = ' AND (keyword LIKE %s OR url LIKE %s) ';
+			$search_args = array( $like, $like );
 		}
 
 		$orderby = filter_input( INPUT_GET, 'orderby' );
-
-		$orderby = ! empty( $orderby ) ? esc_sql( sanitize_text_field( $orderby ) ) : 'keyword';
+		$orderby = ! empty( $orderby ) ? sanitize_text_field( $orderby ) : 'keyword';
 		$orderby = $this->sanitize_orderby( $orderby );
 
 		$order = filter_input( INPUT_GET, 'order' );
-		$order = ! empty( $order ) ? esc_sql( strtoupper( sanitize_text_field( $order ) ) ) : 'ASC';
+		$order = ! empty( $order ) ? strtoupper( sanitize_text_field( $order ) ) : 'ASC';
 		$order = $this->sanitize_order( $order );
 
-		$table_name = esc_sql( $wpdb->prefix . 'sb2_autolink' );
+		$table_name = $wpdb->prefix . 'sb2_autolink';
 
-		$data = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT id, keyword, url, lastseen
+		$sql  = "SELECT id, keyword, url, lastseen
 			FROM {$table_name} 
 			WHERE 1 = 1 
-			{$do_search} 
-			ORDER BY %1\$s %2\$s 
-			LIMIT %3\$d, %4\$d",
-				$orderby,
-				$order,
-				$offset,
-				$per_page
-			),
-			ARRAY_A
-		);
+			{$search_sql} 
+			ORDER BY {$orderby} {$order} 
+			LIMIT %d, %d";
+		$args = array_merge( $search_args, array( $offset, $per_page ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Query built from prefixed table, sanitized orderby/order and %s/%d placeholders passed to $wpdb->prepare().
+		$data = $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A );
 
 		$current_page = $this->get_pagenum();
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- $do_search built via $wpdb->prepare() with esc_like() above.
-		$total_items = $wpdb->get_var( "SELECT count(id) FROM {$wpdb->prefix}sb2_autolink WHERE 1=1 $do_search;" );
+		$count_sql = "SELECT count(id) FROM {$wpdb->prefix}sb2_autolink WHERE 1=1 {$search_sql}";
+		if ( empty( $search_args ) ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- No user input; static count query on a prefixed table.
+			$total_items = $wpdb->get_var( $count_sql );
+		} else {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- $search_sql uses %s placeholders passed to $wpdb->prepare().
+			$total_items = $wpdb->get_var( $wpdb->prepare( $count_sql, $search_args ) );
+		}
 
 		$this->items = $data;
 
@@ -452,23 +449,5 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 		$result = strcmp( $a[ $orderby ], $b[ $orderby ] );
 
 		return ( 'asc' === $order ) ? $result : -$result;
-	}
-
-
-
-
-	public static function ajax_update_per_page() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( 'Permission denied' );
-		}
-
-		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
-		if ( ! wp_verify_nonce( $nonce, 'add-keyword-nonce' ) ) {
-			wp_send_json_error( 'Invalid nonce' );
-		}
-
-		$per_page = isset( $_POST['per_page'] ) ? (int) $_POST['per_page'] : 25;
-		update_user_meta( get_current_user_id(), 'sb_autolink_per_page', $per_page );
-		wp_send_json_success();
 	}
 }

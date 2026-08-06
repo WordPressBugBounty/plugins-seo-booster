@@ -281,6 +281,7 @@ jQuery(document).ready(function($) {
             data.issues.forEach(function(issue) {
                 allPossibilities.push({
                     type: 'issue',
+                    id: issue.id || 0,
                     key: issue.key,
                     severity: issue.severity,
                     message: issue.message,
@@ -296,6 +297,7 @@ jQuery(document).ready(function($) {
             suggestionItems.forEach(function(improvement) {
                 allPossibilities.push({
                     type: 'improvement',
+                    id: improvement.id || 0,
                     key: improvement.key,
                     severity: improvement.severity || 'opportunity',
                     message: improvement.message,
@@ -310,12 +312,17 @@ jQuery(document).ready(function($) {
             html += '<div class="sb-analysis-section">';
             html += '<h4 class="sb-collapsible-header" data-target="sb-possibilities-list">';
             html += '<span class="dashicons dashicons-arrow-down-alt2 sb-collapse-icon"></span>';
-            html += sb_seo_metabox.strings.issues + ' (' + totalCount + ')';
+            html += '<span class="sb-possibilities-heading-label">' + sb_seo_metabox.strings.issues + ' (<span class="sb-possibilities-count">' + totalCount + '</span>)</span>';
             html += '</h4>';
             html += '<div class="sb-collapsible-content" id="sb-possibilities-list">';
             
             allPossibilities.forEach(function(item) {
-                html += '<div class="sb-analysis-item">';
+                var issueId = parseInt(item.id, 10) || 0;
+                var canTriage = !!(sb_seo_metabox.can_triage && issueId > 0);
+                var escapedKey = (item.key || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+                var escapedSeverity = (item.severity || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+                html += '<div class="sb-analysis-item" data-issue-id="' + issueId + '" data-key="' + escapedKey + '" data-severity="' + escapedSeverity + '">';
                 
                 // Choose icon based on severity/type
                 var iconClass = 'dashicons-warning';
@@ -346,6 +353,7 @@ jQuery(document).ready(function($) {
                 
                 // Escape HTML in message to prevent XSS
                 var messageText = (item.message || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+                html += '<div class="sb-analysis-item-body">';
                 html += '<div class="sb-analysis-text">' + gscLabel + aiReadinessLabel + messageText + '</div>';
                 
                 // Display extra data for various issue types
@@ -579,11 +587,29 @@ jQuery(document).ready(function($) {
                         html += '</ul></div>';
                     }
                 }
-                
+
+                if (canTriage) {
+                    var strings = sb_seo_metabox.strings || {};
+                    html += '<div class="sb-issue-actions">';
+                    html += '<button type="button" class="button button-small sb-mark-done" data-issue-id="' + issueId + '">';
+                    html += (strings.mark_as_done || 'Mark as done');
+                    html += '</button> ';
+                    html += '<button type="button" class="button button-small sb-ignore-issue" data-issue-id="' + issueId + '">';
+                    html += (strings.ignore || 'Ignore');
+                    html += '</button>';
+                    html += '</div>';
+                }
+
+                html += '</div>';
                 html += '</div>';
             });
             
             html += '</div>';
+            if (sb_seo_metabox.can_triage && sb_seo_metabox.possibilities_url) {
+                var viewLabel = (sb_seo_metabox.strings && sb_seo_metabox.strings.view_in_possibilities) || 'View in Possibilities';
+                var possUrl = String(sb_seo_metabox.possibilities_url).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                html += '<p class="sb-metabox-possibilities-link"><a href="' + possUrl + '">' + viewLabel + '</a></p>';
+            }
             html += '</div>';
         }
 
@@ -654,11 +680,206 @@ jQuery(document).ready(function($) {
             window.SB_SEO_ExamplesDisplay.initToggles();
         }
     };
+
+    /**
+     * Escape text for HTML content.
+     *
+     * @param {*} text Raw text.
+     * @return {string}
+     */
+    function sbMetaboxEscapeHtml(text) {
+        return (text == null ? '' : String(text))
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    /**
+     * Update the Possibilities (N) heading count in the metabox.
+     *
+     * @param {number} delta Change to apply.
+     * @return {void}
+     */
+    function sbMetaboxSyncPossibilitiesCount(delta) {
+        var $count = jQuery('#sb-analysis-results .sb-possibilities-count').first();
+        if (!$count.length) {
+            return;
+        }
+        var current = parseInt($count.text().replace(/[^\d]/g, ''), 10) || 0;
+        $count.text(Math.max(0, current + delta));
+    }
+
+    /**
+     * Show a short triage error near analysis results.
+     *
+     * @param {string} message Error message.
+     * @return {void}
+     */
+    function sbMetaboxShowTriageError(message) {
+        jQuery('#sb-analysis-results .sb-metabox-triage-error').remove();
+        var $notice = jQuery('<div class="notice notice-error inline sb-metabox-triage-error"><p></p></div>');
+        $notice.find('p').text(message == null ? '' : String(message));
+        jQuery('#sb-analysis-results').prepend($notice);
+        setTimeout(function() {
+            $notice.fadeOut(300, function() {
+                jQuery(this).remove();
+            });
+        }, 8000);
+    }
+
+    /**
+     * Soft-remove confirmation row after Undo window expires.
+     *
+     * @param {jQuery} $confirm Confirmation element.
+     * @return {void}
+     */
+    function sbMetaboxFinalizeStatusRemoval($confirm) {
+        $confirm.slideUp(200, function() {
+            jQuery(this).remove();
+            var remaining = jQuery('#sb-possibilities-list .sb-analysis-item, #sb-possibilities-list .sb-issue-status-confirm').length;
+            if (remaining === 0) {
+                var $section = jQuery('#sb-possibilities-list').closest('.sb-analysis-section');
+                $section.find('.sb-possibilities-count').text('0');
+            }
+        });
+    }
+
+    /**
+     * Restore an issue row after Undo.
+     *
+     * @param {number} issueId Issue ID.
+     * @param {jQuery} $confirm Confirmation element.
+     * @param {jQuery} $cachedItem Cached original item HTML.
+     * @return {void}
+     */
+    function sbMetaboxUndoIssueStatus(issueId, $confirm, $cachedItem) {
+        var strings = sb_seo_metabox.strings || {};
+        var $btn = $confirm.find('.sb-undo-issue');
+        $btn.prop('disabled', true);
+
+        jQuery.ajax({
+            url: sb_seo_metabox.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'sb_update_issue_status',
+                nonce: sb_seo_metabox.issues_nonce,
+                issue_id: issueId,
+                status: 'active'
+            },
+            success: function(response) {
+                if (!response || !response.success) {
+                    sbMetaboxShowTriageError((response && response.data && response.data.message) || strings.triage_error || 'Could not update this possibility. Please try again.');
+                    $btn.prop('disabled', false);
+                    return;
+                }
+                $confirm.replaceWith($cachedItem);
+                sbMetaboxSyncPossibilitiesCount(1);
+            },
+            error: function() {
+                sbMetaboxShowTriageError(strings.triage_error || 'Could not update this possibility. Please try again.');
+                $btn.prop('disabled', false);
+            }
+        });
+    }
+
+    /**
+     * Mark done / Ignore via shared Possibilities AJAX.
+     *
+     * @param {number} issueId Issue ID.
+     * @param {string} status fixed|ignored_permanent.
+     * @param {jQuery} $button Clicked button.
+     * @return {void}
+     */
+    function sbMetaboxUpdateIssueStatus(issueId, status, $button) {
+        var strings = sb_seo_metabox.strings || {};
+        if (!issueId || !sb_seo_metabox.can_triage) {
+            return;
+        }
+
+        var $item = $button.closest('.sb-analysis-item');
+        if (!$item.length) {
+            return;
+        }
+
+        var $cachedItem = $item.clone(true, true);
+        $button.prop('disabled', true);
+        $item.find('.sb-mark-done, .sb-ignore-issue').prop('disabled', true);
+
+        jQuery.ajax({
+            url: sb_seo_metabox.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'sb_update_issue_status',
+                nonce: sb_seo_metabox.issues_nonce,
+                issue_id: issueId,
+                status: status
+            },
+            success: function(response) {
+                if (!response || !response.success) {
+                    sbMetaboxShowTriageError((response && response.data && response.data.message) || strings.triage_error || 'Could not update this possibility. Please try again.');
+                    $item.find('.sb-mark-done, .sb-ignore-issue').prop('disabled', false);
+                    return;
+                }
+
+                var label = status === 'fixed'
+                    ? (strings.marked_as_done || 'Marked as done')
+                    : (strings.ignored || 'Ignored');
+                var $confirm = jQuery(
+                    '<div class="sb-issue-status-confirm" data-issue-id="' + issueId + '">' +
+                    '<span class="sb-issue-status-confirm__label">' + sbMetaboxEscapeHtml(label) + '</span> ' +
+                    '<button type="button" class="button-link sb-undo-issue" data-issue-id="' + issueId + '">' +
+                    sbMetaboxEscapeHtml(strings.undo || 'Undo') +
+                    '</button></div>'
+                );
+
+                $item.replaceWith($confirm);
+                sbMetaboxSyncPossibilitiesCount(-1);
+
+                var undoTimer = setTimeout(function() {
+                    sbMetaboxFinalizeStatusRemoval($confirm);
+                }, 8000);
+
+                $confirm.find('.sb-undo-issue').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    clearTimeout(undoTimer);
+                    sbMetaboxUndoIssueStatus(issueId, $confirm, $cachedItem);
+                });
+            },
+            error: function() {
+                sbMetaboxShowTriageError(strings.triage_error || 'Could not update this possibility. Please try again.');
+                $item.find('.sb-mark-done, .sb-ignore-issue').prop('disabled', false);
+            }
+        });
+    }
+
+    jQuery(document).on('click', '#sb-analysis-results .sb-mark-done', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var issueId = parseInt(jQuery(this).data('issue-id'), 10) || 0;
+        sbMetaboxUpdateIssueStatus(issueId, 'fixed', jQuery(this));
+    });
+
+    jQuery(document).on('click', '#sb-analysis-results .sb-ignore-issue', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var issueId = parseInt(jQuery(this).data('issue-id'), 10) || 0;
+        sbMetaboxUpdateIssueStatus(issueId, 'ignored_permanent', jQuery(this));
+    });
     
     // Error and success message functions
     function showError(message) {
         hideMessages();
-        var errorDiv = $('<div class="sb-error-message" style="background: #f8d7da; color: #721c24; padding: 10px; margin: 10px 0; border: 1px solid #f5c6cb; border-radius: 4px; display: flex; align-items: center;"><span class="dashicons dashicons-warning" style="margin-right: 8px;"></span>' + message + '<button type="button" class="sb-close-message" style="margin-left: auto; background: none; border: none; color: #721c24; cursor: pointer; font-size: 16px;">&times;</button></div>');
+        var errorDiv = $('<div class="sb-error-message" style="background: #f8d7da; color: #721c24; padding: 10px; margin: 10px 0; border: 1px solid #f5c6cb; border-radius: 4px; display: flex; align-items: center;"></div>');
+        errorDiv.append('<span class="dashicons dashicons-warning" style="margin-right: 8px;"></span>');
+        if (message && message.jquery) {
+            errorDiv.append($('<span class="sb-message-text"></span>').append(message));
+        } else {
+            errorDiv.append($('<span class="sb-message-text"></span>').text(message == null ? '' : String(message)));
+        }
+        errorDiv.append('<button type="button" class="sb-close-message" style="margin-left: auto; background: none; border: none; color: #721c24; cursor: pointer; font-size: 16px;">&times;</button>');
         $('#sb-get-llm-suggestions').after(errorDiv);
         
         // Auto-hide after 10 seconds
@@ -671,7 +892,10 @@ jQuery(document).ready(function($) {
     
     function showSuccess(message) {
         hideMessages();
-        var successDiv = $('<div class="sb-success-message" style="background: #d4edda; color: #155724; padding: 10px; margin: 10px 0; border: 1px solid #c3e6cb; border-radius: 4px; display: flex; align-items: center;"><span class="dashicons dashicons-yes-alt" style="margin-right: 8px;"></span>' + message + '<button type="button" class="sb-close-message" style="margin-left: auto; background: none; border: none; color: #155724; cursor: pointer; font-size: 16px;">&times;</button></div>');
+        var successDiv = $('<div class="sb-success-message" style="background: #d4edda; color: #155724; padding: 10px; margin: 10px 0; border: 1px solid #c3e6cb; border-radius: 4px; display: flex; align-items: center;"></div>');
+        successDiv.append('<span class="dashicons dashicons-yes-alt" style="margin-right: 8px;"></span>');
+        successDiv.append($('<span class="sb-message-text"></span>').text(message == null ? '' : String(message)));
+        successDiv.append('<button type="button" class="sb-close-message" style="margin-left: auto; background: none; border: none; color: #155724; cursor: pointer; font-size: 16px;">&times;</button>');
         $('#sb-get-llm-suggestions').after(successDiv);
         
         // Auto-hide after 5 seconds
@@ -694,7 +918,10 @@ jQuery(document).ready(function($) {
         // Remove any existing notifications
         $('.sb-image-notification').remove();
         
-        var notification = $('<div class="sb-image-notification" style="position: fixed; top: 32px; right: 20px; z-index: 100000; background: ' + bgColor + '; color: ' + textColor + '; padding: 12px 16px; border: 1px solid ' + borderColor + '; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); max-width: 400px; display: flex; align-items: center; gap: 10px;"><span class="dashicons ' + icon + '" style="font-size: 20px; width: 20px; height: 20px;"></span><span style="flex: 1;">' + message + '</span><button type="button" class="sb-close-notification" style="background: none; border: none; color: ' + textColor + '; cursor: pointer; font-size: 18px; line-height: 1; padding: 0; width: 20px; height: 20px;">&times;</button></div>');
+        var notification = $('<div class="sb-image-notification" style="position: fixed; top: 32px; right: 20px; z-index: 100000; background: ' + bgColor + '; color: ' + textColor + '; padding: 12px 16px; border: 1px solid ' + borderColor + '; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); max-width: 400px; display: flex; align-items: center; gap: 10px;"></div>');
+        notification.append($('<span class="dashicons ' + icon + '" style="font-size: 20px; width: 20px; height: 20px;"></span>'));
+        notification.append($('<span style="flex: 1;"></span>').text(message == null ? '' : String(message)));
+        notification.append($('<button type="button" class="sb-close-notification" style="background: none; border: none; color: ' + textColor + '; cursor: pointer; font-size: 18px; line-height: 1; padding: 0; width: 20px; height: 20px;">&times;</button>'));
         
         $('body').append(notification);
         
@@ -750,6 +977,26 @@ jQuery(document).ready(function($) {
         });
     });
 
+    var aiTabHydrated = false;
+
+    /**
+     * Load saved AI suggestions + assistant history once, when the AI tools tab is first opened.
+     * Avoids AJAX on every editor load when the user never visits the tab.
+     */
+    function hydrateAiTab() {
+        if (aiTabHydrated || isAttachmentPage()) {
+            return;
+        }
+        aiTabHydrated = true;
+
+        loadSavedLLMSuggestions();
+        loadAssistantHistory();
+
+        if (sb_seo_metabox.saved_comprehensive_analysis && typeof displayComprehensiveAnalysis === 'function') {
+            displayComprehensiveAnalysis(sb_seo_metabox.saved_comprehensive_analysis);
+        }
+    }
+
     // Section tabs (Analysis / AI tools / Keywords)
     $('#sb-seo-metabox').on('click', '.sb-seo-tab', function() {
         var $metabox = $('#sb-seo-metabox');
@@ -761,6 +1008,10 @@ jQuery(document).ready(function($) {
 
         $metabox.find('.sb-seo-tab-panel').removeClass('active');
         $metabox.find('#sb-seo-' + tab).addClass('active');
+
+        if (tab === 'ai') {
+            hydrateAiTab();
+        }
 
         // Tabulator needs a redraw after the Keywords panel becomes visible again.
         if (tab === 'keywords' && window.sbGscKeywordsTable && typeof window.sbGscKeywordsTable.redraw === 'function') {
@@ -881,7 +1132,7 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success && response.data) {
                     var $btn = $('#sb-get-llm-suggestions');
-                    $btn.prop('disabled', false).html('<span class="dashicons dashicons-lightbulb"></span> Generate AI SEO Suggestions');
+                    $btn.prop('disabled', false).html(getGenerateSuggestionsButtonHtml());
 
                     // Display suggestions if available
                     if (response.data.titles && response.data.descriptions) {
@@ -895,11 +1146,293 @@ jQuery(document).ready(function($) {
             error: function() {
                 // On error, still enable button with default message
                 var $btn = $('#sb-get-llm-suggestions');
-                $btn.prop('disabled', false).html('<span class="dashicons dashicons-lightbulb"></span> Generate AI SEO Suggestions');
+                $btn.prop('disabled', false).html(getGenerateSuggestionsButtonHtml());
                 updateAiPanelVisibility();
             }
         });
     }
+
+    function formatAssistantAnswer(text) {
+        var escaped = escapeHtml(text || '');
+        var parts = escaped.split('\n');
+        var out = [];
+        var listItems = [];
+        function flushList() {
+            if (listItems.length) {
+                out.push('<ul class="sb-ai-assistant-bullets">' + listItems.join('') + '</ul>');
+                listItems = [];
+            }
+        }
+        parts.forEach(function(rawLine) {
+            var line = rawLine.trim();
+            if (!line) {
+                flushList();
+                return;
+            }
+            if (/^[-*]\s+/.test(line)) {
+                listItems.push('<li>' + line.replace(/^[-*]\s+/, '') + '</li>');
+            } else {
+                flushList();
+                out.push('<p>' + line + '</p>');
+            }
+        });
+        flushList();
+        return out.join('') || '<p>' + escaped + '</p>';
+    }
+
+    function renderAssistantActions(actions, canUsePro) {
+        var $wrap = $('#sb-ai-assistant-actions');
+        $wrap.empty();
+        if (!actions || !actions.length) {
+            return;
+        }
+
+        var s = sb_seo_metabox.strings || {};
+        var canPro = !!canUsePro;
+        $wrap.append('<h5 class="sb-ai-assistant-actions-heading">' + escapeHtml(s.assistant_proposed || 'Proposed actions') + '</h5>');
+
+        actions.forEach(function(action) {
+            if (!action || !action.type) {
+                return;
+            }
+            var label = action.label || action.type;
+            var typeLabel = action.type === 'set_focus_keyword'
+                ? 'Focus keyword'
+                : (action.type === 'create_autolink' ? 'Autolink' : action.type);
+            var $card = $('<div class="sb-ai-assistant-action-card"></div>');
+            var $main = $('<div class="sb-ai-assistant-action-main"></div>');
+            $main.append('<span class="sb-ai-assistant-action-badge">' + escapeHtml(typeLabel) + '</span>');
+            $main.append('<span class="sb-ai-assistant-action-label">' + escapeHtml(label) + '</span>');
+            $card.append($main);
+
+            var $footer = $('<div class="sb-ai-assistant-action-footer"></div>');
+            if (canPro) {
+                var $btn = $('<button type="button" class="button button-small button-primary sb-ai-assistant-apply-btn"></button>');
+                $btn.text(s.assistant_apply || 'Apply');
+                $btn.attr('data-action-type', action.type);
+                $btn.attr('data-payload', JSON.stringify(action.payload || {}));
+                $footer.append($btn);
+            } else {
+                var $locked = $('<span class="sb-ai-assistant-pro-lock"></span>');
+                $locked.append('<span class="sb-ai-assistant-pro-badge">' + escapeHtml(s.assistant_pro_required || 'Pro') + '</span>');
+                $locked.append('<span class="sb-ai-assistant-pro-text">' + escapeHtml(s.assistant_pro_teaser || 'Applying actions requires SEO Booster Pro.') + '</span>');
+                $locked.append(
+                    $('<a></a>')
+                        .attr('href', sb_seo_metabox.pro_upgrade_url || 'https://seoboosterpro.com/')
+                        .attr('target', '_blank')
+                        .attr('rel', 'noopener noreferrer')
+                        .text(s.upgrade || 'Upgrade')
+                );
+                $footer.append($locked);
+            }
+            $card.append($footer);
+            $wrap.append($card);
+        });
+    }
+
+    function displayAssistantResult(data, fromHistory) {
+        if (!data || !data.answer) {
+            return;
+        }
+        var s = sb_seo_metabox.strings || {};
+        var $result = $('#sb-ai-assistant-result');
+        var $echo = $('#sb-ai-assistant-question-echo');
+        var $answer = $('#sb-ai-assistant-answer');
+
+        if (data.question) {
+            var prefix = fromHistory ? (s.assistant_previous || 'Previous answer') : (s.assistant_you_asked || 'You asked:');
+            $echo.html('<strong>' + escapeHtml(prefix) + '</strong> ' + escapeHtml(data.question));
+            $echo.removeClass('sb-hidden');
+        } else {
+            $echo.empty().addClass('sb-hidden');
+        }
+
+        $answer.html(formatAssistantAnswer(data.answer));
+        renderAssistantActions(data.actions || [], data.can_use_pro_actions !== undefined ? data.can_use_pro_actions : sb_seo_metabox.can_use_pro_actions);
+        $result.removeClass('sb-hidden');
+        $('#sb-ai-assistant-history-hint').addClass('sb-hidden');
+
+        if (!fromHistory && data.titles && data.titles.length && data.descriptions && data.descriptions.length) {
+            displayLLMResults({
+                titles: data.titles,
+                descriptions: data.descriptions,
+                language: data.language || ''
+            }, true);
+            if (data.language) {
+                updateLanguageDisplay(data.language);
+            }
+        }
+
+        updateAiPanelVisibility();
+    }
+
+    function loadAssistantHistory() {
+        if (isAttachmentPage()) {
+            return;
+        }
+        var postId = $('#post_ID').val() || (sb_seo_metabox && sb_seo_metabox.post_id) || '';
+        if (!postId) {
+            return;
+        }
+        if ($('#sb-ai-assistant').length === 0) {
+            return;
+        }
+
+        $.ajax({
+            url: sb_seo_metabox.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'sb_seo_get_ai_assistant_history',
+                post_id: postId,
+                nonce: sb_seo_metabox.nonce
+            },
+            success: function(response) {
+                if (!response.success || !response.data || !response.data.last_turn) {
+                    return;
+                }
+                var turn = response.data.last_turn;
+                displayAssistantResult({
+                    question: turn.q,
+                    answer: turn.answer,
+                    actions: turn.actions || [],
+                    titles: turn.titles || [],
+                    descriptions: turn.descriptions || [],
+                    language: response.data.language || '',
+                    can_use_pro_actions: response.data.can_use_pro_actions
+                }, true);
+            }
+        });
+    }
+
+    function askAssistant(question) {
+        var s = sb_seo_metabox.strings || {};
+        question = (question || '').trim();
+        if (!question) {
+            window.SBModal.alert(s.assistant_empty || 'Please enter a question.', { tone: 'warning' });
+            return;
+        }
+
+        if (sb_seo_metabox.ai_provider !== 'WordPress') {
+            window.SBModal.alert(
+                'Ask requires WordPress Connectors. Choose WordPress Connectors under Settings → AI/LLM.',
+                { tone: 'warning' }
+            );
+            return;
+        }
+
+        var postId = $('#post_ID').val() || (sb_seo_metabox && sb_seo_metabox.post_id) || '';
+        if (!postId) {
+            return;
+        }
+
+        var $askBtn = $('#sb-ai-assistant-ask');
+        var $loading = $('#sb-ai-assistant-loading');
+        $askBtn.prop('disabled', true);
+        $loading.removeClass('sb-hidden');
+
+        $.ajax({
+            url: sb_seo_metabox.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'sb_seo_ai_assistant_ask',
+                post_id: postId,
+                question: question,
+                nonce: sb_seo_metabox.nonce
+            },
+            success: function(response) {
+                $loading.addClass('sb-hidden');
+                $askBtn.prop('disabled', false);
+                if (!response.success || !response.data) {
+                    var msg = (response.data && response.data.message) ? response.data.message : (s.assistant_error || 'Could not get an answer.');
+                    window.SBModal.alert(msg, { tone: 'error' });
+                    return;
+                }
+                var data = response.data;
+                data.question = question;
+                displayAssistantResult(data, false);
+            },
+            error: function() {
+                $loading.addClass('sb-hidden');
+                $askBtn.prop('disabled', false);
+                window.SBModal.alert(s.assistant_error || 'Could not get an answer.', { tone: 'error' });
+            }
+        });
+    }
+
+    $(document).on('click', '.sb-ai-assistant-chip', function() {
+        var q = $(this).data('question') || $(this).text();
+        $('#sb-ai-assistant-input').val(q);
+        askAssistant(q);
+    });
+
+    $(document).on('click', '#sb-ai-assistant-ask', function() {
+        askAssistant($('#sb-ai-assistant-input').val());
+    });
+
+    $(document).on('keydown', '#sb-ai-assistant-input', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            askAssistant($(this).val());
+        }
+    });
+
+    $(document).on('click', '.sb-ai-assistant-apply-btn', function() {
+        var $btn = $(this);
+        var actionType = $btn.attr('data-action-type');
+        var payload;
+        try {
+            payload = JSON.parse($btn.attr('data-payload') || '{}');
+        } catch (err) {
+            payload = {};
+        }
+        var s = sb_seo_metabox.strings || {};
+        var postId = $('#post_ID').val() || (sb_seo_metabox && sb_seo_metabox.post_id) || '';
+
+        function doApply() {
+            $btn.prop('disabled', true);
+            $.ajax({
+                url: sb_seo_metabox.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'sb_seo_ai_assistant_apply_action',
+                    post_id: postId,
+                    action_type: actionType,
+                    payload: JSON.stringify(payload),
+                    nonce: sb_seo_metabox.nonce
+                },
+                success: function(response) {
+                    $btn.prop('disabled', false);
+                    if (!response.success) {
+                        var msg = (response.data && response.data.message) ? response.data.message : (s.assistant_error || 'Error');
+                        window.SBModal.alert(msg, { tone: 'error' });
+                        return;
+                    }
+                    $btn.text(s.assistant_applied || 'Applied.').prop('disabled', true);
+                    // Mirror focus keyword into the active SEO plugin UI when possible.
+                    if (actionType === 'set_focus_keyword' && payload.keyword) {
+                        var $applyProxy = $('<button type="button" class="sb-llm-apply-btn" data-field="focus_keyword"></button>');
+                        $applyProxy.attr('data-value', payload.keyword);
+                        $applyProxy.trigger('click');
+                    }
+                    window.SBModal.alert(response.data.message || (s.assistant_applied || 'Applied.'), { tone: 'success' });
+                },
+                error: function() {
+                    $btn.prop('disabled', false);
+                    window.SBModal.alert(s.assistant_error || 'Error', { tone: 'error' });
+                }
+            });
+        }
+
+        if (actionType === 'create_autolink') {
+            window.SBModal.confirm(s.assistant_apply_confirm || 'Create this automatic internal link?', { tone: 'warning' }).then(function(ok) {
+                if (ok) {
+                    doApply();
+                }
+            });
+        } else {
+            doApply();
+        }
+    });
 
     // Display LLM results
     function displayLLMResults(data, isNewGeneration = false) {
@@ -919,7 +1452,7 @@ jQuery(document).ready(function($) {
                     <div class="sb-llm-results-content">
                         <div class="sb-llm-results-intro" style="margin-bottom: 20px; padding: 12px; background: #f0f6fc; border-left: 4px solid #2271b1; border-radius: 2px;">
                             <p style="margin: 0; font-size: 13px; color: #1d2327;">
-                                <strong>What you received:</strong> The AI analyzed your content and generated 5 optimized SEO title suggestions and 5 meta description suggestions. 
+                                <strong>What you received:</strong> The AI analyzed your content and generated 7 optimized SEO title suggestions and 7 meta description suggestions. 
                                 If you have set a focus keyword, it has been included in the suggestions following SEO best practices. 
                                 You can select and copy any suggestion text directly, or use the "Copy" button. Click "Use" to apply a suggestion to your SEO fields.
                             </p>
@@ -1009,10 +1542,16 @@ jQuery(document).ready(function($) {
 
         $results.removeClass('sb-hidden');
 
-        // Expand whenever suggestions are shown (saved or newly generated).
-        $results.addClass('expanded');
-        $content.show();
-        $arrow.removeClass('dashicons-arrow-down').addClass('dashicons-arrow-up');
+        // Expand for new generations; keep collapsed when restoring saved suggestions.
+        if (isNewGeneration) {
+            $results.addClass('expanded');
+            $content.show();
+            $arrow.removeClass('dashicons-arrow-down').addClass('dashicons-arrow-up');
+        } else {
+            $results.removeClass('expanded');
+            $content.hide();
+            $arrow.removeClass('dashicons-arrow-up').addClass('dashicons-arrow-down');
+        }
 
         updateAiPanelVisibility();
 
@@ -1021,7 +1560,7 @@ jQuery(document).ready(function($) {
         }
     }
 
-    // Update language display (language is auto-detected, stored for reference)
+    // Update language display (language is auto-detected; label is rendered in PHP)
     function updateLanguageDisplay(language) {
         llmData.language = language;
     }
@@ -1036,6 +1575,16 @@ jQuery(document).ready(function($) {
             "'": '&#039;'
         };
         return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    function getGenerateSuggestionsButtonHtml() {
+        var $btn = $('#sb-get-llm-suggestions');
+        var s = (sb_seo_metabox && sb_seo_metabox.strings) || {};
+        var type = ($btn.data('request-type') || 'seo_suggestions').toString();
+        if (type === 'product_seo') {
+            return '<span class="dashicons dashicons-cart"></span> ' + (s.generate_product_seo || 'Generate Product SEO');
+        }
+        return '<span class="dashicons dashicons-lightbulb"></span> ' + (s.generate_suggestions || 'Generate title & meta ideas');
     }
 
     function displayComprehensiveAnalysis(data) {
@@ -1153,7 +1702,7 @@ jQuery(document).ready(function($) {
         var $timerText = $loading.find('.sb-llm-timer-text');
 
         var originalHtml = $btn.html();
-        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update" style="animation: spin 1s linear infinite;"></span> ' + 'Generating...');
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update" style="animation: spin 1s linear infinite;"></span> ' + ((sb_seo_metabox.strings && sb_seo_metabox.strings.generating) || 'Generating...'));
 
         showAiLoading();
         updateStatusMessage('analyzing', $statusMessage, $statusStep);
@@ -1259,10 +1808,10 @@ jQuery(document).ready(function($) {
                     hideAiLoading();
                     finishCb();
                     if (response.data && response.data.insufficient_credits) {
-                        showError(
-                            'Insufficient credits (' + response.data.credits_remaining + ' remaining). ' +
-                            '<a href="' + response.data.buy_url + '">Purchase more credits</a>'
-                        );
+                        var $creditsMsg = $('<span></span>')
+                            .text('Insufficient credits (' + response.data.credits_remaining + ' remaining). ')
+                            .append($('<a></a>').attr('href', response.data.buy_url || '#').text('Purchase more credits'));
+                        showError($creditsMsg);
                     } else {
                         showError(response.data.message || 'Failed to submit request.');
                     }
@@ -1455,7 +2004,7 @@ jQuery(document).ready(function($) {
     function getStatusLabel(status) {
         var s = sb_seo_metabox.strings || {};
         var key = 'request_status_' + (status || 'queued');
-        return s[key] || status || '—';
+        return s[key] || status || '-';
     }
     function loadRecentRequests() {
         var postId = sb_seo_metabox.post_id;
@@ -1485,8 +2034,8 @@ jQuery(document).ready(function($) {
                 var statusLabel = getStatusLabel(row.status);
                 var timeStr = row.created ? (function() {
                     var d = new Date(row.created * 1000);
-                    return isNaN(d.getTime()) ? '—' : d.toLocaleString();
-                }()) : '—';
+                    return isNaN(d.getTime()) ? '-' : d.toLocaleString();
+                }()) : '-';
                 var retryHtml = (row.status === 'failed' || row.status === 'queued') 
                     ? '<button type="button" class="button button-small sb-recent-retry-btn" data-request-id="' + (row.id || '').replace(/"/g, '&quot;') + '">' + (sb_seo_metabox.strings.retry || 'Retry') + '</button>'
                     : '';
@@ -1538,7 +2087,7 @@ jQuery(document).ready(function($) {
         var $statusStep = $loading.find('.sb-llm-status-step');
         var $timerText = $loading.find('.sb-llm-timer-text');
         var originalHtml = $btn.html();
-        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update" style="animation: spin 1s linear infinite;"></span> ' + 'Generating...');
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update" style="animation: spin 1s linear infinite;"></span> ' + ((sb_seo_metabox.strings && sb_seo_metabox.strings.generating) || 'Generating...'));
         showAiLoading();
         updateStatusMessage('queued', $statusMessage, $statusStep);
         var countup = 0;
@@ -1953,14 +2502,10 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Load saved suggestions on page load
-    if (!isAttachmentPage()) {
-        loadSavedLLMSuggestions();
-    }
-
-    // Restore saved comprehensive analysis if present (e.g. after reload)
-    if (sb_seo_metabox.saved_comprehensive_analysis && typeof displayComprehensiveAnalysis === 'function') {
-        displayComprehensiveAnalysis(sb_seo_metabox.saved_comprehensive_analysis);
+    // Saved suggestions / assistant history hydrate on first AI tools tab open (see hydrateAiTab).
+    // Credits pending poll still starts on ready so in-flight requests are not abandoned.
+    if (!isAttachmentPage() && $('#sb-seo-ai').hasClass('active')) {
+        hydrateAiTab();
     }
 
     updateAiPanelVisibility();
@@ -1999,7 +2544,7 @@ jQuery(document).ready(function($) {
             return '✓';
         }
         if (item.unknown) {
-            return '—';
+            return '-';
         }
         return '○';
     }
@@ -2007,7 +2552,7 @@ jQuery(document).ready(function($) {
     function buildChecklistHtml(items, showPoints) {
         if (!items || !items.length) {
             var notAnalyzed = (sb_seo_metabox.strings && sb_seo_metabox.strings.readiness_not_analyzed) || 'Not analyzed yet.';
-            return '<li class="is-unknown"><span class="sb-ai-readiness-status">—</span><span class="sb-ai-readiness-label">' + notAnalyzed + '</span></li>';
+            return '<li class="is-unknown"><span class="sb-ai-readiness-status">-</span><span class="sb-ai-readiness-label">' + notAnalyzed + '</span></li>';
         }
         return items.map(function (item) {
             var pointsHtml = showPoints && item.points ? '<span class="sb-ai-readiness-points">+' + item.points + '</span>' : '';
@@ -2032,34 +2577,96 @@ jQuery(document).ready(function($) {
         jQuery('#sb-ai-readiness-sitewide').html(buildChecklistHtml(view.sitewide || [], false));
     }
 
-    function updateFullReviewActionsVisibility(mode) {
+    function updateFullReviewActionsVisibility() {
         var $wrap = jQuery('#sb-seo-full-review-actions');
         if (!$wrap.length) {
             return;
         }
-        var $buttons = $wrap.find('.sb-seo-analysis-buttons');
-        var $help = $wrap.find('.sb-full-review-help');
-        var $heading = $wrap.find('h3');
-
-        if (mode === 'warning') {
-            $wrap.addClass('sb-hidden');
-            return;
-        }
 
         $wrap.removeClass('sb-hidden');
-        if (mode === 'needed') {
-            $buttons.show();
-            $help.show();
-            $heading.show();
-            return;
-        }
-
-        // Fresh analysis: keep last-downloaded note only.
-        $buttons.hide();
-        $help.hide();
-        $heading.hide();
+        $wrap.find('.sb-seo-analysis-buttons, .sb-full-review-help, h3').show();
     }
     window.updateFullReviewActionsVisibility = updateFullReviewActionsVisibility;
+
+    /**
+     * Read the live focus keyword from SEO Booster fields or the active SEO plugin UI.
+     * Rank Math often keeps the value in its data store until the post is saved.
+     */
+    function getCurrentFocusKeyword() {
+        var fromSb = $('#sb_seo_focus_keyword').val();
+        if (fromSb && String(fromSb).trim() !== '') {
+            return String(fromSb).trim().split(',')[0].trim();
+        }
+
+        var seoPlugin = (typeof sb_seo_metabox !== 'undefined' && sb_seo_metabox.seo_plugin) ? sb_seo_metabox.seo_plugin : {};
+        var pluginSlug = seoPlugin.plugin || '';
+        var fields = seoPlugin.fields || {};
+
+        if (pluginSlug === 'rankmath' && window.wp && wp.data && typeof wp.data.select === 'function') {
+            try {
+                var store = wp.data.select('rank-math');
+                if (store) {
+                    var kw = '';
+                    if (typeof store.getFocusKeyword === 'function') {
+                        kw = store.getFocusKeyword();
+                    } else if (typeof store.getFocusKeywords === 'function') {
+                        var list = store.getFocusKeywords();
+                        if (Array.isArray(list) && list.length) {
+                            var first = list[0];
+                            if (typeof first === 'string') {
+                                kw = first;
+                            } else if (first && typeof first === 'object') {
+                                kw = first.value || first.id || first.keyword || '';
+                            }
+                        } else if (typeof list === 'string') {
+                            kw = list;
+                        }
+                    }
+                    if (kw && String(kw).trim() !== '') {
+                        return String(kw).trim().split(',')[0].trim();
+                    }
+                }
+            } catch (e) {
+                // Fall through to DOM selectors.
+            }
+        }
+
+        var selectors = [];
+        if (fields.focus_keyword) {
+            selectors.push(fields.focus_keyword);
+        }
+        if (pluginSlug === 'rankmath') {
+            selectors.push('#rank_math_focus_keyword', 'input[name="rank_math_focus_keyword"]');
+        } else if (pluginSlug === 'yoast') {
+            selectors.push('#yoast_wpseo_focuskw', 'input[name="yoast_wpseo_focuskw"]');
+        } else if (pluginSlug === 'seopress') {
+            selectors.push('#seopress_analysis_target_kw', 'input[name="seopress_analysis_target_kw"]');
+        } else if (pluginSlug === 'aioseo') {
+            selectors.push('#aioseo-keyphrase', '#aioseo_keywords', 'input[name="aioseo-keyphrase"]');
+        }
+
+        for (var i = 0; i < selectors.length; i++) {
+            var $el = $(selectors[i]);
+            if (!$el.length) {
+                continue;
+            }
+            var val = $el.val();
+            if (val && String(val).trim() !== '') {
+                return String(val).trim().split(',')[0].trim();
+            }
+        }
+
+        // Rank Math Tagify / chip UI (classic editor).
+        var $tag = $('.rank-math-focus-keyword .tagify__tag-text, .rank-math-focus-keyword .rank-math-tag').first();
+        if ($tag.length) {
+            var tagText = $.trim($tag.text());
+            if (tagText) {
+                return tagText;
+            }
+        }
+
+        return '';
+    }
 
     // Load existing analysis on page load
     function loadExistingAnalysis() {
@@ -2074,7 +2681,7 @@ jQuery(document).ready(function($) {
         // Get current input field values
         var currentTitle = $('#sb_seo_title').val();
         var currentDescription = $('#sb_seo_description').val();
-        var currentFocusKeyword = $('#sb_seo_focus_keyword').val();
+        var currentFocusKeyword = getCurrentFocusKeyword();
 
         // Make AJAX request to get saved analysis results
         $.ajax({
@@ -2173,7 +2780,7 @@ jQuery(document).ready(function($) {
         // Get current input field values
         var currentTitle = $('#sb_seo_title').val();
         var currentDescription = $('#sb_seo_description').val();
-        var currentFocusKeyword = $('#sb_seo_focus_keyword').val();
+        var currentFocusKeyword = getCurrentFocusKeyword();
 
         // Disable analysis button during request
         $('#sb-download-and-analyze').prop('disabled', true);
@@ -2303,7 +2910,7 @@ jQuery(document).ready(function($) {
         // Get current input field values
         var currentTitle = $('#sb_seo_title').val();
         var currentDescription = $('#sb_seo_description').val();
-        var currentFocusKeyword = $('#sb_seo_focus_keyword').val();
+        var currentFocusKeyword = getCurrentFocusKeyword();
         
         // Disable analysis button during request
         $('#sb-download-and-analyze').prop('disabled', true);

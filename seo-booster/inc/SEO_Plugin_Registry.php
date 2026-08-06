@@ -365,6 +365,251 @@ class SEO_Plugin_Registry {
 	}
 
 	/**
+	 * Rendered title/description for analysis and display (templates resolved).
+	 *
+	 * @param int $post_id Post ID.
+	 * @return array{title: string, description: string}
+	 */
+	public static function read_post_seo_resolved( $post_id ) {
+		$adapter = self::get_active_adapter();
+		if ( ! $adapter ) {
+			return array(
+				'title'       => '',
+				'description' => '',
+			);
+		}
+
+		return $adapter->read_post_seo_resolved( $post_id );
+	}
+
+	/**
+	 * Whether the post is marked noindex by the active SEO plugin.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return bool|null True/false when known; null when unknown / no plugin.
+	 */
+	public static function read_post_noindex( $post_id ) {
+		$adapter = self::get_active_adapter();
+		if ( ! $adapter ) {
+			return null;
+		}
+
+		$post_id = (int) $post_id;
+		$slug    = $adapter->get_slug();
+
+		switch ( $slug ) {
+			case 'yoast':
+				$robots = get_post_meta( $post_id, '_yoast_wpseo_meta-robots-noindex', true );
+				if ( '1' === (string) $robots ) {
+					return true;
+				}
+				if ( '2' === (string) $robots ) {
+					return false;
+				}
+				return null;
+			case 'rankmath':
+				$robots = get_post_meta( $post_id, 'rank_math_robots', true );
+				if ( is_array( $robots ) ) {
+					return in_array( 'noindex', $robots, true );
+				}
+				return null;
+			case 'seopress':
+				$value = get_post_meta( $post_id, '_seopress_robots_index', true );
+				if ( 'yes' === $value ) {
+					return true;
+				}
+				if ( 'no' === $value ) {
+					return false;
+				}
+				return null;
+			case 'aioseo':
+				return self::read_aioseo_post_noindex( $post_id );
+			case 'seoframework':
+				$noindex = get_post_meta( $post_id, '_genesis_noindex', true );
+				if ( '' === $noindex || false === $noindex ) {
+					return null;
+				}
+				return (bool) $noindex;
+			default:
+				return null;
+		}
+	}
+
+	/**
+	 * Whether the term is marked noindex by the active SEO plugin.
+	 *
+	 * @param int $term_id Term ID.
+	 * @return bool|null True/false when known; null when unknown / no plugin / default.
+	 */
+	public static function read_term_noindex( $term_id ) {
+		$adapter = self::get_active_adapter();
+		if ( ! $adapter ) {
+			return null;
+		}
+
+		$term_id = (int) $term_id;
+		$slug    = $adapter->get_slug();
+
+		switch ( $slug ) {
+			case 'yoast':
+				if ( ! class_exists( 'WPSEO_Taxonomy_Meta' ) ) {
+					return null;
+				}
+				$term = get_term( $term_id );
+				if ( ! $term || is_wp_error( $term ) ) {
+					return null;
+				}
+				$robots = \WPSEO_Taxonomy_Meta::get_term_meta( $term_id, $term->taxonomy, 'noindex' );
+				if ( 'noindex' === (string) $robots ) {
+					return true;
+				}
+				if ( 'index' === (string) $robots ) {
+					return false;
+				}
+				return null;
+			case 'rankmath':
+				$robots = get_term_meta( $term_id, 'rank_math_robots', true );
+				if ( is_array( $robots ) ) {
+					if ( in_array( 'noindex', $robots, true ) ) {
+						return true;
+					}
+					if ( in_array( 'index', $robots, true ) ) {
+						return false;
+					}
+				}
+				return null;
+			case 'seopress':
+				$value = get_term_meta( $term_id, '_seopress_robots_index', true );
+				if ( 'yes' === $value ) {
+					return true;
+				}
+				if ( 'no' === $value ) {
+					return false;
+				}
+				return null;
+			case 'aioseo':
+				return self::read_aioseo_term_noindex( $term_id );
+			case 'seoframework':
+				if ( function_exists( 'tsf' ) ) {
+					try {
+						$tsf = tsf();
+						if ( is_object( $tsf ) && method_exists( $tsf, 'data' ) ) {
+							$term_api = $tsf->data()->plugin()->term();
+							if ( is_object( $term_api ) && method_exists( $term_api, 'get_meta_item' ) ) {
+								$value = $term_api::get_meta_item( 'noindex', $term_id );
+								if ( '' === $value || null === $value || false === $value || 0 === (int) $value ) {
+									return null;
+								}
+								return (bool) (int) $value;
+							}
+						}
+					} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+					}
+				}
+				$noindex = get_term_meta( $term_id, '_genesis_noindex', true );
+				if ( '' === $noindex || false === $noindex ) {
+					return null;
+				}
+				return (bool) $noindex;
+			default:
+				return null;
+		}
+	}
+
+	/**
+	 * AIOSEO post noindex from helpers model or aioseo_posts row.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return bool|null
+	 */
+	private static function read_aioseo_post_noindex( $post_id ) {
+		if ( function_exists( 'aioseo' ) ) {
+			try {
+				$helpers = aioseo()->helpers ?? null;
+				if ( is_object( $helpers ) && method_exists( $helpers, 'getPost' ) ) {
+					$post = $helpers->getPost( $post_id );
+					if ( is_object( $post ) && isset( $post->robots_noindex ) ) {
+						return (bool) $post->robots_noindex;
+					}
+				}
+			} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+			}
+		}
+
+		global $wpdb;
+		$table = $wpdb->prefix . 'aioseo_posts';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
+			return null;
+		}
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$value = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT robots_noindex FROM {$table} WHERE post_id = %d LIMIT 1",
+				$post_id
+			)
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( null === $value ) {
+			return null;
+		}
+
+		return (bool) (int) $value;
+	}
+
+	/**
+	 * AIOSEO term noindex from Term model or aioseo_terms row.
+	 *
+	 * @param int $term_id Term ID.
+	 * @return bool|null
+	 */
+	private static function read_aioseo_term_noindex( $term_id ) {
+		if ( function_exists( 'aioseo' ) ) {
+			try {
+				if ( class_exists( '\AIOSEO\Plugin\Pro\Models\Term' ) && method_exists( '\AIOSEO\Plugin\Pro\Models\Term', 'getTerm' ) ) {
+					$term = \AIOSEO\Plugin\Pro\Models\Term::getTerm( $term_id );
+					if ( is_object( $term ) && isset( $term->robots_noindex ) ) {
+						return (bool) $term->robots_noindex;
+					}
+				}
+				if ( class_exists( '\AIOSEO\Plugin\Common\Models\Term' ) && method_exists( '\AIOSEO\Plugin\Common\Models\Term', 'getTerm' ) ) {
+					$term = \AIOSEO\Plugin\Common\Models\Term::getTerm( $term_id );
+					if ( is_object( $term ) && isset( $term->robots_noindex ) ) {
+						return (bool) $term->robots_noindex;
+					}
+				}
+			} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+			}
+		}
+
+		global $wpdb;
+		$table = $wpdb->prefix . 'aioseo_terms';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
+			return null;
+		}
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$value = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT robots_noindex FROM {$table} WHERE term_id = %d LIMIT 1",
+				$term_id
+			)
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( null === $value ) {
+			return null;
+		}
+
+		return (bool) (int) $value;
+	}
+
+	/**
 	 * @param int $post_id Post ID.
 	 * @return string[]
 	 */
@@ -486,6 +731,24 @@ class SEO_Plugin_Registry {
 		}
 
 		return $adapter->read_term_seo( $term_id );
+	}
+
+	/**
+	 * Rendered title/description for a term (templates resolved).
+	 *
+	 * @param int $term_id Term ID.
+	 * @return array{title: string, description: string}
+	 */
+	public static function read_term_seo_resolved( $term_id ) {
+		$adapter = self::get_active_adapter();
+		if ( ! $adapter ) {
+			return array(
+				'title'       => '',
+				'description' => '',
+			);
+		}
+
+		return $adapter->read_term_seo_resolved( $term_id );
 	}
 
 	/**

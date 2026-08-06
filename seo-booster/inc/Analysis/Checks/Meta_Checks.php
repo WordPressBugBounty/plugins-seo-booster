@@ -6,7 +6,7 @@ use Cleverplugins\SEOBooster\Analysis\Abstract_Checks;
 use Cleverplugins\SEOBooster\Analysis\Content_Context;
 use Cleverplugins\SEOBooster\Analysis\Html_Document;
 use Cleverplugins\SEOBooster\Analysis\Result_Set;
-use Cleverplugins\SEOBooster\Google_API;
+use Cleverplugins\SEOBooster\SEO_Plugins\Abstract_Post_Meta_Adapter;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -50,7 +50,7 @@ class Meta_Checks extends Abstract_Checks {
 		$this->check_open_graph( $document, $results );
 		$this->check_twitter_cards( $document, $results );
 		$this->check_canonical_url( $context, $document, $results );
-		$this->check_robots_meta( $document, $results );
+		$this->check_robots_meta( $context, $document, $results );
 		$this->check_meta_viewport( $document, $results );
 		$this->check_favicon( $document, $results );
 		$this->check_language_declaration( $document, $results );
@@ -73,7 +73,10 @@ class Meta_Checks extends Abstract_Checks {
 		}
 
 		if ( empty( $title ) ) {
-			$title = $context->seo_data['title'] ?? '';
+			$title = trim( (string) ( $context->seo_data['title'] ?? '' ) );
+			if ( Abstract_Post_Meta_Adapter::looks_like_seo_template( $title ) ) {
+				$title = '';
+			}
 		}
 
 		if ( empty( $title ) && $context->object_type === 'post' && $context->object ) {
@@ -126,6 +129,12 @@ class Meta_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_focus_keyword( Content_Context $context, Result_Set $results ) {
+		$adapter = \Cleverplugins\SEOBooster\SEO_Plugin_Registry::get_active_adapter();
+		if ( $adapter && ! $adapter->supports_focus_keyword() ) {
+			$results->add_not_applicable( 'keyword_not_supported', __( 'Focus keyword is not supported by the active SEO plugin.', 'seo-booster' ) );
+			return;
+		}
+
 		$focus_keyword = $context->seo_data['focus_keyword'] ?? '';
 		if ( empty( $focus_keyword ) ) {
 			$results->add_opportunity( 'keyword_missing', __( 'Consider setting a focus keyword to help with SEO targeting.', 'seo-booster' ) );
@@ -152,9 +161,12 @@ class Meta_Checks extends Abstract_Checks {
 
 		if ( empty( $description ) ) {
 			$description = trim( (string) ( $context->seo_data['description'] ?? '' ) );
+			if ( Abstract_Post_Meta_Adapter::looks_like_seo_template( $description ) ) {
+				$description = '';
+			}
 		}
 
-		if ( empty( $description ) && $context->object_type === 'post' && $context->object && ! Google_API::identify_active_seo_plugin() ) {
+		if ( empty( $description ) && $context->object_type === 'post' && $context->object ) {
 			$description = trim( (string) $context->object->post_excerpt );
 		}
 
@@ -167,7 +179,31 @@ class Meta_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_noindex_status( Content_Context $context, Result_Set $results ) {
-		$noindex = $context->seo_data['noindex'] ?? 0;
+		$noindex = null;
+		if ( array_key_exists( 'noindex', $context->seo_data ) ) {
+			$noindex = ! empty( $context->seo_data['noindex'] );
+		}
+
+		if ( null === $noindex && $context->has_full_page ) {
+			$full_html = $context->full_page_content;
+			if ( is_string( $full_html ) && $full_html !== '' ) {
+				if ( preg_match( '/<meta[^>]+name=["\']robots["\'][^>]+content=["\']([^"\']+)["\']/i', $full_html, $m )
+					|| preg_match( '/<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']robots["\']/i', $full_html, $m ) ) {
+					$robots = strtolower( $m[1] );
+					if ( false !== strpos( $robots, 'noindex' ) ) {
+						$noindex = true;
+					} elseif ( false !== strpos( $robots, 'index' ) ) {
+						$noindex = false;
+					}
+				}
+			}
+		}
+
+		if ( null === $noindex ) {
+			$results->add_not_applicable( 'indexable_unknown', __( 'Indexability could not be determined from the SEO plugin or page robots meta.', 'seo-booster' ) );
+			return;
+		}
+
 		if ( $noindex ) {
 			$results->add_opportunity( 'noindex_set', __( 'This page is set to noindex. Search engines will not index this page.', 'seo-booster' ) );
 			return;
@@ -279,11 +315,12 @@ class Meta_Checks extends Abstract_Checks {
 	}
 
 	/**
-	 * @param Html_Document $document Document.
-	 * @param Result_Set    $results Results.
+	 * @param Content_Context $context Context.
+	 * @param Html_Document   $document Document.
+	 * @param Result_Set      $results Results.
 	 * @return void
 	 */
-	private function check_robots_meta( Html_Document $document, Result_Set $results ) {
+	private function check_robots_meta( Content_Context $context, Html_Document $document, Result_Set $results ) {
 		$html = $document->get_scope_html( Html_Document::SCOPE_FULL_PAGE );
 		if ( ! preg_match( '/<meta[^>]*name=["\']robots["\'][^>]*content=["\']([^"\']+)["\'][^>]*>/i', $html, $m ) ) {
 			$results->add_good( 'robots_default', __( 'No restrictive robots meta tag found (default index,follow applies).', 'seo-booster' ) );
@@ -292,6 +329,11 @@ class Meta_Checks extends Abstract_Checks {
 
 		$content = strtolower( $m[1] );
 		if ( false !== strpos( $content, 'noindex' ) || false !== strpos( $content, 'none' ) ) {
+			// Avoid stacking with check_noindex_status when the SEO plugin already reported noindex.
+			if ( array_key_exists( 'noindex', $context->seo_data ) && ! empty( $context->seo_data['noindex'] ) ) {
+				$results->add_good( 'robots_matches_plugin_noindex', __( 'Robots meta matches the SEO plugin noindex setting.', 'seo-booster' ) );
+				return;
+			}
 			$results->add_warning( 'robots_noindex', __( 'Robots meta tag restricts indexing. Confirm this is intentional.', 'seo-booster' ) );
 			return;
 		}

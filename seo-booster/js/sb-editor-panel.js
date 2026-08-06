@@ -17,7 +17,7 @@
 			return '✓';
 		}
 		if (item.unknown) {
-			return '—';
+			return '-';
 		}
 		return '○';
 	}
@@ -96,7 +96,7 @@
 
 		var seoScore = viewData.seo_score;
 		var seoGrade = viewData.seo_score_grade || {};
-		var readinessGrade = viewData.grade || { label: '—', color: '#646970' };
+		var readinessGrade = viewData.grade || { label: '-', color: '#646970' };
 		var postDetails = viewData.details || [];
 		var sitewide = viewData.sitewide || [];
 		var possibilities = viewData.top_possibilities || [];
@@ -201,7 +201,7 @@
 							},
 							disabled: isLoading
 						},
-						isLoading ? strings.loading || 'Loading…' : strings.refresh || 'Run quick review'
+						isLoading ? strings.loading || 'Loading…' : strings.refresh || 'Re-run analysis'
 					),
 					isLoading ? el(Spinner, null) : null
 				),

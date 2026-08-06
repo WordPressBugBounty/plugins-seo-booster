@@ -3,6 +3,7 @@
 namespace Cleverplugins\SEOBooster\Tools;
 
 use Cleverplugins\SEOBooster\Media\AI_Image_Generator;
+use Cleverplugins\SEOBooster\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -122,6 +123,7 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 
 	/** @inheritDoc */
 	protected static function prepare_batch_from_request() {
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in Tools_Batch_Base::ajax_start_batch() before this runs.
 		$process_scope = isset( $_POST['process_scope'] )
 			? sanitize_text_field( wp_unslash( $_POST['process_scope'] ) )
 			: 'selected';
@@ -172,6 +174,15 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 		$filtered                       = Tools_Image_Scanner::filter_readable_attachment_ids( $attachment_ids );
 		$attachment_ids                 = $filtered['ids'];
 
+		$attachment_ids = array_values(
+			array_filter(
+				$attachment_ids,
+				function ( $id ) {
+					return Utils::user_can_edit_object( (int) $id );
+				}
+			)
+		);
+
 		if ( empty( $attachment_ids ) ) {
 			if ( ! empty( $attachment_ids_before_readable ) ) {
 				wp_send_json_error(
@@ -188,6 +199,7 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 				? wp_unslash( $_POST['apply_fields'] )
 				: null
 		);
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		if ( ! self::has_any_apply_field( $apply_fields ) ) {
 			wp_send_json_error( array( 'message' => __( 'Select at least one field to apply.', 'seo-booster' ) ) );
@@ -251,12 +263,12 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 			$mime       = get_post_mime_type( $attachment_id );
 			$mime_label = $mime ? $mime : __( 'unknown', 'seo-booster' );
 			throw new \Exception(
-				sprintf(
+				esc_html( sprintf(
 					/* translators: 1: MIME type, 2: supported formats list */
 					__( 'This file type (%1$s) is not supported. Supported formats: %2$s.', 'seo-booster' ),
 					$mime_label,
 					Tools_Image_Scanner::get_processable_formats_label()
-				)
+				) )
 			);
 		}
 
@@ -264,7 +276,7 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 
 		if ( ! AI_Image_Generator::attachment_has_readable_file( $attachment_id ) ) {
 			throw new \Exception(
-				__( 'Image file was not found on disk. Regenerate thumbnails or re-upload the file.', 'seo-booster' )
+				esc_html__( 'Image file was not found on disk. Regenerate thumbnails or re-upload the file.', 'seo-booster' )
 			);
 		}
 

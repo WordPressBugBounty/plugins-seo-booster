@@ -4,6 +4,7 @@ namespace Cleverplugins\SEOBooster\Media;
 
 use Cleverplugins\SEOBooster\Credits_Service;
 use Cleverplugins\SEOBooster\LLM_Helper;
+use Cleverplugins\SEOBooster\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -51,11 +52,16 @@ class AI_Image_Generator {
 			wp_send_json_error( array( 'message' => __( 'Invalid attachment ID', 'seo-booster' ) ) );
 		}
 
+		if ( ! Utils::user_can_edit_object( $attachment_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied', 'seo-booster' ) ) );
+		}
+
 		try {
 			$result = self::generate_descriptions( $attachment_id );
 			wp_send_json_success( $result );
 		} catch ( \Exception $e ) {
-			wp_send_json_error( array( 'message' => $e->getMessage() ) );
+			Utils::log( 'AI image description generation failed: ' . $e->getMessage(), 2 );
+			wp_send_json_error( array( 'message' => __( 'Something went wrong. Check the SEO Booster debug log for details.', 'seo-booster' ) ) );
 		}
 	}
 
@@ -78,11 +84,16 @@ class AI_Image_Generator {
 			wp_send_json_error( array( 'message' => __( 'Invalid attachment ID', 'seo-booster' ) ) );
 		}
 
+		if ( ! Utils::user_can_edit_object( $attachment_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied', 'seo-booster' ) ) );
+		}
+
 		try {
 			$result = self::restore_previous_content( $attachment_id );
 			wp_send_json_success( $result );
 		} catch ( \Exception $e ) {
-			wp_send_json_error( array( 'message' => $e->getMessage() ) );
+			Utils::log( 'AI image content restore failed: ' . $e->getMessage(), 2 );
+			wp_send_json_error( array( 'message' => __( 'Something went wrong. Check the SEO Booster debug log for details.', 'seo-booster' ) ) );
 		}
 	}
 
@@ -103,6 +114,10 @@ class AI_Image_Generator {
 
 		if ( ! $attachment_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid attachment ID', 'seo-booster' ) ) );
+		}
+
+		if ( ! Utils::user_can_edit_object( $attachment_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied', 'seo-booster' ) ) );
 		}
 
 		try {
@@ -144,7 +159,8 @@ class AI_Image_Generator {
 				)
 			);
 		} catch ( \Exception $e ) {
-			wp_send_json_error( array( 'message' => $e->getMessage() ) );
+			Utils::log( 'AI image content apply failed: ' . $e->getMessage(), 2 );
+			wp_send_json_error( array( 'message' => __( 'Something went wrong. Check the SEO Booster debug log for details.', 'seo-booster' ) ) );
 		}
 	}
 
@@ -160,19 +176,19 @@ class AI_Image_Generator {
 		$attachment = get_post( $attachment_id );
 
 		if ( ! $attachment || $attachment->post_type !== 'attachment' ) {
-			throw new \Exception( __( 'Invalid attachment', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Invalid attachment', 'seo-booster' ) );
 		}
 
 		// Check if it's an image
 		if ( ! wp_attachment_is_image( $attachment_id ) ) {
-			throw new \Exception( __( 'This feature is only available for images', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'This feature is only available for images', 'seo-booster' ) );
 		}
 
 		// Check AI provider
 		$ai_provider = LLM_Helper::get_selected_ai_provider();
 
 		if ( ! in_array( $ai_provider, array( 'WordPress', 'seobooster' ), true ) ) {
-			throw new \Exception( __( 'Image description generation requires an AI provider to be enabled.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Image description generation requires an AI provider to be enabled.', 'seo-booster' ) );
 		}
 
 		// Store previous content before generating new one
@@ -180,7 +196,7 @@ class AI_Image_Generator {
 
 		$image_source = self::get_image_source_for_ai( $attachment_id );
 		if ( ! $image_source ) {
-			throw new \Exception( __( 'Could not resolve a readable image file or publicly reachable URL. Regenerate thumbnails or ensure the image file exists on disk.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Could not resolve a readable image file or publicly reachable URL. Regenerate thumbnails or ensure the image file exists on disk.', 'seo-booster' ) );
 		}
 
 		// Get context (existing metadata only; post context is not sent to vision).
@@ -191,11 +207,11 @@ class AI_Image_Generator {
 
 		if ( $ai_provider === 'seobooster' ) {
 			if ( ! Credits_Service::is_credits_provider_usable() ) {
-				throw new \Exception( __( 'SEO Booster Credits are not available. Enable them in SEO Booster Settings or use WordPress Connectors.', 'seo-booster' ) );
+				throw new \Exception( esc_html__( 'SEO Booster Credits are not available. Enable them in SEO Booster Settings or use WordPress Connectors.', 'seo-booster' ) );
 			}
 			if ( empty( $image_source['public_url'] ) || ! self::is_url_publicly_reachable( $image_source['public_url'] ) ) {
 				throw new \Exception(
-					__( 'SEO Booster Credits requires a publicly reachable image URL. Local or staging sites should use the WordPress AI provider instead. No metadata was saved.', 'seo-booster' )
+					esc_html__( 'SEO Booster Credits requires a publicly reachable image URL. Local or staging sites should use the WordPress AI provider instead. No metadata was saved.', 'seo-booster' )
 				);
 			}
 			$generated = self::generate_via_credits( $attachment_id, $image_source, $context, $language );
@@ -496,25 +512,13 @@ class AI_Image_Generator {
 	 * @return bool
 	 */
 	private static function is_local_only_host( $host ) {
-		$host = strtolower( $host );
-
-		if ( $host === 'localhost' || $host === '127.0.0.1' || $host === '::1' ) {
-			return true;
+		$host = strtolower( (string) $host );
+		if ( false !== strpos( $host, ':' ) && filter_var( $host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
+			$url = 'http://[' . $host . ']/';
+		} else {
+			$url = 'http://' . $host . '/';
 		}
-
-		if ( preg_match( '/\.local$/', $host ) ) {
-			return true;
-		}
-
-		if ( filter_var( $host, FILTER_VALIDATE_IP ) ) {
-			return ! filter_var(
-				$host,
-				FILTER_VALIDATE_IP,
-				FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-			);
-		}
-
-		return false;
+		return ! \Cleverplugins\SEOBooster\Utils::is_safe_outbound_url( $url );
 	}
 
 	/**
@@ -540,6 +544,10 @@ class AI_Image_Generator {
 	private static function get_image_url_http_status( $url ) {
 		if ( empty( $url ) || strpos( $url, 'http' ) !== 0 ) {
 			return new \WP_Error( 'sb_invalid_image_url', 'Invalid image URL' );
+		}
+
+		if ( ! \Cleverplugins\SEOBooster\Utils::is_safe_outbound_url( $url ) ) {
+			return new \WP_Error( 'sb_blocked_image_url', 'Blocked private or local URL' );
 		}
 
 		$args = array(
@@ -679,37 +687,37 @@ class AI_Image_Generator {
 	 */
 	private static function parse_vision_response( $response_text ) {
 		if ( empty( $response_text ) ) {
-			throw new \Exception( __( 'Empty response from AI. Configure a vision-capable provider at Settings → Connectors.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Empty response from AI. Configure a vision-capable provider at Settings → Connectors.', 'seo-booster' ) );
 		}
 
 		if ( is_wp_error( $response_text ) ) {
-			throw new \Exception( $response_text->get_error_message() );
+			throw new \Exception( esc_html( $response_text->get_error_message() ) );
 		}
 
 		$response_text = preg_replace( '#^```(?:json)?\s*|\s*```$#', '', trim( (string) $response_text ) );
 		$parsed        = json_decode( $response_text, true );
 
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
-			throw new \Exception( __( 'Invalid JSON response from AI. No metadata was saved.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Invalid JSON response from AI. No metadata was saved.', 'seo-booster' ) );
 		}
 
 		if ( ! empty( $parsed['error'] ) ) {
 			$detail = ! empty( $parsed['message'] ) ? $parsed['message'] : $parsed['error'];
 			throw new \Exception(
-				sprintf(
+				esc_html( sprintf(
 					/* translators: %s: error detail from AI */
 					__( 'Could not analyze image: %s. No metadata was saved.', 'seo-booster' ),
 					sanitize_text_field( $detail )
-				)
+				) )
 			);
 		}
 
 		if ( empty( $parsed['image_visible'] ) || $parsed['image_visible'] !== true ) {
-			throw new \Exception( __( 'The AI could not verify the image content. No metadata was saved.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'The AI could not verify the image content. No metadata was saved.', 'seo-booster' ) );
 		}
 
 		if ( empty( $parsed['title'] ) || empty( $parsed['alt_text'] ) || empty( $parsed['caption'] ) || empty( $parsed['description'] ) ) {
-			throw new \Exception( __( 'AI response missing required fields (title, alt_text, caption, description). No metadata was saved.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'AI response missing required fields (title, alt_text, caption, description). No metadata was saved.', 'seo-booster' ) );
 		}
 
 		return array(
@@ -733,11 +741,11 @@ class AI_Image_Generator {
 	 */
 	private static function call_wp_connector_vision( array $image_source, $context, $language ) {
 		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
-			throw new \Exception( __( 'WordPress AI is not available. Use WordPress 7 or later and configure Settings → Connectors.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'WordPress AI is not available. Use WordPress 7 or later and configure Settings → Connectors.', 'seo-booster' ) );
 		}
 
 		if ( ! LLM_Helper::wp_ai_is_available() ) {
-			throw new \Exception( LLM_Helper::wp_ai_unavailable_message() );
+			throw new \Exception( esc_html( LLM_Helper::wp_ai_unavailable_message() ) );
 		}
 
 		$file_path  = $image_source['file_path'] ?? '';
@@ -761,11 +769,11 @@ class AI_Image_Generator {
 			$builder = $builder->with_file( $public_url );
 		} else {
 			throw new \Exception(
-				__( 'Image file is not readable and URL is not publicly reachable. Cannot analyze image safely. No metadata was saved.', 'seo-booster' )
+				esc_html__( 'Image file is not readable and URL is not publicly reachable. Cannot analyze image safely. No metadata was saved.', 'seo-booster' )
 			);
 		}
 
-		$response_text = $builder->generate_text();
+		$response_text = LLM_Helper::generate_ai_text( $builder, 'image-metadata' );
 
 		return self::parse_vision_response( $response_text );
 	}
@@ -812,7 +820,7 @@ class AI_Image_Generator {
 		$previous = get_post_meta( $attachment_id, '_sb_ai_image_previous_content', true );
 
 		if ( empty( $previous ) || ! is_array( $previous ) ) {
-			throw new \Exception( __( 'No previous content to restore', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'No previous content to restore', 'seo-booster' ) );
 		}
 
 		// Restore ALT text
@@ -908,13 +916,13 @@ class AI_Image_Generator {
 	 */
 	private static function generate_via_credits( $attachment_id, array $image_source, $context, $language ) {
 		if ( ! Credits_Service::is_registered() ) {
-			throw new \Exception( __( 'Credits account not connected. Go to SEO Booster Settings to connect.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Credits account not connected. Go to SEO Booster Settings to connect.', 'seo-booster' ) );
 		}
 
 		$public_url = $image_source['public_url'] ?? '';
 		if ( empty( $public_url ) || ! self::is_url_publicly_reachable( $public_url ) ) {
 			throw new \Exception(
-				__( 'SEO Booster Credits requires a publicly reachable image URL. No metadata was saved.', 'seo-booster' )
+				esc_html__( 'SEO Booster Credits requires a publicly reachable image URL. No metadata was saved.', 'seo-booster' )
 			);
 		}
 
@@ -932,7 +940,7 @@ class AI_Image_Generator {
 		$result = Credits_Service::submit_request( 'image_analysis', $input_data );
 
 		if ( ! $result['success'] ) {
-			throw new \Exception( $result['error'] );
+			throw new \Exception( esc_html( $result['error'] ) );
 		}
 
 		$request_id = $result['request_id'];
@@ -954,21 +962,21 @@ class AI_Image_Generator {
 				if ( ! empty( $status['data']['error'] ) ) {
 					$detail = $status['data']['message'] ?? $status['data']['error'];
 					throw new \Exception(
-						sprintf(
+						esc_html( sprintf(
 							/* translators: %s: error detail */
 							__( 'Could not analyze image: %s. No metadata was saved.', 'seo-booster' ),
 							sanitize_text_field( $detail )
-						)
+						) )
 					);
 				}
 
 				if ( empty( $status['data']['image_visible'] ) || $status['data']['image_visible'] !== true ) {
-					throw new \Exception( __( 'The AI could not verify the image content. No metadata was saved.', 'seo-booster' ) );
+					throw new \Exception( esc_html__( 'The AI could not verify the image content. No metadata was saved.', 'seo-booster' ) );
 				}
 
 				if ( empty( $status['data']['title'] ) || empty( $status['data']['alt_text'] )
 					|| empty( $status['data']['caption'] ) || empty( $status['data']['description'] ) ) {
-					throw new \Exception( __( 'AI response missing required fields. No metadata was saved.', 'seo-booster' ) );
+					throw new \Exception( esc_html__( 'AI response missing required fields. No metadata was saved.', 'seo-booster' ) );
 				}
 
 				return array(
@@ -982,11 +990,11 @@ class AI_Image_Generator {
 
 			if ( $status['status'] === 'failed' ) {
 				throw new \Exception(
-					__( 'Image analysis failed: ', 'seo-booster' ) . ( $status['error'] ?? __( 'Unknown error', 'seo-booster' ) )
+					esc_html( __( 'Image analysis failed: ', 'seo-booster' ) . ( $status['error'] ?? __( 'Unknown error', 'seo-booster' ) ) )
 				);
 			}
 		}
 
-		throw new \Exception( __( 'Image analysis timed out. Credits have been refunded.', 'seo-booster' ) );
+		throw new \Exception( esc_html__( 'Image analysis timed out. Credits have been refunded.', 'seo-booster' ) );
 	}
 }

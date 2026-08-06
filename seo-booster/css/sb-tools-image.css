@@ -497,6 +497,25 @@
     display: none !important;
 }
 
+.sb-tools-process-disabled-reason {
+    display: block;
+    margin: 0 0 12px;
+    max-width: 720px;
+    padding: 10px 12px;
+}
+
+.sb-tools-process-disabled-reason[hidden],
+.sb-tools-process-ai-warning[hidden] {
+    display: none !important;
+}
+
+.sb-tools-process-ai-warning {
+    display: block;
+    margin: 0 0 12px;
+    max-width: 720px;
+    padding: 10px 12px;
+}
+
 .sb-tools-ai-warning {
     display: flex;
     gap: 10px;
@@ -504,7 +523,7 @@
     background: #fcf9e8;
     border: 1px solid #dba617;
     border-left-width: 4px;
-    border-radius: 4px;
+    border-radius: 8px;
     padding: 12px 14px;
     margin: 0 0 14px;
     max-width: 720px;
@@ -574,15 +593,22 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: #fff;
-    border: 1px solid #c3c4c7;
-    border-radius: 4px;
-    padding: 16px 18px;
+    background: var(--sb-ui-white, #fff);
+    border: 1px solid var(--sb-ui-border, #c3c4c7);
+    border-radius: 12px;
+    padding: 18px 20px;
     box-sizing: border-box;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.sb-tools-overview-card:hover {
+    border-color: rgba(0, 130, 76, 0.35);
+    box-shadow: var(--sb-ui-shadow, 0 4px 20px rgba(0, 0, 0, 0.05));
 }
 
 .sb-tools-overview-grid .sb-card--locked {
     background: #f6f7f7;
+    border-style: dashed;
 }
 
 .sb-tools-nav a.nav-tab.proonly {
@@ -666,6 +692,38 @@
 .sb-tools-overview-card h2 {
     margin-top: 0;
     font-size: 1.1em;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.sb-tools-ai-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1;
+    padding: 3px 6px;
+    border-radius: 3px;
+    background: #1d2327;
+    color: #fff;
+    vertical-align: middle;
+}
+
+.sb-tools-ai-badge--optional {
+    background: #f0f0f1;
+    color: #50575e;
+    border: 1px solid #c3c4c7;
+}
+
+.sb-tools-ai-badge--nav {
+    font-size: 9px;
+    padding: 2px 5px;
+    margin-left: 4px;
+    position: relative;
+    top: -1px;
 }
 
 .sb-tools-overview-card__desc {
@@ -682,15 +740,48 @@
     border-color: #dba617;
 }
 
-.sb-tools-nav {
-    margin-bottom: 16px;
+.sb-tools-panel .sb-tools-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 20px;
+    padding: 0 0 16px;
+    border-bottom: 1px solid var(--sb-ui-soft, #f0f0f1);
+}
+
+.sb-tools-panel .sb-tools-nav .nav-tab {
+    float: none;
+    margin: 0;
+    padding: 7px 16px;
+    border: 1px solid var(--sb-ui-border, #c3c4c7);
+    border-radius: 999px;
+    background: var(--sb-ui-white, #fff);
+    color: var(--sb-ui-muted, #50575e);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.sb-tools-panel .sb-tools-nav .nav-tab:hover,
+.sb-tools-panel .sb-tools-nav .nav-tab:focus {
+    background: var(--sb-ui-soft, #f0f0f1);
+    color: #1d2327;
+}
+
+.sb-tools-panel .sb-tools-nav .nav-tab-active,
+.sb-tools-panel .sb-tools-nav .nav-tab-active:hover,
+.sb-tools-panel .sb-tools-nav .nav-tab-active:focus {
+    background: var(--sb-ui-green, #00824c);
+    border-color: var(--sb-ui-green, #00824c);
+    color: #fff;
 }
 
 .sb-tools-llms-preview {
     background: #1d2327;
     color: #f0f0f1;
     padding: 16px;
-    border-radius: 4px;
+    border-radius: 10px;
     max-height: 420px;
     overflow: auto;
     white-space: pre-wrap;
@@ -968,13 +1059,6 @@
     margin: 6px 0 0;
 }
 
-.sb-entity-refine-action--meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-}
-
 .sb-entity-refine-empty {
     margin-top: -8px;
 }
@@ -1239,3 +1323,152 @@
 .sb-entity-card.is-filter-hidden {
     display: none;
 }
+
+.sb-entity-apply-rail {
+    margin: 12px 0 20px;
+}
+
+.sb-entity-apply-panel {
+    margin: 0 0 12px;
+    padding: 14px 16px;
+    background: #f6f7f7;
+    border: 1px solid #c3c4c7;
+    border-left: 4px solid #2271b1;
+    border-radius: 4px;
+}
+
+.sb-entity-apply-actions {
+    margin: 12px 0 0;
+}
+
+.sb-entity-preflight {
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+}
+
+.sb-entity-preflight h4 {
+    margin: 0 0 8px;
+}
+
+.sb-entity-preflight-list {
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+}
+
+.sb-entity-preflight-item {
+    margin: 0 0 10px;
+    padding: 8px 10px;
+    border-radius: 3px;
+    background: #f6f7f7;
+}
+
+.sb-entity-preflight-item--error {
+    background: #fcf0f1;
+    border-left: 3px solid #d63638;
+}
+
+.sb-entity-preflight-item--warning {
+    background: #fcf9e8;
+    border-left: 3px solid #dba617;
+}
+
+.sb-entity-preflight-item--info {
+    background: #f0f6fc;
+    border-left: 3px solid #2271b1;
+}
+
+.sb-entity-preflight-ok {
+    color: #1e7e34;
+    font-weight: 600;
+}
+
+/* ---------------------------------------------------------------
+ * sb-ui alignment layer — shared look for every tool tab
+ * (scoped to .sb-tools-panel so nothing leaks outside the Tools hub)
+ * --------------------------------------------------------------- */
+
+/* Tool title row: match panel titles used on Dashboard / AI Bots */
+.sb-tools-panel .sb-tools-tool-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    color: var(--sb-ui-text, #1d2327);
+}
+
+/* Lead paragraph directly under the tool title */
+.sb-tools-panel .sb-tools-tool > .description,
+.sb-tools-panel .sb-tools-overview > .description {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--sb-ui-muted, #50575e);
+    max-width: 42em;
+    margin: 6px 0 16px;
+}
+
+/* Section headings inside tools */
+.sb-tools-panel .sb-tools-tool h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--sb-ui-text, #1d2327);
+}
+
+/* Visible separation between stacked tool sections */
+.sb-tools-panel .sb-tools-section {
+    border-top: 1px solid var(--sb-ui-soft, #f0f0f1);
+    padding-top: 18px;
+}
+
+/* WP inline notices: rounded, soft tinted backgrounds, no boxy border */
+.sb-tools-panel .notice.inline {
+    border: 0;
+    border-left: 4px solid #c3c4c7;
+    border-radius: 8px;
+    box-shadow: none;
+    background: var(--sb-ui-soft, #f0f0f1);
+    padding: 10px 14px;
+    margin: 0 0 16px;
+    max-width: 720px;
+}
+
+.sb-tools-panel .notice-warning.inline {
+    background: #fcf9e8;
+    border-left-color: #dba617;
+}
+
+.sb-tools-panel .notice-info.inline {
+    background: #f0f6fc;
+    border-left-color: var(--sb-ui-blue, #0073aa);
+}
+
+.sb-tools-panel .notice-success.inline {
+    background: #edfaef;
+    border-left-color: var(--sb-ui-green, #00824c);
+}
+
+.sb-tools-panel .notice-error.inline {
+    background: #fcf0f1;
+    border-left-color: #d63638;
+}
+
+/* Primary buttons: brand green everywhere in the Tools hub.
+   :not(:disabled):not(.disabled) keeps WP's disabled styling intact. */
+.sb-tools-panel .button-primary:not(:disabled):not(.disabled) {
+    background: var(--sb-ui-green, #00824c);
+    border-color: var(--sb-ui-green, #00824c);
+    color: #fff;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+.sb-tools-panel .button-primary:not(:disabled):not(.disabled):hover,
+.sb-tools-panel .button-primary:not(:disabled):not(.disabled):focus {
+    background: var(--sb-ui-green-hover, #00653b);
+    border-color: var(--sb-ui-green-hover, #00653b);
+    color: #fff;
+}
+

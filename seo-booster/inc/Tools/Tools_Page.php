@@ -38,32 +38,37 @@ class Tools_Page {
     public static function get_tools() {
         $tools = array(
             'overview' => array(
-                'id'      => 'overview',
-                'label'   => __( 'Overview', 'seo-booster' ),
-                'premium' => false,
-                'render'  => array(__CLASS__, 'render_overview'),
-                'enqueue' => null,
+                'id'          => 'overview',
+                'label'       => __( 'Overview', 'seo-booster' ),
+                'premium'     => false,
+                'requires_ai' => false,
+                'render'      => array(__CLASS__, 'render_overview'),
+                'enqueue'     => null,
             ),
             'meta'     => array(
-                'id'      => 'meta',
-                'label'   => __( 'Bulk meta', 'seo-booster' ),
-                'premium' => false,
-                'render'  => array(__CLASS__, 'render_meta_tool'),
-                'enqueue' => array(__CLASS__, 'enqueue_meta_scripts'),
+                'id'          => 'meta',
+                'label'       => __( 'Bulk meta', 'seo-booster' ),
+                'premium'     => false,
+                'requires_ai' => true,
+                'render'      => array(__CLASS__, 'render_meta_tool'),
+                'enqueue'     => array(__CLASS__, 'enqueue_meta_scripts'),
             ),
             'image'    => array(
-                'id'      => 'image',
-                'label'   => __( 'Image metadata', 'seo-booster' ),
-                'premium' => false,
-                'render'  => array(__CLASS__, 'render_image_tool'),
-                'enqueue' => array(__CLASS__, 'enqueue_image_scripts'),
+                'id'          => 'image',
+                'label'       => __( 'Image metadata', 'seo-booster' ),
+                'premium'     => false,
+                'requires_ai' => true,
+                'render'      => array(__CLASS__, 'render_image_tool'),
+                'enqueue'     => array(__CLASS__, 'enqueue_image_scripts'),
             ),
             'llms'     => array(
-                'id'      => 'llms',
-                'label'   => __( 'llms.txt', 'seo-booster' ),
-                'premium' => false,
-                'render'  => array(Tools_Llms_Txt::class, 'render_admin'),
-                'enqueue' => array(Tools_Llms_Txt::class, 'enqueue_scripts'),
+                'id'          => 'llms',
+                'label'       => __( 'llms.txt', 'seo-booster' ),
+                'premium'     => false,
+                'requires_ai' => false,
+                'ai_optional' => true,
+                'render'      => array(Tools_Llms_Txt::class, 'render_admin'),
+                'enqueue'     => array(Tools_Llms_Txt::class, 'enqueue_scripts'),
             ),
         );
         $tools = array_merge( $tools, self::get_premium_tool_tabs() );
@@ -83,46 +88,53 @@ class Tools_Page {
     private static function get_premium_tool_tabs() {
         return array(
             'needs-analysis'         => array(
-                'id'      => 'needs-analysis',
-                'label'   => __( 'Needs analysis', 'seo-booster' ),
-                'premium' => true,
-                'render'  => array(__CLASS__, 'render_needs_analysis_tab'),
-                'enqueue' => array(__CLASS__, 'enqueue_needs_analysis_scripts'),
+                'id'          => 'needs-analysis',
+                'label'       => __( 'Needs analysis', 'seo-booster' ),
+                'premium'     => true,
+                'requires_ai' => false,
+                'render'      => array(__CLASS__, 'render_needs_analysis_tab'),
+                'enqueue'     => array(__CLASS__, 'enqueue_needs_analysis_scripts'),
             ),
             'content-decay'          => array(
-                'id'      => 'content-decay',
-                'label'   => __( 'Content decay', 'seo-booster' ),
-                'premium' => true,
-                'render'  => array(__CLASS__, 'render_content_decay_tab'),
-                'enqueue' => array(__CLASS__, 'enqueue_content_decay_scripts'),
+                'id'          => 'content-decay',
+                'label'       => __( 'Content decay', 'seo-booster' ),
+                'premium'     => true,
+                'requires_ai' => false,
+                'render'      => array(__CLASS__, 'render_content_decay_tab'),
+                'enqueue'     => array(__CLASS__, 'enqueue_content_decay_scripts'),
             ),
             'gsc-opportunities'      => array(
-                'id'      => 'gsc-opportunities',
-                'label'   => __( 'GSC opportunities', 'seo-booster' ),
-                'premium' => true,
-                'render'  => array(__CLASS__, 'render_gsc_opportunities_tab'),
-                'enqueue' => array(__CLASS__, 'enqueue_gsc_opportunities_scripts'),
+                'id'          => 'gsc-opportunities',
+                'label'       => __( 'GSC opportunities', 'seo-booster' ),
+                'premium'     => true,
+                'requires_ai' => true,
+                'render'      => array(__CLASS__, 'render_gsc_opportunities_tab'),
+                'enqueue'     => array(__CLASS__, 'enqueue_gsc_opportunities_scripts'),
             ),
             'focus-keyword'          => array(
-                'id'      => 'focus-keyword',
-                'label'   => __( 'Focus keywords', 'seo-booster' ),
-                'premium' => true,
-                'render'  => array(__CLASS__, 'render_focus_keyword_tab'),
-                'enqueue' => array(__CLASS__, 'enqueue_focus_keyword_scripts'),
+                'id'          => 'focus-keyword',
+                'label'       => __( 'Focus keywords', 'seo-booster' ),
+                'premium'     => true,
+                'requires_ai' => false,
+                'render'      => array(__CLASS__, 'render_focus_keyword_tab'),
+                'enqueue'     => array(__CLASS__, 'enqueue_focus_keyword_scripts'),
             ),
             'autolink-opportunities' => array(
-                'id'      => 'autolink-opportunities',
-                'label'   => __( 'Autolink opportunities', 'seo-booster' ),
-                'premium' => true,
-                'render'  => array(__CLASS__, 'render_autolink_opportunities_tab'),
-                'enqueue' => array(__CLASS__, 'enqueue_autolink_opportunities_scripts'),
+                'id'          => 'autolink-opportunities',
+                'label'       => __( 'Autolink opportunities', 'seo-booster' ),
+                'premium'     => true,
+                'requires_ai' => false,
+                'render'      => array(__CLASS__, 'render_autolink_opportunities_tab'),
+                'enqueue'     => array(__CLASS__, 'enqueue_autolink_opportunities_scripts'),
             ),
             'entity-map'             => array(
-                'id'      => 'entity-map',
-                'label'   => __( 'Entity Map', 'seo-booster' ),
-                'premium' => true,
-                'render'  => array(__CLASS__, 'render_entity_map_tab'),
-                'enqueue' => array(__CLASS__, 'enqueue_entity_map_scripts'),
+                'id'          => 'entity-map',
+                'label'       => __( 'Entity Map', 'seo-booster' ),
+                'premium'     => true,
+                'requires_ai' => false,
+                'ai_optional' => true,
+                'render'      => array(__CLASS__, 'render_entity_map_tab'),
+                'enqueue'     => array(__CLASS__, 'enqueue_entity_map_scripts'),
             ),
         );
     }
@@ -229,7 +241,7 @@ class Tools_Page {
         self::render_premium_tool_tab(
             'Cleverplugins\\SEOBooster\\Tools\\Tools_Needs_Analysis',
             __( 'Needs analysis', 'seo-booster' ),
-            __( 'Find content that was never analyzed, has stale SEO analysis, or still shows issues from your last run. Queue a bulk re-analysis using the existing SEO analysis engine.', 'seo-booster' ),
+            __( 'Find content that was never analyzed, has stale SEO analysis, or still shows issues from your last run. Run a bulk re-analysis using the existing SEO analysis engine.', 'seo-booster' ),
             array('Cleverplugins\\SEOBooster\\Tools\\Tools_Needs_Analysis', 'render_admin')
         );
     }
@@ -265,7 +277,7 @@ class Tools_Page {
         self::render_premium_tool_tab(
             'Cleverplugins\\SEOBooster\\Tools\\Tools_Focus_Keyword',
             __( 'Focus keywords', 'seo-booster' ),
-            __( 'Suggest unique focus keywords from imported GSC data for pages missing one — no AI required. Picks the highest-impression query per URL and skips utility pages.', 'seo-booster' ),
+            __( 'Suggest unique focus keywords from imported GSC data for pages missing one: no AI required. Picks the highest-impression query per URL and skips utility pages.', 'seo-booster' ),
             array('Cleverplugins\\SEOBooster\\Tools\\Tools_Focus_Keyword', 'render_admin')
         );
     }
@@ -289,7 +301,7 @@ class Tools_Page {
         self::render_premium_tool_tab(
             'Cleverplugins\\SEOBooster\\Tools\\Tools_Entity_Map',
             __( 'Entity Map', 'seo-booster' ),
-            __( 'Publish a structured Entity Map so AI systems understand your organization, key content, and relationships — beyond llms.txt.', 'seo-booster' ),
+            __( 'Publish a structured Entity Map so AI systems understand your organization, key content, and relationships, beyond llms.txt.', 'seo-booster' ),
             array('Cleverplugins\\SEOBooster\\Tools\\Tools_Entity_Map', 'render_admin'),
             'entity-map'
         );
@@ -382,9 +394,10 @@ class Tools_Page {
         }
         $tools = self::get_tools();
         $active_tab = self::get_active_tab();
-        echo '<div class="wrap sb-wrap sb-tools-wrap">';
+        echo '<div class="wrap sb-wrap sb-dashboard sb-tools-wrap">';
         echo wp_kses_post( Utils::show_plugin_headline( __( 'Tools', 'seo-booster' ), true ) );
         $has_premium = self::user_has_premium_tools();
+        echo '<section class="sb-ui-panel sb-tools-panel">';
         echo '<nav class="nav-tab-wrapper sb-tools-nav" aria-label="' . esc_attr__( 'Tools sections', 'seo-booster' ) . '">';
         foreach ( $tools as $tool ) {
             $url = self::get_page_url( $tool['id'] );
@@ -395,12 +408,12 @@ class Tools_Page {
             if ( !empty( $tool['premium'] ) && !$has_premium ) {
                 $class .= ' proonly';
             }
-            printf(
-                '<a href="%s" class="%s">%s</a>',
-                esc_url( $url ),
-                esc_attr( $class ),
-                esc_html( $tool['label'] )
-            );
+            $ai_badge = '';
+            if ( !empty( $tool['requires_ai'] ) ) {
+                $ai_badge = sprintf( ' <span class="sb-tools-ai-badge sb-tools-ai-badge--nav" title="%s">%s</span>', esc_attr__( 'Requires WordPress Connectors AI', 'seo-booster' ), esc_html__( 'AI', 'seo-booster' ) );
+            }
+            echo '<a href="' . esc_url( $url ) . '" class="' . esc_attr( $class ) . '">' . esc_html( $tool['label'] ) . $ai_badge . '</a>';
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $ai_badge is escaped above.
         }
         echo '</nav>';
         echo '<div class="sb-tools-tab-content">';
@@ -408,6 +421,7 @@ class Tools_Page {
             call_user_func( $tools[$active_tab]['render'] );
         }
         echo '</div>';
+        echo '</section>';
         echo '</div>';
     }
 
@@ -473,9 +487,15 @@ class Tools_Page {
         }
         wp_enqueue_style( 'list-tables' );
         wp_enqueue_style(
+            'sb-ui',
+            SEOBOOSTER_PLUGINURL . 'css/sb-ui.css',
+            array(),
+            filemtime( SEOBOOSTER_PLUGINPATH . 'css/sb-ui.css' )
+        );
+        wp_enqueue_style(
             'seo-booster',
             SEOBOOSTER_PLUGINURL . 'css/seo-booster.css',
-            array(),
+            array('sb-ui'),
             filemtime( SEOBOOSTER_PLUGINPATH . 'css/seo-booster.css' )
         );
         wp_enqueue_style(
@@ -487,7 +507,12 @@ class Tools_Page {
         wp_enqueue_style(
             'sb-tools-shared',
             SEOBOOSTER_PLUGINURL . 'css/sb-tools-image.css',
-            array('list-tables', 'seo-booster', 'seobooster-settings'),
+            array(
+                'list-tables',
+                'sb-ui',
+                'seo-booster',
+                'seobooster-settings'
+            ),
             filemtime( SEOBOOSTER_PLUGINPATH . 'css/sb-tools-image.css' )
         );
         Utils::enqueue_modal_assets();
@@ -604,8 +629,8 @@ class Tools_Page {
             'timer_completed'          => __( 'Completed in %s s', 'seo-booster' ),
             'timer_failed'             => __( 'Failed after %s s', 'seo-booster' ),
             'complete'                 => __( 'Done: %1$d processed, %2$d failed.', 'seo-booster' ),
-            'batch_complete'           => __( 'Batch complete in %1$s — %2$d processed, %3$d failed.', 'seo-booster' ),
-            'batch_cancelled'          => __( 'Cancelled after %1$s — %2$d processed, %3$d failed.', 'seo-booster' ),
+            'batch_complete'           => __( 'Batch complete in %1$s: %2$d processed, %3$d failed.', 'seo-booster' ),
+            'batch_cancelled'          => __( 'Cancelled after %1$s: %2$d processed, %3$d failed.', 'seo-booster' ),
             'title_processing'         => __( '%1$d/%2$d', 'seo-booster' ),
             'title_complete'           => __( 'Complete: %1$d processed, %2$d failed', 'seo-booster' ),
             'title_cancelled'          => __( 'Cancelled: %1$d processed', 'seo-booster' ),
@@ -618,7 +643,7 @@ class Tools_Page {
             'alt_text'                 => __( 'Alt text', 'seo-booster' ),
             'caption'                  => __( 'Caption', 'seo-booster' ),
             'description'              => __( 'Description', 'seo-booster' ),
-            'empty'                    => __( '—', 'seo-booster' ),
+            'empty'                    => __( '-', 'seo-booster' ),
             'ai_disabled'              => __( 'Enable AI in SEO Booster Settings to process images.', 'seo-booster' ),
             'edit'                     => __( 'Edit', 'seo-booster' ),
             'view'                     => __( 'View', 'seo-booster' ),
@@ -660,15 +685,17 @@ class Tools_Page {
             'processing'           => __( 'Processing %1$d of %2$d…', 'seo-booster' ),
             'generating'           => __( 'Generating SEO meta with AI…', 'seo-booster' ),
             'complete'             => __( 'Done: %1$d processed, %2$d failed.', 'seo-booster' ),
-            'batch_complete'       => __( 'Batch complete in %1$s — %2$d processed, %3$d failed.', 'seo-booster' ),
-            'batch_cancelled'      => __( 'Cancelled after %1$s — %2$d processed, %3$d failed.', 'seo-booster' ),
+            'batch_complete'       => __( 'Batch complete in %1$s: %2$d processed, %3$d failed.', 'seo-booster' ),
+            'batch_cancelled'      => __( 'Cancelled after %1$s: %2$d processed, %3$d failed.', 'seo-booster' ),
             'cancel'               => __( 'Cancel', 'seo-booster' ),
             'error'                => __( 'Error', 'seo-booster' ),
             'before'               => __( 'Before', 'seo-booster' ),
             'after'                => __( 'After', 'seo-booster' ),
             'seo_title'            => __( 'SEO title', 'seo-booster' ),
             'seo_description'      => __( 'Meta description', 'seo-booster' ),
-            'empty'                => __( '—', 'seo-booster' ),
+            'empty'                => __( '-', 'seo-booster' ),
+            'process_selected'     => __( 'Process selected', 'seo-booster' ),
+            'process_selected_n'   => __( 'Process selected (%d)', 'seo-booster' ),
             'process_all_matching' => __( 'Process all matching (%d)', 'seo-booster' ),
             'confirm_process_all'  => __( 'Process all %d matching items? This may take a long time. Keep this tab open.', 'seo-booster' ),
             'tab_warning'          => __( 'Keep this browser tab open while content is processing. Leaving or closing the tab will stop the batch.', 'seo-booster' ),
@@ -679,10 +706,11 @@ class Tools_Page {
             'revert_success'       => __( 'Previous values restored.', 'seo-booster' ),
             'issues_col'           => __( 'Issues', 'seo-booster' ),
             'content_col'          => __( 'Content', 'seo-booster' ),
-            'batch_cancelled'      => __( 'Cancelled after %1$s — %2$d processed, %3$d failed.', 'seo-booster' ),
             'title_complete'       => __( 'Complete: %1$d processed, %2$d failed', 'seo-booster' ),
             'title_cancelled'      => __( 'Cancelled: %1$d processed', 'seo-booster' ),
-            'item_skipped'         => __( 'Skipped — fields already filled (no AI call).', 'seo-booster' ),
+            'item_skipped'         => __( 'Skipped: fields already filled (no AI call).', 'seo-booster' ),
+            'ai_required'          => __( 'Enable AI (WordPress Connectors) to process results.', 'seo-booster' ),
+            'seo_plugin_required'  => __( 'An SEO plugin that supports writing titles and descriptions is required to process results.', 'seo-booster' ),
         );
     }
 
@@ -717,11 +745,15 @@ class Tools_Page {
             'processing'           => __( 'Processing %1$d of %2$d…', 'seo-booster' ),
             'batch_complete'       => __( 'Done: %1$d processed, %2$d failed.', 'seo-booster' ),
             'batch_cancelled'      => __( 'Cancelled: %1$d processed, %2$d failed.', 'seo-booster' ),
+            'process_selected'     => __( 'Process selected', 'seo-booster' ),
+            'process_selected_n'   => __( 'Process selected (%d)', 'seo-booster' ),
             'process_all_matching' => __( 'Process all matching (%d)', 'seo-booster' ),
             'confirm_process_all'  => __( 'Process all %d matching opportunities? This may take a long time. Keep this tab open.', 'seo-booster' ),
             'revert_confirm'       => __( 'Restore previous SEO titles and descriptions from your last bulk run?', 'seo-booster' ),
             'revert_success'       => __( 'Previous values restored.', 'seo-booster' ),
             'error'                => __( 'Error', 'seo-booster' ),
+            'ai_required'          => __( 'Enable AI (WordPress Connectors) to process results.', 'seo-booster' ),
+            'seo_plugin_required'  => __( 'An SEO plugin that supports writing titles and descriptions is required to process results.', 'seo-booster' ),
         );
     }
 
@@ -739,6 +771,8 @@ class Tools_Page {
             'processing'           => __( 'Processing %1$d of %2$d…', 'seo-booster' ),
             'batch_complete'       => __( 'Done: %1$d processed, %2$d failed.', 'seo-booster' ),
             'batch_cancelled'      => __( 'Cancelled: %1$d processed, %2$d failed.', 'seo-booster' ),
+            'process_selected'     => __( 'Apply selected', 'seo-booster' ),
+            'process_selected_n'   => __( 'Apply selected (%d)', 'seo-booster' ),
             'process_all_matching' => __( 'Apply all matching (%d)', 'seo-booster' ),
             'confirm_process_all'  => __( 'Apply focus keywords to all %d matching items?', 'seo-booster' ),
             'revert_confirm'       => __( 'Restore previous focus keywords from your last bulk run?', 'seo-booster' ),
@@ -746,10 +780,10 @@ class Tools_Page {
             'choose_keyword'       => __( 'Choose focus keyword', 'seo-booster' ),
             'show_suggestions'     => __( 'Show GSC suggestions (%d)', 'seo-booster' ),
             'hide_suggestions'     => __( 'Hide GSC suggestions', 'seo-booster' ),
-            'custom_keyword'       => __( 'Custom keyword — edit or pick a suggestion below.', 'seo-booster' ),
+            'custom_keyword'       => __( 'Custom keyword: edit or pick a suggestion below.', 'seo-booster' ),
             'impressions_short'    => __( 'Impr.', 'seo-booster' ),
             'position_short'       => __( 'Pos.', 'seo-booster' ),
-            'no_metrics'           => __( '—', 'seo-booster' ),
+            'no_metrics'           => __( '-', 'seo-booster' ),
             'error'                => __( 'Error', 'seo-booster' ),
         );
     }
@@ -767,6 +801,8 @@ class Tools_Page {
             'processing'            => __( 'Processing %1$d of %2$d…', 'seo-booster' ),
             'batch_complete'        => __( 'Done: %1$d processed, %2$d failed.', 'seo-booster' ),
             'batch_cancelled'       => __( 'Cancelled: %1$d processed, %2$d failed.', 'seo-booster' ),
+            'process_selected'      => __( 'Apply selected', 'seo-booster' ),
+            'process_selected_n'    => __( 'Apply selected (%d)', 'seo-booster' ),
             'process_all_matching'  => __( 'Apply all matching (%d)', 'seo-booster' ),
             'confirm_process_all'   => __( 'Apply all %d matching items?', 'seo-booster' ),
             'revert_confirm'        => __( 'Remove autolink rules created in your last batch?', 'seo-booster' ),

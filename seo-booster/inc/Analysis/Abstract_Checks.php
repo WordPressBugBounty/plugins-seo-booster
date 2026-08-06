@@ -228,6 +228,14 @@ abstract class Abstract_Checks implements Check_Interface {
 			);
 		}
 
+		if ( ! \Cleverplugins\SEOBooster\Utils::is_safe_outbound_url( $url ) ) {
+			return array(
+				'status'      => 'broken',
+				'status_code' => 0,
+				'error'       => 'Blocked private or local URL',
+			);
+		}
+
 		$response = wp_remote_head(
 			$url,
 			array(
@@ -277,6 +285,14 @@ abstract class Abstract_Checks implements Check_Interface {
 	 * @return array<string, mixed>
 	 */
 	public static function check_link_status( $url ) {
+		if ( ! \Cleverplugins\SEOBooster\Utils::is_safe_outbound_url( $url ) ) {
+			return array(
+				'status'      => 'skipped',
+				'status_code' => 0,
+				'error'       => 'Blocked private or local URL',
+			);
+		}
+
 		$response = wp_remote_head(
 			$url,
 			array(
@@ -288,8 +304,9 @@ abstract class Abstract_Checks implements Check_Interface {
 
 		if ( is_wp_error( $response ) ) {
 			return array(
-				'status' => 'broken',
-				'error'  => $response->get_error_message(),
+				'status'      => 'inconclusive',
+				'status_code' => 0,
+				'error'       => $response->get_error_message(),
 			);
 		}
 
@@ -304,10 +321,28 @@ abstract class Abstract_Checks implements Check_Interface {
 			);
 		}
 
+		// Only HTTP 404 is a confirmed missing link for customer-facing possibilities.
+		if ( 404 === $status_code ) {
+			return array(
+				'status'      => 'broken',
+				'status_code' => $status_code,
+				'error'       => 'HTTP 404 error',
+			);
+		}
+
+		if ( 403 === $status_code ) {
+			return array(
+				'status'      => 'blocked',
+				'status_code' => $status_code,
+				'error'       => 'HTTP 403 error',
+			);
+		}
+
 		if ( $status_code >= 400 ) {
 			return array(
-				'status' => 'broken',
-				'error'  => sprintf( 'HTTP %d error', $status_code ),
+				'status'      => 'inconclusive',
+				'status_code' => $status_code,
+				'error'       => sprintf( 'HTTP %d error', $status_code ),
 			);
 		}
 
@@ -471,5 +506,15 @@ abstract class Abstract_Checks implements Check_Interface {
 		}
 
 		return Html_Document::SCOPE_CONTENT;
+	}
+
+	/**
+	 * UTF-8-aware word count for analysis text.
+	 *
+	 * @param string $text Plain or lightly marked text.
+	 * @return int
+	 */
+	protected function count_words( $text ) {
+		return Html_Document::count_words( $text );
 	}
 }

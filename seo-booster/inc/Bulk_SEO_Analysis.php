@@ -96,8 +96,16 @@ class Bulk_SEO_Analysis {
 				continue;
 			}
 
+			if ( ! current_user_can( 'edit_post', $post_id ) ) {
+				continue;
+			}
+
 			$post = get_post( $post_id );
 			if ( ! $post ) {
+				continue;
+			}
+
+			if ( ! Utils::user_can_edit_object( $post_id ) ) {
 				continue;
 			}
 
@@ -179,6 +187,10 @@ class Bulk_SEO_Analysis {
 			wp_send_json_error( array( 'message' => __( 'Invalid parameters', 'seo-booster' ) ) );
 		}
 
+		if ( ! Utils::user_can_edit_object( $post_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied', 'seo-booster' ) ) );
+		}
+
 		$transient_key = 'sb_seo_bulk_batch_' . $batch_id;
 		$batch_status  = get_transient( $transient_key );
 
@@ -235,12 +247,12 @@ class Bulk_SEO_Analysis {
 				)
 			);
 		} catch ( \Exception $e ) {
-			Utils::log( 'Bulk SEO analysis failed for post ' . $post_id . ': ' . $e->getMessage(), 2 );
+			Utils::log( sprintf( 'SEO analysis failed for post %d: %s', $post_id, $e->getMessage() ), 2 );
 			self::update_batch_status( $batch_id, 'failed', $post_id );
 
 			wp_send_json_error(
 				array(
-					'message' => $e->getMessage(),
+					'message' => __( 'Something went wrong. Check the SEO Booster debug log for details.', 'seo-booster' ),
 					'post_id' => $post_id,
 				)
 			);

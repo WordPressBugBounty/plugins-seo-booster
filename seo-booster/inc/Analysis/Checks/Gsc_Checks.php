@@ -7,7 +7,6 @@ use Cleverplugins\SEOBooster\Analysis\Content_Context;
 use Cleverplugins\SEOBooster\Analysis\Gsc_Inspection_Cache;
 use Cleverplugins\SEOBooster\Analysis\Html_Document;
 use Cleverplugins\SEOBooster\Analysis\Result_Set;
-use Cleverplugins\SEOBooster\Analysis\Severity;
 use Cleverplugins\SEOBooster\Google_API;
 use Cleverplugins\SEOBooster\Utils;
 
@@ -80,7 +79,7 @@ class Gsc_Checks extends Abstract_Checks {
 			$url
 		);
 
-		$results = $wpdb->get_results( $query, ARRAY_A );
+		$results = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
 		return $results ? $results : array();
 	}
 
@@ -132,93 +131,22 @@ class Gsc_Checks extends Abstract_Checks {
 		}
 
 		$inspection_result = $inspection_data['inspectionResult'] ?? array();
-		if ( empty( $inspection_result ) ) {
+		if ( empty( $inspection_result ) || ! is_array( $inspection_result ) ) {
 			$context->record_gsc_check_status( 'status', 'not_applicable', __( 'No inspection result available', 'seo-booster' ) );
 			$results->add_not_applicable( 'gsc_status_skipped_no_result', __( 'Google Search Console: Indexing & Structured Data check skipped (No inspection result available).', 'seo-booster' ) );
 			return;
 		}
 
-		$index_status = $inspection_result['indexStatusResult'] ?? array();
-		$rich_results = $inspection_result['richResultsResult'] ?? array();
-		$issues_found = false;
+		$index_status = isset( $inspection_result['indexStatusResult'] ) && is_array( $inspection_result['indexStatusResult'] )
+			? $inspection_result['indexStatusResult']
+			: array();
+		$rich_results = isset( $inspection_result['richResultsResult'] ) && is_array( $inspection_result['richResultsResult'] )
+			? $inspection_result['richResultsResult']
+			: array();
 
-		if ( ! empty( $index_status ) ) {
-			$indexing_state = $index_status['indexingState'] ?? '';
-			$coverage_state = $index_status['coverageState'] ?? '';
-			$verdict        = $index_status['verdict'] ?? '';
-
-			if ( ! empty( $indexing_state ) && 'INDEXING_ALLOWED' !== $indexing_state ) {
-				$severity = $this->map_gsc_severity( $indexing_state, $coverage_state );
-				$message  = $this->translate_gsc_term( $indexing_state );
-				if ( ! empty( $coverage_state ) && 'PASS' !== $coverage_state ) {
-					$message .= ' - ' . $this->translate_gsc_term( $coverage_state );
-				}
-
-				$issue_key = 'gsc_indexing_' . strtolower( str_replace( '_', '-', $indexing_state ) );
-				if ( Severity::ERROR === $severity ) {
-					$results->add_error(
-						$issue_key,
-						$message,
-						array(
-							'source'         => 'gsc',
-							'indexing_state' => $indexing_state,
-							'coverage_state' => $coverage_state,
-							'verdict'        => $verdict,
-						)
-					);
-				} else {
-					$results->add_warning(
-						$issue_key,
-						$message,
-						array(
-							'source'         => 'gsc',
-							'indexing_state' => $indexing_state,
-							'coverage_state' => $coverage_state,
-							'verdict'        => $verdict,
-						)
-					);
-				}
-				$issues_found = true;
-			}
-		}
-
-		if ( ! empty( $rich_results['detectedItems'] ) && is_array( $rich_results['detectedItems'] ) ) {
-			foreach ( $rich_results['detectedItems'] as $item ) {
-				$rich_result_type = isset( $item['richResultType'] ) ? sanitize_text_field( $item['richResultType'] ) : '';
-				if ( empty( $rich_result_type ) || empty( $item['items'] ) || ! is_array( $item['items'] ) ) {
-					continue;
-				}
-
-				foreach ( $item['items'] as $item_data ) {
-					if ( empty( $item_data['issues'] ) || ! is_array( $item_data['issues'] ) ) {
-						continue;
-					}
-
-					foreach ( $item_data['issues'] as $issue ) {
-						$issue_message  = isset( $issue['issueMessage'] ) ? sanitize_text_field( $issue['issueMessage'] ) : '';
-						$issue_severity = isset( $issue['severity'] ) ? sanitize_text_field( $issue['severity'] ) : '';
-						if ( empty( $issue_message ) ) {
-							continue;
-						}
-
-						$issue_key = 'gsc_structured_' . strtolower( str_replace( ' ', '-', $rich_result_type ) );
-						$message   = sprintf( __( '%1$s: %2$s', 'seo-booster' ), $rich_result_type, $issue_message );
-						$extra     = array(
-							'source'           => 'gsc',
-							'rich_result_type' => $rich_result_type,
-							'issue_message'    => $issue_message,
-							'severity_raw'     => $issue_severity,
-						);
-
-						if ( 'ERROR' === $issue_severity ) {
-							$results->add_error( $issue_key, $message, $extra );
-						} else {
-							$results->add_warning( $issue_key, $message, $extra );
-						}
-						$issues_found = true;
-					}
-				}
-			}
+		$issues_found = $this->apply_index_status_signals( $index_status, $results );
+		if ( $this->apply_rich_result_signals( $rich_results, $results ) ) {
+			$issues_found = true;
 		}
 
 		if ( $issues_found ) {
@@ -226,25 +154,256 @@ class Gsc_Checks extends Abstract_Checks {
 			return;
 		}
 
-		$context->record_gsc_check_status( 'status', 'no_data', '' );
-		$results->add_good( 'gsc_status_ok', __( 'Google Search Console: No indexing or structured data issues found.', 'seo-booster' ) );
+		$verdict = isset( $index_status['verdict'] ) ? (string) $index_status['verdict'] : '';
+		if ( 'PASS' === $verdict ) {
+			$context->record_gsc_check_status( 'status', 'no_data', '' );
+			$results->add_good( 'gsc_status_ok', __( 'Google Search Console: No indexing or structured data issues found.', 'seo-booster' ) );
+			return;
+		}
+
+		// Unknown / unspecified / NEUTRAL without blockers: stay silent (no HIGH, no false "ok").
+		$context->record_gsc_check_status( 'status', 'inconclusive', __( 'Inspection returned no clear pass or blocker', 'seo-booster' ) );
+		$results->add_not_applicable(
+			'gsc_status_inconclusive',
+			__( 'Google Search Console: Indexing status is inconclusive (URL may be unknown or not yet fully evaluated).', 'seo-booster' )
+		);
 	}
 
 	/**
-	 * @param string $indexing_state Indexing state.
-	 * @param string $coverage_state Coverage state.
+	 * Apply indexStatusResult decision table. Returns true when any issue was added.
+	 *
+	 * @param array      $index_status Index status result.
+	 * @param Result_Set $results Results.
+	 * @return bool
+	 */
+	private function apply_index_status_signals( array $index_status, Result_Set $results ) {
+		if ( empty( $index_status ) ) {
+			return false;
+		}
+
+		$issues_found   = false;
+		$indexing_state = isset( $index_status['indexingState'] ) ? (string) $index_status['indexingState'] : '';
+		$coverage_state = isset( $index_status['coverageState'] ) ? (string) $index_status['coverageState'] : '';
+		$verdict        = isset( $index_status['verdict'] ) ? (string) $index_status['verdict'] : '';
+		$robots_state   = isset( $index_status['robotsTxtState'] ) ? (string) $index_status['robotsTxtState'] : '';
+		$fetch_state    = isset( $index_status['pageFetchState'] ) ? (string) $index_status['pageFetchState'] : '';
+		$extra_base     = array(
+			'source'         => 'gsc',
+			'indexing_state' => $indexing_state,
+			'coverage_state' => $coverage_state,
+			'verdict'        => $verdict,
+			'robots_state'   => $robots_state,
+			'fetch_state'    => $fetch_state,
+		);
+
+		$hard_indexing_blockers = array(
+			'BLOCKED_BY_META_TAG',
+			'BLOCKED_BY_HTTP_HEADER',
+			'BLOCKED_BY_ROBOTS_TXT',
+		);
+		if ( in_array( $indexing_state, $hard_indexing_blockers, true ) ) {
+			$results->add_error(
+				'gsc_indexing_' . $this->gsc_key_slug( $indexing_state ),
+				$this->translate_gsc_term( $indexing_state ),
+				$extra_base
+			);
+			$issues_found = true;
+		}
+
+		if ( 'DISALLOWED' === $robots_state ) {
+			$results->add_error(
+				'gsc_robots_disallowed',
+				$this->translate_gsc_term( 'DISALLOWED' ),
+				$extra_base
+			);
+			$issues_found = true;
+		}
+
+		$hard_fetch_states = array(
+			'NOT_FOUND',
+			'SERVER_ERROR',
+			'ACCESS_DENIED',
+			'ACCESS_FORBIDDEN',
+			'REDIRECT_ERROR',
+			'BLOCKED_4XX',
+			'INVALID_URL',
+			'BLOCKED_ROBOTS_TXT',
+		);
+		if ( in_array( $fetch_state, $hard_fetch_states, true ) ) {
+			$results->add_error(
+				'gsc_fetch_' . $this->gsc_key_slug( $fetch_state ),
+				$this->translate_gsc_term( $fetch_state ),
+				$extra_base
+			);
+			$issues_found = true;
+		}
+
+		if ( 'SOFT_404' === $fetch_state || 'SOFT_404' === $indexing_state ) {
+			$results->add_opportunity(
+				'gsc_soft_404',
+				__( 'Google may treat this URL as a soft 404.', 'seo-booster' ),
+				$extra_base
+			);
+			$issues_found = true;
+		}
+
+		if ( $this->coverage_indicates_not_indexed( $coverage_state ) ) {
+			$results->add_opportunity(
+				'gsc_coverage_not_indexed',
+				sprintf(
+					/* translators: %s: GSC coverage state text from the API */
+					__( 'Google coverage: %s', 'seo-booster' ),
+					$coverage_state
+				),
+				$extra_base
+			);
+			$issues_found = true;
+		}
+
+		$user_canonical   = isset( $index_status['userCanonical'] ) ? (string) $index_status['userCanonical'] : '';
+		$google_canonical = isset( $index_status['googleCanonical'] ) ? (string) $index_status['googleCanonical'] : '';
+		if ( $user_canonical !== '' && $google_canonical !== '' && ! $this->gsc_urls_match( $user_canonical, $google_canonical ) ) {
+			$results->add_opportunity(
+				'gsc_canonical_mismatch',
+				sprintf(
+					/* translators: 1: user canonical URL, 2: Google-selected canonical URL */
+					__( 'Canonical mismatch: declared %1$s, Google selected %2$s.', 'seo-booster' ),
+					$user_canonical,
+					$google_canonical
+				),
+				array_merge(
+					$extra_base,
+					array(
+						'user_canonical'   => $user_canonical,
+						'google_canonical' => $google_canonical,
+					)
+				)
+			);
+			$issues_found = true;
+		}
+
+		// INDEXING_STATE_UNSPECIFIED and other unknown enums: no issue by themselves.
+		return $issues_found;
+	}
+
+	/**
+	 * Apply rich result issues. ERROR → critical; WARNING → opportunity; empty severity ignored.
+	 *
+	 * @param array      $rich_results Rich results payload.
+	 * @param Result_Set $results Results.
+	 * @return bool
+	 */
+	private function apply_rich_result_signals( array $rich_results, Result_Set $results ) {
+		if ( empty( $rich_results['detectedItems'] ) || ! is_array( $rich_results['detectedItems'] ) ) {
+			return false;
+		}
+
+		$issues_found = false;
+		foreach ( $rich_results['detectedItems'] as $item ) {
+			$rich_result_type = isset( $item['richResultType'] ) ? sanitize_text_field( $item['richResultType'] ) : '';
+			if ( $rich_result_type === '' || empty( $item['items'] ) || ! is_array( $item['items'] ) ) {
+				continue;
+			}
+
+			foreach ( $item['items'] as $item_data ) {
+				if ( empty( $item_data['issues'] ) || ! is_array( $item_data['issues'] ) ) {
+					continue;
+				}
+
+				foreach ( $item_data['issues'] as $issue ) {
+					$issue_message  = isset( $issue['issueMessage'] ) ? sanitize_text_field( $issue['issueMessage'] ) : '';
+					$issue_severity = isset( $issue['severity'] ) ? sanitize_text_field( $issue['severity'] ) : '';
+					if ( $issue_message === '' || $issue_severity === '' ) {
+						continue;
+					}
+
+					$issue_identity = isset( $issue['issueMessage'] ) ? md5( strtolower( $issue_message ) ) : 'unknown';
+					$issue_key      = 'gsc_structured_' . $this->gsc_key_slug( $rich_result_type ) . '_' . substr( $issue_identity, 0, 8 );
+					$message        = sprintf(
+						/* translators: 1: rich result type, 2: issue message */
+						__( '%1$s: %2$s', 'seo-booster' ),
+						$rich_result_type,
+						$issue_message
+					);
+					$extra = array(
+						'source'           => 'gsc',
+						'rich_result_type' => $rich_result_type,
+						'issue_message'    => $issue_message,
+						'severity_raw'     => $issue_severity,
+					);
+
+					if ( 'ERROR' === $issue_severity ) {
+						$results->add_error( $issue_key, $message, $extra );
+						$issues_found = true;
+					} elseif ( 'WARNING' === $issue_severity ) {
+						$results->add_opportunity( $issue_key, $message, $extra );
+						$issues_found = true;
+					}
+				}
+			}
+		}
+
+		return $issues_found;
+	}
+
+	/**
+	 * Whether coverage text indicates crawled/discovered but not indexed.
+	 *
+	 * @param string $coverage_state Free-text coverage state from GSC.
+	 * @return bool
+	 */
+	private function coverage_indicates_not_indexed( $coverage_state ) {
+		$coverage_state = trim( (string) $coverage_state );
+		if ( $coverage_state === '' ) {
+			return false;
+		}
+
+		// Unknown to Google is not a blocker by itself (often UNSPECIFIED companion text).
+		if ( false !== stripos( $coverage_state, 'unknown to Google' ) ) {
+			return false;
+		}
+
+		$needles = array(
+			'currently not indexed',
+			'Discovered - currently not indexed',
+			'Crawled - currently not indexed',
+		);
+		foreach ( $needles as $needle ) {
+			if ( false !== stripos( $coverage_state, $needle ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Normalize and compare two URLs for canonical equality.
+	 *
+	 * @param string $a First URL.
+	 * @param string $b Second URL.
+	 * @return bool
+	 */
+	private function gsc_urls_match( $a, $b ) {
+		$normalize = static function ( $url ) {
+			$url = strtolower( untrailingslashit( (string) $url ) );
+			$url = preg_replace( '#^https?://#', '', $url );
+			return $url;
+		};
+
+		return $normalize( $a ) === $normalize( $b );
+	}
+
+	/**
+	 * Slugify a GSC enum / type for issue keys.
+	 *
+	 * @param string $value Raw value.
 	 * @return string
 	 */
-	private function map_gsc_severity( $indexing_state, $coverage_state = '' ) {
-		if ( in_array( $indexing_state, array( 'BLOCKED_BY_META_TAG', 'BLOCKED_BY_ROBOTS_TXT' ), true ) ) {
-			return Severity::ERROR;
-		}
-
-		if ( 'INDEXING_ALLOWED' !== $indexing_state ) {
-			return Severity::WARNING;
-		}
-
-		return Severity::WARNING;
+	private function gsc_key_slug( $value ) {
+		$value = strtolower( (string) $value );
+		$value = preg_replace( '/[^a-z0-9]+/', '-', $value );
+		return trim( (string) $value, '-' );
 	}
 
 	/**
@@ -253,13 +412,24 @@ class Gsc_Checks extends Abstract_Checks {
 	 */
 	private function translate_gsc_term( $technical_term ) {
 		$translations = array(
-			'BLOCKED_BY_META_TAG'   => __( 'Page is set to not be indexed', 'seo-booster' ),
-			'BLOCKED_BY_ROBOTS_TXT' => __( 'Page is blocked by robots.txt', 'seo-booster' ),
-			'NOT_FOUND'             => __( 'Page not found (404 error)', 'seo-booster' ),
-			'INDEXING_ALLOWED'      => __( 'Indexing is allowed', 'seo-booster' ),
-			'FAIL'                  => __( "Google can't index this page", 'seo-booster' ),
-			'PASS'                  => __( 'Page is indexed', 'seo-booster' ),
-			'NEUTRAL'               => __( 'Page is excluded from indexing', 'seo-booster' ),
+			'BLOCKED_BY_META_TAG'      => __( 'Page is set to not be indexed (meta robots)', 'seo-booster' ),
+			'BLOCKED_BY_HTTP_HEADER'   => __( 'Page is set to not be indexed (HTTP header)', 'seo-booster' ),
+			'BLOCKED_BY_ROBOTS_TXT'    => __( 'Page is blocked by robots.txt', 'seo-booster' ),
+			'DISALLOWED'               => __( 'Page is disallowed by robots.txt', 'seo-booster' ),
+			'NOT_FOUND'                => __( 'Page not found (404 error)', 'seo-booster' ),
+			'SERVER_ERROR'             => __( 'Google got a server error when fetching this page', 'seo-booster' ),
+			'ACCESS_DENIED'            => __( 'Google was denied access when fetching this page', 'seo-booster' ),
+			'ACCESS_FORBIDDEN'         => __( 'Google was forbidden from fetching this page', 'seo-booster' ),
+			'REDIRECT_ERROR'           => __( 'Google hit a redirect error when fetching this page', 'seo-booster' ),
+			'BLOCKED_4XX'              => __( 'Google got a 4xx response when fetching this page', 'seo-booster' ),
+			'INVALID_URL'              => __( 'Google considers this URL invalid', 'seo-booster' ),
+			'BLOCKED_ROBOTS_TXT'       => __( 'Google could not fetch this page because of robots.txt', 'seo-booster' ),
+			'INDEXING_ALLOWED'         => __( 'Indexing is allowed', 'seo-booster' ),
+			'INDEXING_STATE_UNSPECIFIED' => __( 'Indexing state unknown', 'seo-booster' ),
+			'FAIL'                     => __( "Google can't index this page", 'seo-booster' ),
+			'PASS'                     => __( 'Page is indexed', 'seo-booster' ),
+			'NEUTRAL'                  => __( 'Page is excluded from indexing', 'seo-booster' ),
+			'SOFT_404'                 => __( 'Google may treat this URL as a soft 404', 'seo-booster' ),
 		);
 
 		return $translations[ $technical_term ] ?? $technical_term;
@@ -468,7 +638,7 @@ class Gsc_Checks extends Abstract_Checks {
 			$url
 		);
 
-		$rows = $wpdb->get_results( $query, ARRAY_A );
+		$rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
 		if ( empty( $rows ) ) {
 			$context->record_gsc_check_status( 'keyword_cannibalization', 'no_data', '' );
 			$results->add_good( 'gsc_no_cannibalization', __( 'Google Search Console: No keyword cannibalization detected.', 'seo-booster' ) );
@@ -635,7 +805,7 @@ class Gsc_Checks extends Abstract_Checks {
 			$url
 		);
 
-		$rows = $wpdb->get_results( $query, ARRAY_A );
+		$rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
 		if ( empty( $rows ) ) {
 			$context->record_gsc_check_status( 'content_freshness', 'no_data', __( 'No traffic data available for comparison', 'seo-booster' ) );
 			return;

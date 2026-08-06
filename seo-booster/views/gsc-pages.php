@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Ensure the list table class is loaded and initialized
 if ( ! class_exists( 'Cleverplugins\SEOBooster\SB_GSC_List_Table' ) ) {
-	require_once plugin_dir_path( __FILE__ ) . 'class-gsc-list-table.php'; // Adjust the path as needed
+	require_once SEOBOOSTER_PLUGINPATH . 'inc/SB_GSC_List_Table.php';
 }
 
 // Initialize the list table
@@ -25,18 +25,20 @@ $sb_gsc_filter_submitted    = isset( $_GET['sb_gsc_filtered'] );
 $sb_traffic_30_days_checked = $sb_gsc_filter_submitted ? isset( $_GET['traffic_30_days'] ) : true;
 
 ?>
-<div class="wrap">
+<div class="wrap sb-wrap sb-dashboard sb-gsc-page">
 
 	<?php
-	// Display the plugin headline
 	echo wp_kses_post( Utils::show_plugin_headline( 'Google Search Console Overview', true ) );
 	?>
 
-	<div id="sb2fof" class="clearfix clear"></div>
-
+	<section class="sb-ui-panel sb-gsc-results" aria-labelledby="sb-gsc-results-title">
+		<h2 class="sb-ui-title" id="sb-gsc-results-title"><?php esc_html_e( 'Keywords and pages', 'seo-booster' ); ?></h2>
+		<p class="sb-ui-lead">
+			<?php esc_html_e( 'Search and filter keywords imported from Google Search Console.', 'seo-booster' ); ?>
+		</p>
 
 	<!-- The form for searching and filtering results -->
-	<form id="urls-filter" method="get" style="margin-bottom: 15px;">
+	<form id="urls-filter" method="get">
 		<div class="sb-filter-container">
 			<div class="sb-filter-row">
 				<!-- Search Section -->
@@ -103,10 +105,13 @@ $sb_traffic_30_days_checked = $sb_gsc_filter_submitted ? isset( $_GET['traffic_3
 				</div>
 			</div>
 		</div>
+		<div class="sb-gsc-table-wrap">
 		<?php
 		$gsc_list_table->display();
 		?>
+		</div>
 	</form>
+	</section>
 </div>
 
 <script>

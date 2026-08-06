@@ -119,12 +119,13 @@ class CacheManager {
 	 * @return array An array containing the fetched content and cache status.
 	 */
 	public static function fetch_and_cache_url_content( string $url, array $args = array() ): array {
-		$post_id      = isset( $args['post_id'] ) ? $args['post_id'] : false;
-		$content_type = isset( $args['content_type'] ) ? $args['content_type'] : 'post';
-		$item_id      = isset( $args['item_id'] ) ? $args['item_id'] : 0;
+		$post_id             = isset( $args['post_id'] ) ? $args['post_id'] : false;
+		$content_type        = isset( $args['content_type'] ) ? $args['content_type'] : 'post';
+		$item_id             = isset( $args['item_id'] ) ? $args['item_id'] : 0;
+		$require_ok_response = ! empty( $args['require_ok_response'] );
 
-		if ( ! wp_http_validate_url( $url ) ) {
-			Utils::log( 'Invalid URL provided', 2 );
+		if ( ! Utils::is_safe_outbound_url( $url, array( 'allow_same_host' => true ) ) ) {
+			Utils::log( 'Invalid or blocked URL provided', 2 );
 			return array(
 				'error'  => __( 'Invalid URL', 'seo-booster' ),
 				'cached' => false,
@@ -157,8 +158,8 @@ class CacheManager {
 		$cache_key  = self::generate_cache_key( $url, $modified_time );
 		$cache_file = self::$cache_dir . $cache_key;
 
-		// Check if cache exists and is valid
-		if ( self::$filesystem->exists( $cache_file ) ) {
+		// Analysis fetches skip disk cache: older entries may be redirect-followed bodies.
+		if ( ! $require_ok_response && self::$filesystem->exists( $cache_file ) ) {
 			// For posts, check if the post has been modified
 			if ( $post_id ) {
 				$post_modified_time = get_post_modified_time( 'U', false, $post_id );
@@ -210,19 +211,23 @@ class CacheManager {
 
 		$sslverify = apply_filters( 'seo_booster_ssl_verify', ! $is_local_site );
 
-		// Fetch the content from the URL
-		$response = wp_remote_get(
-			$url,
-			array(
-				'sslverify'  => $sslverify,
-				'timeout'    => 30,
-				'user-agent' => 'SEO Booster/1.0',
-				'headers'    => array(
-					'Accept-Encoding' => 'gzip, deflate',
-				),
-				'decompress' => true,
-			)
+		$request_args = array(
+			'sslverify'  => $sslverify,
+			'timeout'    => 30,
+			'user-agent' => 'SEO Booster/1.0',
+			'headers'    => array(
+				'Accept-Encoding' => 'gzip, deflate',
+			),
+			'decompress' => true,
 		);
+
+		// Analysis fetches must not silently follow redirects or cache error pages.
+		if ( $require_ok_response ) {
+			$request_args['redirection'] = 0;
+		}
+
+		// Fetch the content from the URL
+		$response = wp_remote_get( $url, $request_args );
 
 		if ( is_wp_error( $response ) ) {
 			$parsed_url   = wp_parse_url( $url );
@@ -236,6 +241,39 @@ class CacheManager {
 			);
 		}
 
+		$status_code = (int) wp_remote_retrieve_response_code( $response );
+		$headers     = wp_remote_retrieve_headers( $response );
+		$redirect_to = '';
+		if ( is_object( $headers ) && isset( $headers['location'] ) ) {
+			$redirect_to = (string) $headers['location'];
+		} elseif ( is_array( $headers ) && isset( $headers['location'] ) ) {
+			$redirect_to = (string) $headers['location'];
+		}
+
+		if ( $require_ok_response ) {
+			$is_redirect = ( $status_code >= 300 && $status_code < 400 );
+			$is_error    = ( $status_code >= 400 || 0 === $status_code );
+			if ( $is_redirect || $is_error ) {
+				$parsed_url   = wp_parse_url( $url );
+				$stripped_url = isset( $parsed_url['path'] ) ? $parsed_url['path'] : '';
+				Utils::log(
+					sprintf(
+						'Rejected URL fetch for analysis: %1$s (HTTP %2$d)',
+						$stripped_url,
+						$status_code
+					),
+					2
+				);
+				return array(
+					'error'       => sprintf( 'HTTP %d', $status_code ),
+					'status_code' => $status_code,
+					'redirect_to' => $redirect_to,
+					'cached'      => false,
+					'duration'    => Utils::timerstop( 'fetch_url', 5 ),
+				);
+			}
+		}
+
 		$content = wp_remote_retrieve_body( $response );
 		self::create_cache_file( $cache_file, $content, $url );
 
@@ -244,11 +282,12 @@ class CacheManager {
 		$stripped_url = isset( $parsed_url['path'] ) ? $parsed_url['path'] : '';
 
 		return array(
-			'content'  => $content,
-			'cached'   => false,
-			'size'     => strlen( $content ),
-			'time'     => time(),
-			'duration' => $time_taken,
+			'content'     => $content,
+			'cached'      => false,
+			'size'        => strlen( $content ),
+			'time'        => time(),
+			'duration'    => $time_taken,
+			'status_code' => $status_code,
 		);
 	}
 

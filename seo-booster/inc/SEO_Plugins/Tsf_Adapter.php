@@ -98,6 +98,34 @@ class Tsf_Adapter extends Abstract_Post_Meta_Adapter {
 	}
 
 	/**
+	 * @param int $post_id Post ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_post_seo_resolved( $post_id ) {
+		$raw = $this->read_post_seo( $post_id );
+		if ( ! function_exists( 'tsf' ) ) {
+			return $raw;
+		}
+
+		try {
+			$tsf = tsf();
+			if ( is_object( $tsf ) && method_exists( $tsf, 'get_title' ) && method_exists( $tsf, 'get_description' ) ) {
+				$title = (string) $tsf->get_title( array(), (int) $post_id );
+				$desc  = (string) $tsf->get_description( array(), (int) $post_id );
+				if ( $title !== '' || $desc !== '' ) {
+					return array(
+						'title'       => sanitize_text_field( $title !== '' ? $title : $raw['title'] ),
+						'description' => sanitize_textarea_field( $desc !== '' ? $desc : $raw['description'] ),
+					);
+				}
+			}
+		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Keep raw.
+		}
+
+		return $raw;
+	}
+
+	/**
 	 * @param int    $post_id Post ID.
 	 * @param string $title   Title.
 	 * @return void
@@ -126,13 +154,67 @@ class Tsf_Adapter extends Abstract_Post_Meta_Adapter {
 	}
 
 	/**
+	 * @param string $field_type title|description|both
+	 * @return array{title_key?: string, description_key?: string}
+	 */
+	public function get_term_meta_keys( $field_type = 'both' ) {
+		// TSF stores term SEO in autodescription-term-settings (not flat termmeta keys).
+		return array();
+	}
+
+	/**
+	 * @param int $term_id Term ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_term_seo( $term_id ) {
+		$term_id = (int) $term_id;
+		if ( $this->tsf_can_use_term_api() ) {
+			$term_api = tsf()->data()->plugin()->term();
+			$title    = '';
+			$desc     = '';
+			if ( method_exists( $term_api, 'get_meta_item' ) ) {
+				$title = (string) ( $term_api::get_meta_item( 'doctitle', $term_id ) ?? '' );
+				$desc  = (string) ( $term_api::get_meta_item( 'description', $term_id ) ?? '' );
+			}
+
+			return array(
+				'title'       => sanitize_text_field( $title ),
+				'description' => sanitize_textarea_field( $desc ),
+			);
+		}
+
+		$settings_key = defined( 'THE_SEO_FRAMEWORK_TERM_OPTIONS' ) ? THE_SEO_FRAMEWORK_TERM_OPTIONS : 'autodescription-term-settings';
+		$settings     = get_term_meta( $term_id, $settings_key, true );
+		if ( is_array( $settings ) ) {
+			return array(
+				'title'       => sanitize_text_field( (string) ( $settings['doctitle'] ?? '' ) ),
+				'description' => sanitize_textarea_field( (string) ( $settings['description'] ?? '' ) ),
+			);
+		}
+
+		// Legacy Genesis-style flat termmeta (older installs / unit tests).
+		return array(
+			'title'       => sanitize_text_field( (string) get_term_meta( $term_id, '_genesis_title', true ) ),
+			'description' => sanitize_textarea_field( (string) get_term_meta( $term_id, '_genesis_description', true ) ),
+		);
+	}
+
+	/**
+	 * @param int $term_id Term ID.
+	 * @return array{title: string, description: string}
+	 */
+	public function read_term_seo_resolved( $term_id ) {
+		return $this->read_term_seo( $term_id );
+	}
+
+	/**
 	 * @param int    $term_id Term ID.
 	 * @param string $title   Title.
 	 * @return void
 	 */
 	public function write_term_title( $term_id, $title ) {
 		if ( $this->tsf_can_use_term_api() ) {
-			tsf()->data()->plugin()->term()->update_single_meta_item( '_genesis_title', sanitize_text_field( $title ), $term_id );
+			tsf()->data()->plugin()->term()->update_single_meta_item( 'doctitle', sanitize_text_field( $title ), (int) $term_id );
 			return;
 		}
 
@@ -146,7 +228,7 @@ class Tsf_Adapter extends Abstract_Post_Meta_Adapter {
 	 */
 	public function write_term_description( $term_id, $description ) {
 		if ( $this->tsf_can_use_term_api() ) {
-			tsf()->data()->plugin()->term()->update_single_meta_item( '_genesis_description', sanitize_textarea_field( $description ), $term_id );
+			tsf()->data()->plugin()->term()->update_single_meta_item( 'description', sanitize_textarea_field( $description ), (int) $term_id );
 			return;
 		}
 

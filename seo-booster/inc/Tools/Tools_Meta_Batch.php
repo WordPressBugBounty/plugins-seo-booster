@@ -6,6 +6,7 @@ use Cleverplugins\SEOBooster\LLM_Content_Condenser;
 use Cleverplugins\SEOBooster\LLM_Helper;
 use Cleverplugins\SEOBooster\LLM_WP_Connector_Service;
 use Cleverplugins\SEOBooster\SEO_Plugin_Registry;
+use Cleverplugins\SEOBooster\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -85,6 +86,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 
 	/** @inheritDoc */
 	protected static function prepare_batch_from_request() {
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in Tools_Batch_Base::ajax_start_batch() before this runs.
 		$process_scope = isset( $_POST['process_scope'] )
 			? sanitize_text_field( wp_unslash( $_POST['process_scope'] ) )
 			: 'selected';
@@ -132,6 +134,19 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 			wp_send_json_error( array( 'message' => __( 'No matching content selected.', 'seo-booster' ) ) );
 		}
 
+		$post_ids = array_values(
+			array_filter(
+				$post_ids,
+				function ( $id ) {
+					return Utils::user_can_edit_object( (int) $id );
+				}
+			)
+		);
+
+		if ( empty( $post_ids ) ) {
+			wp_send_json_error( array( 'message' => __( 'No matching content selected.', 'seo-booster' ) ) );
+		}
+
 		$apply_fields = Tools_Meta_Scanner::parse_apply_fields(
 			isset( $_POST['apply_fields'] ) && is_array( $_POST['apply_fields'] )
 				? wp_unslash( $_POST['apply_fields'] )
@@ -143,6 +158,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 		}
 
 		$overwrite = ! empty( $_POST['overwrite_existing'] );
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		return array(
 			'item_ids' => $post_ids,
@@ -175,7 +191,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 		$post_id = (int) $item_id;
 		$post    = get_post( $post_id );
 		if ( ! $post ) {
-			throw new \Exception( __( 'Post not found', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'Post not found', 'seo-booster' ) );
 		}
 
 		$apply_fields = isset( $config['apply_fields'] ) && is_array( $config['apply_fields'] )
@@ -193,7 +209,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 				'post_type'    => $post->post_type,
 				'edit_url'     => get_edit_post_link( $post_id, 'raw' ) ?: '',
 				'skipped'      => true,
-				'message'      => __( 'Skipped — selected fields already have values. Enable overwrite to update.', 'seo-booster' ),
+				'message'      => __( 'Skipped: selected fields already have values. Enable overwrite to update.', 'seo-booster' ),
 				'before'       => $before,
 				'after'        => $before,
 				'apply_fields' => $apply_fields,
@@ -216,6 +232,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 			'',
 			array(
 				'variant'       => LLM_WP_Connector_Service::VARIANT_BULK,
+				'source'        => 'tools-meta',
 				'fields_needed' => $writable_fields,
 				'gsc_limit'     => 10,
 			)
@@ -376,7 +393,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 		}
 
 		if ( empty( $picked ) ) {
-			throw new \Exception( __( 'AI did not return usable title or description suggestions.', 'seo-booster' ) );
+			throw new \Exception( esc_html__( 'AI did not return usable title or description suggestions.', 'seo-booster' ) );
 		}
 
 		return $picked;

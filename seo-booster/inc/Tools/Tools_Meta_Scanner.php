@@ -548,4 +548,81 @@ class Tools_Meta_Scanner {
 		}
 		return self::get_default_post_types();
 	}
+
+	/**
+	 * Count published posts/pages missing SEO title or description (setup wizard).
+	 *
+	 * Uses the same read path as scan(); capped for responsiveness.
+	 *
+	 * @param int $cap Max posts to inspect.
+	 * @return int
+	 */
+	public static function count_missing_title_or_description( $cap = 500 ) {
+		$cap   = max( 50, min( 2000, (int) $cap ) );
+		$count = 0;
+
+		$query = new \WP_Query(
+			array(
+				'post_type'              => self::get_default_post_types(),
+				'post_status'            => 'publish',
+				'posts_per_page'         => $cap,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => true,
+				'update_post_term_cache' => false,
+			)
+		);
+
+		foreach ( $query->posts as $post_id ) {
+			$post_id = (int) $post_id;
+			if ( $post_id <= 0 || SEO_Issues_Manager::should_exclude_from_analysis( $post_id ) ) {
+				continue;
+			}
+			$meta = SEO_Meta_Writer::read( $post_id );
+			if ( trim( (string) ( $meta['title'] ?? '' ) ) === '' || trim( (string) ( $meta['description'] ?? '' ) ) === '' ) {
+				++$count;
+			}
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Count published posts/pages missing a focus keyword (setup wizard).
+	 *
+	 * @param int $cap Max posts to inspect.
+	 * @return int
+	 */
+	public static function count_missing_focus_keyword( $cap = 500 ) {
+		if ( ! SEO_Plugin_Registry::supports_focus_keyword() ) {
+			return 0;
+		}
+
+		$cap   = max( 50, min( 2000, (int) $cap ) );
+		$count = 0;
+
+		$query = new \WP_Query(
+			array(
+				'post_type'              => self::get_default_post_types(),
+				'post_status'            => 'publish',
+				'posts_per_page'         => $cap,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => true,
+				'update_post_term_cache' => false,
+			)
+		);
+
+		foreach ( $query->posts as $post_id ) {
+			$post_id = (int) $post_id;
+			if ( $post_id <= 0 || SEO_Issues_Manager::should_exclude_from_analysis( $post_id ) ) {
+				continue;
+			}
+			if ( trim( SEO_Meta_Writer::read_focus_keyword( $post_id ) ) === '' ) {
+				++$count;
+			}
+		}
+
+		return $count;
+	}
 }

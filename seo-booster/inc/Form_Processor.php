@@ -189,9 +189,12 @@ class Form_Processor {
         $cleared_cache_files = self::clear_seo_booster_cache_files();
         self::cancel_all_plugin_cron_events();
         self::cancel_all_plugin_action_scheduler_jobs();
+        if ( class_exists( __NAMESPACE__ . '\\Setup_Wizard' ) ) {
+            Setup_Wizard::reset_to_pending();
+        }
         self::add_settings_notice( sprintf( 
             /* translators: 1: number of database tables truncated, 2: number of cache files removed */
-            __( 'Clear complete: %1$d database tables reset, GSC authentication removed, %2$d cache files deleted, and background jobs cancelled. Automatic link rules were preserved.', 'seo-booster' ),
+            __( 'Clear complete: %1$d database tables reset, GSC authentication removed, setup wizard reset, %2$d cache files deleted, and background jobs cancelled. Automatic link rules were preserved.', 'seo-booster' ),
             $tables_truncated,
             $cleared_cache_files
          ) );
@@ -572,7 +575,12 @@ class Form_Processor {
             if ( $cleared_count > 0 ) {
                 add_action( 'admin_notices', function () use($cleared_count, $cleared_size) {
                     echo '<div class="notice notice-success is-dismissible"><p>';
-                    printf( esc_html__( 'Cache cleared successfully! Removed %1$d files (%2$s).', 'seo-booster' ), $cleared_count, size_format( $cleared_size ) );
+                    printf( 
+                        /* translators: 1: number of files removed, 2: total size freed */
+                        esc_html__( 'Cache cleared successfully! Removed %1$d files (%2$s).', 'seo-booster' ),
+                        (int) $cleared_count,
+                        esc_html( size_format( $cleared_size ) )
+                     );
                     echo '</p></div>';
                 } );
             }
@@ -641,12 +649,13 @@ class Form_Processor {
      */
     private static function process_ai_settings() {
         if ( isset( $_POST['seobooster_ai_provider'] ) ) {
-            $ai_provider = sanitize_text_field( wp_unslash( $_POST['seobooster_ai_provider'] ) );
-            $allowed_providers = array('disabled', 'wordpress');
-            if ( \Cleverplugins\SEOBooster\Credits_Service::is_ai_provider_available() ) {
+            // Accept "wordpress" / "WordPress" / legacy "openai" and store the canonical value.
+            $ai_provider = LLM_Helper::normalize_ai_provider( sanitize_text_field( wp_unslash( $_POST['seobooster_ai_provider'] ) ) );
+            $allowed_providers = array('disabled', 'WordPress');
+            if ( Credits_Service::is_ai_provider_available() ) {
                 $allowed_providers[] = 'seobooster';
             }
-            if ( in_array( $ai_provider, $allowed_providers, true ) ) {
+            if ( '' !== $ai_provider && in_array( $ai_provider, $allowed_providers, true ) ) {
                 update_option( 'seobooster_ai_provider', $ai_provider );
             }
         }

@@ -1,0 +1,247 @@
+/**
+ * Automatic Links page — builds on sb-ui.css tokens.
+ *
+ * @package Cleverplugins\SEOBooster
+ */
+
+.sb-autolink-page .sb-autolink-add-form {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	align-items: stretch;
+	gap: 12px;
+	width: 100%;
+	margin: 0;
+}
+
+.sb-autolink-page .sb-autolink-field {
+	width: 100%;
+	margin: 0;
+}
+
+.sb-autolink-page .sb-autolink-field label {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--sb-ui-text);
+}
+
+.sb-autolink-page .sb-autolink-field input {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+.sb-autolink-page .sb-autolink-submit {
+	width: 100%;
+	margin-top: 4px;
+}
+
+.sb-autolink-page .sb-autolink-submit .button {
+	width: 100%;
+	background: var(--sb-ui-green) !important;
+	border-color: var(--sb-ui-green) !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
+}
+
+.sb-autolink-page .sb-autolink-submit .button:hover {
+	background: var(--sb-ui-green-hover) !important;
+	border-color: var(--sb-ui-green-hover) !important;
+}
+
+.sb-autolink-page .sb-autolink-response {
+	margin-top: 12px;
+	font-size: 13px;
+	line-height: 1.45;
+}
+
+.sb-autolink-page #addkwresponse.hasError {
+	color: #b32d2e;
+}
+
+.sb-autolink-page .field-error-msg {
+	display: block;
+	margin-top: 5px;
+	color: #b32d2e;
+	font-size: 12px;
+}
+
+.sb-autolink-page .sb-autolink-spinner,
+.sb-autolink-page .kwaddspinner {
+	margin-top: 12px;
+	text-align: left;
+	clear: both;
+	float: none;
+	background-image: none;
+}
+
+.sb-autolink-page .kwaddspinner > div {
+	width: 12px;
+	height: 12px;
+	background-color: var(--sb-ui-green);
+	border-radius: 100%;
+	display: inline-block;
+	animation: sb-autolink-bouncedelay 1.4s infinite ease-in-out both;
+}
+
+.sb-autolink-page .kwaddspinner .bounce1 {
+	animation-delay: -0.32s;
+}
+
+.sb-autolink-page .kwaddspinner .bounce2 {
+	animation-delay: -0.16s;
+}
+
+@keyframes sb-autolink-bouncedelay {
+	0%,
+	80%,
+	100% {
+		transform: scale(0);
+	}
+	40% {
+		transform: scale(1);
+	}
+}
+
+.sb-autolink-page .sb-autolink-help-list {
+	margin: 0 0 16px;
+	padding-left: 1.25em;
+	color: var(--sb-ui-muted);
+	font-size: 14px;
+	line-height: 1.55;
+}
+
+.sb-autolink-page .sb-autolink-help-list li {
+	margin-bottom: 8px;
+}
+
+.sb-autolink-page .sb-autolink-help-list strong {
+	color: var(--sb-ui-text);
+}
+
+.sb-autolink-page .sb-autolink-help-subtitle {
+	margin: 0 0 8px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--sb-ui-text);
+}
+
+.sb-autolink-page .sb-autolink-help-footer {
+	margin: 0;
+	font-size: 13px;
+}
+
+.sb-autolink-page .sb-autolink-help-footer a {
+	color: var(--sb-ui-green);
+	text-decoration: none;
+	font-weight: 600;
+}
+
+.sb-autolink-page .sb-autolink-help-footer a:hover {
+	color: var(--sb-ui-green-hover);
+	text-decoration: underline;
+}
+
+.sb-autolink-page .sb-autolink-results .wp-list-table {
+	border: 1px solid var(--sb-ui-border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.sb-autolink-page .sb-autolink-results .wp-list-table td {
+	vertical-align: middle;
+}
+
+.sb-autolink-page .sb-autolink-results .wp-list-table .column-pointing {
+	width: 36px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.sb-autolink-page .sb-autolink-results .wp-list-table .column-pointing .dashicons {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	font-size: 20px;
+	line-height: 20px;
+	vertical-align: middle;
+	color: var(--sb-ui-muted);
+}
+
+.sb-autolink-page .editable-field {
+	display: block;
+	width: 100%;
+	padding: 8px;
+	box-sizing: border-box;
+	cursor: pointer;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.sb-autolink-page .editable-field.keyword-field {
+	margin-top: 0;
+	background-color: var(--sb-ui-soft);
+}
+
+.sb-autolink-page .editable-field:hover {
+	background-color: var(--sb-ui-soft);
+	border-color: var(--sb-ui-blue);
+}
+
+.sb-autolink-page .ok-icon,
+.sb-autolink-page .cancel-icon {
+	margin-left: 8px;
+	cursor: pointer;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.sb-autolink-page .inline-edit-input {
+	width: calc(100% - 60px);
+	padding: 5px;
+	margin: 0;
+	border: 1px solid var(--sb-ui-border);
+	background: var(--sb-ui-white);
+	box-shadow: 0 0 0 1px var(--sb-ui-blue);
+	user-select: text;
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	-ms-user-select: text;
+}
+
+.sb-autolink-page .inline-edit-input:focus {
+	outline: none;
+}
+
+.sb-autolink-page .inline-edit-input::-moz-selection,
+.sb-autolink-page .inline-edit-input::selection {
+	background: var(--sb-ui-blue);
+	color: #fff;
+}
+
+.sb-autolink-page .sb-autolink-row-new {
+	animation: sbAutolinkRowHighlight 2.5s ease-out;
+}
+
+.sb-autolink-page .sb-autolink-row-removing {
+	opacity: 0.45;
+	pointer-events: none;
+}
+
+@keyframes sbAutolinkRowHighlight {
+	0% {
+		background-color: #d7f0d7;
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+@media screen and (max-width: 782px) {
+	.sb-autolink-page .sb-autolink-submit .button {
+		width: 100%;
+	}
+}

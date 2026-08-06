@@ -67,12 +67,13 @@ class Result_Set {
 	/**
 	 * Add a passed/good check.
 	 *
-	 * @param string $key Issue key.
-	 * @param string $message Message.
+	 * @param string     $key Issue key.
+	 * @param string     $message Message.
+	 * @param array|null $extra_data Extra data (e.g. ai_readiness tag).
 	 * @return void
 	 */
-	public function add_good( $key, $message ) {
-		$this->add( $key, $message, Severity::GOOD, null );
+	public function add_good( $key, $message, $extra_data = null ) {
+		$this->add( $key, $message, Severity::GOOD, $extra_data );
 	}
 
 	/**

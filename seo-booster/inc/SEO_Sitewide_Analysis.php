@@ -304,7 +304,7 @@ class SEO_Sitewide_Analysis {
             $this->add_issue(
                 'llms_txt_disabled',
                 __( 'Dynamic llms.txt is disabled. Enable it under SEO Booster → Tools to help AI crawlers discover your content.', 'seo-booster' ),
-                'warning',
+                'medium',
                 $ai_meta
             );
             return;
@@ -356,7 +356,7 @@ class SEO_Sitewide_Analysis {
         }
         if ( !$has_premium ) {
             if ( !empty( $llms_settings['enabled'] ) ) {
-                $this->add_improvement( 'entity_map_pro_available', __( 'Structured Entity Map is available with SEO Booster Pro — go beyond llms.txt with machine-readable organization and content relationships.', 'seo-booster' ), $ai_meta );
+                $this->add_improvement( 'entity_map_pro_available', __( 'Structured Entity Map is available with SEO Booster Pro. Go beyond llms.txt with machine-readable organization and content relationships.', 'seo-booster' ), $ai_meta );
             }
             return;
         }
