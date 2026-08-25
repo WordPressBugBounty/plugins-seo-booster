@@ -131,6 +131,7 @@ abstract class Tools_Batch_Base {
 	 * @return array
 	 */
 	protected static function get_start_batch_extra_response( array $config ) {
+		unset( $config );
 		return array();
 	}
 
@@ -147,7 +148,7 @@ abstract class Tools_Batch_Base {
 		}
 
 		$precondition_error = static::validate_preconditions();
-		if ( $precondition_error !== '' ) {
+		if ( '' !== $precondition_error ) {
 			wp_send_json_error( array( 'message' => $precondition_error ) );
 		}
 
@@ -231,7 +232,7 @@ abstract class Tools_Batch_Base {
 		$item_key = static::get_item_id_post_key();
 		$item_id  = isset( $_POST[ $item_key ] ) ? intval( $_POST[ $item_key ] ) : 0;
 
-		if ( $batch_id === '' || $item_id <= 0 ) {
+		if ( '' === $batch_id || $item_id <= 0 ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid parameters', 'seo-booster' ) ) );
 		}
 
@@ -296,7 +297,7 @@ abstract class Tools_Batch_Base {
 		}
 
 		$batch_id = isset( $_POST['batch_id'] ) ? sanitize_text_field( wp_unslash( $_POST['batch_id'] ) ) : '';
-		if ( $batch_id === '' ) {
+		if ( '' === $batch_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid batch ID', 'seo-booster' ) ) );
 		}
 
@@ -321,7 +322,7 @@ abstract class Tools_Batch_Base {
 		}
 
 		$batch_id = isset( $_POST['batch_id'] ) ? sanitize_text_field( wp_unslash( $_POST['batch_id'] ) ) : '';
-		if ( $batch_id === '' ) {
+		if ( '' === $batch_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid batch ID', 'seo-booster' ) ) );
 		}
 
@@ -348,7 +349,7 @@ abstract class Tools_Batch_Base {
 		}
 
 		$batch_user_id = isset( $batch['user_id'] ) ? (int) $batch['user_id'] : 0;
-		if ( $batch_user_id !== get_current_user_id() ) {
+		if ( get_current_user_id() !== $batch_user_id ) {
 			return false;
 		}
 
@@ -381,7 +382,7 @@ abstract class Tools_Batch_Base {
 			$batch['processing_ids'] = array();
 		}
 
-		if ( $status === 'processed' ) {
+		if ( 'processed' === $status ) {
 			$batch['processed'] = isset( $batch['processed'] ) ? $batch['processed'] + 1 : 1;
 			if ( $item_id > 0 && ! in_array( $item_id, $batch['processed_ids'], true ) ) {
 				$batch['processed_ids'][] = $item_id;
@@ -390,7 +391,7 @@ abstract class Tools_Batch_Base {
 			if ( ! empty( $batch['processing'] ) ) {
 				--$batch['processing'];
 			}
-		} elseif ( $status === 'failed' ) {
+		} elseif ( 'failed' === $status ) {
 			$batch['failed'] = isset( $batch['failed'] ) ? $batch['failed'] + 1 : 1;
 			if ( $item_id > 0 && ! in_array( $item_id, $batch['failed_ids'], true ) ) {
 				$batch['failed_ids'][] = $item_id;
@@ -407,7 +408,7 @@ abstract class Tools_Batch_Base {
 				$batch['failed_items'][] = array_merge(
 					array(
 						'item_id' => $item_id,
-						'message' => $error_message !== '' ? $error_message : __( 'Processing failed.', 'seo-booster' ),
+						'message' => '' !== $error_message ? $error_message : __( 'Processing failed.', 'seo-booster' ),
 					),
 					static::get_failed_item_meta( $item_id, $error_message )
 				);
@@ -416,7 +417,7 @@ abstract class Tools_Batch_Base {
 			if ( ! empty( $batch['processing'] ) ) {
 				--$batch['processing'];
 			}
-		} elseif ( $status === 'processing' ) {
+		} elseif ( 'processing' === $status ) {
 			$batch['processing'] = isset( $batch['processing'] ) ? $batch['processing'] + 1 : 1;
 			if ( $item_id > 0 && ! in_array( $item_id, $batch['processing_ids'], true ) ) {
 				$batch['processing_ids'][] = $item_id;
@@ -439,7 +440,7 @@ abstract class Tools_Batch_Base {
 		$processing = (int) ( $batch['processing'] ?? 0 );
 		$remaining  = max( 0, $queued - $processed - $failed );
 		$cancelled  = ! empty( $batch['cancelled'] );
-		$completed  = ! $cancelled && $remaining === 0 && $queued > 0 && $processing === 0;
+		$completed  = ! $cancelled && 0 === $remaining && $queued > 0 && 0 === $processing;
 
 		$next_item_id = 0;
 		if ( ! $completed && ! $cancelled && ! empty( $batch['item_ids'] ) ) {

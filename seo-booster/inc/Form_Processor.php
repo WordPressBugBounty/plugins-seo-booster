@@ -87,7 +87,7 @@ class Form_Processor {
             }
             // Send the actual weekly email update (forced)
             require_once SEOBOOSTER_PLUGINPATH . 'inc/email_status.php';
-            email_status::send_email_update( 7, true );
+            Email_Status::send_email_update( 7, true );
             // Add success notice
             add_action( 'admin_notices', function () {
                 echo '<div class="notice notice-success is-dismissible"><p>';
@@ -139,10 +139,10 @@ class Form_Processor {
             as_unschedule_all_actions( 'sb_gsc_process_keywords_batch' );
         }
         if ( function_exists( 'as_schedule_single_action' ) ) {
-            as_schedule_single_action( time(), 'sb_gsc_schedule_all_pages' );
+            as_schedule_single_action( time(), 'seobooster_gsc_schedule_all_pages' );
         } else {
-            wp_clear_scheduled_hook( 'sb_gsc_schedule_all_pages' );
-            wp_schedule_single_event( time(), 'sb_gsc_schedule_all_pages' );
+            wp_clear_scheduled_hook( 'seobooster_gsc_schedule_all_pages' );
+            wp_schedule_single_event( time(), 'seobooster_gsc_schedule_all_pages' );
         }
         self::add_settings_notice( __( 'Keyword scanning has been restarted. A full rescan of imported pages has been queued.', 'seo-booster' ) );
     }
@@ -281,7 +281,7 @@ class Form_Processor {
         $hooks = array(
             'sb_gsc_process_url_keywords',
             'sb_gsc_process_keywords_batch',
-            'sb_gsc_schedule_all_pages',
+            'seobooster_gsc_schedule_all_pages',
             'sb_gsc_analyze_post_keywords',
             'sb_gsc_schedule_traffic_pages',
             'sb_gsc_inspect_url',
@@ -649,7 +649,7 @@ class Form_Processor {
      */
     private static function process_ai_settings() {
         if ( isset( $_POST['seobooster_ai_provider'] ) ) {
-            // Accept "wordpress" / "WordPress" / legacy "openai" and store the canonical value.
+            // Accept "WordPress" / "WordPress" / legacy "openai" and store the canonical value.
             $ai_provider = LLM_Helper::normalize_ai_provider( sanitize_text_field( wp_unslash( $_POST['seobooster_ai_provider'] ) ) );
             $allowed_providers = array('disabled', 'WordPress');
             if ( Credits_Service::is_ai_provider_available() ) {
@@ -712,7 +712,7 @@ class Form_Processor {
         // Cancel existing Action Scheduler recurring action
         as_unschedule_all_actions( 'sb_seo_possibilities_auto_scan', array(), 'seo-booster' );
         // Schedule new Action Scheduler recurring action if enabled
-        if ( $new_enabled === 'on' ) {
+        if ( 'on' === $new_enabled ) {
             as_schedule_recurring_action(
                 time(),
                 $new_frequency,

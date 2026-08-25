@@ -78,15 +78,15 @@ class AI_Readiness {
 			$max += (int) $item['points'];
 			$pass = Ai_Readiness_Registry::item_passes( $item, $key_sets['pass'], $key_sets['fail'], $analysis );
 
-			if ( $pass === true ) {
+			if ( true === $pass ) {
 				$score += (int) $item['points'];
 			}
 
 			$details[] = array(
 				'key'     => $item['key'],
 				'label'   => $item['label'],
-				'pass'    => $pass === true,
-				'unknown' => $pass === null,
+				'pass'    => true === $pass,
+				'unknown' => null === $pass,
 				'points'  => (int) $item['points'],
 				'scope'   => 'post',
 			);
@@ -98,8 +98,8 @@ class AI_Readiness {
 			$sitewide_details[] = array(
 				'key'     => $item['key'],
 				'label'   => $item['label'],
-				'pass'    => $pass === true,
-				'unknown' => $pass === null,
+				'pass'    => true === $pass,
+				'unknown' => null === $pass,
 				'scope'   => 'sitewide',
 			);
 		}
@@ -114,10 +114,10 @@ class AI_Readiness {
 			'details'           => $details,
 			'sitewide'          => $sitewide_details,
 			'seo_score'         => $seo_score,
-			'seo_score_grade'   => $seo_score !== null ? self::grade( $seo_score ) : null,
+			'seo_score_grade'   => null !== $seo_score ? self::grade( $seo_score ) : null,
 			'top_possibilities' => self::get_top_possibilities( $analysis ),
 			'analyzed_at'       => self::get_analyzed_at( $analysis ),
-			'has_analysis'      => ! empty( $analysis ) && ( $seo_score !== null || ! empty( $key_sets['all'] ) ),
+			'has_analysis'      => ! empty( $analysis ) && ( null !== $seo_score || ! empty( $key_sets['all'] ) ),
 			'issues_url'        => admin_url( 'admin.php?page=sb2_seo_issues' ),
 			'tools_url'         => admin_url( 'admin.php?page=sb2_tools' ),
 			'ai_bots_url'       => admin_url( 'admin.php?page=sb2_ai_bots' ),
@@ -354,7 +354,7 @@ class AI_Readiness {
 	 */
 	public static function enqueue_block_editor_assets() {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		if ( ! $screen || $screen->base !== 'post' ) {
+		if ( ! $screen || 'post' !== $screen->base ) {
 			return;
 		}
 

@@ -95,7 +95,7 @@ class SEO_Analysis {
 	 * @return array Analysis results.
 	 */
 	public function analyze( $use_full_page = false, $force_download = false ) {
-		if ( $this->context->object_type === 'post' && $this->context->object_id && SEO_Issues_Manager::should_exclude_from_analysis( $this->context->object_id ) ) {
+		if ( 'post' === $this->context->object_type && $this->context->object_id && SEO_Issues_Manager::should_exclude_from_analysis( $this->context->object_id ) ) {
 			return array(
 				'score'        => null,
 				'issues'       => array(),
@@ -115,7 +115,7 @@ class SEO_Analysis {
 		$this->results = new Result_Set();
 		Url_Status_Cache::reset_time_budget( $this->context->bulk_mode ? 4 : 8 );
 
-		$should_gate = $use_full_page || $this->context->object_type === 'url';
+		$should_gate = $use_full_page || 'url' === $this->context->object_type;
 
 		// Direct files (PDF, images, archives) are not HTML pages: record an empty
 		// analysis so they leave the Possibilities queue without fake content audits.
@@ -137,7 +137,7 @@ class SEO_Analysis {
 
 		if ( $force_download ) {
 			$inspect_url = $this->context->get_object_url();
-			if ( $inspect_url !== '' ) {
+			if ( '' !== $inspect_url ) {
 				Gsc_Inspection_Cache::invalidate( $inspect_url );
 			}
 		}
@@ -153,89 +153,6 @@ class SEO_Analysis {
 		$this->save_analysis_results( $this->context->has_full_page );
 
 		return $this->results->to_array();
-	}
-
-	/**
-	 * Run analysis in steps for progressive feedback.
-	 *
-	 * @since 6.1.26
-	 * @param string $step The current step to execute.
-	 * @return array Step result with message, next step, and elapsed time.
-	 */
-	public function analyze_step( $step ) {
-		$start_time = microtime( true );
-		$result     = array(
-			'step'      => $step,
-			'message'   => '',
-			'next_step' => null,
-			'elapsed'   => 0,
-		);
-
-		if ( 'start' === $step ) {
-			$this->context->refresh_seo_data();
-			$this->results       = new Result_Set();
-			$result['message']   = __( 'Starting analysis...', 'seo-booster' );
-			$result['next_step'] = 'download';
-		} elseif ( 'download' === $step ) {
-			$this->context->refresh_seo_data();
-			if ( $this->is_non_html_file_target() ) {
-				$this->results->calculate_score();
-				$this->save_analysis_results( false );
-				$result['message']   = __( 'This URL is a file, not a page; on-page checks do not apply.', 'seo-booster' );
-				$result['next_step'] = null;
-				$result['results']   = $this->results->to_array();
-				$result['elapsed']   = round( microtime( true ) - $start_time, 2 );
-				return $result;
-			}
-			// Each AJAX step constructs a fresh SEO_Analysis; save immediately when gated.
-			if ( $this->apply_reachability_gate() ) {
-				$this->results->calculate_score();
-				$this->save_analysis_results( false );
-				$result['message']   = __( 'URL is unavailable or redirects; on-page checks skipped.', 'seo-booster' );
-				$result['next_step'] = null;
-				$result['results']   = $this->results->to_array();
-				$result['elapsed']   = round( microtime( true ) - $start_time, 2 );
-				return $result;
-			}
-			$this->context->download_full_page_content();
-			$inspect_url = $this->context->get_object_url();
-			if ( $inspect_url !== '' ) {
-				Gsc_Inspection_Cache::invalidate( $inspect_url );
-			}
-			$result['message']   = __( 'Downloading page content...', 'seo-booster' );
-			$result['next_step'] = 'headers';
-		} elseif ( 'cache' === $step ) {
-			$this->results->calculate_score();
-			$this->save_analysis_results( true );
-			$result['message']   = __( 'Caching results...', 'seo-booster' );
-			$result['next_step'] = null;
-			$result['results']   = $this->results->to_array();
-		} else {
-			// Fresh SEO_Analysis instance per AJAX step: reload plugin meta before checks.
-			$this->context->refresh_seo_data();
-			$document = $this->build_document();
-			$next     = $this->registry->run_step( $step, $this->context, $document, $this->results );
-
-			switch ( $step ) {
-				case 'headers':
-					$result['message'] = __( 'Analyzing headers...', 'seo-booster' );
-					break;
-				case 'links':
-					$result['message'] = __( 'Checking links...', 'seo-booster' );
-					break;
-				case 'content':
-					$result['message'] = __( 'Analyzing content...', 'seo-booster' );
-					break;
-				case 'gsc':
-					$result['message'] = __( 'Checking Search Console opportunities...', 'seo-booster' );
-					break;
-			}
-
-			$result['next_step'] = $next;
-		}
-
-		$result['elapsed'] = round( microtime( true ) - $start_time, 2 );
-		return $result;
 	}
 
 	/**
@@ -287,7 +204,7 @@ class SEO_Analysis {
 			$page_main = Html_Document::build_page_main_html( $full_html );
 			// One shared scope for content/links/images: never keep an empty page_main
 			// when rendered post content is available.
-			if ( Html_Document::count_words( $page_main ) < 1 && $content_html !== '' ) {
+			if ( Html_Document::count_words( $page_main ) < 1 && '' !== $content_html ) {
 				$page_main = $content_html;
 			}
 			$document->set_scope_html( Html_Document::SCOPE_PAGE_MAIN, $page_main );
@@ -308,7 +225,7 @@ class SEO_Analysis {
 	private function is_non_html_file_target() {
 		// Attachment posts are already excluded elsewhere; this covers URL-only analysis
 		// of raw file paths coming from Search Console history.
-		if ( $this->context->object_type === 'post' && $this->context->object_id ) {
+		if ( 'post' === $this->context->object_type && $this->context->object_id ) {
 			return false;
 		}
 
@@ -378,9 +295,9 @@ class SEO_Analysis {
 			$payload
 		);
 
-		if ( ! $analysis_id ) {
+		if ( false === $analysis_id ) {
 			// Excluded posts return false from the save helper without being a hard failure.
-			if ( $this->context->object_type === 'post' && $this->context->object_id && SEO_Issues_Manager::should_exclude_from_analysis( $this->context->object_id ) ) {
+			if ( 'post' === $this->context->object_type && $this->context->object_id && SEO_Issues_Manager::should_exclude_from_analysis( $this->context->object_id ) ) {
 				return false;
 			}
 			throw new \RuntimeException( 'Could not save analysis results' );

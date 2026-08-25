@@ -357,7 +357,7 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 	 * @version v1.0.0  Wednesday, March 27th, 2024.
 	 * @return  void
 	 */
-	function prepare_items() {
+	public function prepare_items() {
 		global $wpdb;
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- List table pagination, search, and sort reads only.
@@ -365,7 +365,7 @@ class SB_Autolink_List_Table extends \WP_List_Table {
 		// Get per_page from URL parameter first, then user meta, then default to 25
 		$url_per_page  = isset( $_GET['per_page'] ) ? (int) wp_unslash( $_GET['per_page'] ) : 0;
 		$user_per_page = get_user_meta( get_current_user_id(), 'sb_autolink_per_page', true );
-		$per_page      = $url_per_page ?: ( ! empty( $user_per_page ) ? (int) $user_per_page : 25 );
+		$per_page      = $url_per_page ? $url_per_page : ( ! empty( $user_per_page ) ? (int) $user_per_page : 25 );
 
 		$columns  = $this->get_columns();
 		$hidden   = $this->hidden_columns;

@@ -36,12 +36,52 @@ class Page_Reachability {
 	 */
 	public static function non_html_file_extensions() {
 		return array(
-			'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp', 'rtf', 'csv', 'txt',
-			'zip', 'gz', 'tar', 'rar', '7z',
-			'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg', 'ico', 'bmp', 'tiff',
-			'mp3', 'wav', 'ogg', 'm4a', 'mp4', 'mov', 'avi', 'webm', 'mkv',
-			'css', 'js', 'json', 'xml',
-			'woff', 'woff2', 'ttf', 'otf', 'eot',
+			'pdf',
+			'doc',
+			'docx',
+			'xls',
+			'xlsx',
+			'ppt',
+			'pptx',
+			'odt',
+			'ods',
+			'odp',
+			'rtf',
+			'csv',
+			'txt',
+			'zip',
+			'gz',
+			'tar',
+			'rar',
+			'7z',
+			'jpg',
+			'jpeg',
+			'png',
+			'gif',
+			'webp',
+			'avif',
+			'svg',
+			'ico',
+			'bmp',
+			'tiff',
+			'mp3',
+			'wav',
+			'ogg',
+			'm4a',
+			'mp4',
+			'mov',
+			'avi',
+			'webm',
+			'mkv',
+			'css',
+			'js',
+			'json',
+			'xml',
+			'woff',
+			'woff2',
+			'ttf',
+			'otf',
+			'eot',
 		);
 	}
 
@@ -178,7 +218,7 @@ class Page_Reachability {
 
 		if ( self::STATUS_REDIRECTED === $status ) {
 			$redirect_to = (string) $probe['redirect_to'];
-			if ( $code > 0 && $redirect_to !== '' ) {
+			if ( $code > 0 && '' !== $redirect_to ) {
 				$message = sprintf(
 					/* translators: 1: HTTP status code, 2: redirect destination URL */
 					__( 'This URL redirects (HTTP %1$d) to: %2$s. On-page possibilities are not shown for redirected URLs.', 'seo-booster' ),

@@ -127,22 +127,22 @@ class AI_Image_Generator {
 			$description = isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
 
 			// Update ALT text
-			if ( $alt_text !== '' ) {
+			if ( '' !== $alt_text ) {
 				update_post_meta( $attachment_id, '_wp_attachment_image_alt', $alt_text );
 			}
 
 			// Update title, caption and description
 			$update_data = array( 'ID' => $attachment_id );
 
-			if ( $title !== '' ) {
+			if ( '' !== $title ) {
 				$update_data['post_title'] = $title;
 			}
 
-			if ( $caption !== '' ) {
+			if ( '' !== $caption ) {
 				$update_data['post_excerpt'] = $caption;
 			}
 
-			if ( $description !== '' ) {
+			if ( '' !== $description ) {
 				$update_data['post_content'] = $description;
 			}
 
@@ -175,7 +175,7 @@ class AI_Image_Generator {
 	public static function generate_descriptions( $attachment_id ) {
 		$attachment = get_post( $attachment_id );
 
-		if ( ! $attachment || $attachment->post_type !== 'attachment' ) {
+		if ( ! $attachment || 'attachment' !== $attachment->post_type ) {
 			throw new \Exception( esc_html__( 'Invalid attachment', 'seo-booster' ) );
 		}
 
@@ -205,7 +205,7 @@ class AI_Image_Generator {
 		// Get language
 		$language = self::get_language( $attachment_id );
 
-		if ( $ai_provider === 'seobooster' ) {
+		if ( 'seobooster' === $ai_provider ) {
 			if ( ! Credits_Service::is_credits_provider_usable() ) {
 				throw new \Exception( esc_html__( 'SEO Booster Credits are not available. Enable them in SEO Booster Settings or use WordPress Connectors.', 'seo-booster' ) );
 			}
@@ -271,10 +271,10 @@ class AI_Image_Generator {
 		);
 
 		$attached_file       = get_attached_file( $attachment_id );
-		$context['filename'] = self::humanize_filename( $attached_file ?: '' );
+		$context['filename'] = self::humanize_filename( $attached_file ? $attached_file : '' );
 
 		$attachment = get_post( $attachment_id );
-		if ( $attachment && $attachment->post_title !== '' ) {
+		if ( $attachment && '' !== $attachment->post_title ) {
 			$context['existing_title'] = $attachment->post_title;
 		}
 
@@ -303,7 +303,7 @@ class AI_Image_Generator {
 			}
 		}
 
-		return apply_filters( 'sb_ai_image_attachment_context', $context, $attachment_id );
+		return apply_filters( 'sb_ai_image_attachment_context', $context, $attachment_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Legacy hook; renaming would break existing integrations.
 	}
 
 	/**
@@ -314,18 +314,18 @@ class AI_Image_Generator {
 	 * @return string Humanized basename without extension, or empty string.
 	 */
 	private static function humanize_filename( $path ) {
-		if ( $path === '' ) {
+		if ( '' === $path ) {
 			return '';
 		}
 
 		$base = wp_basename( $path );
 		$name = pathinfo( $base, PATHINFO_FILENAME );
-		if ( $name === '' || $name === false ) {
+		if ( '' === $name || false === $name ) {
 			return '';
 		}
 
 		$compact = preg_replace( '/[\s_-]+/', '', $name );
-		if ( $compact === '' || preg_match( '/^\d+$/', $compact ) ) {
+		if ( '' === $compact || preg_match( '/^\d+$/', $compact ) ) {
 			return '';
 		}
 		if ( preg_match( '/^(?:img|dsc|p\d+|photo|image|wp|screenshot|capture)[\d_-]*$/i', $compact ) ) {
@@ -385,7 +385,7 @@ class AI_Image_Generator {
 			$width  = (int) $image_data[1];
 			$height = (int) $image_data[2];
 
-			if ( $size !== 'full' && ( $width < 150 || $height < 150 ) ) {
+			if ( 'full' !== $size && ( $width < 150 || $height < 150 ) ) {
 				continue;
 			}
 
@@ -431,7 +431,7 @@ class AI_Image_Generator {
 			$width  = (int) $image_data[1];
 			$height = (int) $image_data[2];
 
-			if ( $size !== 'full' && ( $width < 150 || $height < 150 ) ) {
+			if ( 'full' !== $size && ( $width < 150 || $height < 150 ) ) {
 				continue;
 			}
 
@@ -468,7 +468,7 @@ class AI_Image_Generator {
 			return '';
 		}
 
-		if ( $size === 'full' ) {
+		if ( 'full' === $size ) {
 			return is_readable( $attached_file ) ? $attached_file : '';
 		}
 
@@ -501,7 +501,7 @@ class AI_Image_Generator {
 
 		$status = self::get_image_url_http_status( $url );
 
-		return ! is_wp_error( $status ) && (int) $status === 200;
+		return ! is_wp_error( $status ) && 200 === (int) $status;
 	}
 
 	/**
@@ -597,7 +597,7 @@ class AI_Image_Generator {
 		);
 
 		foreach ( $keys as $key ) {
-			if ( array_key_exists( $key, $context ) && $context[ $key ] !== '' ) {
+			if ( array_key_exists( $key, $context ) && '' !== $context[ $key ] ) {
 				$vision[ $key ] = $context[ $key ];
 			}
 		}
@@ -628,7 +628,7 @@ class AI_Image_Generator {
 			$hint_parts[] = 'parent post: "' . $context['post_title'] . '"';
 		}
 
-		if ( array_key_exists( 'existing_title', $context ) && $context['existing_title'] !== '' ) {
+		if ( array_key_exists( 'existing_title', $context ) && '' !== $context['existing_title'] ) {
 			$existing_parts[] = 'title: "' . $context['existing_title'] . '"';
 		}
 		if ( array_key_exists( 'existing_alt_text', $context ) ) {
@@ -704,15 +704,17 @@ class AI_Image_Generator {
 		if ( ! empty( $parsed['error'] ) ) {
 			$detail = ! empty( $parsed['message'] ) ? $parsed['message'] : $parsed['error'];
 			throw new \Exception(
-				esc_html( sprintf(
+				esc_html(
+					sprintf(
 					/* translators: %s: error detail from AI */
-					__( 'Could not analyze image: %s. No metadata was saved.', 'seo-booster' ),
-					sanitize_text_field( $detail )
-				) )
+						__( 'Could not analyze image: %s. No metadata was saved.', 'seo-booster' ),
+						sanitize_text_field( $detail )
+					)
+				)
 			);
 		}
 
-		if ( empty( $parsed['image_visible'] ) || $parsed['image_visible'] !== true ) {
+		if ( empty( $parsed['image_visible'] ) || true !== $parsed['image_visible'] ) {
 			throw new \Exception( esc_html__( 'The AI could not verify the image content. No metadata was saved.', 'seo-booster' ) );
 		}
 
@@ -880,25 +882,20 @@ class AI_Image_Generator {
 	}
 
 	/**
-	 * Check if a model supports vision (HTTP URLs for images).
-	 *
-	 * @since 7.0.0
-	 * @param string|null $model Model name. If null, uses current setting.
-	 * @return bool True if model supports vision, false otherwise.
-	 */
-	/**
 	 * Check if the current AI setup supports vision (image description generation).
 	 * For WordPress provider, returns true when wp_ai_client_prompt exists. For Credits, returns true.
 	 *
+	 * @since 7.0.0
 	 * @param string|null $model Model name (legacy; ignored when provider is WordPress).
-	 * @return bool
+	 * @return bool True if model supports vision, false otherwise.
 	 */
+	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Legacy API; parameter retained for backward compatibility.
 	public static function model_supports_vision( $model = null ) {
 		$provider = LLM_Helper::get_selected_ai_provider();
-		if ( $provider === 'WordPress' ) {
+		if ( 'WordPress' === $provider ) {
 			return LLM_Helper::wp_ai_image_tools_can_process();
 		}
-		if ( $provider === 'seobooster' ) {
+		if ( 'seobooster' === $provider ) {
 			return Credits_Service::is_credits_provider_usable();
 		}
 		return false;
@@ -958,19 +955,21 @@ class AI_Image_Generator {
 				continue;
 			}
 
-			if ( $status['status'] === 'completed' && ! empty( $status['data'] ) ) {
+			if ( 'completed' === $status['status'] && ! empty( $status['data'] ) ) {
 				if ( ! empty( $status['data']['error'] ) ) {
 					$detail = $status['data']['message'] ?? $status['data']['error'];
 					throw new \Exception(
-						esc_html( sprintf(
+						esc_html(
+							sprintf(
 							/* translators: %s: error detail */
-							__( 'Could not analyze image: %s. No metadata was saved.', 'seo-booster' ),
-							sanitize_text_field( $detail )
-						) )
+								__( 'Could not analyze image: %s. No metadata was saved.', 'seo-booster' ),
+								sanitize_text_field( $detail )
+							)
+						)
 					);
 				}
 
-				if ( empty( $status['data']['image_visible'] ) || $status['data']['image_visible'] !== true ) {
+				if ( empty( $status['data']['image_visible'] ) || true !== $status['data']['image_visible'] ) {
 					throw new \Exception( esc_html__( 'The AI could not verify the image content. No metadata was saved.', 'seo-booster' ) );
 				}
 
@@ -988,7 +987,7 @@ class AI_Image_Generator {
 				);
 			}
 
-			if ( $status['status'] === 'failed' ) {
+			if ( 'failed' === $status['status'] ) {
 				throw new \Exception(
 					esc_html( __( 'Image analysis failed: ', 'seo-booster' ) . ( $status['error'] ?? __( 'Unknown error', 'seo-booster' ) ) )
 				);

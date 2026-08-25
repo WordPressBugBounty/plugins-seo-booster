@@ -19,11 +19,11 @@ $active_labels       = SEO_Plugin_Registry::get_active_labels();
 $notice_class        = 'notice-success';
 $compat_notice_class = 'sb-tools-seo-compat notice inline';
 
-if ( $tier === 'analysis_only' || ! $seo_target ) {
+if ( 'analysis_only' === $tier || ! $seo_target ) {
 	$notice_class = 'notice-warning';
 }
 
-if ( $tier === 'partial' ) {
+if ( 'partial' === $tier ) {
 	$notice_class = 'notice-info';
 }
 
@@ -43,7 +43,7 @@ if ( $tier === 'partial' ) {
 		</p>
 	<?php endif; ?>
 
-	<?php if ( $tier === 'full' && $seo_target ) : ?>
+	<?php if ( 'full' === $tier && $seo_target ) : ?>
 		<p>
 			<span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>
 			<?php
@@ -54,7 +54,7 @@ if ( $tier === 'partial' ) {
 			);
 			?>
 		</p>
-	<?php elseif ( $tier === 'partial' && $seo_target ) : ?>
+	<?php elseif ( 'partial' === $tier && $seo_target ) : ?>
 		<p>
 			<span class="dashicons dashicons-info" aria-hidden="true"></span>
 			<?php

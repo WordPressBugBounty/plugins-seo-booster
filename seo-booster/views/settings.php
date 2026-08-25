@@ -454,7 +454,7 @@ foreach ( $mandatory_elements as $element => $label ) {
 esc_html_e( 'Checked items are skipped. Uncheck an element to allow linking inside it.', 'seo-booster' );
 ?>
 								<a href="<?php 
-echo esc_url( Utils::generate_cp_web_link( 'admin', 'docs/automatic-links/why-arent-my-keywords-being-linked-automatically/' ) );
+echo esc_url( Utils::generate_cp_web_link( 'settings_autolink_docs', 'docs/automatic-links/why-arent-my-keywords-being-linked-automatically/' ) );
 ?>" target="_blank" rel="noopener">
 									<?php 
 esc_html_e( 'Why wasn\'t my keyword linked?', 'seo-booster' );
@@ -509,7 +509,7 @@ if ( !$show_404_upsell ) {
     esc_html_e( 'Common system URLs (feeds, admin, login, etc.) are ignored automatically and will not be logged as 404 errors.', 'seo-booster' );
     ?>
 								<a href="<?php 
-    echo esc_url( Seobooster2::gen_web_link( 'documentation_link', '/docs/404-errors/customizing-the-list-of-ignored-urls/' ) );
+    echo esc_url( Utils::generate_cp_web_link( 'settings_404_docs', 'docs/404-errors/customizing-the-list-of-ignored-urls/' ) );
     ?>" target="_blank" rel="noopener">
 									<?php 
     esc_html_e( 'Customize the ignore list', 'seo-booster' );
@@ -572,6 +572,7 @@ if ( $selected_site ) {
     echo '<strong>' . esc_html( $selected_site ) . '</strong>';
     $google_email = get_option( 'seobooster_google_email' );
     if ( $google_email ) {
+        // translators: %s: Google account email address.
         echo '<br><small>' . sprintf( esc_html__( 'Google Email: %s', 'seo-booster' ), esc_html( $google_email ) ) . '</small>';
     }
 } else {
@@ -684,6 +685,7 @@ if ( 'on' === $seo_possibilities_enabled && function_exists( 'as_next_scheduled_
         $next_time = gmdate( 'Y-m-d H:i:s', $next_scheduled );
         $current_time = current_time( 'timestamp' );
         $time_diff = human_time_diff( $current_time, $next_scheduled );
+        // translators: %s: time difference until the next scheduled scan.
         echo '<br><small>' . esc_html__( 'Next scheduled scan', 'seo-booster' ) . ': ' . esc_html( $next_time ) . ' (' . sprintf( esc_html__( 'in %s', 'seo-booster' ), esc_html( $time_diff ) ) . ')</small>';
     }
 }
@@ -836,7 +838,7 @@ esc_html_e( 'Choose how to generate AI-powered SEO suggestions.', 'seo-booster' 
 					</td>
 				</tr>
 				<tr valign="top" id="wordpress-connectors-settings" style="<?php 
-echo ( $ai_provider !== 'WordPress' ? 'display: none;' : '' );
+echo ( 'WordPress' !== $ai_provider ? 'display: none;' : '' );
 ?>">
 					<th scope="row" valign="top">
 						<?php 
@@ -864,7 +866,7 @@ if ( $credits_ai_available ) {
     $is_registered = \Cleverplugins\SEOBooster\Credits_Service::is_registered();
     ?>
 				<tr valign="top" id="seobooster-credits-register" style="<?php 
-    echo ( $ai_provider !== 'seobooster' ? 'display: none;' : '' );
+    echo ( 'seobooster' !== $ai_provider ? 'display: none;' : '' );
     ?>">
 					<th scope="row" valign="top">
 						<?php 
@@ -911,7 +913,7 @@ if ( $credits_ai_available ) {
     if ( $is_registered ) {
         ?>
 				<tr valign="top" id="seobooster-credits-balance-row" style="<?php 
-        echo ( $ai_provider !== 'seobooster' ? 'display: none;' : '' );
+        echo ( 'seobooster' !== $ai_provider ? 'display: none;' : '' );
         ?>">
 					<th scope="row" valign="top">
 						<?php 
@@ -1397,10 +1399,10 @@ if ( class_exists( 'ActionScheduler_Store' ) ) {
 						</thead>
 						<tbody>
 							<?php 
-    foreach ( $seobooster_actions as $status => $count ) {
-        $status_label = ucfirst( str_replace( '-', ' ', $status ) );
+    foreach ( $seobooster_actions as $action_status => $count ) {
+        $status_label = ucfirst( str_replace( '-', ' ', $action_status ) );
         $badge_class = 'status-neutral';
-        switch ( $status ) {
+        switch ( $action_status ) {
             case 'pending':
                 $badge_class = 'status-warning';
                 break;
@@ -1418,7 +1420,7 @@ if ( class_exists( 'ActionScheduler_Store' ) ) {
 								<tr>
 									<td class="column-status column-primary">
 										<span class="status-<?php 
-        echo esc_attr( $status );
+        echo esc_attr( $action_status );
         ?> <?php 
         echo esc_attr( $badge_class );
         ?>"><?php 

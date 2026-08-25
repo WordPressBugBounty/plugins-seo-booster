@@ -25,7 +25,6 @@ class SB_SEO_Metabox {
     public static function init() {
         add_action( 'add_meta_boxes', array(__CLASS__, 'add_seo_metabox') );
         add_action( 'admin_enqueue_scripts', array(__CLASS__, 'enqueue_scripts') );
-        add_action( 'wp_ajax_sb_seo_get_keyword_suggestions', array(__CLASS__, 'get_keyword_suggestions') );
         // AI writing assistance (sb_seo_ai_writing_assistance) removed for 7.2 — was placeholder only.
         // Reimplement with WordPress Connectors before listing as a Pro feature again.
         add_action( 'wp_ajax_sb_seo_analysis', array(__CLASS__, 'ajax_seo_analysis') );
@@ -41,7 +40,6 @@ class SB_SEO_Metabox {
         add_action( 'wp_ajax_sb_seo_get_recent_request_statuses', array(__CLASS__, 'ajax_get_recent_request_statuses') );
         add_action( 'wp_ajax_sb_seo_retry_request', array(__CLASS__, 'ajax_retry_request') );
         add_action( 'wp_ajax_sb_seo_get_llm_suggestions', array(__CLASS__, 'ajax_get_llm_suggestions') );
-        add_action( 'wp_ajax_sb_seo_analyze_step', array(__CLASS__, 'ajax_analyze_step') );
         add_action( 'wp_ajax_sb_seo_toggle_analysis_exclusion', array(__CLASS__, 'ajax_toggle_analysis_exclusion') );
         add_action( 'wp_ajax_sb_seo_apply_seo_field', array(__CLASS__, 'ajax_apply_seo_field') );
         // Save exclusion preference on post save
@@ -110,7 +108,7 @@ class SB_SEO_Metabox {
         $item_id = ( $is_term ? $post_or_term->term_id : $post_or_term->ID );
         $item_type = ( $is_term ? 'term' : 'post' );
         // Check if this is an attachment
-        $is_attachment = !$is_term && isset( $post_or_term->post_type ) && $post_or_term->post_type === 'attachment';
+        $is_attachment = !$is_term && isset( $post_or_term->post_type ) && 'attachment' === $post_or_term->post_type;
         // Get current URL for preview
         $current_url = ( $is_term ? get_term_link( $post_or_term ) : get_permalink( $item_id ) );
         if ( is_wp_error( $current_url ) ) {
@@ -128,21 +126,21 @@ class SB_SEO_Metabox {
         $is_excluded = false;
         $is_auto_excluded = false;
         $exclusion_reason = '';
-        if ( !$is_term && $item_type === 'post' ) {
+        if ( !$is_term && 'post' === $item_type ) {
             // Check if user has manually excluded
             $user_excluded = get_post_meta( $item_id, '_sb_exclude_from_analysis', true );
-            $is_excluded = $user_excluded === '1';
+            $is_excluded = '1' === $user_excluded;
             // Check if auto-excluded (WooCommerce/private)
             $is_auto_excluded = \Cleverplugins\SEOBooster\SEO_Issues_Manager::is_auto_excluded( $item_id );
             // Auto-set postmeta for auto-excluded pages if not already set
-            if ( $is_auto_excluded && $user_excluded !== '1' && $user_excluded !== '0' ) {
+            if ( $is_auto_excluded && '1' !== $user_excluded && '0' !== $user_excluded ) {
                 update_post_meta( $item_id, '_sb_exclude_from_analysis', '1' );
                 $is_excluded = true;
             }
             // Determine exclusion reason for display
             if ( $is_auto_excluded ) {
                 $post_status = get_post_status( $item_id );
-                if ( $post_status === 'private' ) {
+                if ( 'private' === $post_status ) {
                     $exclusion_reason = __( 'This page is automatically excluded (private page)', 'seo-booster' );
                 } elseif ( function_exists( 'wc_get_page_id' ) ) {
                     $wc_page_types = array(
@@ -154,7 +152,11 @@ class SB_SEO_Metabox {
                     foreach ( $wc_page_types as $page_type => $page_label ) {
                         $wc_page_id = wc_get_page_id( $page_type );
                         if ( $wc_page_id && $item_id === $wc_page_id ) {
-                            $exclusion_reason = sprintf( __( 'This page is automatically excluded (WooCommerce %s page)', 'seo-booster' ), $page_label );
+                            $exclusion_reason = sprintf( 
+                                /* translators: %s: WooCommerce page type label (e.g. Cart, Checkout) */
+                                __( 'This page is automatically excluded (WooCommerce %s page)', 'seo-booster' ),
+                                $page_label
+                             );
                             break;
                         }
                     }
@@ -168,7 +170,7 @@ class SB_SEO_Metabox {
         echo esc_attr( $item_type );
         ?>">
 			<?php 
-        $show_page_settings = !$is_term && $item_type === 'post';
+        $show_page_settings = !$is_term && 'post' === $item_type;
         if ( !$show_page_settings ) {
             $seo_plug_preview = Google_API::identify_active_seo_plugin();
             $show_page_settings = !empty( $seo_plug_preview['name'] );
@@ -186,7 +188,7 @@ class SB_SEO_Metabox {
             ?>
 
 				<?php 
-            if ( !$is_term && $item_type === 'post' ) {
+            if ( !$is_term && 'post' === $item_type ) {
                 ?>
 					<?php 
                 self::render_autolink_control( $post_or_term );
@@ -228,7 +230,7 @@ class SB_SEO_Metabox {
 				</button>
 				<?php 
         $gsc_keyword_count = 0;
-        if ( !$is_term && $item_type === 'post' && $item_id && $current_url ) {
+        if ( !$is_term && 'post' === $item_type && $item_id && $current_url ) {
             $gsc_keyword_count = self::count_gsc_keywords_for_url( $current_url );
         }
         ?>
@@ -302,7 +304,7 @@ class SB_SEO_Metabox {
 				</div>
 
 				<?php 
-        if ( !$is_term && $item_type === 'post' ) {
+        if ( !$is_term && 'post' === $item_type ) {
             ?>
 					<?php 
             AI_Readiness::render_classic_sections( $item_id );
@@ -358,9 +360,9 @@ class SB_SEO_Metabox {
 			<div class="sb-seo-analysis-section">
 				<?php 
         $ai_provider = LLM_Helper::get_selected_ai_provider();
-        $is_wc_product = !$is_term && isset( $post_or_term->post_type ) && $post_or_term->post_type === 'product' && function_exists( 'wc_get_product' );
+        $is_wc_product = !$is_term && isset( $post_or_term->post_type ) && 'product' === $post_or_term->post_type && function_exists( 'wc_get_product' );
         $ai_enabled = !empty( $ai_provider ) && !in_array( $ai_provider, array('disabled'), true );
-        $show_ask = !$is_term && $item_type === 'post' && $item_id;
+        $show_ask = !$is_term && 'post' === $item_type && $item_id;
         if ( !$ai_enabled ) {
             ?>
 				<div class="sb-seo-analysis-actions">
@@ -452,10 +454,10 @@ class SB_SEO_Metabox {
 						<input type="text" id="sb-ai-assistant-input" class="regular-text" maxlength="500" placeholder="<?php 
                 esc_attr_e( 'Ask about rankings, issues, or titles for this page…', 'seo-booster' );
                 ?>" <?php 
-                disabled( $ai_provider !== 'WordPress' );
+                disabled( 'WordPress' !== $ai_provider );
                 ?> />
 						<button type="button" id="sb-ai-assistant-ask" class="button button-primary" <?php 
-                disabled( $ai_provider !== 'WordPress' );
+                disabled( 'WordPress' !== $ai_provider );
                 ?>>
 							<?php 
                 esc_html_e( 'Ask', 'seo-booster' );
@@ -463,7 +465,7 @@ class SB_SEO_Metabox {
 						</button>
 					</div>
 						<?php 
-                if ( $ai_provider !== 'WordPress' ) {
+                if ( 'WordPress' !== $ai_provider ) {
                     ?>
 					<p class="sb-ai-assistant-provider-note">
 							<?php 
@@ -471,7 +473,7 @@ class SB_SEO_Metabox {
                     ?>
 					</p>
 					<?php 
-                } elseif ( !$is_term && $item_type === 'post' && $item_id ) {
+                } elseif ( !$is_term && 'post' === $item_type && $item_id ) {
                     ?>
 						<?php 
                     $detected_locale = LLM_Helper::get_post_language( $item_id );
@@ -624,10 +626,10 @@ class SB_SEO_Metabox {
         ?>
 
 				<?php 
-        if ( $ai_provider !== 'disabled' ) {
+        if ( 'disabled' !== $ai_provider ) {
             $has_saved_suggestions = false;
             $saved_comprehensive_ui = null;
-            if ( !$is_term && $item_type === 'post' && $item_id ) {
+            if ( !$is_term && 'post' === $item_type && $item_id ) {
                 $saved_llm = LLM_Helper::get_saved_suggestions( $item_id );
                 $has_saved_suggestions = is_array( $saved_llm ) && !empty( $saved_llm['titles'] ) && !empty( $saved_llm['descriptions'] );
                 $saved_comprehensive_ui = get_post_meta( $item_id, '_sb_comprehensive_analysis_result', true );
@@ -661,7 +663,7 @@ class SB_SEO_Metabox {
 					</div>
 
 					<?php 
-            if ( $ai_provider === 'seobooster' ) {
+            if ( 'seobooster' === $ai_provider ) {
                 ?>
 					<div id="sb-recent-requests-wrap" class="sb-recent-requests-wrap sb-hidden">
 						<h4 class="sb-recent-requests-title"><?php 
@@ -836,7 +838,7 @@ class SB_SEO_Metabox {
             return;
         }
         $meta = get_post_meta( $post->ID, '_sbp-markdown', true );
-        if ( 'auto-draft' === $post->post_status || $meta === '' || $meta === false ) {
+        if ( 'auto-draft' === $post->post_status || '' === $meta || false === $meta ) {
             $meta = 'yes';
         }
         ?>
@@ -928,7 +930,7 @@ class SB_SEO_Metabox {
         ?></h3>
 				
 				<?php 
-        if ( $ai_provider === 'disabled' ) {
+        if ( 'disabled' === $ai_provider ) {
             ?>
 				<div class="sb-llm-disabled">
 					<p style="margin: 0 0 10px 0; color: #646970;">
@@ -951,7 +953,7 @@ class SB_SEO_Metabox {
         } else {
             ?>
 					<?php 
-            $supports_vision = $ai_provider === 'WordPress' && function_exists( 'wp_ai_client_prompt' ) || $ai_provider === 'seobooster';
+            $supports_vision = 'WordPress' === $ai_provider && function_exists( 'wp_ai_client_prompt' ) || 'seobooster' === $ai_provider;
             ?>
 				<div class="sb-image-ai-generator">
 					<p><?php 
@@ -1043,7 +1045,7 @@ class SB_SEO_Metabox {
             ?>
 
 					<?php 
-            if ( $ai_provider === 'seobooster' ) {
+            if ( 'seobooster' === $ai_provider ) {
                 ?>
 					<div id="sb-recent-requests-wrap" class="sb-recent-requests-wrap sb-attachment-recent-requests sb-hidden">
 						<h4 class="sb-recent-requests-title"><?php 
@@ -1258,7 +1260,7 @@ class SB_SEO_Metabox {
         );
         $credits_data = array();
         $provider = LLM_Helper::get_selected_ai_provider();
-        if ( $provider === 'seobooster' && Credits_Service::is_registered() ) {
+        if ( 'seobooster' === $provider && Credits_Service::is_registered() ) {
             $credits_data = array(
                 'balance'       => Credits_Service::get_balance(),
                 'is_registered' => true,
@@ -1273,7 +1275,7 @@ class SB_SEO_Metabox {
         }
         $pending_request_id = ( $post_id ? get_post_meta( $post_id, '_sb_pending_request_id', true ) : '' );
         $pending_request_type = ( $post_id && $pending_request_id ? get_post_meta( $post_id, '_sb_pending_request_type', true ) : '' );
-        if ( !is_string( $pending_request_type ) || $pending_request_type === '' ) {
+        if ( !is_string( $pending_request_type ) || '' === $pending_request_type ) {
             $pending_request_type = 'seo_suggestions';
         }
         $recent_request_ids = ( $post_id ? get_post_meta( $post_id, '_sb_recent_request_ids', true ) : array() );
@@ -1289,12 +1291,8 @@ class SB_SEO_Metabox {
         $has_recent_request_ids = !empty( $recent_request_ids );
         $assistant_has_history = ( $post_id ? AI_Page_Assistant::has_history( $post_id ) : false );
         $can_use_pro_actions = false;
-        $pro_upgrade_url = 'https://seoboosterpro.com/';
+        $pro_upgrade_url = Utils::get_pro_upgrade_url( 'metabox_pro_upgrade' );
         if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) ) {
-            $fs = seobooster_fs();
-            if ( is_object( $fs ) && method_exists( $fs, 'get_upgrade_url' ) ) {
-                $pro_upgrade_url = $fs->get_upgrade_url();
-            }
         }
         // Triage (Mark as done / Ignore) matches Possibilities: Pro + manage_options.
         $can_triage = false;
@@ -1309,7 +1307,7 @@ class SB_SEO_Metabox {
             'credits'                      => $credits_data,
             'post_id'                      => $post_id,
             'ai_readiness_keys'            => Ai_Readiness_Registry::get_issue_keys(),
-            'pending_request_id'           => ( $pending_request_id ?: '' ),
+            'pending_request_id'           => ( $pending_request_id ? $pending_request_id : '' ),
             'pending_request_type'         => $pending_request_type,
             'recent_request_ids'           => $recent_request_ids,
             'saved_comprehensive_analysis' => $saved_comprehensive,
@@ -1379,56 +1377,6 @@ class SB_SEO_Metabox {
                 'view_in_possibilities'     => __( 'View in Possibilities', 'seo-booster' ),
             ),
         ) );
-    }
-
-    /**
-     * Get keyword suggestions for the current URL.
-     *
-     * @since 6.1.26
-     * @return void
-     */
-    public static function get_keyword_suggestions() {
-        check_ajax_referer( 'sb_seo_metabox_nonce', 'nonce' );
-        if ( !current_user_can( 'edit_posts' ) ) {
-            wp_send_json_error( array(
-                'message' => __( 'Permission denied', 'seo-booster' ),
-            ) );
-        }
-        $current_url = ( isset( $_POST['current_url'] ) ? esc_url_raw( $_POST['current_url'] ) : '' );
-        global $wpdb;
-        // Get keywords for this URL from GSC data
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed tables; value uses %s placeholder.
-        $query = $wpdb->prepare( "SELECT DISTINCT qk.query, \n                    COALESCE(SUM(qkh.clicks), 0) as clicks,\n                    COALESCE(SUM(qkh.impressions), 0) as impressions,\n                    COALESCE(AVG(qkh.position), 0) as position\n             FROM {$wpdb->prefix}sb2_query_keywords qk\n             LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history qkh ON qk.id = qkh.query_keywords_id\n             WHERE qk.page LIKE %s\n             GROUP BY qk.query\n             ORDER BY clicks DESC, impressions DESC\n             LIMIT 10", '%' . $wpdb->esc_like( $current_url ) . '%' );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prepared above.
-        $keywords = $wpdb->get_results( $query, ARRAY_A );
-        if ( empty( $keywords ) ) {
-            wp_send_json_success( array(
-                'keywords' => array(),
-                'message'  => __( 'No keyword data available for this URL', 'seo-booster' ),
-            ) );
-        }
-        wp_send_json_success( array(
-            'keywords' => $keywords,
-        ) );
-    }
-
-    /**
-     * Detect installed SEO plugins.
-     *
-     * @since 6.1.26
-     * @return array Array of detected SEO plugins.
-     */
-    public static function detect_seo_plugins() {
-        $detected = array();
-        foreach ( SEO_Plugin_Registry::get_adapters() as $adapter ) {
-            if ( $adapter->is_active() ) {
-                $detected[$adapter->get_slug()] = array(
-                    'name' => $adapter->get_label(),
-                );
-            }
-        }
-        return $detected;
     }
 
     /**
@@ -1503,7 +1451,7 @@ class SB_SEO_Metabox {
             ) );
         }
         // Check if excluded from analysis
-        if ( $object_type === 'post' && \Cleverplugins\SEOBooster\SEO_Issues_Manager::should_exclude_from_analysis( $object_id ) ) {
+        if ( 'post' === $object_type && \Cleverplugins\SEOBooster\SEO_Issues_Manager::should_exclude_from_analysis( $object_id ) ) {
             wp_send_json_error( array(
                 'message'  => __( 'This page is excluded from SEO analysis', 'seo-booster' ),
                 'excluded' => true,
@@ -1558,7 +1506,7 @@ class SB_SEO_Metabox {
             ) );
         }
         // Check if excluded from analysis
-        if ( $object_type === 'post' && \Cleverplugins\SEOBooster\SEO_Issues_Manager::should_exclude_from_analysis( $object_id ) ) {
+        if ( 'post' === $object_type && \Cleverplugins\SEOBooster\SEO_Issues_Manager::should_exclude_from_analysis( $object_id ) ) {
             wp_send_json_success( array(
                 'score'        => null,
                 'issues'       => array(),
@@ -1576,7 +1524,7 @@ class SB_SEO_Metabox {
             $saved_analysis = \Cleverplugins\SEOBooster\SEO_Analysis::get_saved_analysis( $object_id, $object_type );
             // Check if we have a valid saved analysis with a score
             // Score can be 0 (valid score), so we check for null explicitly
-            $has_score = $saved_analysis && isset( $saved_analysis['score'] ) && $saved_analysis['score'] !== null;
+            $has_score = $saved_analysis && isset( $saved_analysis['score'] ) && null !== $saved_analysis['score'];
             if ( $has_score ) {
                 // Use saved analysis results if score exists (from any analysis type)
                 $results = $saved_analysis;
@@ -1621,7 +1569,7 @@ class SB_SEO_Metabox {
                     $results['refresh_reason'] = __( 'Analysis is missing Google Search Console checks. Please re-run analysis to see all checks.', 'seo-booster' );
                 }
                 // Add last download info if available (for full page analysis)
-                if ( $object_type === 'post' ) {
+                if ( 'post' === $object_type ) {
                     $last_download = get_post_meta( $object_id, '_sb_last_page_download', true );
                     if ( !empty( $last_download ) ) {
                         $results['last_download'] = gmdate( 'Y-m-d H:i:s', $last_download );
@@ -1655,7 +1603,7 @@ class SB_SEO_Metabox {
     private static function count_gsc_keywords_for_url( $url ) {
         global $wpdb;
         $url = (string) $url;
-        if ( $url === '' ) {
+        if ( '' === $url ) {
             return 0;
         }
         $table = $wpdb->prefix . 'sb2_query_keywords';
@@ -2134,7 +2082,7 @@ class SB_SEO_Metabox {
             'status'            => $result['status'],
             'credits_remaining' => $result['credits_remaining'],
         );
-        if ( $result['status'] === 'completed' && !empty( $result['data'] ) ) {
+        if ( 'completed' === $result['status'] && !empty( $result['data'] ) ) {
             $response['data'] = $result['data'];
             // Save the results to post meta for later retrieval
             if ( $post_id && !empty( $result['data'] ) ) {
@@ -2154,7 +2102,7 @@ class SB_SEO_Metabox {
                 }
             }
         }
-        if ( $result['status'] === 'failed' ) {
+        if ( 'failed' === $result['status'] ) {
             $response['error'] = $result['error'];
         }
         wp_send_json_success( $response );
@@ -2336,52 +2284,15 @@ class SB_SEO_Metabox {
             ) );
         }
         $saved = LLM_Helper::get_saved_suggestions( $post_id );
-        $response = ( $saved ?: array(
+        $response = ( $saved ? $saved : array(
             'titles'       => null,
             'descriptions' => null,
         ) );
         $provider = LLM_Helper::get_selected_ai_provider();
-        if ( $provider === 'seobooster' && Credits_Service::is_registered() ) {
+        if ( 'seobooster' === $provider && Credits_Service::is_registered() ) {
             $response['credits_remaining'] = Credits_Service::get_balance();
         }
         wp_send_json_success( $response );
-    }
-
-    /**
-     * AJAX handler for step-by-step analysis.
-     *
-     * @since 6.1.26
-     * @return void
-     */
-    public static function ajax_analyze_step() {
-        check_ajax_referer( 'sb_seo_metabox_nonce', 'nonce' );
-        if ( !current_user_can( 'edit_posts' ) ) {
-            wp_send_json_error( array(
-                'message' => __( 'Permission denied', 'seo-booster' ),
-            ) );
-        }
-        $post_id = ( isset( $_POST['post_id'] ) ? intval( $_POST['post_id'] ) : 0 );
-        $step = ( isset( $_POST['step'] ) ? sanitize_key( $_POST['step'] ) : 'start' );
-        if ( !$post_id ) {
-            wp_send_json_error( array(
-                'message' => __( 'Invalid post ID', 'seo-booster' ),
-            ) );
-        }
-        if ( !Utils::user_can_edit_object( $post_id ) ) {
-            wp_send_json_error( array(
-                'message' => __( 'Permission denied', 'seo-booster' ),
-            ) );
-        }
-        try {
-            $analyzer = new SEO_Analysis($post_id);
-            $result = $analyzer->analyze_step( $step );
-            wp_send_json_success( $result );
-        } catch ( \Exception $e ) {
-            Utils::log( sprintf( 'SEO analysis failed for post %d: %s', $post_id, $e->getMessage() ), 2 );
-            wp_send_json_error( array(
-                'message' => __( 'Analysis failed', 'seo-booster' ),
-            ) );
-        }
     }
 
     /**
@@ -2420,7 +2331,7 @@ class SB_SEO_Metabox {
         $exclusion_reason = '';
         if ( $is_auto_excluded ) {
             $post_status = get_post_status( $post_id );
-            if ( $post_status === 'private' ) {
+            if ( 'private' === $post_status ) {
                 $exclusion_reason = __( 'This page is automatically excluded (private page)', 'seo-booster' );
             } elseif ( function_exists( 'wc_get_page_id' ) ) {
                 $wc_page_types = array(
@@ -2432,7 +2343,11 @@ class SB_SEO_Metabox {
                 foreach ( $wc_page_types as $page_type => $page_label ) {
                     $wc_page_id = wc_get_page_id( $page_type );
                     if ( $wc_page_id && $post_id === $wc_page_id ) {
-                        $exclusion_reason = sprintf( __( 'This page is automatically excluded (WooCommerce %s page)', 'seo-booster' ), $page_label );
+                        $exclusion_reason = sprintf( 
+                            /* translators: %s: WooCommerce page type label (e.g. Cart, Checkout) */
+                            __( 'This page is automatically excluded (WooCommerce %s page)', 'seo-booster' ),
+                            $page_label
+                         );
                         break;
                     }
                 }
@@ -2467,7 +2382,7 @@ class SB_SEO_Metabox {
                 'message' => __( 'Invalid field.', 'seo-booster' ),
             ) );
         }
-        if ( $object_type === 'post' ) {
+        if ( 'post' === $object_type ) {
             if ( !current_user_can( 'edit_post', $object_id ) ) {
                 wp_send_json_error( array(
                     'message' => __( 'Permission denied', 'seo-booster' ),
@@ -2478,7 +2393,7 @@ class SB_SEO_Metabox {
                 'message' => __( 'Permission denied', 'seo-booster' ),
             ) );
         }
-        if ( $field === 'description' ) {
+        if ( 'description' === $field ) {
             $value = sanitize_textarea_field( $value );
         } else {
             $value = sanitize_text_field( $value );
@@ -2488,7 +2403,7 @@ class SB_SEO_Metabox {
             $value,
             $object_id,
             $object_type,
-            $field === 'focus_keyword'
+            'focus_keyword' === $field
         );
         if ( empty( $result['success'] ) ) {
             wp_send_json_error( array(
@@ -2544,11 +2459,9 @@ class SB_SEO_Metabox {
         // Save exclusion preference
         if ( isset( $_POST['sb_exclude_from_analysis'] ) ) {
             update_post_meta( $post_id, '_sb_exclude_from_analysis', '1' );
-        } else {
+        } elseif ( !\Cleverplugins\SEOBooster\SEO_Issues_Manager::is_auto_excluded( $post_id ) ) {
             // Only set to '0' if not auto-excluded (user explicitly unchecked)
-            if ( !\Cleverplugins\SEOBooster\SEO_Issues_Manager::is_auto_excluded( $post_id ) ) {
-                update_post_meta( $post_id, '_sb_exclude_from_analysis', '0' );
-            }
+            update_post_meta( $post_id, '_sb_exclude_from_analysis', '0' );
         }
     }
 

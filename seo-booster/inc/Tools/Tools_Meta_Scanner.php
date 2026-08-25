@@ -6,6 +6,7 @@ use Cleverplugins\SEOBooster\Google_API;
 use Cleverplugins\SEOBooster\LLM_Helper;
 use Cleverplugins\SEOBooster\SEO_Issues_Manager;
 use Cleverplugins\SEOBooster\SEO_Plugin_Registry;
+use Cleverplugins\SEOBooster\SEO_Plugins\Abstract_Post_Meta_Adapter;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -157,8 +158,8 @@ class Tools_Meta_Scanner {
 				'title'     => $row['post_title'],
 				'post_type' => $row['post_type'],
 				'slug'      => get_post_field( 'post_name', $post_id ),
-				'edit_url'  => get_edit_post_link( $post_id, 'raw' ) ?: '',
-				'view_url'  => get_permalink( $post_id ) ?: '',
+				'edit_url'  => get_edit_post_link( $post_id, 'raw' ) ? get_edit_post_link( $post_id, 'raw' ) : '',
+				'view_url'  => get_permalink( $post_id ) ? get_permalink( $post_id ) : '',
 				'issues'    => $row['issues'],
 				'meta'      => array(
 					'seo_title'       => $row['seo_title'],
@@ -214,7 +215,7 @@ class Tools_Meta_Scanner {
 						continue;
 					}
 
-					$meta = SEO_Meta_Writer::read( $post_id );
+					$meta = self::read_seo_meta_for_scan( $post_id );
 
 					$rows[] = array(
 						'id'              => $post_id,
@@ -235,6 +236,69 @@ class Tools_Meta_Scanner {
 	}
 
 	/**
+	 * Read SEO title/description for Tools scans.
+	 *
+	 * Prefers resolved values (global SEO-plugin templates count as present) while
+	 * keeping an explicitly stored raw value when resolution is empty.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return array{title: string, description: string}
+	 */
+	public static function read_seo_meta_for_scan( $post_id ) {
+		$raw      = SEO_Meta_Writer::read( $post_id );
+		$resolved = SEO_Plugin_Registry::read_post_seo_resolved( $post_id );
+
+		return array(
+			'title'       => self::pick_scan_seo_value( $raw['title'] ?? '', $resolved['title'] ?? '' ),
+			'description' => self::pick_scan_seo_value( $raw['description'] ?? '', $resolved['description'] ?? '' ),
+		);
+	}
+
+	/**
+	 * Prefer a usable resolved value; fall back to raw storage.
+	 *
+	 * @param string $raw      Raw stored value.
+	 * @param string $resolved Resolved/rendered value.
+	 * @return string
+	 */
+	private static function pick_scan_seo_value( $raw, $resolved ) {
+		$resolved = trim( (string) $resolved );
+		if ( '' !== $resolved && ! Abstract_Post_Meta_Adapter::looks_like_seo_template( $resolved ) ) {
+			return $resolved;
+		}
+
+		return trim( (string) $raw );
+	}
+
+	/**
+	 * Whether a scan value should count as missing (empty after resolve + raw).
+	 *
+	 * Pure template tokens with no other prose still count as missing. A stored
+	 * value like "%excerpt% - commercial intro" does not.
+	 *
+	 * @param string $value Value from read_seo_meta_for_scan().
+	 * @return bool
+	 */
+	public static function is_missing_seo_value( $value ) {
+		$value = trim( (string) $value );
+		if ( '' === $value ) {
+			return true;
+		}
+
+		if ( ! Abstract_Post_Meta_Adapter::looks_like_seo_template( $value ) ) {
+			return false;
+		}
+
+		// Strip %%token%% before %token% so SEOPress tokens are not half-matched.
+		$without_tokens = preg_replace( '/%%[a-z0-9_-]+%%/i', '', $value );
+		$without_tokens = preg_replace( '/%[a-z0-9_-]+%/i', '', (string) $without_tokens );
+		$without_tokens = preg_replace( '/#[a-z0-9_]+/i', '', (string) $without_tokens );
+		$without_tokens = trim( preg_replace( '/[\s|_\-.,;:%#]+/u', '', (string) $without_tokens ) );
+
+		return '' === $without_tokens;
+	}
+
+	/**
 	 * @param array[] $rows Post rows.
 	 * @return array{titles: array, descriptions: array}
 	 */
@@ -243,20 +307,24 @@ class Tools_Meta_Scanner {
 		$descriptions = array();
 
 		foreach ( $rows as $row ) {
-			$title_key = self::normalize_for_duplicate( $row['seo_title'] );
-			if ( $title_key !== '' ) {
-				if ( ! isset( $titles[ $title_key ] ) ) {
-					$titles[ $title_key ] = 0;
+			if ( ! self::is_missing_seo_value( $row['seo_title'] ?? '' ) ) {
+				$title_key = self::normalize_for_duplicate( $row['seo_title'] );
+				if ( '' !== $title_key ) {
+					if ( ! isset( $titles[ $title_key ] ) ) {
+						$titles[ $title_key ] = 0;
+					}
+					++$titles[ $title_key ];
 				}
-				++$titles[ $title_key ];
 			}
 
-			$desc_key = self::normalize_for_duplicate( $row['seo_description'] );
-			if ( $desc_key !== '' ) {
-				if ( ! isset( $descriptions[ $desc_key ] ) ) {
-					$descriptions[ $desc_key ] = 0;
+			if ( ! self::is_missing_seo_value( $row['seo_description'] ?? '' ) ) {
+				$desc_key = self::normalize_for_duplicate( $row['seo_description'] );
+				if ( '' !== $desc_key ) {
+					if ( ! isset( $descriptions[ $desc_key ] ) ) {
+						$descriptions[ $desc_key ] = 0;
+					}
+					++$descriptions[ $desc_key ];
 				}
-				++$descriptions[ $desc_key ];
 			}
 		}
 
@@ -303,21 +371,23 @@ class Tools_Meta_Scanner {
 	public static function classify_issues( array $row, array $filters, array $duplicate_map ) {
 		$issues = array();
 
-		if ( in_array( 'missing_title', $filters, true ) && trim( (string) $row['seo_title'] ) === '' ) {
+		if ( in_array( 'missing_title', $filters, true ) && self::is_missing_seo_value( $row['seo_title'] ?? '' ) ) {
 			$issues[] = 'missing_title';
 		}
-		if ( in_array( 'missing_description', $filters, true ) && trim( (string) $row['seo_description'] ) === '' ) {
+		if ( in_array( 'missing_description', $filters, true ) && self::is_missing_seo_value( $row['seo_description'] ?? '' ) ) {
 			$issues[] = 'missing_description';
 		}
 
 		$title_key = self::normalize_for_duplicate( $row['seo_title'] );
-		if ( in_array( 'duplicate_title', $filters, true ) && $title_key !== ''
+		if ( in_array( 'duplicate_title', $filters, true ) && '' !== $title_key
+			&& ! self::is_missing_seo_value( $row['seo_title'] ?? '' )
 			&& isset( $duplicate_map['titles'][ $title_key ] ) && $duplicate_map['titles'][ $title_key ] > 1 ) {
 			$issues[] = 'duplicate_title';
 		}
 
 		$desc_key = self::normalize_for_duplicate( $row['seo_description'] );
-		if ( in_array( 'duplicate_description', $filters, true ) && $desc_key !== ''
+		if ( in_array( 'duplicate_description', $filters, true ) && '' !== $desc_key
+			&& ! self::is_missing_seo_value( $row['seo_description'] ?? '' )
 			&& isset( $duplicate_map['descriptions'][ $desc_key ] ) && $duplicate_map['descriptions'][ $desc_key ] > 1 ) {
 			$issues[] = 'duplicate_description';
 		}
@@ -338,11 +408,17 @@ class Tools_Meta_Scanner {
 	 * @return bool
 	 */
 	private static function meta_contains_keyword( array $row, array $keywords ) {
-		$haystack = strtolower( trim( $row['seo_title'] . ' ' . $row['seo_description'] ) );
+		$haystack = strtolower(
+			trim(
+				(string) ( $row['seo_title'] ?? '' ) . ' ' .
+				(string) ( $row['seo_description'] ?? '' ) . ' ' .
+				(string) ( $row['post_title'] ?? '' )
+			)
+		);
 
 		foreach ( $keywords as $keyword ) {
 			$keyword = strtolower( trim( (string) $keyword ) );
-			if ( $keyword !== '' && strpos( $haystack, $keyword ) !== false ) {
+			if ( '' !== $keyword && false !== strpos( $haystack, $keyword ) ) {
 				return true;
 			}
 		}
@@ -412,7 +488,7 @@ class Tools_Meta_Scanner {
 	 */
 	public static function ai_is_available() {
 		$ai_provider = LLM_Helper::get_selected_ai_provider();
-		if ( $ai_provider !== 'WordPress' ) {
+		if ( 'WordPress' !== $ai_provider ) {
 			return false;
 		}
 
@@ -425,11 +501,11 @@ class Tools_Meta_Scanner {
 	public static function get_ai_unavailable_message() {
 		$ai_provider = LLM_Helper::get_selected_ai_provider();
 
-		if ( $ai_provider === 'seobooster' ) {
+		if ( 'seobooster' === $ai_provider ) {
 			return __( 'SEO Booster Credits are not available yet. Use WordPress Connectors for bulk meta generation.', 'seo-booster' );
 		}
 
-		if ( $ai_provider === 'WordPress' ) {
+		if ( 'WordPress' === $ai_provider ) {
 			return LLM_Helper::wp_ai_unavailable_message();
 		}
 
@@ -442,10 +518,10 @@ class Tools_Meta_Scanner {
 	 */
 	public static function get_ai_notice_type() {
 		$ai_provider = LLM_Helper::get_selected_ai_provider();
-		if ( $ai_provider === 'WordPress' ) {
+		if ( 'WordPress' === $ai_provider ) {
 			return LLM_Helper::wp_ai_is_available() ? 'ok' : 'connector';
 		}
-		if ( $ai_provider === 'seobooster' ) {
+		if ( 'seobooster' === $ai_provider ) {
 			return 'credits';
 		}
 		return 'disabled';
@@ -578,8 +654,8 @@ class Tools_Meta_Scanner {
 			if ( $post_id <= 0 || SEO_Issues_Manager::should_exclude_from_analysis( $post_id ) ) {
 				continue;
 			}
-			$meta = SEO_Meta_Writer::read( $post_id );
-			if ( trim( (string) ( $meta['title'] ?? '' ) ) === '' || trim( (string) ( $meta['description'] ?? '' ) ) === '' ) {
+			$meta = self::read_seo_meta_for_scan( $post_id );
+			if ( self::is_missing_seo_value( $meta['title'] ?? '' ) || self::is_missing_seo_value( $meta['description'] ?? '' ) ) {
 				++$count;
 			}
 		}

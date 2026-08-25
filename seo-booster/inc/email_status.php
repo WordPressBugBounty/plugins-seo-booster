@@ -7,7 +7,7 @@ use Cleverplugins\SEOBooster\Tools\Tools_Page;
 if ( !defined( 'ABSPATH' ) ) {
     exit;
 }
-class email_status {
+class Email_Status {
     public static function init() {
     }
 
@@ -96,7 +96,10 @@ class email_status {
                 3600
             );
         }
-        $total_new_keywords = ( (int) $total_new_keywords ?: 0 );
+        $total_new_keywords = (int) $total_new_keywords;
+        if ( !$total_new_keywords ) {
+            $total_new_keywords = 0;
+        }
         $top_possibilities = array();
         $possibilities_stats = array(
             'total_issues' => 0,
@@ -182,7 +185,11 @@ class email_status {
             $intro_summary .= '<h2>' . esc_html__( 'Summary', 'seo-booster' ) . '</h2>';
             $intro_summary .= '<ul>';
             if ( $total_new_keywords > 0 ) {
-                $intro_summary .= '<li>' . sprintf( __( '%s new keywords discovered', 'seo-booster' ), '<strong>' . number_format_i18n( $total_new_keywords ) . '</strong>' ) . '</li>';
+                $intro_summary .= '<li>' . sprintf( 
+                    /* translators: %s: number of new keywords */
+                    __( '%s new keywords discovered', 'seo-booster' ),
+                    '<strong>' . number_format_i18n( $total_new_keywords ) . '</strong>'
+                 ) . '</li>';
             }
             if ( $possibilities_count > 0 ) {
                 $intro_summary .= '<li>' . sprintf( 

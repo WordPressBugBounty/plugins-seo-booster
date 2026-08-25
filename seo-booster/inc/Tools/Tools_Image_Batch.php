@@ -103,7 +103,7 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 			return $value;
 		}
 		if ( is_int( $value ) || is_float( $value ) ) {
-			return (int) $value === 1;
+			return 1 === (int) $value;
 		}
 		$value = strtolower( trim( (string) $value ) );
 		return in_array( $value, array( '1', 'true', 'yes', 'on' ), true );
@@ -113,7 +113,7 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 	protected static function validate_preconditions() {
 		if ( ! Tools_Image_Scanner::ai_is_available() ) {
 			$message = Tools_Image_Scanner::get_ai_unavailable_message();
-			if ( $message === '' ) {
+			if ( '' === $message ) {
 				$message = __( 'AI is not configured for image generation.', 'seo-booster' );
 			}
 			return $message;
@@ -137,7 +137,7 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 			)
 			: array();
 
-		if ( $process_scope === 'all_matching' ) {
+		if ( 'all_matching' === $process_scope ) {
 			if ( empty( $filters ) ) {
 				wp_send_json_error( array( 'message' => __( 'Select at least one scan filter.', 'seo-booster' ) ) );
 			}
@@ -246,7 +246,7 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 			'attachment_id' => (int) $item_id,
 			'image_title'   => get_the_title( $item_id ),
 			'thumb_url'     => $thumb ? $thumb[0] : '',
-			'edit_url'      => get_edit_post_link( $item_id, 'raw' ) ?: '',
+			'edit_url'      => get_edit_post_link( $item_id, 'raw' ) ? get_edit_post_link( $item_id, 'raw' ) : '',
 		);
 	}
 
@@ -263,12 +263,14 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 			$mime       = get_post_mime_type( $attachment_id );
 			$mime_label = $mime ? $mime : __( 'unknown', 'seo-booster' );
 			throw new \Exception(
-				esc_html( sprintf(
+				esc_html(
+					sprintf(
 					/* translators: 1: MIME type, 2: supported formats list */
-					__( 'This file type (%1$s) is not supported. Supported formats: %2$s.', 'seo-booster' ),
-					$mime_label,
-					Tools_Image_Scanner::get_processable_formats_label()
-				) )
+						__( 'This file type (%1$s) is not supported. Supported formats: %2$s.', 'seo-booster' ),
+						$mime_label,
+						Tools_Image_Scanner::get_processable_formats_label()
+					)
+				)
 			);
 		}
 
@@ -360,7 +362,7 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 	public static function apply_content( $attachment_id, array $content, array $apply_fields ) {
 		$after = array();
 
-		if ( ! empty( $apply_fields['alt_text'] ) && isset( $content['alt_text'] ) && $content['alt_text'] !== '' ) {
+		if ( ! empty( $apply_fields['alt_text'] ) && isset( $content['alt_text'] ) && '' !== $content['alt_text'] ) {
 			update_post_meta( $attachment_id, '_wp_attachment_image_alt', sanitize_text_field( $content['alt_text'] ) );
 			$after['alt_text'] = sanitize_text_field( $content['alt_text'] );
 		}
@@ -372,12 +374,12 @@ class Tools_Image_Batch extends Tools_Batch_Base {
 			$after['title']            = $update_data['post_title'];
 		}
 
-		if ( ! empty( $apply_fields['caption'] ) && isset( $content['caption'] ) && $content['caption'] !== '' ) {
+		if ( ! empty( $apply_fields['caption'] ) && isset( $content['caption'] ) && '' !== $content['caption'] ) {
 			$update_data['post_excerpt'] = sanitize_textarea_field( $content['caption'] );
 			$after['caption']            = $update_data['post_excerpt'];
 		}
 
-		if ( ! empty( $apply_fields['description'] ) && isset( $content['description'] ) && $content['description'] !== '' ) {
+		if ( ! empty( $apply_fields['description'] ) && isset( $content['description'] ) && '' !== $content['description'] ) {
 			$update_data['post_content'] = sanitize_textarea_field( $content['description'] );
 			$after['description']        = $update_data['post_content'];
 		}

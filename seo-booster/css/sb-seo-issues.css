@@ -384,6 +384,11 @@ tr:hover .row-actions {
 	border-left: 3px solid #ddd;
 }
 
+.sb-analysis-item--filter-match {
+	background: #fcf9e8;
+	border-left-color: #dba617;
+}
+
 .sb-analysis-item:last-child {
 	margin-bottom: 0;
 }

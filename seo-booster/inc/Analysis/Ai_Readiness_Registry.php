@@ -208,7 +208,7 @@ class Ai_Readiness_Registry {
 				if ( empty( $item['key'] ) ) {
 					continue;
 				}
-				if ( $outcome === 'pass' ) {
+				if ( 'pass' === $outcome ) {
 					$pass[] = $item['key'];
 				} else {
 					$fail[] = $item['key'];
@@ -248,11 +248,11 @@ class Ai_Readiness_Registry {
 			$key      = $row['issue_key'] ?? ( $row['key'] ?? '' );
 			$severity = $row['severity'] ?? '';
 
-			if ( $key === '' ) {
+			if ( '' === $key ) {
 				continue;
 			}
 
-			if ( $severity === 'good' ) {
+			if ( 'good' === $severity ) {
 				$pass[] = $key;
 			} else {
 				$fail[] = $key;
@@ -275,7 +275,7 @@ class Ai_Readiness_Registry {
 	 * @return bool|null Null when indeterminate (no analysis yet).
 	 */
 	public static function item_passes( $item, $pass_keys, $fail_keys, $analysis = null ) {
-		if ( ! empty( $item['type'] ) && $item['type'] === 'seo_score_meta' ) {
+		if ( ! empty( $item['type'] ) && 'seo_score_meta' === $item['type'] ) {
 			return self::seo_score_meta_passes( $analysis );
 		}
 
@@ -316,7 +316,7 @@ class Ai_Readiness_Registry {
 			$analyzed_at = gmdate( 'Y-m-d H:i:s', (int) $analysis['metadata']['timestamp'] );
 		}
 
-		if ( $analyzed_at === '' ) {
+		if ( '' === $analyzed_at ) {
 			return null;
 		}
 

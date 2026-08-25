@@ -48,7 +48,7 @@ class Credits_Service {
 			),
 		);
 
-		if ( $body !== null ) {
+		if ( null !== $body ) {
 			$args['body'] = wp_json_encode( $body );
 		}
 
@@ -107,8 +107,8 @@ class Credits_Service {
 		$status = wp_remote_retrieve_response_code( $response );
 
 		if ( $status >= 200 && $status < 300 && ! empty( $data['api_token'] ) ) {
-			update_option( 'seobooster_credits_api_token', $data['api_token'] );
-			update_option( 'seobooster_credits_user_id', $data['user_id'] );
+			update_option( 'seobooster_credits_api_token', $data['api_token'], false );
+			update_option( 'seobooster_credits_user_id', $data['user_id'], false );
 			self::set_cached_balance( $data['credits_balance'] ?? 0 );
 
 			return array(
@@ -140,7 +140,7 @@ class Credits_Service {
 
 		if ( ! $force_refresh ) {
 			$cached = get_transient( self::$balance_cache_key );
-			if ( $cached !== false ) {
+			if ( false !== $cached ) {
 				return (int) $cached;
 			}
 		}
@@ -210,7 +210,7 @@ class Credits_Service {
 	 */
 	public static function get_packs() {
 		$cached = get_transient( 'seobooster_credits_packs' );
-		if ( $cached !== false ) {
+		if ( false !== $cached ) {
 			return $cached;
 		}
 
@@ -309,7 +309,7 @@ class Credits_Service {
 		}
 
 		// Insufficient credits
-		if ( isset( $result['status_code'] ) && $result['status_code'] === 402 ) {
+		if ( isset( $result['status_code'] ) && 402 === $result['status_code'] ) {
 			return array(
 				'success'           => false,
 				'error'             => __( 'Insufficient credits. Please purchase more credits to continue.', 'seo-booster' ),
@@ -332,6 +332,29 @@ class Credits_Service {
 	 * @return array
 	 */
 	public static function get_request_status( $request_id ) {
+		$request_id = (string) $request_id;
+		if ( ! preg_match( '/^[A-Za-z0-9_-]{1,128}$/', $request_id ) ) {
+			return array(
+				'success' => false,
+				'error'   => __( 'Invalid request ID', 'seo-booster' ),
+			);
+		}
+
+		$cache_key = 'sb_credit_result_' . $request_id;
+		$cached    = get_transient( $cache_key );
+		if ( is_array( $cached ) && ! empty( $cached['status'] ) ) {
+			$status = (string) $cached['status'];
+			if ( in_array( $status, Credits_REST_Controller::ALLOWED_STATUSES, true ) ) {
+				return array(
+					'success'           => true,
+					'status'            => $status,
+					'data'              => isset( $cached['data'] ) && is_array( $cached['data'] ) ? $cached['data'] : null,
+					'error'             => null,
+					'credits_remaining' => null,
+				);
+			}
+		}
+
 		$result = self::api_request( 'GET', '/requests/' . $request_id );
 
 		if ( $result['success'] ) {
@@ -383,13 +406,13 @@ class Credits_Service {
 	 * Whether the SEO Booster Credits AI provider may be selected in settings.
 	 *
 	 * Disabled by default until public release. Enable via:
-	 * add_filter( 'sb_credits_ai_provider_available', '__return_true' );
+	 * add_filter( 'seobooster_credits_ai_provider_available', '__return_true' );
 	 *
 	 * @since 7.0.5
 	 * @return bool
 	 */
 	public static function is_ai_provider_available() {
-		return (bool) apply_filters( 'sb_credits_ai_provider_available', false );
+		return (bool) apply_filters( 'seobooster_credits_ai_provider_available', false );
 	}
 
 	/**

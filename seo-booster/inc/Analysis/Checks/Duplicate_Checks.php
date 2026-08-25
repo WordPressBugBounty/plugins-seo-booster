@@ -41,16 +41,16 @@ class Duplicate_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_duplicate_titles( Content_Context $context, Result_Set $results ) {
-		$raw = $this->get_raw_seo_fields( $context );
+		$raw   = $this->get_raw_seo_fields( $context );
 		$title = $raw['title'];
-		if ( $title === '' || Abstract_Post_Meta_Adapter::looks_like_seo_template( $title ) ) {
+		if ( '' === $title || Abstract_Post_Meta_Adapter::looks_like_seo_template( $title ) ) {
 			return;
 		}
 
 		global $wpdb;
 		$all_duplicates = $this->collect_seo_title_duplicates( $context, $title );
 
-		if ( $context->object_type === 'post' ) {
+		if ( 'post' === $context->object_type ) {
 			$duplicate_post_titles = $wpdb->get_results(
 				$wpdb->prepare(
 					"SELECT ID, post_title, 'post_title' as type
@@ -73,7 +73,11 @@ class Duplicate_Checks extends Abstract_Checks {
 		}
 
 		$duplicate_links = $this->format_duplicate_links( $all_duplicates );
-		$message         = sprintf( __( 'This SEO title is already used by %d other post(s) or term(s). Consider making it unique.', 'seo-booster' ), count( $all_duplicates ) );
+		$message = sprintf(
+			/* translators: %d: number of other posts or terms using the same SEO title */
+			__( 'This SEO title is already used by %d other post(s) or term(s). Consider making it unique.', 'seo-booster' ),
+			count( $all_duplicates )
+		);
 		$message        .= '<br><small>Used by: ' . $duplicate_links . '</small>';
 
 		$results->add_warning( 'duplicate_title', $message );
@@ -87,7 +91,7 @@ class Duplicate_Checks extends Abstract_Checks {
 	private function check_duplicate_meta_descriptions( Content_Context $context, Result_Set $results ) {
 		$raw         = $this->get_raw_seo_fields( $context );
 		$description = $raw['description'];
-		if ( $description === '' || Abstract_Post_Meta_Adapter::looks_like_seo_template( $description ) ) {
+		if ( '' === $description || Abstract_Post_Meta_Adapter::looks_like_seo_template( $description ) ) {
 			return;
 		}
 
@@ -99,7 +103,11 @@ class Duplicate_Checks extends Abstract_Checks {
 		}
 
 		$duplicate_links = $this->format_duplicate_links( $all_duplicates );
-		$message         = sprintf( __( 'This meta description is already used by %d other post(s) or term(s). Consider making it unique.', 'seo-booster' ), count( $all_duplicates ) );
+		$message = sprintf(
+			/* translators: %d: number of other posts or terms using the same meta description */
+			__( 'This meta description is already used by %d other post(s) or term(s). Consider making it unique.', 'seo-booster' ),
+			count( $all_duplicates )
+		);
 		$message        .= '<br><small>Used by: ' . $duplicate_links . '</small>';
 
 		$results->add_warning( 'duplicate_meta_description', $message );
@@ -112,10 +120,10 @@ class Duplicate_Checks extends Abstract_Checks {
 	 * @return array{title: string, description: string}
 	 */
 	private function get_raw_seo_fields( Content_Context $context ) {
-		if ( $context->object_type === 'post' && $context->object_id > 0 ) {
+		if ( 'post' === $context->object_type && $context->object_id > 0 ) {
 			return SEO_Plugin_Registry::read_post_seo( $context->object_id );
 		}
-		if ( $context->object_type === 'term' && $context->object_id > 0 ) {
+		if ( 'term' === $context->object_type && $context->object_id > 0 ) {
 			return SEO_Plugin_Registry::read_term_seo( $context->object_id );
 		}
 
@@ -133,7 +141,7 @@ class Duplicate_Checks extends Abstract_Checks {
 	private function collect_seo_title_duplicates( Content_Context $context, $title ) {
 		$all_duplicates = array();
 
-		if ( $context->object_type === 'post' ) {
+		if ( 'post' === $context->object_type ) {
 			$duplicate_posts = SEO_Plugin_Registry::find_duplicate_posts( 'title', $title, $context->object_id );
 			foreach ( $duplicate_posts as $post ) {
 				$all_duplicates[] = $post;
@@ -164,7 +172,7 @@ class Duplicate_Checks extends Abstract_Checks {
 	private function collect_seo_description_duplicates( Content_Context $context, $description ) {
 		$all_duplicates = array();
 
-		if ( $context->object_type === 'post' ) {
+		if ( 'post' === $context->object_type ) {
 			$duplicate_posts = SEO_Plugin_Registry::find_duplicate_posts( 'description', $description, $context->object_id );
 			foreach ( $duplicate_posts as $post ) {
 				$all_duplicates[] = $post;

@@ -65,7 +65,6 @@ class Setup_Wizard {
         add_action( 'wp_ajax_sb_setup_health_counts', array(__CLASS__, 'ajax_health_counts') );
         add_action( 'wp_ajax_sb_setup_enable_ai', array(__CLASS__, 'ajax_enable_ai') );
         add_action( 'wp_ajax_sb_setup_get_autolink_suggestions', array(__CLASS__, 'ajax_get_autolink_suggestions') );
-        add_action( 'wp_ajax_sb_setup_save_selected_site', array(__CLASS__, 'ajax_save_selected_site') );
         add_action( 'wp_ajax_sb_setup_save_bot_tracking', array(__CLASS__, 'ajax_save_bot_tracking') );
         add_action( 'admin_post_sb_setup_restart', array(__CLASS__, 'handle_restart') );
     }
@@ -153,7 +152,7 @@ class Setup_Wizard {
         $args = array(
             'page' => 'sb2_setup',
         );
-        if ( $step !== '' ) {
+        if ( '' !== $step ) {
             $args['step'] = sanitize_key( $step );
         }
         return admin_url( 'admin.php?' . http_build_query( $args ) );
@@ -311,12 +310,6 @@ class Setup_Wizard {
         if ( $requested && in_array( $requested, self::get_step_ids(), true ) ) {
             update_option( self::OPTION_STEP, $requested, false );
         }
-        if ( self::STATUS_PENDING !== self::get_status() && self::STATUS_DISMISSED !== self::get_status() ) {
-            // Viewing after complete is fine (soft restart keeps completed until the user advances).
-            if ( self::STATUS_COMPLETED === self::get_status() ) {
-                // no-op
-            }
-        }
         $state = self::build_state();
         include SEOBOOSTER_PLUGINPATH . 'views/setup-wizard.php';
     }
@@ -338,7 +331,7 @@ class Setup_Wizard {
         $ai_variant = self::get_ai_variant();
         $completions = array(
             'welcome'   => true,
-            'gsc'       => $access_token !== '' && $selected_site !== '' && $has_gsc_data,
+            'gsc'       => '' !== $access_token && '' !== $selected_site && $has_gsc_data,
             'email'     => 'on' === get_option( 'seobooster_weekly_email', '' ),
             'autolink'  => 'on' === get_option( 'seobooster_internal_linking', '' ),
             'scan'      => !empty( $stats['total_analyzed'] ) && (int) $stats['total_analyzed'] > 0,
@@ -362,9 +355,9 @@ class Setup_Wizard {
             }
         }
         $gsc_phase = 'connect';
-        if ( $access_token !== '' && $selected_site === '' ) {
+        if ( '' !== $access_token && '' === $selected_site ) {
             $gsc_phase = 'site';
-        } elseif ( $access_token !== '' && $selected_site !== '' && !$has_gsc_data ) {
+        } elseif ( '' !== $access_token && '' !== $selected_site && !$has_gsc_data ) {
             $gsc_phase = 'import';
         } elseif ( $has_gsc_data ) {
             $gsc_phase = 'done';
@@ -388,7 +381,7 @@ class Setup_Wizard {
             'completions'       => $completions,
             'seo_plugin_label'  => ( $seo_label ? $seo_label : '' ),
             'google_email'      => $google_email,
-            'access_token'      => $access_token !== '',
+            'access_token'      => '' !== $access_token,
             'selected_site'     => $selected_site,
             'sites'             => $sites,
             'has_gsc_data'      => $has_gsc_data,
@@ -524,7 +517,7 @@ class Setup_Wizard {
         self::assert_ajax();
         $email_recipient = ( isset( $_POST['email'] ) ? sanitize_text_field( wp_unslash( $_POST['email'] ) ) : '' );
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in Setup_Wizard::assert_ajax() before this runs.
-        if ( $email_recipient === '' ) {
+        if ( '' === $email_recipient ) {
             $current = wp_get_current_user();
             $email_recipient = $current->user_email;
         }
@@ -627,7 +620,7 @@ class Setup_Wizard {
         foreach ( $rows as $row ) {
             $query = ( isset( $row['query'] ) ? (string) $row['query'] : '' );
             $page = ( isset( $row['page'] ) ? (string) $row['page'] : '' );
-            if ( $query === '' || $page === '' ) {
+            if ( '' === $query || '' === $page ) {
                 continue;
             }
             $key = strtolower( $query );
@@ -667,34 +660,6 @@ class Setup_Wizard {
     }
 
     /**
-     * Save selected GSC site (before import).
-     *
-     * @return void
-     */
-    public static function ajax_save_selected_site() {
-        self::assert_ajax();
-        $raw = ( isset( $_POST['site_url'] ) ? wp_unslash( $_POST['site_url'] ) : '' );
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in Setup_Wizard::assert_ajax() before this runs.
-        // Domain properties use sc-domain:host — esc_url_raw() would strip them.
-        $site = ( is_string( $raw ) && 0 === strpos( $raw, 'sc-domain:' ) ? sanitize_text_field( $raw ) : esc_url_raw( $raw ) );
-        if ( $site === '' ) {
-            wp_send_json_error( array(
-                'message' => __( 'Please select a site', 'seo-booster' ),
-            ) );
-        }
-        $allowed = self::get_gsc_site_urls();
-        if ( !in_array( $site, $allowed, true ) ) {
-            wp_send_json_error( array(
-                'message' => __( 'Please select a site', 'seo-booster' ),
-            ) );
-        }
-        update_option( 'seobooster_selected_site', $site, false );
-        wp_send_json_success( array(
-            'state' => self::build_state(),
-        ) );
-    }
-
-    /**
      * GSC property URLs for the wizard select (strings only).
      *
      * `seobooster_gsc_sites` stores `{ siteUrl, permissionLevel }` entries from Google_API::fetch_sites().
@@ -718,7 +683,7 @@ class Setup_Wizard {
                 $url = (string) $site;
             }
             $url = trim( $url );
-            if ( $url === '' ) {
+            if ( '' === $url ) {
                 continue;
             }
             $urls[] = $url;

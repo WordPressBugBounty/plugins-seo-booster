@@ -3,6 +3,7 @@
 namespace Cleverplugins\SEOBooster\Tools;
 
 use Cleverplugins\SEOBooster\Google_API;
+use Cleverplugins\SEOBooster\GSC_History;
 use Cleverplugins\SEOBooster\SEO_Issues_Manager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -17,6 +18,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Tools_GSC_Helper {
 
 	const PREVIEW_LIMIT = 50;
+
+	/**
+	 * Max keyword rows loaded for opportunity / autolink insight scans (90-day window).
+	 */
+	const INSIGHT_KEYWORD_LIMIT = 500;
 
 	/**
 	 * Max queries shown/sent per page group (keeps the AI prompt focused and the
@@ -91,15 +97,42 @@ class Tools_GSC_Helper {
 	}
 
 	/**
-	 * Fetch all GSC keywords with aggregated stats.
+	 * Fetch GSC keywords with 90-day aggregated stats for insight scanners.
 	 *
+	 * @param int|null $limit                Max rows, or null for no LIMIT.
+	 * @param string[] $opportunity_filters  Opportunity type keys; when set, SQL HAVING pre-filters rows.
+	 * @param bool     $require_min_traffic  When true, HAVING impressions >= 50 OR clicks >= 5.
 	 * @return array<int, array>
 	 */
-	public static function get_all_keywords_with_stats() {
+	public static function get_insight_keyword_rows( $limit = null, array $opportunity_filters = array(), $require_min_traffic = false ) {
 		global $wpdb;
 
-		$rows = $wpdb->get_results(
-			"SELECT
+		$window = (int) GSC_History::INSIGHT_WINDOW_DAYS;
+
+		$having_parts = array();
+		if ( $require_min_traffic ) {
+			$having_parts[] = '(COALESCE(SUM(qkh.impressions), 0) >= 50 OR COALESCE(SUM(qkh.clicks), 0) >= 5)';
+		}
+
+		$opportunity_having = self::build_opportunity_having_clause( $opportunity_filters );
+		if ( '' !== $opportunity_having ) {
+			$having_parts[] = '(' . $opportunity_having . ')';
+		}
+
+		$having_sql = '';
+		if ( ! empty( $having_parts ) ) {
+			$having_sql = ' HAVING ' . implode( ' AND ', $having_parts );
+		}
+
+		$limit_sql = '';
+		$prepare   = array( $window );
+		if ( null !== $limit ) {
+			$limit_sql = ' LIMIT %d';
+			$prepare[] = max( 1, (int) $limit );
+		}
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Prefixed tables; dynamic HAVING/LIMIT.
+		$sql = "SELECT
                 qk.id,
                 qk.query,
                 qk.page,
@@ -111,12 +144,58 @@ class Tools_GSC_Helper {
             FROM {$wpdb->prefix}sb2_query_keywords AS qk
             LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh
                 ON qk.id = qkh.query_keywords_id
-            GROUP BY qk.id, qk.query, qk.page, qk.is_used_in_content
-            ORDER BY impressions DESC, clicks DESC",
+                AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
+            GROUP BY qk.id, qk.query, qk.page, qk.is_used_in_content{$having_sql}
+            ORDER BY impressions DESC, clicks DESC{$limit_sql}";
+
+		$rows = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Dynamic HAVING/LIMIT; placeholders filled via $prepare.
+			$wpdb->prepare( $sql, ...$prepare ),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
 		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * Fetch all GSC keywords with aggregated stats (capped preview list).
+	 *
+	 * @return array<int, array>
+	 */
+	public static function get_all_keywords_with_stats() {
+		return self::get_insight_keyword_rows( self::INSIGHT_KEYWORD_LIMIT );
+	}
+
+	/**
+	 * Build SQL HAVING OR-clauses for opportunity type filters.
+	 *
+	 * @param string[] $filters Active opportunity filter keys.
+	 * @return string Empty when no filters.
+	 */
+	private static function build_opportunity_having_clause( array $filters ) {
+		$allowed = self::get_opportunity_filter_keys();
+		$filters = array_values( array_intersect( $filters, $allowed ) );
+
+		if ( empty( $filters ) ) {
+			return '';
+		}
+
+		$clauses = array();
+
+		if ( in_array( 'striking_distance', $filters, true ) ) {
+			$clauses[] = '(COALESCE(AVG(qkh.position), 0) >= 4 AND COALESCE(AVG(qkh.position), 0) <= 20 AND COALESCE(SUM(qkh.impressions), 0) >= 50)';
+		}
+
+		if ( in_array( 'low_ctr', $filters, true ) ) {
+			$clauses[] = '(COALESCE(AVG(qkh.position), 0) > 0 AND COALESCE(AVG(qkh.position), 0) < 10 AND COALESCE(AVG(qkh.ctr), 0) < 2.0 AND COALESCE(SUM(qkh.impressions), 0) >= 50)';
+		}
+
+		if ( in_array( 'high_impressions_low_clicks', $filters, true ) ) {
+			$clauses[] = '(COALESCE(SUM(qkh.impressions), 0) > 1000 AND COALESCE(SUM(qkh.clicks), 0) < 50)';
+		}
+
+		return implode( ' OR ', $clauses );
 	}
 
 	/**
@@ -157,9 +236,12 @@ class Tools_GSC_Helper {
 	 * stuffing every variation.
 	 *
 	 * @param string[] $filters Active filter keys.
+	 * @param array    $args    Optional: include_all_items (bool, default false).
 	 * @return array
 	 */
-	public static function scan_opportunities( array $filters ) {
+	public static function scan_opportunities( array $filters, array $args = array() ) {
+		$include_all_items = ! empty( $args['include_all_items'] );
+
 		if ( empty( $filters ) ) {
 			return array(
 				'items'         => array(),
@@ -167,7 +249,6 @@ class Tools_GSC_Helper {
 				'preview_limit' => self::PREVIEW_LIMIT,
 				'preview_count' => 0,
 				'all_ids'       => array(),
-				'all_items'     => array(),
 			);
 		}
 
@@ -176,7 +257,7 @@ class Tools_GSC_Helper {
 
 		$groups    = array();
 		$page_post = array();
-		$keywords  = self::get_all_keywords_with_stats();
+		$keywords  = self::get_insight_keyword_rows( null, $filters );
 
 		foreach ( $keywords as $row ) {
 			$types = self::classify_keyword_opportunities( $row );
@@ -187,7 +268,7 @@ class Tools_GSC_Helper {
 			}
 
 			$page = isset( $row['page'] ) ? (string) $row['page'] : '';
-			if ( $page === '' ) {
+			if ( '' === $page ) {
 				continue;
 			}
 
@@ -201,7 +282,7 @@ class Tools_GSC_Helper {
 			}
 
 			$query = trim( (string) $row['query'] );
-			if ( $query === '' ) {
+			if ( '' === $query ) {
 				continue;
 			}
 			$normalized = strtolower( $query );
@@ -214,8 +295,8 @@ class Tools_GSC_Helper {
 					'title'       => get_the_title( $post_id ),
 					'post_type'   => $post ? $post->post_type : '',
 					'slug'        => $post ? (string) $post->post_name : '',
-					'edit_url'    => get_edit_post_link( $post_id, 'raw' ) ?: '',
-					'view_url'    => get_permalink( $post_id ) ?: $page,
+					'edit_url'    => get_edit_post_link( $post_id, 'raw' ) ? get_edit_post_link( $post_id, 'raw' ) : '',
+					'view_url'    => get_permalink( $post_id ) ? get_permalink( $post_id ) : $page,
 					'page_url'    => $page,
 					'queries'     => array(),
 					'seen'        => array(),
@@ -263,7 +344,8 @@ class Tools_GSC_Helper {
 			usort(
 				$queries,
 				function ( $a, $b ) {
-					return ( $b['impressions'] <=> $a['impressions'] ) ?: ( $b['clicks'] <=> $a['clicks'] );
+					$by_impressions = $b['impressions'] <=> $a['impressions'];
+					return 0 !== $by_impressions ? $by_impressions : ( $b['clicks'] <=> $a['clicks'] );
 				}
 			);
 
@@ -293,21 +375,27 @@ class Tools_GSC_Helper {
 		usort(
 			$matching,
 			function ( $a, $b ) {
-				return ( $b['impressions'] <=> $a['impressions'] ) ?: ( $b['clicks'] <=> $a['clicks'] );
+				$by_impressions = $b['impressions'] <=> $a['impressions'];
+				return 0 !== $by_impressions ? $by_impressions : ( $b['clicks'] <=> $a['clicks'] );
 			}
 		);
 
 		$total_found = count( $matching );
 		$preview     = array_slice( $matching, 0, self::PREVIEW_LIMIT );
 
-		return array(
+		$result = array(
 			'items'         => $preview,
 			'total_found'   => $total_found,
 			'preview_limit' => self::PREVIEW_LIMIT,
 			'preview_count' => count( $preview ),
 			'all_ids'       => array_values( array_unique( array_column( $matching, 'post_id' ) ) ),
-			'all_items'     => $matching,
 		);
+
+		if ( $include_all_items ) {
+			$result['all_items'] = $matching;
+		}
+
+		return $result;
 	}
 
 	/**
@@ -323,7 +411,7 @@ class Tools_GSC_Helper {
 		}
 
 		$post = get_post( $post_id );
-		if ( ! $post || $post->post_status !== 'publish' ) {
+		if ( ! $post || 'publish' !== $post->post_status ) {
 			return 0;
 		}
 
@@ -343,10 +431,13 @@ class Tools_GSC_Helper {
 	public static function get_keywords_for_page( $page_url ) {
 		global $wpdb;
 
-		if ( $page_url === '' ) {
+		if ( '' === $page_url ) {
 			return array();
 		}
 
+		$window = (int) GSC_History::INSIGHT_WINDOW_DAYS;
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed tables; INTERVAL/LIMIT are integers.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT
@@ -360,13 +451,17 @@ class Tools_GSC_Helper {
                 FROM {$wpdb->prefix}sb2_query_keywords AS qk
                 LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh
                     ON qk.id = qkh.query_keywords_id
+                    AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
                 WHERE qk.page = %s
                 GROUP BY qk.id, qk.query, qk.page
-                ORDER BY impressions DESC, clicks DESC",
+                ORDER BY impressions DESC, clicks DESC
+                LIMIT 100",
+				$window,
 				$page_url
 			),
 			ARRAY_A
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return is_array( $rows ) ? $rows : array();
 	}
@@ -400,18 +495,18 @@ class Tools_GSC_Helper {
 		foreach ( $rows as $row ) {
 			$post_id = (int) ( $row['post_id'] ?? 0 );
 			$value   = trim( (string) ( $row['meta_value'] ?? '' ) );
-			if ( $post_id <= 0 || $value === '' ) {
+			if ( $post_id <= 0 || '' === $value ) {
 				continue;
 			}
 
 			$parts = explode( ',', $value );
 			$first = trim( (string) ( $parts[0] ?? '' ) );
-			if ( $first === '' ) {
+			if ( '' === $first ) {
 				continue;
 			}
 
 			$normalized = self::normalize_keyword( $first );
-			if ( $normalized !== '' && ! isset( $map[ $normalized ] ) ) {
+			if ( '' !== $normalized && ! isset( $map[ $normalized ] ) ) {
 				$map[ $normalized ] = $post_id;
 			}
 		}
@@ -493,7 +588,7 @@ class Tools_GSC_Helper {
 
 		foreach ( $fragments as $fragment ) {
 			$fragment = strtolower( trim( (string) $fragment ) );
-			if ( $fragment === '' ) {
+			if ( '' === $fragment ) {
 				continue;
 			}
 			if ( strpos( $slug, $fragment ) !== false || strpos( $title, $fragment ) !== false ) {
@@ -538,7 +633,7 @@ class Tools_GSC_Helper {
 			return array();
 		}
 
-		if ( $limit === null ) {
+		if ( null === $limit ) {
 			$limit = self::MAX_FOCUS_KEYWORD_ALTERNATIVES;
 		}
 		$limit = max( 1, (int) $limit );
@@ -553,7 +648,7 @@ class Tools_GSC_Helper {
 			$position    = (float) ( $row['position'] ?? 0 );
 			$query       = trim( (string) ( $row['query'] ?? '' ) );
 
-			if ( $query === '' || $impressions < self::MIN_FOCUS_IMPRESSIONS ) {
+			if ( '' === $query || $impressions < self::MIN_FOCUS_IMPRESSIONS ) {
 				continue;
 			}
 
@@ -562,7 +657,7 @@ class Tools_GSC_Helper {
 			}
 
 			$normalized = self::normalize_keyword( $query );
-			if ( $normalized === '' ) {
+			if ( '' === $normalized ) {
 				continue;
 			}
 
@@ -602,7 +697,7 @@ class Tools_GSC_Helper {
 
 		foreach ( $rows as $keyword ) {
 			$normalized = self::normalize_keyword( $keyword );
-			if ( $normalized !== '' ) {
+			if ( '' !== $normalized ) {
 				$set[ $normalized ] = true;
 			}
 		}
@@ -630,7 +725,7 @@ class Tools_GSC_Helper {
 	 * @return array
 	 */
 	public static function scan_autolink_opportunities( $filter, array $post_types = array( 'post', 'page' ) ) {
-		if ( $filter === 'enable_high_traffic' ) {
+		if ( 'enable_high_traffic' === $filter ) {
 			return self::scan_autolink_enable_high_traffic( $post_types );
 		}
 
@@ -661,9 +756,9 @@ class Tools_GSC_Helper {
 		$parsed = wp_parse_url( (string) $page_url );
 		if ( is_array( $parsed ) && ! empty( $parsed['path'] ) ) {
 			$path = $parsed['path'];
-			if ( $slug === '' ) {
+			if ( '' === $slug ) {
 				$trimmed = trim( $parsed['path'], '/' );
-				if ( $trimmed !== '' ) {
+				if ( '' !== $trimmed ) {
 					$segments = explode( '/', $trimmed );
 					$slug     = (string) end( $segments );
 				}
@@ -736,7 +831,7 @@ class Tools_GSC_Helper {
 		}
 
 		foreach ( $tokens as $token ) {
-			if ( $token !== '' && ! in_array( $token, $stopwords, true ) ) {
+			if ( '' !== $token && ! in_array( $token, $stopwords, true ) ) {
 				$filtered[] = $token;
 			}
 		}
@@ -796,7 +891,7 @@ class Tools_GSC_Helper {
 
 		foreach ( $candidates as $entry ) {
 			$signature = self::keyword_signature( $entry['keyword'] ?? '' );
-			if ( $signature === '' || isset( $kept_signatures[ $signature ] ) ) {
+			if ( '' === $signature || isset( $kept_signatures[ $signature ] ) ) {
 				continue;
 			}
 
@@ -856,7 +951,7 @@ class Tools_GSC_Helper {
 	 */
 	public static function get_autolink_missing_rules_items() {
 		$existing   = self::get_autolink_keyword_set();
-		$keywords   = self::get_all_keywords_with_stats();
+		$keywords   = self::get_insight_keyword_rows( null, array(), true );
 		$by_keyword = array();
 
 		foreach ( $keywords as $row ) {
@@ -866,7 +961,7 @@ class Tools_GSC_Helper {
 			$clicks      = (int) ( $row['clicks'] ?? 0 );
 			$word_count  = count( array_filter( explode( ' ', $query ) ) );
 
-			if ( $query === '' || $page === '' || strlen( $query ) < 3 ) {
+			if ( '' === $query || '' === $page || strlen( $query ) < 3 ) {
 				continue;
 			}
 
@@ -879,7 +974,7 @@ class Tools_GSC_Helper {
 			}
 
 			$normalized = self::normalize_keyword( $query );
-			if ( $normalized === '' || isset( $existing[ $normalized ] ) ) {
+			if ( '' === $normalized || isset( $existing[ $normalized ] ) ) {
 				continue;
 			}
 
@@ -892,7 +987,7 @@ class Tools_GSC_Helper {
 					'keyword'       => $query,
 					'target_url'    => $page,
 					'post_id'       => $post_id,
-					'edit_url'      => $post_id > 0 ? ( get_edit_post_link( $post_id, 'raw' ) ?: '' ) : '',
+					'edit_url'      => $post_id > 0 ? ( get_edit_post_link( $post_id, 'raw' ) ? get_edit_post_link( $post_id, 'raw' ) : '' ) : '',
 					'clicks'        => $clicks,
 					'impressions'   => $impressions,
 					'position'      => round( (float) ( $row['position'] ?? 0 ), 1 ),
@@ -1024,10 +1119,32 @@ class Tools_GSC_Helper {
 	 * @return array
 	 */
 	public static function scan_autolink_enable_high_traffic( array $post_types ) {
+		$matching    = self::get_autolink_enable_high_traffic_items( $post_types );
+		$total_found = count( $matching );
+		$preview     = array_slice( $matching, 0, self::PREVIEW_LIMIT );
+
+		return array(
+			'items'         => $preview,
+			'total_found'   => $total_found,
+			'preview_limit' => self::PREVIEW_LIMIT,
+			'preview_count' => count( $preview ),
+			'all_ids'       => array_column( $matching, 'post_id' ),
+			'filter'        => 'enable_high_traffic',
+		);
+	}
+
+	/**
+	 * Full list of high-traffic pages with autolink off (90-day window, max 200 pages).
+	 *
+	 * @param string[] $post_types Post types.
+	 * @return array<int, array>
+	 */
+	public static function get_autolink_enable_high_traffic_items( array $post_types ) {
 		global $wpdb;
 
 		$matching   = array();
 		$min_clicks = 10;
+		$window     = (int) GSC_History::INSIGHT_WINDOW_DAYS;
 
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed table names; HAVING uses %d.
 		$page_clicks = $wpdb->get_results(
@@ -1036,9 +1153,12 @@ class Tools_GSC_Helper {
             FROM {$wpdb->prefix}sb2_query_keywords AS qk
             LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh
                 ON qk.id = qkh.query_keywords_id
+                AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
             GROUP BY qk.page
             HAVING clicks >= %d
-            ORDER BY clicks DESC",
+            ORDER BY clicks DESC
+            LIMIT 200",
+				$window,
 				(int) $min_clicks
 			),
 			ARRAY_A
@@ -1051,7 +1171,7 @@ class Tools_GSC_Helper {
 
 		foreach ( $page_clicks as $row ) {
 			$page = (string) ( $row['page'] ?? '' );
-			if ( $page === '' ) {
+			if ( '' === $page ) {
 				continue;
 			}
 
@@ -1061,12 +1181,12 @@ class Tools_GSC_Helper {
 			}
 
 			$post = get_post( $post_id );
-			if ( ! $post || $post->post_status !== 'publish' || ! in_array( $post->post_type, $post_types, true ) ) {
+			if ( ! $post || 'publish' !== $post->post_status || ! in_array( $post->post_type, $post_types, true ) ) {
 				continue;
 			}
 
 			$autolink = get_post_meta( $post_id, '_sbp-autolink', true );
-			if ( $autolink === 'yes' ) {
+			if ( 'yes' === $autolink ) {
 				continue;
 			}
 
@@ -1075,23 +1195,13 @@ class Tools_GSC_Helper {
 				'post_id'   => $post_id,
 				'title'     => get_the_title( $post_id ),
 				'post_type' => $post->post_type,
-				'edit_url'  => get_edit_post_link( $post_id, 'raw' ) ?: '',
+				'edit_url'  => get_edit_post_link( $post_id, 'raw' ) ? get_edit_post_link( $post_id, 'raw' ) : '',
 				'page_url'  => $page,
 				'clicks'    => (int) ( $row['clicks'] ?? 0 ),
 			);
 		}
 
-		$total_found = count( $matching );
-		$preview     = array_slice( $matching, 0, self::PREVIEW_LIMIT );
-
-		return array(
-			'items'         => $preview,
-			'total_found'   => $total_found,
-			'preview_limit' => self::PREVIEW_LIMIT,
-			'preview_count' => count( $preview ),
-			'all_ids'       => array_column( $matching, 'post_id' ),
-			'filter'        => 'enable_high_traffic',
-		);
+		return $matching;
 	}
 
 	/**
@@ -1122,20 +1232,7 @@ class Tools_GSC_Helper {
 	 * @return array{items: array, total_found: int, preview_limit: int, preview_count: int, all_ids: int[], has_history: bool}
 	 */
 	public static function scan_content_decay() {
-		global $wpdb;
-
-		$window    = (int) self::DECAY_WINDOW_DAYS;
-		$table_qk  = $wpdb->prefix . 'sb2_query_keywords';
-		$table_qkh = $wpdb->prefix . 'sb2_query_keywords_history';
-
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed table name; read-only aggregate.
-		$span_days   = (int) $wpdb->get_var(
-			"SELECT DATEDIFF(MAX(date), MIN(date)) FROM {$table_qkh}"
-		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$has_history = $span_days >= ( $window * 2 - 1 );
-
-		if ( ! $has_history ) {
+		if ( ! self::decay_has_sufficient_history() ) {
 			return array(
 				'items'         => array(),
 				'total_found'   => 0,
@@ -1146,10 +1243,76 @@ class Tools_GSC_Helper {
 			);
 		}
 
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed tables; INTERVAL/HAVING use %d.
-		$rows = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT
+		$matching    = self::build_decay_items_from_rows( self::query_decay_page_rows() );
+		$total_found = count( $matching );
+		$preview     = array_slice( $matching, 0, self::PREVIEW_LIMIT );
+
+		return array(
+			'items'         => $preview,
+			'total_found'   => $total_found,
+			'preview_limit' => self::PREVIEW_LIMIT,
+			'preview_count' => count( $preview ),
+			'all_ids'       => array_column( $matching, 'post_id' ),
+			'has_history'   => true,
+		);
+	}
+
+	/**
+	 * Top declining pages for Ask / dashboard samples (lightweight).
+	 *
+	 * @param int $limit Max rows.
+	 * @return array<int, array>
+	 */
+	public static function get_content_decay_preview_items( $limit = 8 ) {
+		$limit = max( 1, (int) $limit );
+
+		if ( ! self::decay_has_sufficient_history() ) {
+			return array();
+		}
+
+		return self::build_decay_items_from_rows( self::query_decay_page_rows( $limit ) );
+	}
+
+	/**
+	 * Whether history spans enough days for decay comparison.
+	 *
+	 * @return bool
+	 */
+	private static function decay_has_sufficient_history() {
+		global $wpdb;
+
+		$window    = (int) self::DECAY_WINDOW_DAYS;
+		$table_qkh = $wpdb->prefix . 'sb2_query_keywords_history';
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed table name; read-only aggregate.
+		$span_days = (int) $wpdb->get_var(
+			"SELECT DATEDIFF(MAX(date), MIN(date)) FROM {$table_qkh}"
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		return $span_days >= ( $window * 2 - 1 );
+	}
+
+	/**
+	 * SQL rows for page-level content decay (optional LIMIT after sort).
+	 *
+	 * @param int|null $limit Max pages, or null for all matches.
+	 * @return array<int, array>
+	 */
+	private static function query_decay_page_rows( $limit = null ) {
+		global $wpdb;
+
+		$window    = (int) self::DECAY_WINDOW_DAYS;
+		$table_qk  = $wpdb->prefix . 'sb2_query_keywords';
+		$table_qkh = $wpdb->prefix . 'sb2_query_keywords_history';
+
+		$limit_sql = '';
+		$span      = $window * 2;
+		$min_prev  = (int) self::DECAY_MIN_PREVIOUS_CLICKS;
+		$min_impr  = (int) self::DECAY_MIN_RECENT_IMPRESSIONS;
+		$min_decl  = (int) self::DECAY_MIN_DECLINE_PCT;
+
+		$sql = "SELECT
 				qk.page,
 				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY) THEN qkh.clicks ELSE 0 END) AS recent_clicks,
 				SUM(CASE WHEN qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY) THEN qkh.impressions ELSE 0 END) AS recent_impressions,
@@ -1160,28 +1323,70 @@ class Tools_GSC_Helper {
 			FROM {$table_qk} AS qk
 			LEFT JOIN {$table_qkh} AS qkh
 				ON qk.id = qkh.query_keywords_id
+				AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
 			WHERE qk.page IS NOT NULL AND qk.page != ''
 			GROUP BY qk.page
 			HAVING previous_clicks >= %d
-				AND recent_impressions >= %d",
-				$window,
-				$window,
-				$window * 2,
-				$window,
-				$window * 2,
-				$window,
-				(int) self::DECAY_MIN_PREVIOUS_CLICKS,
-				(int) self::DECAY_MIN_RECENT_IMPRESSIONS
-			),
-			ARRAY_A
-		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				AND recent_impressions >= %d
+				AND ((previous_clicks - recent_clicks) / previous_clicks) * 100 >= %d
+			ORDER BY ((previous_clicks - recent_clicks) / previous_clicks) DESC, previous_clicks DESC";
 
-		if ( ! is_array( $rows ) ) {
-			$rows = array();
+		if ( null !== $limit ) {
+			$limit_sql = ' LIMIT %d';
+			$sql      .= $limit_sql;
 		}
 
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Prefixed tables; dynamic LIMIT; $sql built above.
+		if ( null !== $limit ) {
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					$sql,
+					$window,
+					$window,
+					$span,
+					$window,
+					$span,
+					$window,
+					$span,
+					$min_prev,
+					$min_impr,
+					$min_decl,
+					max( 1, (int) $limit )
+				),
+				ARRAY_A
+			);
+		} else {
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					$sql,
+					$window,
+					$window,
+					$span,
+					$window,
+					$span,
+					$window,
+					$span,
+					$min_prev,
+					$min_impr,
+					$min_decl
+				),
+				ARRAY_A
+			);
+		}
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+
+		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * Enrich decay SQL rows into publishable page items.
+	 *
+	 * @param array<int, array> $rows Rows from query_decay_page_rows().
+	 * @return array<int, array>
+	 */
+	private static function build_decay_items_from_rows( array $rows ) {
 		$matching = array();
+
 		foreach ( $rows as $row ) {
 			$page            = (string) ( $row['page'] ?? '' );
 			$recent_clicks   = (int) ( $row['recent_clicks'] ?? 0 );
@@ -1189,22 +1394,20 @@ class Tools_GSC_Helper {
 			$recent_impr     = (int) ( $row['recent_impressions'] ?? 0 );
 			$previous_impr   = (int) ( $row['previous_impressions'] ?? 0 );
 
-			if ( $page === '' || $previous_clicks <= 0 ) {
+			if ( '' === $page || $previous_clicks <= 0 ) {
 				continue;
 			}
 
 			$decline_pct = ( ( $previous_clicks - $recent_clicks ) / $previous_clicks ) * 100;
-			if ( $decline_pct < self::DECAY_MIN_DECLINE_PCT ) {
-				continue;
-			}
 
 			$post_id = self::resolve_publishable_post_id( $page );
 			if ( $post_id <= 0 ) {
 				continue;
 			}
 
-			$view_url = get_permalink( $post_id ) ?: $page;
-			$status   = class_exists( __NAMESPACE__ . '\\Tools_Needs_Analysis' )
+			$permalink = get_permalink( $post_id );
+			$view_url  = $permalink ? $permalink : $page;
+			$status    = class_exists( __NAMESPACE__ . '\\Tools_Needs_Analysis' )
 				? Tools_Needs_Analysis::get_analysis_status( $post_id )
 				: array(
 					'label'       => '',
@@ -1218,7 +1421,7 @@ class Tools_GSC_Helper {
 				'title'                => get_the_title( $post_id ),
 				'post_type'            => get_post_type( $post_id ),
 				'slug'                 => get_post_field( 'post_name', $post_id ),
-				'edit_url'             => get_edit_post_link( $post_id, 'raw' ) ?: '',
+				'edit_url'             => get_edit_post_link( $post_id, 'raw' ) ? get_edit_post_link( $post_id, 'raw' ) : '',
 				'view_url'             => $view_url,
 				'page_url'             => $page,
 				'recent_clicks'        => $recent_clicks,
@@ -1232,7 +1435,7 @@ class Tools_GSC_Helper {
 				'issue_count'          => (int) $status['issue_count'],
 			);
 
-			if ( $status['issue_count'] > 0 && $view_url !== '' ) {
+			if ( $status['issue_count'] > 0 && '' !== $view_url ) {
 				$item['possibilities_url'] = admin_url(
 					'admin.php?page=sb2_seo_issues&s=' . rawurlencode( $view_url )
 				);
@@ -1252,17 +1455,7 @@ class Tools_GSC_Helper {
 			}
 		);
 
-		$total_found = count( $matching );
-		$preview     = array_slice( $matching, 0, self::PREVIEW_LIMIT );
-
-		return array(
-			'items'         => $preview,
-			'total_found'   => $total_found,
-			'preview_limit' => self::PREVIEW_LIMIT,
-			'preview_count' => count( $preview ),
-			'all_ids'       => array_column( $matching, 'post_id' ),
-			'has_history'   => true,
-		);
+		return $matching;
 	}
 
 	/**
@@ -1301,16 +1494,20 @@ class Tools_GSC_Helper {
 			FROM {$table_qk} AS qk
 			LEFT JOIN {$table_qkh} AS qkh
 				ON qk.id = qkh.query_keywords_id
+				AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
 			WHERE qk.page IS NOT NULL AND qk.page != ''
 			GROUP BY qk.page
 			HAVING previous_clicks >= %d
-				AND recent_impressions >= %d",
+				AND recent_impressions >= %d
+				AND ((previous_clicks - recent_clicks) / previous_clicks) * 100 >= %d",
 				$window,
 				$window,
 				$window * 2,
 				$window,
+				$window * 2,
 				(int) self::DECAY_MIN_PREVIOUS_CLICKS,
-				(int) self::DECAY_MIN_RECENT_IMPRESSIONS
+				(int) self::DECAY_MIN_RECENT_IMPRESSIONS,
+				(int) self::DECAY_MIN_DECLINE_PCT
 			),
 			ARRAY_A
 		);
@@ -1328,14 +1525,11 @@ class Tools_GSC_Helper {
 			$recent_clicks   = (int) ( $row['recent_clicks'] ?? 0 );
 			$previous_clicks = (int) ( $row['previous_clicks'] ?? 0 );
 
-			if ( $page === '' || $previous_clicks <= 0 ) {
+			if ( '' === $page || $previous_clicks <= 0 ) {
 				continue;
 			}
 
 			$decline_pct = ( ( $previous_clicks - $recent_clicks ) / $previous_clicks ) * 100;
-			if ( $decline_pct < self::DECAY_MIN_DECLINE_PCT ) {
-				continue;
-			}
 
 			if ( ! array_key_exists( $page, $page_post ) ) {
 				$page_post[ $page ] = self::resolve_publishable_post_id( $page );
@@ -1358,7 +1552,7 @@ class Tools_GSC_Helper {
 	 */
 	public static function count_gsc_opportunity_pages() {
 		$filters   = self::get_opportunity_filter_keys();
-		$keywords  = self::get_all_keywords_with_stats();
+		$keywords  = self::get_insight_keyword_rows( null, $filters );
 		$page_post = array();
 		$post_ids  = array();
 
@@ -1371,7 +1565,7 @@ class Tools_GSC_Helper {
 			}
 
 			$page = isset( $row['page'] ) ? (string) $row['page'] : '';
-			if ( $page === '' ) {
+			if ( '' === $page ) {
 				continue;
 			}
 

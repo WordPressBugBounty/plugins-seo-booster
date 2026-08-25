@@ -1,12 +1,12 @@
 <?php
 
-namespace Cleverplugins\SEOBooster;
-
 /**
  * SEO Booster GSC AJAX Handler
  *
  * @package SEO_Booster
  */
+namespace Cleverplugins\SEOBooster;
+
 // Exit if accessed directly
 if ( !defined( 'ABSPATH' ) ) {
     exit;
@@ -56,9 +56,9 @@ class SB_GSC_Ajax {
         sort( $keyword_ids );
         // Sort to ensure consistent cache key
         // Generate cache key based on keyword IDs with version for cache busting
-        $cache_key = 'sb_gsc_keyword_history_v2_' . md5( implode( '_', $keyword_ids ) );
+        $cache_key = 'sb_gsc_keyword_history_v3_' . md5( implode( '_', $keyword_ids ) );
         // Check if we should clear cache (for debugging)
-        if ( isset( $_POST['clear_cache'] ) && $_POST['clear_cache'] === '1' ) {
+        if ( isset( $_POST['clear_cache'] ) && '1' === $_POST['clear_cache'] ) {
             delete_transient( $cache_key );
         }
         // Try to get cached data
@@ -67,148 +67,20 @@ class SB_GSC_Ajax {
             wp_send_json_success( $cached_data );
             return;
         }
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'sb2_query_keywords_history';
-        // Sanitize keyword IDs and create placeholders for prepared statement
-        $keyword_ids = array_map( 'intval', $keyword_ids );
-        $keyword_ids = array_filter( $keyword_ids, function ( $id ) {
+        $keyword_ids = array_values( array_filter( array_map( 'intval', $keyword_ids ), static function ( $id ) {
             return $id > 0;
-        } );
+        } ) );
         if ( empty( $keyword_ids ) ) {
             wp_send_json_error( 'Invalid keyword IDs provided' );
             return;
         }
-        $placeholders = implode( ',', array_fill( 0, count( $keyword_ids ), '%d' ) );
-        // First, check if we have any data for these keywords (without date filter)
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- IN() placeholders from array_fill; table from prefix; values prepared.
-        $count_check = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table_name} WHERE query_keywords_id IN ({$placeholders})", ...$keyword_ids ) );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-        if ( $count_check === 0 ) {
-            $response = array_fill_keys( $keyword_ids, array() );
-            set_transient( $cache_key, $response, HOUR_IN_SECONDS );
-            wp_send_json_success( $response );
-            return;
-        }
-        // Get all data for these keywords in a single query, ordered by date
-        // Use 60-day filter for optimization, but ensure we get at least one entry per keyword
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- IN() placeholders from array_fill; table from prefix; values prepared.
-        $all_entries = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table_name} \n                WHERE query_keywords_id IN ({$placeholders})\n                AND date >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)\n                ORDER BY query_keywords_id, date ASC", ...$keyword_ids ) );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-        // Check which keywords have recent data
-        $keywords_with_recent_data = array();
-        foreach ( $all_entries as $entry ) {
-            $keywords_with_recent_data[$entry->query_keywords_id] = true;
-        }
-        // Find keywords that don't have recent data
-        $keywords_needing_historical_data = array_diff( $keyword_ids, array_keys( $keywords_with_recent_data ) );
-        // If any keywords don't have recent data, get ALL historical data for them
-        if ( !empty( $keywords_needing_historical_data ) ) {
-            $historical_keyword_ids = array_map( 'intval', $keywords_needing_historical_data );
-            $historical_keyword_ids = array_filter( $historical_keyword_ids, function ( $id ) {
-                return $id > 0;
-            } );
-            if ( !empty( $historical_keyword_ids ) ) {
-                $historical_placeholders = implode( ',', array_fill( 0, count( $historical_keyword_ids ), '%d' ) );
-                // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- IN() placeholders from array_fill; table from prefix; values prepared.
-                $historical_entries = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table_name} \n                        WHERE query_keywords_id IN ({$historical_placeholders})\n                        ORDER BY query_keywords_id, date ASC", ...$historical_keyword_ids ) );
-                // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-            } else {
-                $historical_entries = array();
-            }
-            // Merge recent and historical data
-            $all_entries = array_merge( $all_entries, $historical_entries );
-        }
-        // Group entries by keyword_id
-        $grouped_entries = array();
-        foreach ( $all_entries as $entry ) {
-            $grouped_entries[$entry->query_keywords_id][] = $entry;
-        }
-        // Process each keyword's data
-        $result = array();
+        $result = GSC_History::get_chart_series( $keyword_ids );
+        // Ensure every requested ID has a key (empty array when no history).
         foreach ( $keyword_ids as $keyword_id ) {
-            $result[$keyword_id] = array();
-            // Skip if no data for this keyword
-            if ( !isset( $grouped_entries[$keyword_id] ) || empty( $grouped_entries[$keyword_id] ) ) {
-                continue;
-            }
-            $entries = $grouped_entries[$keyword_id];
-            $total_entries = count( $entries );
-            // Get the last visit date for this keyword
-            $last_entry = end( $entries );
-            $last_visit_date = $last_entry->date;
-            $days_since_last_visit = (strtotime( 'today' ) - strtotime( $last_visit_date )) / (24 * 60 * 60);
-            // Calculate data ranges for UI
-            $first_entry = reset( $entries );
-            $first_date = $first_entry->date;
-            $last_date = $last_entry->date;
-            $total_days = (strtotime( $last_date ) - strtotime( $first_date )) / (24 * 60 * 60);
-            // Calculate 120 days ago from today
-            $cutoff_date = gmdate( 'Y-m-d', strtotime( '-120 days' ) );
-            // Split data into recent (120 days) and historical
-            $recent_entries = array();
-            $historical_entries = array();
-            foreach ( $entries as $entry ) {
-                if ( $entry->date >= $cutoff_date ) {
-                    $recent_entries[] = $entry;
-                } else {
-                    $historical_entries[] = $entry;
-                }
-            }
-            // Determine which dataset to use for display
-            $display_entries = ( !empty( $recent_entries ) ? $recent_entries : $entries );
-            $is_using_historical = empty( $recent_entries );
-            $has_historical_data = !empty( $historical_entries );
-            // If we have 99 or fewer entries, use all of them
-            if ( count( $display_entries ) <= 99 ) {
-                foreach ( $display_entries as $entry ) {
-                    $formatted_entry = self::format_entry( $entry );
-                    $formatted_entry['last_visit_date'] = $last_visit_date;
-                    $formatted_entry['days_since_last_visit'] = $days_since_last_visit;
-                    $formatted_entry['is_historical'] = $is_using_historical;
-                    $formatted_entry['has_historical_data'] = $has_historical_data;
-                    $formatted_entry['total_days'] = $total_days;
-                    $formatted_entry['first_date'] = $first_date;
-                    $formatted_entry['last_date'] = $last_date;
-                    $result[$keyword_id][] = $formatted_entry;
-                }
-            } else {
-                // Get first entry
-                $first_entry = self::format_entry( $display_entries[0] );
-                $first_entry['last_visit_date'] = $last_visit_date;
-                $first_entry['days_since_last_visit'] = $days_since_last_visit;
-                $first_entry['is_historical'] = $is_using_historical;
-                $first_entry['has_historical_data'] = $has_historical_data;
-                $first_entry['total_days'] = $total_days;
-                $first_entry['first_date'] = $first_date;
-                $first_entry['last_date'] = $last_date;
-                $result[$keyword_id][] = $first_entry;
-                // Get evenly distributed entries (up to 97)
-                $step = floor( count( $display_entries ) / 99 );
-                for ($i = 1; $i < 97 && $i * $step < count( $display_entries ) - 1; $i++) {
-                    $index = $i * $step;
-                    $formatted_entry = self::format_entry( $display_entries[$index] );
-                    $formatted_entry['last_visit_date'] = $last_visit_date;
-                    $formatted_entry['days_since_last_visit'] = $days_since_last_visit;
-                    $formatted_entry['is_historical'] = $is_using_historical;
-                    $formatted_entry['has_historical_data'] = $has_historical_data;
-                    $formatted_entry['total_days'] = $total_days;
-                    $formatted_entry['first_date'] = $first_date;
-                    $formatted_entry['last_date'] = $last_date;
-                    $result[$keyword_id][] = $formatted_entry;
-                }
-                // Get last entry
-                $last_formatted_entry = self::format_entry( $display_entries[count( $display_entries ) - 1] );
-                $last_formatted_entry['last_visit_date'] = $last_visit_date;
-                $last_formatted_entry['days_since_last_visit'] = $days_since_last_visit;
-                $last_formatted_entry['is_historical'] = $is_using_historical;
-                $last_formatted_entry['has_historical_data'] = $has_historical_data;
-                $last_formatted_entry['total_days'] = $total_days;
-                $last_formatted_entry['first_date'] = $first_date;
-                $last_formatted_entry['last_date'] = $last_date;
-                $result[$keyword_id][] = $last_formatted_entry;
+            if ( !isset( $result[$keyword_id] ) ) {
+                $result[$keyword_id] = array();
             }
         }
-        // Cache the results for 1 hour
         set_transient( $cache_key, $result, HOUR_IN_SECONDS );
         wp_send_json_success( $result );
     }
@@ -221,27 +93,12 @@ class SB_GSC_Ajax {
     public static function clear_keyword_history_cache() {
         global $wpdb;
         // Get all transients that match the old pattern
-        $old_cache_keys = $wpdb->get_col( "SELECT option_name FROM {$wpdb->options} \n            WHERE option_name LIKE '_transient_sb_gsc_keyword_history_%' \n            AND option_name NOT LIKE '_transient_sb_gsc_keyword_history_v2_%'" );
+        $old_cache_keys = $wpdb->get_col( "SELECT option_name FROM {$wpdb->options} \n            WHERE option_name LIKE '_transient_sb_gsc_keyword_history_%' \n            AND option_name NOT LIKE '_transient_sb_gsc_keyword_history_v3_%'" );
         // Delete old cache entries
         foreach ( $old_cache_keys as $cache_key ) {
             $transient_name = str_replace( '_transient_', '', $cache_key );
             delete_transient( $transient_name );
         }
-    }
-
-    /**
-     * Format a database entry for JSON response
-     *
-     * @param object $entry Database entry
-     * @return array Formatted entry
-     */
-    private static function format_entry( $entry ) {
-        return array(
-            'date'        => $entry->date,
-            'position'    => floatval( $entry->position ),
-            'clicks'      => intval( $entry->clicks ),
-            'impressions' => intval( $entry->impressions ),
-        );
     }
 
     /**
@@ -311,10 +168,10 @@ class SB_GSC_Ajax {
                 $keyword_id = intval( $res['id'] );
                 $keyword_query = esc_html( $res['query'] ?? '' );
                 // Use 'is_used_in_content' directly from the results
-                if ( $res['is_used_in_content'] === '1' ) {
+                if ( '1' === $res['is_used_in_content'] ) {
                     $position_intext = '1';
                     $position_details = '&#10004; ' . __( 'Used', 'seo-booster' );
-                } elseif ( $res['is_used_in_content'] === '-1' ) {
+                } elseif ( '-1' === $res['is_used_in_content'] ) {
                     $position_intext = '-1';
                     $position_details = '&#10005; ' . __( 'Not used', 'seo-booster' );
                 } else {
@@ -331,52 +188,20 @@ class SB_GSC_Ajax {
                     'position_intext'  => $position_intext,
                     'position_details' => $position_details,
                     'autolink'         => '<span class="label label-info" title="' . esc_attr__( 'Create internal links to this keyword with one click', 'seo-booster' ) . '">' . esc_html__( 'Pro', 'seo-booster' ) . '</span>',
+                    'history'          => array(),
+                    'curves'           => '',
                 );
-                // Get historical data for charts
-                $history = $wpdb->get_results( $wpdb->prepare( "SELECT \n                        date,\n                        clicks,\n                        impressions,\n                        position\n                    FROM {$wpdb->prefix}sb2_query_keywords_history\n                    WHERE query_keywords_id = %d\n                    ORDER BY date ASC", $keyword_id ), ARRAY_A );
-                // If no recent data, get the most recent entry to show at least something
-                if ( empty( $history ) ) {
-                    $latest_entry = $wpdb->get_row( $wpdb->prepare( "SELECT \n                            date,\n                            clicks,\n                            impressions,\n                            position\n                        FROM {$wpdb->prefix}sb2_query_keywords_history\n                        WHERE query_keywords_id = %d\n                        ORDER BY date DESC\n                        LIMIT 1", $keyword_id ), ARRAY_A );
-                    if ( $latest_entry ) {
-                        $history = array($latest_entry);
-                    }
-                }
-                // Apply data reduction at server level
-                if ( count( $history ) > 100 ) {
-                    // Calculate target number of points (between 10 and 20)
-                    $target_points = min( 100, max( 10, count( $history ) ) );
-                    // If we have more points than needed, reduce the data
-                    if ( count( $history ) > $target_points ) {
-                        $reduced_history = array();
-                        // Always keep the first point
-                        $reduced_history[] = $history[0];
-                        // Calculate step size for even distribution
-                        $step = (count( $history ) - 1) / ($target_points - 1);
-                        // Select evenly distributed points
-                        for ($i = 1; $i < $target_points - 1; $i++) {
-                            $index = round( $i * $step );
-                            $reduced_history[] = $history[$index];
-                        }
-                        // Always keep the last point
-                        $reduced_history[] = $history[count( $history ) - 1];
-                        $history = $reduced_history;
-                    }
-                }
-                // Add last visit information
-                if ( !empty( $history ) ) {
-                    $last_entry = end( $history );
-                    $last_visit_date = $last_entry['date'];
-                    $days_since_last_visit = (strtotime( 'today' ) - strtotime( $last_visit_date )) / (24 * 60 * 60);
-                    // Add last visit info to each entry
-                    foreach ( $history as &$entry ) {
-                        $entry['last_visit_date'] = $last_visit_date;
-                        $entry['days_since_last_visit'] = $days_since_last_visit;
-                    }
-                }
-                $newrow['history'] = $history;
-                $newrow['curves'] = '';
                 $response[] = $newrow;
             }
+            $keyword_ids = array_map( static function ( $row ) {
+                return (int) ($row['id'] ?? 0);
+            }, $response );
+            $chart_series = GSC_History::get_chart_series( $keyword_ids );
+            foreach ( $response as &$row ) {
+                $kid = (int) ($row['id'] ?? 0);
+                $row['history'] = ( isset( $chart_series[$kid] ) ? $chart_series[$kid] : array() );
+            }
+            unset($row);
             wp_send_json_success( array(
                 'keywords'       => $response,
                 'last_refreshed' => get_option( 'sb_gsc_last_refreshed' ),
@@ -429,7 +254,8 @@ class SB_GSC_Ajax {
         }
         global $wpdb;
         // Fetch GSC keywords for the current page, ordered by length (longest first) and performance
-        $query = "SELECT DISTINCT k.query, k.id,\n                SUM(h.clicks) AS total_clicks,\n                SUM(h.impressions) AS total_impressions,\n                AVG(h.position) AS avg_position\n            FROM {$wpdb->prefix}sb2_query_keywords AS k\n            INNER JOIN {$wpdb->prefix}sb2_query_keywords_history AS h \n                ON k.id = h.query_keywords_id\n            WHERE k.page = %s\n                AND LENGTH(k.query) >= 3\n            GROUP BY k.query, k.id\n            ORDER BY LENGTH(k.query) DESC, total_impressions DESC, avg_position ASC\n            LIMIT 100";
+        $insight_days = (int) GSC_History::INSIGHT_WINDOW_DAYS;
+        $query = "SELECT DISTINCT k.query, k.id,\n                SUM(h.clicks) AS total_clicks,\n                SUM(h.impressions) AS total_impressions,\n                AVG(h.position) AS avg_position\n            FROM {$wpdb->prefix}sb2_query_keywords AS k\n            INNER JOIN {$wpdb->prefix}sb2_query_keywords_history AS h \n                ON k.id = h.query_keywords_id\n                AND h.date >= DATE_SUB(CURDATE(), INTERVAL {$insight_days} DAY)\n            WHERE k.page = %s\n                AND LENGTH(k.query) >= 3\n            GROUP BY k.query, k.id\n            ORDER BY LENGTH(k.query) DESC, total_impressions DESC, avg_position ASC\n            LIMIT 100";
         $prepared_query = $wpdb->prepare( $query, $permalink );
         // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built with prefixed tables / allowlisted ORDER BY; values prepared.
         $results = $wpdb->get_results( $prepared_query, ARRAY_A );
@@ -490,20 +316,9 @@ class SB_GSC_Ajax {
         if ( !$keyword_id ) {
             wp_send_json_error( 'Invalid keyword ID' );
         }
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'sb2_query_keywords_history';
-        // Get all historical data for this keyword
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
-        $entries = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table_name} \n                WHERE query_keywords_id = %d\n                ORDER BY date ASC", $keyword_id ) );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        if ( empty( $entries ) ) {
+        $formatted_data = GSC_History::get_full_chart_series( $keyword_id );
+        if ( empty( $formatted_data ) ) {
             wp_send_json_error( 'No data found for this keyword' );
-        }
-        // Format the data
-        $formatted_data = array();
-        foreach ( $entries as $entry ) {
-            $formatted_entry = self::format_entry( $entry );
-            $formatted_data[] = $formatted_entry;
         }
         wp_send_json_success( $formatted_data );
     }

@@ -15,6 +15,31 @@
 			.replace(/'/g, '&#039;');
 	}
 
+	/**
+	 * Fill WordPress-style printf placeholders (%1$d, %2$d, or plain %d).
+	 *
+	 * @param {string} template Localized template.
+	 * @param {...(string|number)} values Values in order for %1$d / sequential %d.
+	 * @return {string}
+	 */
+	function formatString(template) {
+		var out = String(template == null ? '' : template);
+		var values = Array.prototype.slice.call(arguments, 1).map(function (value) {
+			return String(value);
+		});
+		var i;
+
+		for (i = 0; i < values.length; i++) {
+			out = out.split('%' + (i + 1) + '$d').join(values[i]);
+			out = out.split('%' + (i + 1) + '$s').join(values[i]);
+		}
+		for (i = 0; i < values.length; i++) {
+			out = out.replace(/%[ds]/, values[i]);
+		}
+
+		return out;
+	}
+
 	function stripShowDetailsParam() {
 		try {
 			var url = new URL(window.location.href);
@@ -128,9 +153,11 @@
 		});
 		html += '</tbody></table>';
 		if (total > keywords.length) {
-			var more = (text.keywords_more || 'Showing top %d of %d keywords.')
-				.replace('%d', String(keywords.length))
-				.replace('%d', String(total));
+			var more = formatString(
+				text.keywords_more || 'Showing top %1$d of %2$d keywords.',
+				keywords.length,
+				total
+			);
 			html += '<p class="sb-overview-keywords-more">' + escapeHtml(more) + '</p>';
 		}
 		html += '</div>';
@@ -144,7 +171,11 @@
 
 		html += '<section class="sb-overview-section sb-overview-score">';
 		if (empty.analysis) {
-			html += '<p class="sb-overview-empty">' + escapeHtml(text.no_analysis || '') + '</p>';
+			var noAnalysisMsg = text.no_analysis || 'No on-page SEO analysis yet.';
+			if (!empty.keywords && (text.no_analysis_with_keywords || '')) {
+				noAnalysisMsg = text.no_analysis_with_keywords;
+			}
+			html += '<p class="sb-overview-empty">' + escapeHtml(noAnalysisMsg) + '</p>';
 			html += ctaLink(text.cta_analyze || text.cta_editor || '', editUrl);
 		} else {
 			html += '<div class="sb-overview-score-row">';

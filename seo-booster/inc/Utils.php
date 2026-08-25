@@ -54,7 +54,7 @@ class Utils extends Seobooster2 {
 		if ( $current_count > 10000 ) {
 			$entries_to_delete = $current_count - 5000;
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
-			$deleted_excess    = $wpdb->query(
+			$deleted_excess = $wpdb->query(
 				$wpdb->prepare(
 					"DELETE FROM {$table_name_log} ORDER BY logtime ASC LIMIT %d",
 					$entries_to_delete
@@ -93,7 +93,12 @@ class Utils extends Seobooster2 {
 		$deleted_ai_hits = AI_Bot_Tracker::cleanup_old_hits();
 		if ( $deleted_ai_hits > 0 ) {
 			self::log(
-				sprintf( 'AI bot hits retention: deleted %d rows older than %d days', $deleted_ai_hits, AI_Bot_Tracker::get_retention_days() ),
+				sprintf(
+					'AI bot hits maintenance: deleted %d rows (retention %d days, soft cap %d)',
+					$deleted_ai_hits,
+					AI_Bot_Tracker::get_retention_days(),
+					AI_Bot_Tracker::get_max_hit_rows()
+				),
 				5
 			);
 		}
@@ -241,6 +246,136 @@ class Utils extends Seobooster2 {
 	}
 
 	/**
+	 * Sanitize a Search Console query for storage without stripping literal "%".
+	 *
+	 * WordPress sanitize_text_field() removes percent-encoded octets (%XX), which
+	 * corrupts queries such as "cbd 4%aa" and is the wrong tool for search terms.
+	 *
+	 * @param string $query Raw query.
+	 * @return string
+	 */
+	public static function sanitize_gsc_query( $query ) {
+		$query = (string) $query;
+		if ( function_exists( 'wp_check_invalid_utf8' ) ) {
+			$query = wp_check_invalid_utf8( $query );
+		}
+		$query = wp_strip_all_tags( $query );
+		$query = preg_replace( '/[\r\n\t]+/', ' ', $query );
+		$query = trim( preg_replace( '/ +/', ' ', (string) $query ) );
+
+		return $query;
+	}
+
+	/**
+	 * Normalize a keyword for case-insensitive content matching.
+	 *
+	 * Preserves literal "%" (unlike sanitize_text_field) and collapses unicode spaces.
+	 *
+	 * @param string $keyword Keyword.
+	 * @return string Lowercased keyword, or empty string.
+	 */
+	public static function normalize_keyword_for_match( $keyword ) {
+		$keyword = self::sanitize_gsc_query( $keyword );
+		$keyword = html_entity_decode( $keyword, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$keyword = preg_replace( '/[\x{00A0}\x{202F}\x{2007}\x{2009}]/u', ' ', $keyword );
+		$keyword = trim( preg_replace( '/ +/', ' ', (string) $keyword ) );
+
+		if ( '' === $keyword ) {
+			return '';
+		}
+
+		if ( function_exists( 'mb_strtolower' ) ) {
+			return mb_strtolower( $keyword, 'UTF-8' );
+		}
+
+		return strtolower( $keyword );
+	}
+
+	/**
+	 * Normalize haystack text before keyword substring / boundary matching.
+	 *
+	 * @param string $text Raw or HTML text.
+	 * @return string
+	 */
+	public static function normalize_text_for_keyword_match( $text ) {
+		$text = wp_strip_all_tags( (string) $text );
+		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$text = preg_replace( '/[\r\n\t\x{00A0}\x{202F}\x{2007}\x{2009}]+/u', ' ', $text );
+		$text = trim( preg_replace( '/ +/', ' ', (string) $text ) );
+
+		return $text;
+	}
+
+	/**
+	 * Regex for whole-phrase keyword match using Unicode letter/number edges.
+	 *
+	 * Unlike \b, this still matches terms that end with punctuation such as "%".
+	 *
+	 * @param string $keyword           Keyword (not preg-quoted).
+	 * @param bool   $case_insensitive  Case-insensitive flag.
+	 * @return string
+	 */
+	public static function keyword_boundary_pattern( $keyword, $case_insensitive = true ) {
+		$flags = $case_insensitive ? 'ui' : 'u';
+
+		return '/(?<![\p{L}\p{N}_])(' . preg_quote( (string) $keyword, '/' ) . ')(?![\p{L}\p{N}_])/' . $flags;
+	}
+
+	/**
+	 * Whether haystack contains keyword as a whole phrase (punctuation-safe).
+	 *
+	 * @param string $text              Haystack.
+	 * @param string $keyword           Needle.
+	 * @param bool   $case_insensitive  Case-insensitive flag.
+	 * @return bool
+	 */
+	public static function text_has_keyword_bounded( $text, $keyword, $case_insensitive = true ) {
+		$text    = self::normalize_text_for_keyword_match( $text );
+		$keyword = $case_insensitive
+			? self::normalize_keyword_for_match( $keyword )
+			: self::sanitize_gsc_query( $keyword );
+
+		if ( '' === $text || '' === $keyword ) {
+			return false;
+		}
+
+		return (bool) preg_match( self::keyword_boundary_pattern( $keyword, $case_insensitive ), $text );
+	}
+
+	/**
+	 * Whether haystack contains any of the keyword variations (substring, case-insensitive).
+	 *
+	 * Used for GSC "used in content" detection where phrase boundaries are too strict
+	 * for short tokens, but percent signs and entity-decoding still matter.
+	 *
+	 * @param string   $text        Haystack (HTML or plain).
+	 * @param string[] $variations  Already-normalized (lowercase) variations.
+	 * @return bool
+	 */
+	public static function text_contains_keyword_variations( $text, array $variations ) {
+		$text = self::normalize_text_for_keyword_match( $text );
+		if ( '' === $text ) {
+			return false;
+		}
+
+		$haystack = function_exists( 'mb_strtolower' )
+			? mb_strtolower( $text, 'UTF-8' )
+			: strtolower( $text );
+
+		foreach ( $variations as $variation ) {
+			$variation = (string) $variation;
+			if ( '' === $variation ) {
+				continue;
+			}
+			if ( false !== strpos( $haystack, $variation ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Checks a string against an array of keywords and returns any matches or false if no match.
 	 *
 	 * @author  Unknown
@@ -255,15 +390,15 @@ class Utils extends Seobooster2 {
 	public static function array_in_string( $str, array $arr ) {
 		$return_arr = array();
 		foreach ( $arr as $arr_value ) {
-			$pattern = '/\\b' . preg_quote( $arr_value['kw'], '/' ) . '\\b/u';
+			$pattern = self::keyword_boundary_pattern( $arr_value['kw'], true );
 			if ( preg_match(
 				$pattern,
-				$str,
+				(string) $str,
 				$matches,
 				PREG_OFFSET_CAPTURE
 			) ) {
 				$wrdpos               = $matches[0][1];
-				$orgword              = mb_substr( $str, $wrdpos, mb_strlen( $arr_value['kw'] ) );
+				$orgword              = mb_substr( (string) $str, $wrdpos, mb_strlen( $arr_value['kw'] ) );
 				$arr_value['orgword'] = $orgword;
 				$return_arr[]         = $arr_value;
 			}
@@ -389,7 +524,7 @@ class Utils extends Seobooster2 {
 				)
 			);
 			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			if ( $column_info && ( strpos( $column_info->Type, 'varchar(1000)' ) !== false || strpos( $column_info->Type, 'varchar(191)' ) !== false ) ) {
+			if ( $column_info && ( strpos( $column_info->{'Type'}, 'varchar(1000)' ) !== false || strpos( $column_info->{'Type'}, 'varchar(191)' ) !== false ) ) {
 				// Drop indexes first to avoid conflicts
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DDL migration; table name escaped with esc_sql().
 				$wpdb->query( "ALTER TABLE `{$table_name_escaped}` DROP INDEX IF EXISTS unique_query_page" );
@@ -1054,34 +1189,67 @@ KEY ID (ID)) $wpdb_collate";
 	}
 
 	/**
-	 * Helper function to generate tagged links
+	 * UTM source slug for outbound seoboosterpro.com links (free vs Pro build).
 	 *
-	 * @author  Lars Koudal
-	 * @since   v0.0.1
-	 * @version v1.0.0  Tuesday, June 25th, 2024.
-	 * @access  public static
-	 * @param   string  $placement  Where in the plugin the link is placed
-	 * @param   string  $page       Which page on cleverplugins website the link points to
-	 * @param   mixed   $params     Any additional parameters to add to the link
-	 * @return  mixed
+	 * @return string
+	 */
+	public static function get_web_link_utm_source() {
+		$utm_source = 'seo_booster_free';
+		if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) ) {
+			$fs = seobooster_fs();
+			if ( is_object( $fs ) && method_exists( $fs, 'is_premium' ) && $fs->is_premium() ) {
+				$utm_source = 'seo_booster_pro';
+			}
+		}
+
+		return $utm_source;
+	}
+
+	/**
+	 * Build a tagged seoboosterpro.com URL for admin links and marketing fallbacks.
+	 *
+	 * @param string $placement Where in the plugin the link is placed (utm_content).
+	 * @param string $page      Path on seoboosterpro.com (e.g. docs, pricing, support).
+	 * @param array  $params    Optional extra query parameters.
+	 * @return string
 	 */
 	public static function generate_cp_web_link( $placement = '', $page = '/', $params = array() ) {
 		$base_url = 'https://seoboosterpro.com';
 		if ( '/' !== $page ) {
 			$page = '/' . trim( $page, '/' ) . '/';
 		}
-		$utm_source = 'seo_booster_free';
-		$parts      = array_merge(
+		$parts = array_merge(
 			array(
-				'utm_source'   => esc_attr( $utm_source ),
+				'utm_source'   => self::get_web_link_utm_source(),
 				'utm_medium'   => 'plugin',
-				'utm_content'  => esc_attr( $placement ),
-				'utm_campaign' => esc_attr( 'seo_booster_v' . self::get_plugin_version() ),
+				'utm_content'  => $placement,
+				'utm_campaign' => 'seo_booster',
 			),
 			$params
 		);
-		$out        = $base_url . $page . '?' . http_build_query( $parts, '', '&amp;' );
-		return $out;
+		$query = http_build_query( $parts, '', '&' );
+
+		return $base_url . $page . '?' . $query;
+	}
+
+	/**
+	 * Pro upgrade URL: Freemius checkout when available, else tagged pricing page.
+	 *
+	 * @param string $placement utm_content when falling back to seoboosterpro.com.
+	 * @return string
+	 */
+	public static function get_pro_upgrade_url( $placement = '' ) {
+		if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) ) {
+			$fs = seobooster_fs();
+			if ( is_object( $fs ) && method_exists( $fs, 'get_upgrade_url' ) ) {
+				$fs_upgrade = $fs->get_upgrade_url();
+				if ( is_string( $fs_upgrade ) && '' !== $fs_upgrade ) {
+					return $fs_upgrade;
+				}
+			}
+		}
+
+		return self::generate_cp_web_link( $placement, 'pricing' );
 	}
 
 	/**
@@ -1128,10 +1296,9 @@ KEY ID (ID)) $wpdb_collate";
 	 */
 	public static function show_plugin_headline( $title = '', $return = false ) {
 		$content           = '<div class="big welcome"><span><img src="' . esc_url( SEOBOOSTER_PLUGINURL . 'images/sblogo25.png' ) . '" height="40" class="SEO Booster logo" alt="SEO Booster"></span>SEO Booster <span class="version">v. ' . esc_html( self::get_plugin_version() ) . '</span><span class="title">' . esc_html( $title ) . '</span>';
-		$documentation_url = self::generate_cp_web_link( 'admin', 'docs' );
-
-		$roadmap_url = 'https://seobooster.productlift.dev/';
-		$support_url = 'https://seoboosterpro.com/support/';
+		$documentation_url = self::generate_cp_web_link( 'headline_docs', 'docs' );
+		$roadmap_url       = 'https://seobooster.productlift.dev/';
+		$support_url       = self::generate_cp_web_link( 'headline_support', 'support' );
 
 		$content .= '<span class="navcont">';
 		$content .= '<span class="documentation"><a href="' . esc_url( $documentation_url ) . '" target="_blank" class="documentation extlink">' . esc_html__( 'Documentation', 'seo-booster' ) . '</a></span>';
@@ -1433,8 +1600,8 @@ KEY ID (ID)) $wpdb_collate";
 					$allowed[] = $site;
 				} elseif ( is_array( $site ) && ! empty( $site['siteUrl'] ) ) {
 					$allowed[] = $site['siteUrl'];
-				} elseif ( is_object( $site ) && ! empty( $site->siteUrl ) ) {
-					$allowed[] = $site->siteUrl;
+				} elseif ( is_object( $site ) && ! empty( $site->{'siteUrl'} ) ) {
+					$allowed[] = $site->{'siteUrl'};
 				}
 			}
 		}

@@ -2,6 +2,8 @@
 
 namespace Cleverplugins\SEOBooster\Analysis;
 
+use Cleverplugins\SEOBooster\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -469,7 +471,7 @@ abstract class Abstract_Checks implements Check_Interface {
 
 			if ( mb_substr( $query_lower, 0, $word_length ) === $word_lower ) {
 				$next_char = mb_substr( $query_lower, $word_length, 1 );
-				if ( $next_char === ' ' || $next_char === '' ) {
+				if ( ' ' === $next_char || '' === $next_char ) {
 					return true;
 				}
 			}
@@ -490,8 +492,18 @@ abstract class Abstract_Checks implements Check_Interface {
 			return 0;
 		}
 
-		$pattern = '/\b' . preg_quote( $keyword, '/' ) . '\b/iu';
-		return preg_match_all( $pattern, $text );
+		$text    = Utils::normalize_text_for_keyword_match( $text );
+		$keyword = Utils::normalize_keyword_for_match( $keyword );
+		if ( '' === $text || '' === $keyword ) {
+			return 0;
+		}
+
+		// Letter/number edges (not \b) so focus keywords like "cbd 4%" still count.
+		$pattern  = Utils::keyword_boundary_pattern( $keyword, false );
+		$haystack = function_exists( 'mb_strtolower' ) ? mb_strtolower( $text, 'UTF-8' ) : strtolower( $text );
+		$count    = preg_match_all( $pattern, $haystack );
+
+		return false === $count ? 0 : (int) $count;
 	}
 
 	/**

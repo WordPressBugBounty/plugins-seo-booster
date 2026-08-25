@@ -176,7 +176,7 @@ class SB_GSC_Metaboxes {
 		if ( $seo_plug_name && ! $embedded ) {
 			$output .= '<p class="sb-gsc-plugin-status">' . esc_html__( 'Detected SEO plugin: ', 'seo-booster' ) . esc_html( $seo_plug_name['name'] );
 
-			if ( $content_type === 'post' && $item_id > 0 ) {
+			if ( 'post' === $content_type && $item_id > 0 ) {
 				$get_focus_keyword = Google_API::get_focus_keywords( $item_id );
 
 				if ( $get_focus_keyword ) {
@@ -287,7 +287,7 @@ class SB_GSC_Metaboxes {
 				'public_url'   => $public_url,
 				'security'     => wp_create_nonce( 'sb_gsc_nonce' ),
 				'strings'      => array(
-					'hoverToSeeChart'          => __( 'Hover to see the chart' ),
+					'hoverToSeeChart'          => __( 'Hover to see the chart', 'seo-booster' ),
 					'analyzing'                => __( 'Loading ...', 'seo-booster' ),
 					'reanalyze'                => __( 'Reanalyze', 'seo-booster' ),
 					'scriptLoaded'             => __( 'GSC Metabox script loaded', 'seo-booster' ),
@@ -418,7 +418,7 @@ class SB_GSC_Metaboxes {
 				)
 			);
 
-			if ( $deleted === false ) {
+			if ( false === $deleted ) {
 				wp_send_json_error( array( 'message' => __( 'Failed to delete transients', 'seo-booster' ) ) );
 			}
 		} else {
@@ -427,7 +427,7 @@ class SB_GSC_Metaboxes {
 
 		// If we don't have a public URL yet, try to get it based on the content type and ID
 		if ( empty( $public_url ) && $item_id > 0 ) {
-			if ( $content_type === 'term' ) {
+			if ( 'term' === $content_type ) {
 				$term = get_term( $item_id );
 				if ( $term && ! is_wp_error( $term ) ) {
 					$public_url = get_term_link( $term );
@@ -452,10 +452,11 @@ class SB_GSC_Metaboxes {
 		wp_send_json_success(
 			array(
 				'message'        => sprintf(
+					/* translators: 1: number of transients deleted, 2: number of jobs scheduled, 3: content type label (post or term). */
 					__( 'Successfully scheduled %2$d jobs for %3$s. Reloading in 4 seconds...', 'seo-booster' ),
 					$deleted,
 					$scheduled_jobs,
-					$content_type === 'term' ? __( 'term', 'seo-booster' ) : __( 'post', 'seo-booster' )
+					'term' === $content_type ? __( 'term', 'seo-booster' ) : __( 'post', 'seo-booster' )
 				),
 				'scheduled_jobs' => $scheduled_jobs,
 				'item_id'        => $item_id,

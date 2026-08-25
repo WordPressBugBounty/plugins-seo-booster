@@ -111,7 +111,12 @@ class Image_Checks extends Abstract_Checks {
 			} else {
 				$results->add_warning(
 					'some_alt_text',
-					sprintf( __( '%1$d out of %2$d images are missing alt text.', 'seo-booster' ), $images_without_alt, $total_images ),
+					sprintf(
+						/* translators: 1: images missing alt text, 2: total images */
+						__( '%1$d out of %2$d images are missing alt text.', 'seo-booster' ),
+						$images_without_alt,
+						$total_images
+					),
 					$extra_missing
 				);
 			}
@@ -121,13 +126,22 @@ class Image_Checks extends Abstract_Checks {
 			if ( $images_with_empty_alt === $total_images && 0 === $images_without_alt ) {
 				$results->add_opportunity(
 					'all_empty_alt_text',
-					sprintf( __( 'All %d images have empty alt text (alt=""). Confirm they are decorative or add meaningful alt text.', 'seo-booster' ), $total_images ),
+					sprintf(
+						/* translators: %d: total number of images */
+						__( 'All %d images have empty alt text (alt=""). Confirm they are decorative or add meaningful alt text.', 'seo-booster' ),
+						$total_images
+					),
 					$extra_empty
 				);
 			} else {
 				$results->add_opportunity(
 					'some_empty_alt_text',
-					sprintf( __( '%1$d out of %2$d images have empty alt text (alt=""). Confirm they are decorative or add meaningful alt text.', 'seo-booster' ), $images_with_empty_alt, $total_images ),
+					sprintf(
+						/* translators: 1: images with empty alt text, 2: total images */
+						__( '%1$d out of %2$d images have empty alt text (alt=""). Confirm they are decorative or add meaningful alt text.', 'seo-booster' ),
+						$images_with_empty_alt,
+						$total_images
+					),
 					$extra_empty
 				);
 			}
@@ -198,7 +212,12 @@ class Image_Checks extends Abstract_Checks {
 					);
 					$error     = $image_status['error'] ?? '';
 					if ( ! empty( $image_status['status_code'] ) ) {
-						$error = sprintf( __( 'HTTP %1$d: %2$s', 'seo-booster' ), $image_status['status_code'], $error );
+						$error = sprintf(
+							/* translators: 1: HTTP status code, 2: error message */
+							__( 'HTTP %1$d: %2$s', 'seo-booster' ),
+							$image_status['status_code'],
+							$error
+						);
 					}
 					$broken_images_list[] = array(
 						'url'     => $image_url,
@@ -224,7 +243,11 @@ class Image_Checks extends Abstract_Checks {
 		if ( $broken_images > 0 ) {
 			$results->add_error(
 				'broken_images',
-				sprintf( __( '%d broken image(s) found. Check and fix the image URLs.', 'seo-booster' ), $broken_images ),
+				sprintf(
+					/* translators: %d: number of broken images */
+					__( '%d broken image(s) found. Check and fix the image URLs.', 'seo-booster' ),
+					$broken_images
+				),
 				array( 'broken_images' => $broken_images_list )
 			);
 		}
@@ -232,7 +255,11 @@ class Image_Checks extends Abstract_Checks {
 		if ( $external_images > 0 ) {
 			$results->add_warning(
 				'external_images',
-				sprintf( __( '%d external image(s) found. Consider hosting images locally for better performance and reliability.', 'seo-booster' ), $external_images ),
+				sprintf(
+					/* translators: %d: number of external images */
+					__( '%d external image(s) found. Consider hosting images locally for better performance and reliability.', 'seo-booster' ),
+					$external_images
+				),
 				! empty( $external_images_list ) ? array( 'external_images' => $external_images_list ) : null
 			);
 		}
@@ -275,7 +302,11 @@ class Image_Checks extends Abstract_Checks {
 		if ( $images_without_dimensions > 0 ) {
 			$results->add_opportunity(
 				'images_without_dimensions',
-				sprintf( __( '%d image(s) without width/height attributes. Add dimensions to prevent layout shift.', 'seo-booster' ), $images_without_dimensions ),
+				sprintf(
+					/* translators: %d: number of images without width/height attributes */
+					__( '%d image(s) without width/height attributes. Add dimensions to prevent layout shift.', 'seo-booster' ),
+					$images_without_dimensions
+				),
 				array( 'images_without_dimensions' => $images_without_dimensions_list )
 			);
 		}

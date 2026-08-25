@@ -43,7 +43,6 @@ class Tools_Llms_Txt {
         add_action( 'wp_head', array(__CLASS__, 'output_head_links'), 1 );
         add_action( 'send_headers', array(__CLASS__, 'output_http_link_headers') );
         add_action( 'wp_ajax_sb_tools_save_llms_settings', array(__CLASS__, 'ajax_save_settings') );
-        add_action( 'wp_ajax_sb_tools_preview_llms', array(__CLASS__, 'ajax_preview') );
         add_action( 'wp_ajax_sb_tools_download_llms', array(__CLASS__, 'ajax_download') );
         add_action( 'wp_ajax_sb_tools_llms_ai_suggest', array(__CLASS__, 'ajax_ai_suggest') );
         add_action( 'save_post', array(__CLASS__, 'maybe_invalidate_cache') );
@@ -79,7 +78,7 @@ class Tools_Llms_Txt {
          *
          * @param string[] $excluded Post type slugs.
          */
-        return apply_filters( 'sb_tools_llms_excluded_post_types', $excluded );
+        return apply_filters( 'seobooster_tools_llms_excluded_post_types', $excluded );
     }
 
     /**
@@ -343,23 +342,6 @@ class Tools_Llms_Txt {
     }
 
     /**
-     * AJAX: preview content.
-     *
-     * @return void
-     */
-    public static function ajax_preview() {
-        check_ajax_referer( 'sb_tools_llms_nonce', 'nonce' );
-        if ( !current_user_can( 'edit_posts' ) ) {
-            wp_send_json_error( array(
-                'message' => __( 'Permission denied', 'seo-booster' ),
-            ) );
-        }
-        wp_send_json_success( array(
-            'preview' => self::build_file_content( self::get_settings(), true ),
-        ) );
-    }
-
-    /**
      * AJAX: download generated content as a file (no front-end serving required).
      *
      * @return void
@@ -453,7 +435,7 @@ class Tools_Llms_Txt {
             "You are an SEO and AI discovery expert. Suggest an optimized llms.txt introduction and a ranked list of pages for AI crawlers.\n\nSite: %s\nTagline: %s\nCurrent intro: %s\nMax links allowed: %d\n\nTop candidate pages (GSC + bot traffic):\n%s\n\nBot crawl gaps (high bot traffic, missing from current llms.txt selection):\n%s\n\nReturn ONLY valid JSON:\n{\n  \"intro\": \"1-3 sentence site intro for llms.txt blockquote\",\n  \"suggestions\": [\n    {\"post_id\": 123, \"reason\": \"short reason\"}\n  ]\n}\n\nInclude up to %d suggestions ordered by importance. Use only post IDs from the lists above.",
             $site_name,
             $tagline,
-            ( $intro !== '' ? $intro : '(empty)' ),
+            ( '' !== $intro ? $intro : '(empty)' ),
             (int) ($settings['max_links'] ?? 20),
             implode( "\n", $candidate_lines ),
             ( !empty( $gap_lines ) ? implode( "\n", $gap_lines ) : '(none)' ),
@@ -599,15 +581,15 @@ class Tools_Llms_Txt {
             return false;
         }
         $path = untrailingslashit( $path );
-        if ( $path === 'llms.txt' ) {
+        if ( 'llms.txt' === $path ) {
             $path = '/llms.txt';
         }
         $home_path = wp_parse_url( home_url( '/' ), PHP_URL_PATH );
         $home_path = ( is_string( $home_path ) ? untrailingslashit( $home_path ) : '' );
-        if ( $home_path !== '' && strpos( $path, $home_path . '/llms.txt' ) === 0 ) {
+        if ( '' !== $home_path && 0 === strpos( $path, $home_path . '/llms.txt' ) ) {
             return true;
         }
-        return $path === '/llms.txt';
+        return '/llms.txt' === $path;
     }
 
     /**
@@ -691,7 +673,7 @@ class Tools_Llms_Txt {
     private static function get_cached_content( array $settings ) {
         $key = self::get_cache_key( $settings );
         $cached = get_transient( $key );
-        if ( is_string( $cached ) && $cached !== '' ) {
+        if ( is_string( $cached ) && '' !== $cached ) {
             return $cached;
         }
         $content = self::build_file_content( $settings, true );
@@ -709,13 +691,13 @@ class Tools_Llms_Txt {
     public static function get_post_description( $post ) {
         $seo = SEO_Plugin_Registry::read_post_seo( $post->ID );
         $desc = trim( (string) ($seo['description'] ?? '') );
-        if ( $desc === '' && !empty( $post->post_excerpt ) ) {
+        if ( '' === $desc && !empty( $post->post_excerpt ) ) {
             $desc = trim( wp_strip_all_tags( $post->post_excerpt ) );
         }
-        if ( $desc === '' && !empty( $post->post_content ) ) {
+        if ( '' === $desc && !empty( $post->post_content ) ) {
             $desc = wp_trim_words( wp_strip_all_tags( $post->post_content ), 20, '…' );
         }
-        if ( $desc === '' ) {
+        if ( '' === $desc ) {
             $desc = get_the_title( $post );
         }
         return $desc;
@@ -733,7 +715,7 @@ class Tools_Llms_Txt {
         $site_name = get_bloginfo( 'name' );
         $site_url = home_url( '/' );
         $intro = trim( (string) ($settings['intro'] ?? '') );
-        if ( $intro === '' ) {
+        if ( '' === $intro ) {
             $intro = sprintf( 
                 /* translators: %s: site name */
                 __( 'Curated content from %s for AI assistants and answer engines.', 'seo-booster' ),
@@ -784,13 +766,13 @@ class Tools_Llms_Txt {
         $entity_section = '';
         if ( function_exists( 'Cleverplugins\\SEOBooster\\seobooster_fs' ) ) {
         }
-        if ( $entity_section !== '' ) {
+        if ( '' !== $entity_section ) {
             $lines[] = rtrim( $entity_section );
         }
         $full_section = '';
         if ( function_exists( 'Cleverplugins\\SEOBooster\\seobooster_fs' ) ) {
         }
-        if ( $full_section !== '' ) {
+        if ( '' !== $full_section ) {
             $lines[] = rtrim( $full_section );
         }
         return implode( "\n", $lines ) . "\n";
@@ -812,7 +794,7 @@ class Tools_Llms_Txt {
         $pinned = array();
         foreach ( $pinned_ids as $post_id ) {
             $post = get_post( $post_id );
-            if ( $post && $post->post_status === 'publish' && in_array( $post->post_type, $post_types, true ) ) {
+            if ( $post && 'publish' === $post->post_status && in_array( $post->post_type, $post_types, true ) ) {
                 if ( Llms_Directory_Rules::is_post_allowed( $post, $rules ) ) {
                     $pinned[$post_id] = $post;
                 }
@@ -831,7 +813,7 @@ class Tools_Llms_Txt {
                 continue;
             }
             $post = get_post( $post_id );
-            if ( $post && $post->post_status === 'publish' && in_array( $post->post_type, $post_types, true ) ) {
+            if ( $post && 'publish' === $post->post_status && in_array( $post->post_type, $post_types, true ) ) {
                 if ( Llms_Directory_Rules::is_post_allowed( $post, $rules ) ) {
                     $posts[$post_id] = $post;
                 }
@@ -880,7 +862,7 @@ class Tools_Llms_Txt {
                 continue;
             }
             $post = get_post( $post_id );
-            if ( !$post || $post->post_status !== 'publish' || !in_array( $post->post_type, $post_types, true ) ) {
+            if ( !$post || 'publish' !== $post->post_status || !in_array( $post->post_type, $post_types, true ) ) {
                 continue;
             }
             $clicks[$post_id] = (int) $row['total_clicks'];
@@ -921,7 +903,7 @@ class Tools_Llms_Txt {
         $gsc_clicks = self::get_gsc_clicks_by_post( $settings );
         $bot_visits = self::get_bot_visits_by_post( 30 );
         $post_ids = array_unique( array_merge( array_keys( $gsc_clicks ), array_keys( $bot_visits ) ) );
-        $weights = apply_filters( 'sb_tools_llms_curation_weights', array(
+        $weights = apply_filters( 'seobooster_tools_llms_curation_weights', array(
             'gsc'  => 0.6,
             'bots' => 0.4,
         ) );
@@ -933,7 +915,7 @@ class Tools_Llms_Txt {
         $scores = array();
         foreach ( $post_ids as $post_id ) {
             $post = get_post( $post_id );
-            if ( !$post || $post->post_status !== 'publish' ) {
+            if ( !$post || 'publish' !== $post->post_status ) {
                 continue;
             }
             if ( !Llms_Directory_Rules::is_post_allowed( $post, $rules ) ) {
@@ -944,7 +926,7 @@ class Tools_Llms_Txt {
             $gsc_norm = ( $max_gsc > 0 ? $gsc / $max_gsc : 0 );
             $bot_norm = ( $max_bots > 0 ? $bot / $max_bots : 0 );
             $score = $gsc_norm * $gsc_weight + $bot_norm * $bot_weight;
-            if ( $score <= 0 && $gsc === 0 && $bot === 0 ) {
+            if ( 0 >= $score && 0 === $gsc && 0 === $bot ) {
                 continue;
             }
             $scores[$post_id] = array(
@@ -997,7 +979,7 @@ class Tools_Llms_Txt {
                 continue;
             }
             $post = get_post( $post_id );
-            if ( !$post || $post->post_status !== 'publish' ) {
+            if ( !$post || 'publish' !== $post->post_status ) {
                 continue;
             }
             $rules = Llms_Directory_Rules::sanitize_rules( $settings['directory_rules'] ?? array() );

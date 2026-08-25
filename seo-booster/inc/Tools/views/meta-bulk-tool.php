@@ -56,7 +56,7 @@ $docs_url = \Cleverplugins\SEOBooster\Utils::generate_cp_web_link( 'tools_bulk_m
 				<span aria-hidden="true"> · </span>
 				<a href="<?php echo esc_url( $settings_url ); ?>"><?php esc_html_e( 'SEO Booster Settings', 'seo-booster' ); ?></a>
 			</p>
-			<?php elseif ( $ai_notice_type === 'credits' ) : ?>
+			<?php elseif ( 'credits' === $ai_notice_type ) : ?>
 			<p>
 				<a href="<?php echo esc_url( $settings_url ); ?>"><?php esc_html_e( 'SEO Booster Settings', 'seo-booster' ); ?></a>
 			</p>
@@ -70,14 +70,14 @@ $docs_url = \Cleverplugins\SEOBooster\Utils::generate_cp_web_link( 'tools_bulk_m
 			<th scope="row"><?php esc_html_e( 'Content types', 'seo-booster' ); ?></th>
 			<td>
 				<div class="sb-toggle-group sb-tools-content-types">
-					<?php foreach ( $selectable_post_types as $type ) : ?>
+					<?php foreach ( $selectable_post_types as $post_type_slug ) : ?>
 						<?php
-						$object = get_post_type_object( $type );
-						$label  = $object ? $object->labels->name : $type;
+						$object = get_post_type_object( $post_type_slug );
+						$label  = $object ? $object->labels->name : $post_type_slug;
 						?>
 						<label class="sb-toggle-label">
 							<div class="sb-toggle-switch">
-								<input type="checkbox" name="post_type" value="<?php echo esc_attr( $type ); ?>" <?php checked( in_array( $type, $post_types, true ) ); ?> <?php disabled( ! $seo_target ); ?> />
+								<input type="checkbox" name="post_type" value="<?php echo esc_attr( $post_type_slug ); ?>" <?php checked( in_array( $post_type_slug, $post_types, true ) ); ?> <?php disabled( ! $seo_target ); ?> />
 								<span class="sb-toggle-slider"></span>
 							</div>
 							<span class="sb-toggle-text"><?php echo esc_html( $label ); ?></span>

@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Registry of analysis check groups and progressive steps.
+ * Registry of analysis check groups.
  *
  * @since 7.1.0
  */
@@ -37,38 +37,6 @@ class Check_Registry {
 	public function run_all( Content_Context $context, Html_Document $document, Result_Set $results ) {
 		foreach ( $this->checks as $check ) {
 			$check->run( $context, $document, $results );
-		}
-	}
-
-	/**
-	 * Run checks for a progressive analyze_step key.
-	 *
-	 * @param string          $step Step name.
-	 * @param Content_Context $context Context.
-	 * @param Html_Document   $document Document.
-	 * @param Result_Set      $results Results.
-	 * @return string|null Next step or null when done.
-	 */
-	public function run_step( $step, Content_Context $context, Html_Document $document, Result_Set $results ) {
-		switch ( $step ) {
-			case 'headers':
-				$this->run_named( array( 'meta', 'content' ), $context, $document, $results );
-				return 'links';
-
-			case 'links':
-				$this->run_named( array( 'links' ), $context, $document, $results );
-				return 'content';
-
-			case 'content':
-				$this->run_named( array( 'content', 'images', 'duplicates' ), $context, $document, $results );
-				return 'gsc';
-
-			case 'gsc':
-				$this->run_named( array( 'gsc' ), $context, $document, $results );
-				return 'cache';
-
-			default:
-				return null;
 		}
 	}
 

@@ -80,10 +80,6 @@ class ContentProcessing {
 			if ( ! self::$page_processing_started && ! $replace_kw_multiple ) {
 				self::$processed_keywords_page = array();
 				self::$page_processing_started = true;
-			} elseif ( self::$page_processing_started && ! $replace_kw_multiple ) {
-				// Log the currently tracked keywords
-				if ( ! empty( self::$processed_keywords_page ) ) {
-				}
 			}
 
 			$replace_count         = 0;
@@ -173,7 +169,7 @@ class ContentProcessing {
 					break;
 				}
 
-				$text_content = $text_node->nodeValue;
+				$text_content = $text_node->{'nodeValue'};
 
 				$matches = array();
 
@@ -207,10 +203,11 @@ class ContentProcessing {
 						continue;
 					}
 
-					// Prepare pattern based on capitalization setting (/u for UTF-8 word boundaries).
-					$pattern = $match_capitalization
-					? '/\b(' . preg_quote( $found_kw['kw'], '/' ) . ')\b/u'
-					: '/\b(' . preg_quote( $found_kw['kw'], '/' ) . ')\b/ui';
+					// Letter/number edges (not \b) so terms ending in "%" / punctuation still match.
+					$pattern = Utils::keyword_boundary_pattern(
+						$found_kw['kw'],
+						! $match_capitalization
+					);
 
 					// Find all matches in this text node
 					if ( preg_match_all( $pattern, $text_content, $pattern_matches, PREG_OFFSET_CAPTURE ) ) {
@@ -276,14 +273,14 @@ class ContentProcessing {
 						$link->setAttribute( 'data-sbfb', '1' );
 					}
 
-					$link->textContent = $match['keyword'];
+					$link->{'textContent'} = $match['keyword'];
 
 					// Create a new text node for the text after the match
 					$after_text = substr( $text_content, $match['position'] + $match['length'] );
 					$after_node = $dom->createTextNode( $after_text );
 
 					// Replace the original text node with our new nodes
-					$parent = $text_node->parentNode;
+					$parent = $text_node->{'parentNode'};
 					if ( $parent ) {
 						// Create a document fragment to hold all our nodes
 						$fragment = $dom->createDocumentFragment();

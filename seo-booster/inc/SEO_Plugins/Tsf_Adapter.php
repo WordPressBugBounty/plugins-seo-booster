@@ -80,10 +80,10 @@ class Tsf_Adapter extends Abstract_Post_Meta_Adapter {
 	 */
 	public function get_meta_keys( $field_type = 'both' ) {
 		$keys = array();
-		if ( $field_type === 'title' || $field_type === 'both' ) {
+		if ( 'title' === $field_type || 'both' === $field_type ) {
 			$keys['title_key'] = '_genesis_title';
 		}
-		if ( $field_type === 'description' || $field_type === 'both' ) {
+		if ( 'description' === $field_type || 'both' === $field_type ) {
 			$keys['description_key'] = '_genesis_description';
 		}
 
@@ -112,10 +112,10 @@ class Tsf_Adapter extends Abstract_Post_Meta_Adapter {
 			if ( is_object( $tsf ) && method_exists( $tsf, 'get_title' ) && method_exists( $tsf, 'get_description' ) ) {
 				$title = (string) $tsf->get_title( array(), (int) $post_id );
 				$desc  = (string) $tsf->get_description( array(), (int) $post_id );
-				if ( $title !== '' || $desc !== '' ) {
+				if ( '' !== $title || '' !== $desc ) {
 					return array(
-						'title'       => sanitize_text_field( $title !== '' ? $title : $raw['title'] ),
-						'description' => sanitize_textarea_field( $desc !== '' ? $desc : $raw['description'] ),
+						'title'       => sanitize_text_field( '' !== $title ? $title : $raw['title'] ),
+						'description' => sanitize_textarea_field( '' !== $desc ? $desc : $raw['description'] ),
 					);
 				}
 			}
@@ -200,11 +200,57 @@ class Tsf_Adapter extends Abstract_Post_Meta_Adapter {
 	}
 
 	/**
+	 * Resolve term title/description via The SEO Framework Meta API (includes generated fallbacks).
+	 *
 	 * @param int $term_id Term ID.
 	 * @return array{title: string, description: string}
 	 */
 	public function read_term_seo_resolved( $term_id ) {
-		return $this->read_term_seo( $term_id );
+		$raw  = $this->read_term_seo( $term_id );
+		$term = get_term( (int) $term_id );
+		if ( ! $term || is_wp_error( $term ) || ! isset( $term->term_id, $term->taxonomy ) ) {
+			return $raw;
+		}
+
+		$args = array(
+			'id'  => (int) $term->term_id,
+			'tax' => $term->taxonomy,
+		);
+
+		try {
+			$title = '';
+			$desc  = '';
+
+			if ( class_exists( '\The_SEO_Framework\Meta\Title' ) && is_callable( array( '\The_SEO_Framework\Meta\Title', 'get_title' ) ) ) {
+				$title = (string) \The_SEO_Framework\Meta\Title::get_title( $args );
+			}
+			if ( class_exists( '\The_SEO_Framework\Meta\Description' ) && is_callable( array( '\The_SEO_Framework\Meta\Description', 'get_description' ) ) ) {
+				$desc = (string) \The_SEO_Framework\Meta\Description::get_description( $args );
+			}
+
+			// Legacy facade fallback (older TSF / when Meta classes unavailable).
+			if ( ( '' === $title || '' === $desc ) && function_exists( 'tsf' ) ) {
+				$tsf = tsf();
+				if ( is_object( $tsf ) ) {
+					if ( '' === $title && method_exists( $tsf, 'get_title' ) ) {
+						$title = (string) $tsf->get_title( $args );
+					}
+					if ( '' === $desc && method_exists( $tsf, 'get_description' ) ) {
+						$desc = (string) $tsf->get_description( $args );
+					}
+				}
+			}
+
+			if ( '' !== $title || '' !== $desc ) {
+				return array(
+					'title'       => sanitize_text_field( '' !== $title ? $title : $raw['title'] ),
+					'description' => sanitize_textarea_field( '' !== $desc ? $desc : $raw['description'] ),
+				);
+			}
+		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Keep raw.
+		}
+
+		return $raw;
 	}
 
 	/**

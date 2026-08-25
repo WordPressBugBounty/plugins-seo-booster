@@ -17,7 +17,6 @@ return array(
     'Symfony\\Polyfill\\Iconv\\' => array($vendorDir . '/symfony/polyfill-iconv'),
     'Symfony\\Component\\CssSelector\\' => array($vendorDir . '/symfony/css-selector'),
     'Soundasleep\\' => array($vendorDir . '/soundasleep/html2text/src'),
-    'League\\Plates\\' => array($vendorDir . '/league/plates/src'),
     'Composer\\Installers\\' => array($vendorDir . '/composer/installers/src/Composer/Installers'),
     'Cleverplugins\\SEOBooster\\' => array($baseDir . '/inc'),
 );

@@ -21,6 +21,9 @@ class AI_Bot_Tracker {
 
     const OPTION_RETENTION_DAYS = 'seobooster_ai_bot_retention_days';
 
+    /** Soft cap for hit rows after retention cleanup (filterable via seobooster_ai_bot_hits_max_rows). */
+    const DEFAULT_MAX_HIT_ROWS = 100000;
+
     const BUCKET_PATH_SEARCH = '/__sb_ai_bot_search_trap/';
 
     const BUCKET_PATH_JUNK = '/__sb_ai_bot_junk_trap/';
@@ -95,6 +98,19 @@ class AI_Bot_Tracker {
     }
 
     /**
+     * Soft maximum rows kept in sb2_ai_bot_hits after retention cleanup.
+     *
+     * @return int
+     */
+    public static function get_max_hit_rows() {
+        $max = (int) apply_filters( 'seobooster_ai_bot_hits_max_rows', self::DEFAULT_MAX_HIT_ROWS );
+        if ( $max < 1000 ) {
+            return 1000;
+        }
+        return $max;
+    }
+
+    /**
      * Handle a frontend request: optionally block (premium) and queue hit recording.
      *
      * @return void
@@ -148,11 +164,11 @@ class AI_Bot_Tracker {
         if ( $status_code < 100 ) {
             $status_code = 200;
         }
-        if ( $status_code === 404 || function_exists( 'is_404' ) && is_404() ) {
+        if ( 404 === $status_code || function_exists( 'is_404' ) && is_404() ) {
             return;
         }
         $is_redirect = $request_redirected || $status_code >= 300 && $status_code < 400;
-        if ( $mapped_kind === 'content' && $is_redirect ) {
+        if ( 'content' === $mapped_kind && $is_redirect ) {
             $request_kind = 'redirect';
         } else {
             $request_kind = $mapped_kind;
@@ -162,7 +178,7 @@ class AI_Bot_Tracker {
         }
         $url_for_hash = $normalized['url'];
         $display_path = $request_path;
-        if ( $request_kind === 'content' || $request_kind === 'redirect' ) {
+        if ( 'content' === $request_kind || 'redirect' === $request_kind ) {
             $url_for_hash = $normalized['url'];
             $display_path = $request_path;
         } else {
@@ -363,7 +379,7 @@ class AI_Bot_Tracker {
      * @return string
      */
     public static function get_purpose_label( $purpose ) {
-        if ( $purpose === 'citation' ) {
+        if ( 'citation' === $purpose ) {
             return __( 'Citation / answer engine', 'seo-booster' );
         }
         return __( 'Research / training', 'seo-booster' );
@@ -720,11 +736,11 @@ class AI_Bot_Tracker {
                 'edit_url' => '',
             );
         }
-        if ( $object_type === 'post' ) {
+        if ( 'post' === $object_type ) {
             $title = get_the_title( $object_id );
             $view_url = get_permalink( $object_id );
             $edit_url = get_edit_post_link( $object_id, 'raw' );
-        } elseif ( $object_type === 'term' ) {
+        } elseif ( 'term' === $object_type ) {
             $term = get_term( $object_id );
             if ( $term && !is_wp_error( $term ) ) {
                 $title = $term->name;
@@ -732,16 +748,17 @@ class AI_Bot_Tracker {
                 $view_url = ( is_wp_error( $term_link ) ? '' : $term_link );
                 $edit_url = get_edit_term_link( $object_id, $term->taxonomy, 'raw' );
             }
-        } elseif ( $object_type === 'home' ) {
+        } elseif ( 'home' === $object_type ) {
             $title = __( 'Homepage', 'seo-booster' );
             $view_url = home_url( '/' );
-        } elseif ( $object_type === 'archive' ) {
+        } elseif ( 'archive' === $object_type ) {
             $title = __( 'Archive', 'seo-booster' );
             if ( is_numeric( $object_id ) && $object_id > 0 ) {
                 $view_url = get_permalink( $object_id );
             }
         }
         if ( empty( $title ) ) {
+            /* translators: %d: WordPress object ID. */
             $title = sprintf( __( 'Object #%d', 'seo-booster' ), $object_id );
         }
         return array(
@@ -1397,16 +1414,53 @@ class AI_Bot_Tracker {
     }
 
     /**
-     * Remove hit rows older than the retention window.
+     * Remove hit rows older than the retention window, then enforce a soft row cap.
      *
-     * @return int Rows deleted.
+     * @return int Rows deleted (retention + excess).
      */
     public static function cleanup_old_hits() {
         global $wpdb;
         $table = $wpdb->prefix . 'sb2_ai_bot_hits';
+        if ( !Utils::plugin_table_exists( $table ) ) {
+            return 0;
+        }
         $days = self::get_retention_days();
+        $deleted = 0;
         // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE hit_date < DATE_SUB(CURDATE(), INTERVAL %d DAY)", $days ) );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $deleted += (int) $wpdb->rows_affected;
+        $deleted += self::enforce_hit_table_cap();
+        return $deleted;
+    }
+
+    /**
+     * Delete oldest hit rows when the table exceeds the soft maximum.
+     *
+     * Mirrors debug-log maintenance: retention first, then cap so busy sites cannot grow without bound.
+     *
+     * @return int Rows deleted.
+     */
+    public static function enforce_hit_table_cap() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'sb2_ai_bot_hits';
+        if ( !Utils::plugin_table_exists( $table ) ) {
+            return 0;
+        }
+        $max = self::get_max_hit_rows();
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table prefix only; aggregate count.
+        $count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
+        if ( $count <= $max ) {
+            return 0;
+        }
+        // Trim toward 80% of the cap so daily maintenance is not constantly deleting one day's surplus.
+        $target = (int) max( 1000, (int) floor( $max * 0.8 ) );
+        $entries_to_delete = $count - $target;
+        if ( $entries_to_delete < 1 ) {
+            return 0;
+        }
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
+        $wpdb->query( $wpdb->prepare( "DELETE FROM {$table} ORDER BY hit_date ASC, id ASC LIMIT %d", $entries_to_delete ) );
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         return (int) $wpdb->rows_affected;
     }

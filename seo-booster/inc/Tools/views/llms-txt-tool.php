@@ -216,14 +216,14 @@ esc_html_e( 'Content types', 'seo-booster' );
 				<td>
 					<div class="sb-toggle-group sb-tools-content-types">
 						<?php 
-foreach ( $post_types as $type => $object ) {
+foreach ( $post_types as $post_type_slug => $object ) {
     ?>
 							<label class="sb-toggle-label">
 								<div class="sb-toggle-switch">
 									<input type="checkbox" name="post_types[]" value="<?php 
-    echo esc_attr( $type );
+    echo esc_attr( $post_type_slug );
     ?>" <?php 
-    checked( in_array( $type, (array) $settings['post_types'], true ) );
+    checked( in_array( $post_type_slug, (array) $settings['post_types'], true ) );
     ?> />
 									<span class="sb-toggle-slider"></span>
 								</div>
@@ -348,7 +348,7 @@ if ( empty( $directories ) ) {
 						<?php 
         $dir = $row['directory'];
         $rule = $row['rule'];
-        $effective = ( $rule !== 'auto' ? $rule : $row['auto_status'] );
+        $effective = ( 'auto' !== $rule ? $rule : $row['auto_status'] );
         $md_url = ( !empty( $row['example_md'] ) ? $row['example_md'] : '' );
         ?>
 						<tr>

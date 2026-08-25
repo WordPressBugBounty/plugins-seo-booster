@@ -79,7 +79,7 @@ class Meta_Checks extends Abstract_Checks {
 			}
 		}
 
-		if ( empty( $title ) && $context->object_type === 'post' && $context->object ) {
+		if ( empty( $title ) && 'post' === $context->object_type && $context->object ) {
 			$title = trim( (string) $context->object->post_title );
 		}
 
@@ -89,9 +89,23 @@ class Meta_Checks extends Abstract_Checks {
 		}
 
 		if ( ! empty( $focus_keyword ) && stripos( $title, $focus_keyword ) === false ) {
-			$results->add_warning( 'title_no_keyword', sprintf( __( 'The focus keyword "%s" does not appear in the title.', 'seo-booster' ), $focus_keyword ) );
+			$results->add_warning(
+				'title_no_keyword',
+				sprintf(
+					/* translators: %s: focus keyword */
+					__( 'The focus keyword "%s" does not appear in the title.', 'seo-booster' ),
+					$focus_keyword
+				)
+			);
 		} elseif ( ! empty( $focus_keyword ) ) {
-			$results->add_good( 'title_has_keyword', sprintf( __( 'The focus keyword "%s" appears in the title.', 'seo-booster' ), $focus_keyword ) );
+			$results->add_good(
+				'title_has_keyword',
+				sprintf(
+					/* translators: %s: focus keyword */
+					__( 'The focus keyword "%s" appears in the title.', 'seo-booster' ),
+					$focus_keyword
+				)
+			);
 		}
 	}
 
@@ -117,9 +131,23 @@ class Meta_Checks extends Abstract_Checks {
 		);
 
 		if ( ! empty( $focus_keyword ) && stripos( $description, $focus_keyword ) === false ) {
-			$results->add_warning( 'description_no_keyword', sprintf( __( 'The focus keyword "%s" does not appear in the meta description.', 'seo-booster' ), $focus_keyword ) );
+			$results->add_warning(
+				'description_no_keyword',
+				sprintf(
+					/* translators: %s: focus keyword */
+					__( 'The focus keyword "%s" does not appear in the meta description.', 'seo-booster' ),
+					$focus_keyword
+				)
+			);
 		} elseif ( ! empty( $focus_keyword ) ) {
-			$results->add_good( 'description_has_keyword', sprintf( __( 'The focus keyword "%s" appears in the meta description.', 'seo-booster' ), $focus_keyword ) );
+			$results->add_good(
+				'description_has_keyword',
+				sprintf(
+					/* translators: %s: focus keyword */
+					__( 'The focus keyword "%s" appears in the meta description.', 'seo-booster' ),
+					$focus_keyword
+				)
+			);
 		}
 	}
 
@@ -166,7 +194,7 @@ class Meta_Checks extends Abstract_Checks {
 			}
 		}
 
-		if ( empty( $description ) && $context->object_type === 'post' && $context->object ) {
+		if ( empty( $description ) && 'post' === $context->object_type && $context->object ) {
 			$description = trim( (string) $context->object->post_excerpt );
 		}
 
@@ -186,7 +214,7 @@ class Meta_Checks extends Abstract_Checks {
 
 		if ( null === $noindex && $context->has_full_page ) {
 			$full_html = $context->full_page_content;
-			if ( is_string( $full_html ) && $full_html !== '' ) {
+			if ( is_string( $full_html ) && '' !== $full_html ) {
 				if ( preg_match( '/<meta[^>]+name=["\']robots["\'][^>]+content=["\']([^"\']+)["\']/i', $full_html, $m )
 					|| preg_match( '/<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']robots["\']/i', $full_html, $m ) ) {
 					$robots = strtolower( $m[1] );
@@ -228,7 +256,14 @@ class Meta_Checks extends Abstract_Checks {
 			return;
 		}
 
-		$results->add_good( 'has_structured_data', sprintf( __( 'Found %d structured data element(s).', 'seo-booster' ), $total ) );
+		$results->add_good(
+			'has_structured_data',
+			sprintf(
+				/* translators: %d: number of structured data elements */
+				__( 'Found %d structured data element(s).', 'seo-booster' ),
+				$total
+			)
+		);
 	}
 
 	/**
@@ -256,7 +291,14 @@ class Meta_Checks extends Abstract_Checks {
 		}
 
 		if ( ! empty( $missing ) ) {
-			$results->add_opportunity( 'incomplete_open_graph', sprintf( __( 'Missing Open Graph tags: %s', 'seo-booster' ), implode( ', ', $missing ) ) );
+			$results->add_opportunity(
+				'incomplete_open_graph',
+				sprintf(
+					/* translators: %s: comma-separated list of missing Open Graph tag names */
+					__( 'Missing Open Graph tags: %s', 'seo-booster' ),
+					implode( ', ', $missing )
+				)
+			);
 			return;
 		}
 
@@ -288,7 +330,14 @@ class Meta_Checks extends Abstract_Checks {
 		}
 
 		if ( ! empty( $missing ) ) {
-			$results->add_opportunity( 'incomplete_twitter_cards', sprintf( __( 'Missing Twitter Card tags: %s', 'seo-booster' ), implode( ', ', $missing ) ) );
+			$results->add_opportunity(
+				'incomplete_twitter_cards',
+				sprintf(
+					/* translators: %s: comma-separated list of missing Twitter Card tag names */
+					__( 'Missing Twitter Card tags: %s', 'seo-booster' ),
+					implode( ', ', $missing )
+				)
+			);
 			return;
 		}
 
@@ -310,7 +359,11 @@ class Meta_Checks extends Abstract_Checks {
 
 		$results->add_opportunity(
 			'no_canonical',
-			sprintf( __( 'No canonical URL found. Consider adding a canonical link tag pointing to: %s', 'seo-booster' ), $context->get_object_url() )
+			sprintf(
+				/* translators: %s: suggested canonical URL */
+				__( 'No canonical URL found. Consider adding a canonical link tag pointing to: %s', 'seo-booster' ),
+				$context->get_object_url()
+			)
 		);
 	}
 
@@ -417,6 +470,13 @@ class Meta_Checks extends Abstract_Checks {
 			return;
 		}
 
-		$results->add_good( 'has_rel_author', sprintf( __( 'Found %d rel="author" link(s).', 'seo-booster' ), $count ) );
+		$results->add_good(
+			'has_rel_author',
+			sprintf(
+				/* translators: %d: number of rel="author" links */
+				__( 'Found %d rel="author" link(s).', 'seo-booster' ),
+				$count
+			)
+		);
 	}
 }

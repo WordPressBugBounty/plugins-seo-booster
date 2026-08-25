@@ -114,7 +114,7 @@ class SB_Adminbar_Ajax {
 
 		$keywords      = array();
 		$keyword_total = 0;
-		if ( $page_url !== '' ) {
+		if ( '' !== $page_url ) {
 			$keyword_data  = self::get_compact_keywords( $page_url );
 			$keywords      = $keyword_data['keywords'];
 			$keyword_total = $keyword_data['total'];
@@ -203,7 +203,7 @@ class SB_Adminbar_Ajax {
 		}
 
 		// URL fallback when item_id was not localized (e.g. some builder contexts).
-		if ( $page_url === '' ) {
+		if ( '' === $page_url ) {
 			return new \WP_Error( 'missing_context', __( 'Could not determine the current page.', 'seo-booster' ) );
 		}
 
@@ -233,7 +233,7 @@ class SB_Adminbar_Ajax {
 	 */
 	private static function sanitize_same_site_url( $raw ) {
 		$url = esc_url_raw( $raw );
-		if ( $url === '' ) {
+		if ( '' === $url ) {
 			return '';
 		}
 
@@ -331,7 +331,7 @@ class SB_Adminbar_Ajax {
 		$out = array();
 		foreach ( array_slice( $list, 0, $limit ) as $value ) {
 			$text = sanitize_text_field( (string) $value );
-			if ( $text !== '' ) {
+			if ( '' !== $text ) {
 				$out[] = $text;
 			}
 		}

@@ -522,7 +522,7 @@ jQuery(document).ready(function ($) {
 											${sbdata.strings.errorFetchingData} 
 											${sbdata.strings.tryAgainLater} 
 											${sbdata.strings.visitTroubleshootingGuide}
-											<a href="https://seoboosterpro.com/docs/errors-and-troubleshooting/failed-to-fetch-data/" target="_blank" rel="noopener">
+											<a href="${sbdata.troubleshooting_guide_url || ''}" target="_blank" rel="noopener">
 													${sbdata.strings.troubleshootingGuide}
 											</a>.
 									</div>

@@ -49,17 +49,22 @@ class SEO_Plugin_Integration {
 
 		$field_selector = $plugin_info['fields'][ $field_type ] ?? null;
 
-		if ( ! $field_selector && $field_type === 'focus_keyword' && ! SEO_Plugin_Registry::supports_focus_keyword() ) {
+		if ( ! $field_selector && 'focus_keyword' === $field_type && ! SEO_Plugin_Registry::supports_focus_keyword() ) {
 			return array(
 				'success' => false,
 				'message' => SEO_Plugin_Registry::get_focus_keyword_requirement_message(),
 			);
 		}
 
-		if ( ! $field_selector && $field_type !== 'focus_keyword' ) {
+		if ( ! $field_selector && 'focus_keyword' !== $field_type ) {
 			return array(
 				'success' => false,
-				'message' => sprintf( __( 'Field type "%1$s" not supported for %2$s.', 'seo-booster' ), $field_type, $plugin_info['name'] ),
+				'message' => sprintf(
+					/* translators: 1: field type key, 2: SEO plugin name. */
+					__( 'Field type "%1$s" not supported for %2$s.', 'seo-booster' ),
+					$field_type,
+					$plugin_info['name']
+				),
 			);
 		}
 
@@ -83,8 +88,18 @@ class SEO_Plugin_Integration {
 			'value'          => $value,
 			'persisted'      => $persisted,
 			'message'        => $persisted
-				? sprintf( __( 'Saved %1$s to %2$s.', 'seo-booster' ), $field_type, $plugin_info['name'] )
-				: sprintf( __( 'Suggestion will be applied to %1$s field in %2$s.', 'seo-booster' ), $field_type, $plugin_info['name'] ),
+				? sprintf(
+					/* translators: 1: field type key, 2: SEO plugin name. */
+					__( 'Saved %1$s to %2$s.', 'seo-booster' ),
+					$field_type,
+					$plugin_info['name']
+				)
+				: sprintf(
+					/* translators: 1: field type key, 2: SEO plugin name. */
+					__( 'Suggestion will be applied to %1$s field in %2$s.', 'seo-booster' ),
+					$field_type,
+					$plugin_info['name']
+				),
 		);
 	}
 }

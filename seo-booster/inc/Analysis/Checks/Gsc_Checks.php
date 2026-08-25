@@ -8,6 +8,7 @@ use Cleverplugins\SEOBooster\Analysis\Gsc_Inspection_Cache;
 use Cleverplugins\SEOBooster\Analysis\Html_Document;
 use Cleverplugins\SEOBooster\Analysis\Result_Set;
 use Cleverplugins\SEOBooster\Google_API;
+use Cleverplugins\SEOBooster\GSC_History;
 use Cleverplugins\SEOBooster\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -73,9 +74,11 @@ class Gsc_Checks extends Abstract_Checks {
             FROM {$wpdb->prefix}sb2_query_keywords AS qk
             LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh
                 ON qk.id = qkh.query_keywords_id
+                AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
             WHERE qk.page = %s
             GROUP BY qk.id, qk.query, qk.page, qk.is_used_in_content
             ORDER BY impressions DESC, clicks DESC",
+			(int) GSC_History::INSIGHT_WINDOW_DAYS,
 			$url
 		);
 
@@ -262,7 +265,7 @@ class Gsc_Checks extends Abstract_Checks {
 
 		$user_canonical   = isset( $index_status['userCanonical'] ) ? (string) $index_status['userCanonical'] : '';
 		$google_canonical = isset( $index_status['googleCanonical'] ) ? (string) $index_status['googleCanonical'] : '';
-		if ( $user_canonical !== '' && $google_canonical !== '' && ! $this->gsc_urls_match( $user_canonical, $google_canonical ) ) {
+		if ( '' !== $user_canonical && '' !== $google_canonical && ! $this->gsc_urls_match( $user_canonical, $google_canonical ) ) {
 			$results->add_opportunity(
 				'gsc_canonical_mismatch',
 				sprintf(
@@ -301,7 +304,7 @@ class Gsc_Checks extends Abstract_Checks {
 		$issues_found = false;
 		foreach ( $rich_results['detectedItems'] as $item ) {
 			$rich_result_type = isset( $item['richResultType'] ) ? sanitize_text_field( $item['richResultType'] ) : '';
-			if ( $rich_result_type === '' || empty( $item['items'] ) || ! is_array( $item['items'] ) ) {
+			if ( '' === $rich_result_type || empty( $item['items'] ) || ! is_array( $item['items'] ) ) {
 				continue;
 			}
 
@@ -313,7 +316,7 @@ class Gsc_Checks extends Abstract_Checks {
 				foreach ( $item_data['issues'] as $issue ) {
 					$issue_message  = isset( $issue['issueMessage'] ) ? sanitize_text_field( $issue['issueMessage'] ) : '';
 					$issue_severity = isset( $issue['severity'] ) ? sanitize_text_field( $issue['severity'] ) : '';
-					if ( $issue_message === '' || $issue_severity === '' ) {
+					if ( '' === $issue_message || '' === $issue_severity ) {
 						continue;
 					}
 
@@ -354,7 +357,7 @@ class Gsc_Checks extends Abstract_Checks {
 	 */
 	private function coverage_indicates_not_indexed( $coverage_state ) {
 		$coverage_state = trim( (string) $coverage_state );
-		if ( $coverage_state === '' ) {
+		if ( '' === $coverage_state ) {
 			return false;
 		}
 
@@ -412,24 +415,24 @@ class Gsc_Checks extends Abstract_Checks {
 	 */
 	private function translate_gsc_term( $technical_term ) {
 		$translations = array(
-			'BLOCKED_BY_META_TAG'      => __( 'Page is set to not be indexed (meta robots)', 'seo-booster' ),
-			'BLOCKED_BY_HTTP_HEADER'   => __( 'Page is set to not be indexed (HTTP header)', 'seo-booster' ),
-			'BLOCKED_BY_ROBOTS_TXT'    => __( 'Page is blocked by robots.txt', 'seo-booster' ),
-			'DISALLOWED'               => __( 'Page is disallowed by robots.txt', 'seo-booster' ),
-			'NOT_FOUND'                => __( 'Page not found (404 error)', 'seo-booster' ),
-			'SERVER_ERROR'             => __( 'Google got a server error when fetching this page', 'seo-booster' ),
-			'ACCESS_DENIED'            => __( 'Google was denied access when fetching this page', 'seo-booster' ),
-			'ACCESS_FORBIDDEN'         => __( 'Google was forbidden from fetching this page', 'seo-booster' ),
-			'REDIRECT_ERROR'           => __( 'Google hit a redirect error when fetching this page', 'seo-booster' ),
-			'BLOCKED_4XX'              => __( 'Google got a 4xx response when fetching this page', 'seo-booster' ),
-			'INVALID_URL'              => __( 'Google considers this URL invalid', 'seo-booster' ),
-			'BLOCKED_ROBOTS_TXT'       => __( 'Google could not fetch this page because of robots.txt', 'seo-booster' ),
-			'INDEXING_ALLOWED'         => __( 'Indexing is allowed', 'seo-booster' ),
+			'BLOCKED_BY_META_TAG'        => __( 'Page is set to not be indexed (meta robots)', 'seo-booster' ),
+			'BLOCKED_BY_HTTP_HEADER'     => __( 'Page is set to not be indexed (HTTP header)', 'seo-booster' ),
+			'BLOCKED_BY_ROBOTS_TXT'      => __( 'Page is blocked by robots.txt', 'seo-booster' ),
+			'DISALLOWED'                 => __( 'Page is disallowed by robots.txt', 'seo-booster' ),
+			'NOT_FOUND'                  => __( 'Page not found (404 error)', 'seo-booster' ),
+			'SERVER_ERROR'               => __( 'Google got a server error when fetching this page', 'seo-booster' ),
+			'ACCESS_DENIED'              => __( 'Google was denied access when fetching this page', 'seo-booster' ),
+			'ACCESS_FORBIDDEN'           => __( 'Google was forbidden from fetching this page', 'seo-booster' ),
+			'REDIRECT_ERROR'             => __( 'Google hit a redirect error when fetching this page', 'seo-booster' ),
+			'BLOCKED_4XX'                => __( 'Google got a 4xx response when fetching this page', 'seo-booster' ),
+			'INVALID_URL'                => __( 'Google considers this URL invalid', 'seo-booster' ),
+			'BLOCKED_ROBOTS_TXT'         => __( 'Google could not fetch this page because of robots.txt', 'seo-booster' ),
+			'INDEXING_ALLOWED'           => __( 'Indexing is allowed', 'seo-booster' ),
 			'INDEXING_STATE_UNSPECIFIED' => __( 'Indexing state unknown', 'seo-booster' ),
-			'FAIL'                     => __( "Google can't index this page", 'seo-booster' ),
-			'PASS'                     => __( 'Page is indexed', 'seo-booster' ),
-			'NEUTRAL'                  => __( 'Page is excluded from indexing', 'seo-booster' ),
-			'SOFT_404'                 => __( 'Google may treat this URL as a soft 404', 'seo-booster' ),
+			'FAIL'                       => __( "Google can't index this page", 'seo-booster' ),
+			'PASS'                       => __( 'Page is indexed', 'seo-booster' ),
+			'NEUTRAL'                    => __( 'Page is excluded from indexing', 'seo-booster' ),
+			'SOFT_404'                   => __( 'Google may treat this URL as a soft 404', 'seo-booster' ),
 		);
 
 		return $translations[ $technical_term ] ?? $technical_term;
@@ -585,7 +588,7 @@ class Gsc_Checks extends Abstract_Checks {
 
 		$results->add_opportunity(
 			'gsc_keywords_not_in_content',
-			__( 'These ranking keywords are not found in your content. Consider adding them naturally to improve relevance.', 'seo-booster' ),
+			__( 'These Search Console keywords do not appear in your content. Try adding them naturally where they fit.', 'seo-booster' ),
 			array(
 				'keywords' => $keyword_list,
 				'page'     => $context->get_object_url(),
@@ -626,6 +629,7 @@ class Gsc_Checks extends Abstract_Checks {
             FROM {$wpdb->prefix}sb2_query_keywords AS qk
             LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh
                 ON qk.id = qkh.query_keywords_id
+                AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
             WHERE qk.query IN (
                 SELECT DISTINCT query
                 FROM {$wpdb->prefix}sb2_query_keywords
@@ -635,6 +639,7 @@ class Gsc_Checks extends Abstract_Checks {
             HAVING COUNT(DISTINCT qk.page) > 1
             ORDER BY impressions DESC, clicks DESC
             LIMIT 50",
+			(int) GSC_History::INSIGHT_WINDOW_DAYS,
 			$url
 		);
 
@@ -798,6 +803,7 @@ class Gsc_Checks extends Abstract_Checks {
             FROM {$wpdb->prefix}sb2_query_keywords AS qk
             LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh
                 ON qk.id = qkh.query_keywords_id
+                AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)
             WHERE qk.page = %s
             GROUP BY qk.query
             HAVING recent_impressions >= 100

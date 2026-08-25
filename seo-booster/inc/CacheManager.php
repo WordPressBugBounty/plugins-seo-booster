@@ -140,10 +140,8 @@ class CacheManager {
 		// If we have a post ID, use the post's modified time
 		if ( $post_id ) {
 			$modified_time = get_post_modified_time( 'U', false, $post_id );
-		}
-		// If we have an item ID and content type, try to get the modified time based on content type
-		elseif ( $item_id && $content_type ) {
-			if ( $content_type === 'term' ) {
+		} elseif ( $item_id && $content_type ) {
+			if ( 'term' === $content_type ) {
 				$term = get_term( $item_id );
 				if ( $term && ! is_wp_error( $term ) ) {
 					// For terms, we can use the term's last update time if available
@@ -170,7 +168,7 @@ class CacheManager {
 
 					// Try to decompress if it's compressed
 					$decompressed_content = @gzdecode( $decoded_content );
-					if ( $decompressed_content !== false ) {
+					if ( false !== $decompressed_content ) {
 						$decoded_content = $decompressed_content;
 					}
 
@@ -183,16 +181,15 @@ class CacheManager {
 						'duration' => $time_taken,
 					);
 				}
-			}
-			// For terms or other content types, use a standard cache validity check
-			else {
+			} else {
+				// For terms or other content types, use a standard cache validity check.
 				// Get and decompress cached content
 				$cached_content  = self::$filesystem->get_contents( $cache_file );
 				$decoded_content = base64_decode( $cached_content );
 
 				// Try to decompress if it's compressed
 				$decompressed_content = @gzdecode( $decoded_content );
-				if ( $decompressed_content !== false ) {
+				if ( false !== $decompressed_content ) {
 					$decoded_content = $decompressed_content;
 				}
 
@@ -356,7 +353,7 @@ class CacheManager {
 
 		// Compress the content using gzip
 		$compressed_content = gzencode( $content, 9 );
-		if ( $compressed_content === false ) {
+		if ( false === $compressed_content ) {
 			// If compression fails, store uncompressed
 			$compressed_content = $content;
 		}
@@ -364,7 +361,7 @@ class CacheManager {
 		$encoded_content = base64_encode( $compressed_content );
 		$result          = self::$filesystem->put_contents( $file_path, $encoded_content, FS_CHMOD_FILE );
 
-		if ( $result === false ) {
+		if ( false === $result ) {
 			Utils::log( sprintf( 'Failed to create cache file: %s', $file_path ), 2 );
 		}
 	}

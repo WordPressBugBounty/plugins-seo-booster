@@ -75,7 +75,7 @@ abstract class Abstract_Post_Meta_Adapter implements SEO_Plugin_Adapter_Interfac
 	 */
 	public static function looks_like_seo_template( $value ) {
 		$value = (string) $value;
-		if ( $value === '' ) {
+		if ( '' === $value ) {
 			return false;
 		}
 
@@ -232,9 +232,9 @@ abstract class Abstract_Post_Meta_Adapter implements SEO_Plugin_Adapter_Interfac
 		global $wpdb;
 
 		$meta_keys = $this->get_meta_keys( $field );
-		$meta_key  = $field === 'title' ? ( $meta_keys['title_key'] ?? '' ) : ( $meta_keys['description_key'] ?? '' );
+		$meta_key  = 'title' === $field ? ( $meta_keys['title_key'] ?? '' ) : ( $meta_keys['description_key'] ?? '' );
 
-		if ( $meta_key === '' || $value === '' ) {
+		if ( '' === $meta_key || '' === $value ) {
 			return array();
 		}
 
@@ -265,9 +265,9 @@ abstract class Abstract_Post_Meta_Adapter implements SEO_Plugin_Adapter_Interfac
 		global $wpdb;
 
 		$meta_keys = $this->get_term_meta_keys( $field );
-		$meta_key  = $field === 'title' ? ( $meta_keys['title_key'] ?? '' ) : ( $meta_keys['description_key'] ?? '' );
+		$meta_key  = 'title' === $field ? ( $meta_keys['title_key'] ?? '' ) : ( $meta_keys['description_key'] ?? '' );
 
-		if ( $meta_key === '' || $value === '' ) {
+		if ( '' === $meta_key || '' === $value ) {
 			return array();
 		}
 
@@ -319,7 +319,7 @@ abstract class Abstract_Post_Meta_Adapter implements SEO_Plugin_Adapter_Interfac
 		$new_primary = trim( $new_primary );
 		$keywords    = $this->parse_focus_keyword_list( $existing );
 
-		if ( $new_primary === '' ) {
+		if ( '' === $new_primary ) {
 			return implode( ', ', $keywords );
 		}
 
@@ -377,12 +377,12 @@ abstract class Abstract_Post_Meta_Adapter implements SEO_Plugin_Adapter_Interfac
 	 */
 	protected function parse_focus_keyword_list( $raw ) {
 		$raw = trim( (string) $raw );
-		if ( $raw === '' ) {
+		if ( '' === $raw ) {
 			return array();
 		}
 
 		// Rank Math classic editor sometimes posts JSON tag objects before sanitize runs.
-		if ( isset( $raw[0] ) && ( $raw[0] === '[' || $raw[0] === '{' ) ) {
+		if ( isset( $raw[0] ) && ( '[' === $raw[0] || '{' === $raw[0] ) ) {
 			$decoded = json_decode( $raw, true );
 			if ( is_array( $decoded ) ) {
 				return $this->normalize_focus_keyword_raw( $decoded );

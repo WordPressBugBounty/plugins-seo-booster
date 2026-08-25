@@ -137,8 +137,12 @@ class SEO_Sitewide_Analysis {
             return;
         }
         $status_code = wp_remote_retrieve_response_code( $response );
-        if ( $status_code !== 200 ) {
-            $this->add_issue( 'robots_txt_missing', __( 'robots.txt file is not accessible (HTTP ' . $status_code . ').', 'seo-booster' ), 'warning' );
+        if ( 200 !== $status_code ) {
+            $this->add_issue( 'robots_txt_missing', sprintf( 
+                /* translators: %d: HTTP response status code. */
+                __( 'robots.txt file is not accessible (HTTP %d).', 'seo-booster' ),
+                (int) $status_code
+             ), 'warning' );
             return;
         }
         $robots_content = wp_remote_retrieve_body( $response );
@@ -197,9 +201,13 @@ class SEO_Sitewide_Analysis {
             ) );
             if ( !is_wp_error( $response ) ) {
                 $status_code = wp_remote_retrieve_response_code( $response );
-                if ( $status_code === 200 ) {
+                if ( 200 === $status_code ) {
                     $sitemap_found = true;
-                    $this->add_good( 'sitemap_exists', sprintf( __( 'XML sitemap found at: %s', 'seo-booster' ), $sitemap_url ) );
+                    $this->add_good( 'sitemap_exists', sprintf( 
+                        /* translators: %s: XML sitemap URL. */
+                        __( 'XML sitemap found at: %s', 'seo-booster' ),
+                        $sitemap_url
+                     ) );
                     break;
                 }
             }
@@ -238,7 +246,7 @@ class SEO_Sitewide_Analysis {
                 ) );
                 if ( !is_wp_error( $response ) ) {
                     $status_code = wp_remote_retrieve_response_code( $response );
-                    if ( $status_code === 200 ) {
+                    if ( 200 === $status_code ) {
                         $favicon_found = true;
                         break;
                     }
@@ -283,7 +291,11 @@ class SEO_Sitewide_Analysis {
         // Check for lang attribute on html tag
         if ( preg_match( '/<html[^>]*lang=["\']([^"\']+)["\']/i', $this->homepage_content, $matches ) ) {
             $lang = $matches[1];
-            $this->add_good( 'language_declared', sprintf( __( 'Language is declared: %s', 'seo-booster' ), $lang ) );
+            $this->add_good( 'language_declared', sprintf( 
+                /* translators: %s: HTML lang attribute value. */
+                __( 'Language is declared: %s', 'seo-booster' ),
+                $lang
+             ) );
         } else {
             $this->add_improvement( 'language_missing', __( 'HTML lang attribute is missing. Declaring the language helps search engines understand your content.', 'seo-booster' ) );
         }
@@ -328,10 +340,14 @@ class SEO_Sitewide_Analysis {
         }
         $status_code = wp_remote_retrieve_response_code( $response );
         $body = trim( (string) wp_remote_retrieve_body( $response ) );
-        if ( $status_code !== 200 || $body === '' ) {
+        if ( 200 !== $status_code || '' === $body ) {
             $this->add_issue(
                 'llms_txt_unreachable',
-                sprintf( __( 'Dynamic llms.txt is not reachable (HTTP %d).', 'seo-booster' ), (int) $status_code ),
+                sprintf( 
+                    /* translators: %d: HTTP response status code. */
+                    __( 'Dynamic llms.txt is not reachable (HTTP %d).', 'seo-booster' ),
+                    (int) $status_code
+                 ),
                 'warning',
                 $ai_meta
             );
@@ -426,7 +442,7 @@ class SEO_Sitewide_Analysis {
             'message'  => $message,
             'severity' => $severity,
         );
-        if ( $extra_data !== null ) {
+        if ( null !== $extra_data ) {
             $issue['extra_data'] = $extra_data;
         }
         $this->results['issues'][] = $issue;
@@ -446,7 +462,7 @@ class SEO_Sitewide_Analysis {
             'key'     => $key,
             'message' => $message,
         );
-        if ( $extra_data !== null ) {
+        if ( null !== $extra_data ) {
             $item['extra_data'] = $extra_data;
         }
         $this->results['improvements'][] = $item;
@@ -466,7 +482,7 @@ class SEO_Sitewide_Analysis {
             'key'     => $key,
             'message' => $message,
         );
-        if ( $extra_data !== null ) {
+        if ( null !== $extra_data ) {
             $item['extra_data'] = $extra_data;
         }
         $this->results['good'][] = $item;
@@ -485,7 +501,7 @@ class SEO_Sitewide_Analysis {
         $good = $this->results['good'] ?? array();
         $improvements = $this->results['improvements'] ?? array();
         foreach ( $issues as $issue ) {
-            if ( $issue['severity'] === 'error' ) {
+            if ( 'error' === $issue['severity'] ) {
                 ++$error_count;
             } else {
                 ++$warning_count;

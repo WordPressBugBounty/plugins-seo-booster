@@ -138,14 +138,8 @@ class AI_Site_Assistant {
             true
         );
         $ask_readiness = self::get_ask_readiness();
-        $upgrade_url = 'https://seoboosterpro.com';
-        if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) ) {
-            $fs = seobooster_fs();
-            if ( is_object( $fs ) && method_exists( $fs, 'get_upgrade_url' ) ) {
-                $upgrade_url = $fs->get_upgrade_url();
-            }
-        }
-        $support_url = 'https://seoboosterpro.com/support/';
+        $upgrade_url = Utils::get_pro_upgrade_url( 'site_assistant_upgrade' );
+        $support_url = Utils::generate_cp_web_link( 'site_assistant_support', 'support' );
         if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) ) {
             $fs = seobooster_fs();
             if ( is_object( $fs ) && method_exists( $fs, 'contact_url' ) ) {
@@ -684,8 +678,7 @@ class AI_Site_Assistant {
             if ( Tools_GSC_Helper::has_gsc_data() ) {
                 $pack['content_decay_count'] = (int) Tools_GSC_Helper::count_content_decay_pages();
                 $pack['gsc_opportunities_count'] = (int) Tools_GSC_Helper::count_gsc_opportunity_pages();
-                $scan = Tools_GSC_Helper::scan_content_decay();
-                $items = ( isset( $scan['items'] ) && is_array( $scan['items'] ) ? array_slice( $scan['items'], 0, 8 ) : array() );
+                $items = Tools_GSC_Helper::get_content_decay_preview_items( 8 );
                 foreach ( $items as $item ) {
                     $url = '';
                     if ( !empty( $item['view_url'] ) ) {
@@ -715,8 +708,9 @@ class AI_Site_Assistant {
         $table_k = $wpdb->prefix . 'sb2_query_keywords';
         $table_h = $wpdb->prefix . 'sb2_query_keywords_history';
         $days = 14;
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed tables; prepared days.
-        $new_keywords = $wpdb->get_results( $wpdb->prepare( "SELECT k.query, k.page, AVG(h.position) as avg_position, SUM(h.clicks) as total_clicks, SUM(h.impressions) as total_impressions\n\t\t\t\tFROM {$table_k} k\n\t\t\t\tJOIN {$table_h} h ON k.id = h.query_keywords_id\n\t\t\t\tWHERE k.first_seen_date >= CURDATE() - INTERVAL %d DAY\n\t\t\t\tGROUP BY k.page, k.query\n\t\t\t\tORDER BY k.first_seen_date DESC\n\t\t\t\tLIMIT 10", $days ), ARRAY_A );
+        $window = (int) GSC_History::INSIGHT_WINDOW_DAYS;
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed tables; prepared days/window.
+        $new_keywords = $wpdb->get_results( $wpdb->prepare( "SELECT k.query, k.page, AVG(h.position) as avg_position, SUM(h.clicks) as total_clicks, SUM(h.impressions) as total_impressions\n\t\t\t\tFROM {$table_k} k\n\t\t\t\tJOIN {$table_h} h ON k.id = h.query_keywords_id\n\t\t\t\t\tAND h.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)\n\t\t\t\tWHERE k.first_seen_date >= CURDATE() - INTERVAL %d DAY\n\t\t\t\tGROUP BY k.page, k.query\n\t\t\t\tORDER BY k.first_seen_date DESC\n\t\t\t\tLIMIT 10", $window, $days ), ARRAY_A );
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         if ( !is_array( $new_keywords ) ) {
             $new_keywords = array();
@@ -741,8 +735,9 @@ class AI_Site_Assistant {
         global $wpdb;
         $table_k = $wpdb->prefix . 'sb2_query_keywords';
         $table_h = $wpdb->prefix . 'sb2_query_keywords_history';
+        $window = (int) GSC_History::INSIGHT_WINDOW_DAYS;
         // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefixed tables; read-only.
-        $rows = $wpdb->get_results( "SELECT k.query, k.page,\n\t\t\t\tSUM(h.impressions) as impressions,\n\t\t\t\tSUM(h.clicks) as clicks,\n\t\t\t\tAVG(h.position) as avg_position\n\t\t\tFROM {$table_k} k\n\t\t\tJOIN {$table_h} h ON k.id = h.query_keywords_id\n\t\t\tWHERE h.date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)\n\t\t\tGROUP BY k.query, k.page\n\t\t\tHAVING impressions >= 50 AND clicks <= 2 AND avg_position BETWEEN 4 AND 25\n\t\t\tORDER BY impressions DESC\n\t\t\tLIMIT 10", ARRAY_A );
+        $rows = $wpdb->get_results( $wpdb->prepare( "SELECT k.query, k.page,\n\t\t\t\tSUM(h.impressions) as impressions,\n\t\t\t\tSUM(h.clicks) as clicks,\n\t\t\t\tAVG(h.position) as avg_position\n\t\t\tFROM {$table_k} k\n\t\t\tJOIN {$table_h} h ON k.id = h.query_keywords_id\n\t\t\t\tAND h.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)\n\t\t\tWHERE h.date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)\n\t\t\tGROUP BY k.query, k.page\n\t\t\tHAVING impressions >= 50 AND clicks <= 2 AND avg_position BETWEEN 4 AND 25\n\t\t\tORDER BY impressions DESC\n\t\t\tLIMIT 10", $window ), ARRAY_A );
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         if ( !is_array( $rows ) ) {
             $rows = array();

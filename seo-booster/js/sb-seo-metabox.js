@@ -1218,7 +1218,7 @@ jQuery(document).ready(function($) {
                 $locked.append('<span class="sb-ai-assistant-pro-text">' + escapeHtml(s.assistant_pro_teaser || 'Applying actions requires SEO Booster Pro.') + '</span>');
                 $locked.append(
                     $('<a></a>')
-                        .attr('href', sb_seo_metabox.pro_upgrade_url || 'https://seoboosterpro.com/')
+                        .attr('href', sb_seo_metabox.pro_upgrade_url || '')
                         .attr('target', '_blank')
                         .attr('rel', 'noopener noreferrer')
                         .text(s.upgrade || 'Upgrade')

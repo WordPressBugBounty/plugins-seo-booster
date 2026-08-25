@@ -60,7 +60,7 @@ class LLM_WP_Connector_Service {
 		$local_analysis_summary = LLM_Helper::ensure_utf8( $local_analysis_summary );
 
 		$variant = isset( $options['variant'] ) ? (string) $options['variant'] : self::VARIANT_FULL;
-		if ( $variant === self::VARIANT_BULK ) {
+		if ( self::VARIANT_BULK === $variant ) {
 			$prompt = $this->build_bulk_meta_prompt( $post_id, $condensed_content, $language, $options );
 		} else {
 			$prompt = $this->build_prompt( $post_id, $condensed_content, $language, $local_analysis_summary );
@@ -81,7 +81,7 @@ class LLM_WP_Connector_Service {
 		}
 
 		$fields_needed = array( 'title', 'description' );
-		if ( $variant === self::VARIANT_BULK && isset( $options['fields_needed'] ) && is_array( $options['fields_needed'] ) ) {
+		if ( self::VARIANT_BULK === $variant && isset( $options['fields_needed'] ) && is_array( $options['fields_needed'] ) ) {
 			$needed = array_values( array_intersect( $options['fields_needed'], array( 'title', 'description' ) ) );
 			if ( ! empty( $needed ) ) {
 				$fields_needed = $needed;
@@ -110,9 +110,9 @@ class LLM_WP_Connector_Service {
 	 */
 	private function execute_ai_prompt( $prompt, $post_id, $variant, array $options ) {
 		$default_timeout = 30.0;
-		if ( $variant === self::VARIANT_BULK ) {
+		if ( self::VARIANT_BULK === $variant ) {
 			$default_timeout = self::BULK_REQUEST_TIMEOUT;
-		} elseif ( $variant === self::VARIANT_ASSISTANT ) {
+		} elseif ( self::VARIANT_ASSISTANT === $variant ) {
 			$default_timeout = self::ASSISTANT_REQUEST_TIMEOUT;
 		}
 		if ( isset( $options['timeout'] ) && is_numeric( $options['timeout'] ) ) {
@@ -187,7 +187,7 @@ class LLM_WP_Connector_Service {
 		if ( ! empty( $options['seed_queries'] ) && is_array( $options['seed_queries'] ) ) {
 			foreach ( $options['seed_queries'] as $seed_query ) {
 				$seed_query = sanitize_text_field( (string) $seed_query );
-				if ( $seed_query !== '' ) {
+				if ( '' !== $seed_query ) {
 					$seed_queries[] = LLM_Helper::ensure_utf8( $seed_query );
 				}
 			}
@@ -196,7 +196,7 @@ class LLM_WP_Connector_Service {
 
 		if ( ! empty( $options['focus_seed_query'] ) ) {
 			$seed = sanitize_text_field( (string) $options['focus_seed_query'] );
-			if ( $seed !== '' ) {
+			if ( '' !== $seed ) {
 				array_unshift( $seed_queries, LLM_Helper::ensure_utf8( $seed ) );
 				$seed_queries = array_values( array_unique( $seed_queries ) );
 			}
@@ -245,15 +245,15 @@ class LLM_WP_Connector_Service {
 		$cannibal_block = $this->build_cannibalization_prompt_block( $post_id );
 
 		$existing_meta_block = '';
-		if ( $current_title !== '' || $current_desc !== '' ) {
+		if ( '' !== $current_title || '' !== $current_desc ) {
 			$existing_meta_block = sprintf(
 				"Current SEO title: %s\nCurrent meta description: %s\n",
-				$current_title !== '' ? $current_title : '(empty)',
-				$current_desc !== '' ? $current_desc : '(empty)'
+				'' !== $current_title ? $current_title : '(empty)',
+				'' !== $current_desc ? $current_desc : '(empty)'
 			);
 		}
 
-		$generate_what = count( $fields_needed ) === 1
+		$generate_what = 1 === count( $fields_needed )
 			? ( 'one SEO ' . $fields_needed[0] )
 			: 'one SEO title and one meta description';
 
@@ -332,11 +332,11 @@ URL: %s
 		}
 
 		$existing_meta_block = '';
-		if ( $current_title !== '' || $current_desc !== '' ) {
+		if ( '' !== $current_title || '' !== $current_desc ) {
 			$existing_meta_block = sprintf(
 				"\nCurrent SEO title: %s\nCurrent meta description: %s",
-				$current_title !== '' ? $current_title : '(empty)',
-				$current_desc !== '' ? $current_desc : '(empty)'
+				'' !== $current_title ? $current_title : '(empty)',
+				'' !== $current_desc ? $current_desc : '(empty)'
 			);
 		}
 
@@ -512,6 +512,7 @@ Return ONLY the JSON object with no additional text, explanations, or formatting
 				FROM {$wpdb->prefix}sb2_query_keywords AS qk
 				LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh
 					ON qk.id = qkh.query_keywords_id
+					AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
 				WHERE qk.query IN (
 					SELECT DISTINCT query
 					FROM {$wpdb->prefix}sb2_query_keywords
@@ -520,6 +521,7 @@ Return ONLY the JSON object with no additional text, explanations, or formatting
 				GROUP BY qk.query, qk.page
 				ORDER BY impressions DESC, clicks DESC
 				LIMIT 80",
+				(int) GSC_History::INSIGHT_WINDOW_DAYS,
 				$url
 			),
 			ARRAY_A
@@ -533,7 +535,7 @@ Return ONLY the JSON object with no additional text, explanations, or formatting
 		foreach ( $rows as $row ) {
 			$query_text = LLM_Helper::ensure_utf8( (string) $row['query'] );
 			$page       = (string) $row['page'];
-			if ( $query_text === '' || $page === '' ) {
+			if ( '' === $query_text || '' === $page ) {
 				continue;
 			}
 			if ( ! isset( $by_query[ $query_text ] ) ) {
@@ -631,7 +633,7 @@ Return ONLY the JSON object with no additional text, explanations, or formatting
 		$condensed_content      = LLM_Helper::ensure_utf8( $condensed_content );
 		$local_analysis_summary = LLM_Helper::ensure_utf8( $local_analysis_summary );
 
-		if ( $question === '' ) {
+		if ( '' === $question ) {
 			throw new \Exception( esc_html__( 'Please enter a question.', 'seo-booster' ) );
 		}
 
@@ -696,7 +698,7 @@ Return ONLY the JSON object with no additional text, explanations, or formatting
 		$cannibal_block  = $this->build_cannibalization_prompt_block( $post_id );
 
 		$analysis_block = '';
-		if ( $local_analysis_summary !== '' ) {
+		if ( '' !== $local_analysis_summary ) {
 			$analysis_block = "\n### SEO ANALYSIS\n" . $local_analysis_summary . "\n";
 		}
 
@@ -739,8 +741,8 @@ Rules:
 			$permalink ? $permalink : '',
 			$language_name,
 			$language,
-			$current_title !== '' ? $current_title : '(empty)',
-			$current_desc !== '' ? $current_desc : '(empty)',
+			'' !== $current_title ? $current_title : '(empty)',
+			'' !== $current_desc ? $current_desc : '(empty)',
 			! empty( $focus_keywords ) ? implode( ', ', $focus_keywords ) : '(none)',
 			! empty( $gsc_keywords ) ? implode( ', ', $gsc_keywords ) : '(none)',
 			$condensed_content,
@@ -776,7 +778,7 @@ Rules:
 
 		$answer = isset( $result_data['answer'] ) ? LLM_Helper::ensure_utf8( (string) $result_data['answer'] ) : '';
 		$answer = trim( $answer );
-		if ( $answer === '' ) {
+		if ( '' === $answer ) {
 			throw new \Exception( esc_html__( 'Invalid response: missing answer', 'seo-booster' ) );
 		}
 
@@ -784,7 +786,7 @@ Rules:
 		if ( isset( $result_data['titles'] ) && is_array( $result_data['titles'] ) ) {
 			foreach ( $result_data['titles'] as $title ) {
 				$title = LLM_Helper::ensure_utf8( sanitize_text_field( (string) $title ) );
-				if ( $title !== '' ) {
+				if ( '' !== $title ) {
 					$titles[] = $title;
 				}
 			}
@@ -794,7 +796,7 @@ Rules:
 		if ( isset( $result_data['descriptions'] ) && is_array( $result_data['descriptions'] ) ) {
 			foreach ( $result_data['descriptions'] as $description ) {
 				$description = LLM_Helper::ensure_utf8( sanitize_textarea_field( (string) $description ) );
-				if ( $description !== '' ) {
+				if ( '' !== $description ) {
 					$descriptions[] = $description;
 				}
 			}
@@ -836,28 +838,28 @@ Rules:
 			$payload = isset( $item['payload'] ) && is_array( $item['payload'] ) ? $item['payload'] : array();
 
 			$clean_payload = array();
-			if ( $type === 'set_focus_keyword' ) {
+			if ( 'set_focus_keyword' === $type ) {
 				$keyword = isset( $payload['keyword'] ) ? LLM_Helper::ensure_utf8( sanitize_text_field( (string) $payload['keyword'] ) ) : '';
-				if ( $keyword === '' ) {
+				if ( '' === $keyword ) {
 					continue;
 				}
 				$clean_payload['keyword'] = $keyword;
-				if ( $label === '' ) {
+				if ( '' === $label ) {
 					$label = sprintf(
 						/* translators: %s: focus keyword */
 						__( 'Set focus keyword: %s', 'seo-booster' ),
 						$keyword
 					);
 				}
-			} elseif ( $type === 'create_autolink' ) {
+			} elseif ( 'create_autolink' === $type ) {
 				$keyword    = isset( $payload['keyword'] ) ? LLM_Helper::ensure_utf8( sanitize_text_field( (string) $payload['keyword'] ) ) : '';
 				$target_url = isset( $payload['target_url'] ) ? esc_url_raw( (string) $payload['target_url'] ) : '';
-				if ( $keyword === '' || $target_url === '' ) {
+				if ( '' === $keyword || '' === $target_url ) {
 					continue;
 				}
 				$clean_payload['keyword']    = $keyword;
 				$clean_payload['target_url'] = LLM_Helper::ensure_utf8( $target_url );
-				if ( $label === '' ) {
+				if ( '' === $label ) {
 					$label = sprintf(
 						/* translators: %s: keyword phrase */
 						__( 'Create autolink: %s', 'seo-booster' ),

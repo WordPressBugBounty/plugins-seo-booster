@@ -35,9 +35,9 @@ if ( ! get_option( 'seobooster_autolink_dedupe_done' ) ) {
 	update_option( 'seobooster_autolink_dedupe_done', 1, false );
 }
 
-$internal_linking     = get_option( 'seobooster_internal_linking' );
+$internal_linking      = get_option( 'seobooster_internal_linking' );
 $settings_autolink_url = admin_url( 'admin.php?page=sb2_settings#automatic-links' );
-$page                  = isset( $_REQUEST['page'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['page'] ) ) : '';
+$admin_page_slug       = isset( $_REQUEST['page'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['page'] ) ) : '';
 ?>
 <div class="wrap sb-wrap sb-dashboard sb-autolink-page">
 	<?php echo wp_kses_post( Utils::show_plugin_headline( esc_html__( 'Automatic keywords to links', 'seo-booster' ), true ) ); ?>
@@ -210,7 +210,7 @@ $page                  = isset( $_REQUEST['page'] ) ? sanitize_text_field( wp_un
 		</p>
 
 		<form id="urls-filter" method="get">
-			<input type="hidden" name="page" value="<?php echo esc_attr( $page ); ?>" />
+			<input type="hidden" name="page" value="<?php echo esc_attr( $admin_page_slug ); ?>" />
 			<?php
 			if ( isset( $_REQUEST['order'] ) ) {
 				?>

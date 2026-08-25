@@ -10,7 +10,7 @@ class SB_GSC_Processor {
 
 	public static function init() {
 		add_action( 'sb_gsc_process_url_keywords', array( __CLASS__, 'process_url_keywords' ), 10, 1 );
-		add_action( 'sb_gsc_schedule_all_pages', array( __CLASS__, 'schedule_keyword_processing_for_all_pages' ) );
+		add_action( 'seobooster_gsc_schedule_all_pages', array( __CLASS__, 'schedule_keyword_processing_for_all_pages' ) );
 		add_action( 'sb_gsc_analyze_post_keywords', array( __CLASS__, 'analyze_post_keywords' ) );
 	}
 
@@ -106,7 +106,7 @@ class SB_GSC_Processor {
 					array( '%d' )
 				);
 
-				if ( $update_result === false ) {
+				if ( false === $update_result ) {
 					Utils::log( 'Database update failed for keyword ID: ' . $keyword['id'] . ' - Error: ' . $wpdb->last_error, 2 );
 				}
 			}

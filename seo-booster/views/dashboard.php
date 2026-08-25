@@ -72,14 +72,14 @@ $wp_ai_ready = function_exists( 'wp_ai_client_prompt' );
 $show_ai_notice = false;
 $ai_notice_link = admin_url( 'admin.php?page=sb2_settings#ai-llm' );
 $ai_notice_text = '';
-if ( $ai_provider === 'disabled' ) {
+if ( 'disabled' === $ai_provider ) {
     $show_ai_notice = true;
     $ai_notice_text = __( 'Enable AI in SEO Booster Settings to get AI-generated SEO suggestions and image meta.', 'seo-booster' );
-} elseif ( $ai_provider === 'WordPress' && !$wp_ai_ready ) {
+} elseif ( 'WordPress' === $ai_provider && !$wp_ai_ready ) {
     $show_ai_notice = true;
     $ai_notice_link = admin_url( 'options-connectors.php' );
     $ai_notice_text = __( 'WordPress AI is not available. Use WordPress 7 or later and configure Settings → Connectors.', 'seo-booster' );
-} elseif ( $ai_provider === 'seobooster' && \Cleverplugins\SEOBooster\Credits_Service::is_ai_provider_available() && !\Cleverplugins\SEOBooster\Credits_Service::is_registered() ) {
+} elseif ( 'seobooster' === $ai_provider && \Cleverplugins\SEOBooster\Credits_Service::is_ai_provider_available() && !\Cleverplugins\SEOBooster\Credits_Service::is_registered() ) {
     $show_ai_notice = true;
     $ai_notice_text = __( 'Connect your SEO Booster Credits account in Settings to use AI features.', 'seo-booster' );
 }
@@ -201,7 +201,7 @@ $ask_readiness = array(
 // seobooster_fs() is namespaced; bare function_exists( 'seobooster_fs' ) always fails.
 if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) ) {
 }
-$ask_upgrade_url = 'https://seoboosterpro.com/pricing/';
+$ask_upgrade_url = Utils::get_pro_upgrade_url( 'dashboard_ask_upgrade' );
 ?>
 	<section class="sb-ui-panel" id="sb-dashboard-do-next" aria-labelledby="sb-dashboard-do-next-title">
 		<h2 class="sb-ui-title" id="sb-dashboard-do-next-title"><?php 
@@ -447,7 +447,7 @@ if ( $show_ask_card ) {
 ?>
 		<?php 
 $seobooster_weekly_email = get_option( 'seobooster_weekly_email' );
-if ( isset( $_GET['gsc_updated'] ) && $_GET['gsc_updated'] == '1' && !$seobooster_weekly_email ) {
+if ( isset( $_GET['gsc_updated'] ) && '1' === $_GET['gsc_updated'] && !$seobooster_weekly_email ) {
     ?>
 			<div id="seobooster_email_container" class="notice notice-success is-dismissible seobooster-notice">
 				<div class="innercont">
@@ -469,7 +469,7 @@ if ( isset( $_GET['gsc_updated'] ) && $_GET['gsc_updated'] == '1' && !$seobooste
 					<div class="col">
 							<form method="post" action="" class="card">
 								<?php 
-    $current_user = wp_get_current_user();
+    $dashboard_user = wp_get_current_user();
     ?>
 								<?php 
     wp_nonce_field( 'seobooster_save_selected_site', 'seobooster_selected_site_nonce' );
@@ -483,7 +483,7 @@ if ( isset( $_GET['gsc_updated'] ) && $_GET['gsc_updated'] == '1' && !$seobooste
 	</p>
 									<p>
 										<input type="text" name="seobooster_email" id="seobooster_email" class="regular-text" value="<?php 
-    echo esc_attr( $current_user->user_email );
+    echo esc_attr( $dashboard_user->user_email );
     ?>" autocomplete="off" data-1p-ignore>
 									</p>
 									<p>
@@ -654,7 +654,7 @@ if ( $selected_site && 0 < $unique_days ) {
 		<h2 class="sb-ui-title" id="sb-dashboard-search-title"><?php 
     esc_html_e( 'Search performance', 'seo-booster' );
     ?></h2>
-		<?php 
+			<?php 
     if ( !empty( $search_perf['label_current'] ) ) {
         ?>
 			<p class="sb-kpi-period">
@@ -675,7 +675,7 @@ if ( $selected_site && 0 < $unique_days ) {
 		<?php 
     }
     ?>
-		<?php 
+			<?php 
     if ( !empty( $dashboard_kpis ) ) {
         ?>
 			<div class="sb-kpi-row">
@@ -818,7 +818,11 @@ if ( $selected_site && 0 < $unique_days ) {
         ?>
 				<p class="sb-card__meta">
 					<?php 
-        printf( esc_html__( '%1$s possibilities detected. Top items to address:', 'seo-booster' ), esc_html( number_format_i18n( $possibilities_stats['total_issues'] ) ) );
+        printf( 
+            /* translators: %s: number of SEO possibilities detected. */
+            esc_html__( '%1$s possibilities detected. Top items to address:', 'seo-booster' ),
+            esc_html( number_format_i18n( $possibilities_stats['total_issues'] ) )
+         );
         ?>
 				</p>
 			<?php 
@@ -851,12 +855,16 @@ if ( $selected_site && 0 < $unique_days ) {
 							</div>
 							<p class="sb-possibility-item__meta">
 								<?php 
-            printf( esc_html( _n(
-                'Affects %1$s page',
-                'Affects %1$s pages',
-                $possibility['affected_urls'],
-                'seo-booster'
-            ) ), esc_html( number_format_i18n( $possibility['affected_urls'] ) ) );
+            printf( 
+                /* translators: %s: number of pages affected by this SEO possibility. */
+                esc_html( _n(
+                    'Affects %1$s page',
+                    'Affects %1$s pages',
+                    $possibility['affected_urls'],
+                    'seo-booster'
+                ) ),
+                esc_html( number_format_i18n( $possibility['affected_urls'] ) )
+             );
             ?>
 								·
 								<a href="<?php 
@@ -935,6 +943,7 @@ if ( $selected_site && 0 < $unique_days ) {
 				<p class="sb-card__meta">
 					<?php 
         printf(
+            /* translators: 1: number of pages crawled, 2: mapped content percentage, 3: research bot visits, 4: citation bot visits. */
             esc_html__( '%1$s pages crawled · %2$s%% mapped content · %3$s research · %4$s citation', 'seo-booster' ),
             esc_html( number_format_i18n( (int) $ai_bot_summary['unique_content_pages'] ) ),
             esc_html( number_format_i18n( (float) $ai_bot_ratio['content_percent'], 1 ) ),
@@ -977,7 +986,7 @@ if ( $selected_site && 0 < $unique_days ) {
 			</p>
 		</section>
 
-		<?php 
+			<?php 
     if ( $show_credits_card ) {
         ?>
 			<section class="sb-ui-panel" aria-labelledby="sb-dashboard-credits-title">
@@ -1048,10 +1057,7 @@ if ( $selected_site && 0 < $unique_days ) {
             'description' => __( 'Enable or disable automatic linking per post from the posts list and Quick Edit.', 'seo-booster' ),
         ));
         $pro_feature = $pro_features[wp_rand( 0, count( $pro_features ) - 1 )];
-        $pro_upgrade_url = 'https://seoboosterpro.com';
-        if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) && method_exists( seobooster_fs(), 'get_upgrade_url' ) ) {
-            $pro_upgrade_url = seobooster_fs()->get_upgrade_url();
-        }
+        $pro_upgrade_url = Utils::get_pro_upgrade_url( 'dashboard_pro_card' );
         ?>
 		<section class="sb-ui-panel sb-dashboard-pro sb-card--locked" aria-labelledby="sb-dashboard-pro-title">
 			<h2 class="sb-ui-title" id="sb-dashboard-pro-title"><?php 
@@ -1076,12 +1082,20 @@ if ( $selected_site && 0 < $unique_days ) {
         $timestamp = gmdate( 'Y-m-d H:i:s', $timestamp );
         $current_time = current_time( 'timestamp' );
         $time_diff = human_time_diff( $current_time, strtotime( $timestamp ) );
-        $timestamp_output = ' <small>' . esc_html__( 'Next scheduled update:', 'seo-booster' ) . ' ' . esc_html( $timestamp ) . ' (' . sprintf( esc_html__( 'in %s', 'seo-booster' ), esc_html( $time_diff ) ) . ')</small>';
+        $timestamp_output = ' <small>' . esc_html__( 'Next scheduled update:', 'seo-booster' ) . ' ' . esc_html( $timestamp ) . ' (' . sprintf( 
+            /* translators: %s: human-readable time until the next scheduled GSC update. */
+            esc_html__( 'in %s', 'seo-booster' ),
+            esc_html( $time_diff )
+         ) . ')</small>';
     }
     ?>
 	<p class="sb-dashboard-status">
 				<?php 
-    echo wp_kses_post( sprintf( esc_html__( 'Connected to GSC site %s', 'seo-booster' ), '<strong>' . esc_html( $selected_site ) . '</strong>' ) . $timestamp_output );
+    echo wp_kses_post( sprintf( 
+        /* translators: %s: connected Google Search Console site URL. */
+        esc_html__( 'Connected to GSC site %s', 'seo-booster' ),
+        '<strong>' . esc_html( $selected_site ) . '</strong>'
+     ) . $timestamp_output );
     ?>
 	</p>
 

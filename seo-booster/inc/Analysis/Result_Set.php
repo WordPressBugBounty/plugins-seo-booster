@@ -111,12 +111,12 @@ class Result_Set {
 	public function add_issue( $key, $message, $severity = Severity::WARNING, $extra_data = null ) {
 		$normalized = Severity::normalize_issue_severity( $severity );
 
-		if ( $normalized === Severity::ERROR ) {
+		if ( Severity::ERROR === $normalized ) {
 			$this->add_error( $key, $message, $extra_data );
 			return;
 		}
 
-		if ( $normalized === Severity::OPPORTUNITY ) {
+		if ( Severity::OPPORTUNITY === $normalized ) {
 			$this->add_opportunity( $key, $message, $extra_data );
 			return;
 		}

@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
+class ComposerStaticInit37f4adacf9b166723017e3f75bfb5f76
 {
     public static $files = array (
         'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
@@ -36,10 +36,6 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
             'Symfony\\Polyfill\\Iconv\\' => 23,
             'Symfony\\Component\\CssSelector\\' => 30,
             'Soundasleep\\' => 12,
-        ),
-        'L' =>
-        array (
-            'League\\Plates\\' => 14,
         ),
         'C' =>
         array (
@@ -94,10 +90,6 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         array (
             0 => __DIR__ . '/..' . '/soundasleep/html2text/src',
         ),
-        'League\\Plates\\' =>
-        array (
-            0 => __DIR__ . '/..' . '/league/plates/src',
-        ),
         'Composer\\Installers\\' =>
         array (
             0 => __DIR__ . '/..' . '/composer/installers/src/Composer/Installers',
@@ -116,7 +108,6 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'Cleverplugins\\SEOBooster\\AI_Readiness' => __DIR__ . '/../..' . '/inc/AI_Readiness.php',
         'Cleverplugins\\SEOBooster\\AI_Referral_Tracker' => __DIR__ . '/../..' . '/inc/AI_Referral_Tracker.php',
         'Cleverplugins\\SEOBooster\\AI_Site_Assistant' => __DIR__ . '/../..' . '/inc/AI_Site_Assistant.php',
-        'Cleverplugins\\SEOBooster\\AI_Writing_Outline' => __DIR__ . '/../..' . '/inc/AI_Writing_Outline.php',
         'Cleverplugins\\SEOBooster\\Admin_Columns' => __DIR__ . '/../..' . '/inc/Admin_Columns.php',
         'Cleverplugins\\SEOBooster\\Analysis\\Abstract_Checks' => __DIR__ . '/../..' . '/inc/Analysis/Abstract_Checks.php',
         'Cleverplugins\\SEOBooster\\Analysis\\Ai_Readiness_Registry' => __DIR__ . '/../..' . '/inc/Analysis/Ai_Readiness_Registry.php',
@@ -143,6 +134,7 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'Cleverplugins\\SEOBooster\\Credits_Service' => __DIR__ . '/../..' . '/inc/Credits_Service.php',
         'Cleverplugins\\SEOBooster\\Dashboard_Actions' => __DIR__ . '/../..' . '/inc/Dashboard_Actions.php',
         'Cleverplugins\\SEOBooster\\Form_Processor' => __DIR__ . '/../..' . '/inc/Form_Processor.php',
+        'Cleverplugins\\SEOBooster\\GSC_History' => __DIR__ . '/../..' . '/inc/GSC_History.php',
         'Cleverplugins\\SEOBooster\\Google_API' => __DIR__ . '/../..' . '/inc/Google_API.php',
         'Cleverplugins\\SEOBooster\\LLM_Content_Condenser' => __DIR__ . '/../..' . '/inc/LLM_Content_Condenser.php',
         'Cleverplugins\\SEOBooster\\LLM_Helper' => __DIR__ . '/../..' . '/inc/LLM_Helper.php',
@@ -160,7 +152,6 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'Cleverplugins\\SEOBooster\\SB_Autolink_List_Table' => __DIR__ . '/../..' . '/inc/SB_Autolink_List_Table.php',
         'Cleverplugins\\SEOBooster\\SB_FOF_List_Table' => __DIR__ . '/../..' . '/inc/SB_FOF_List_Table.php',
         'Cleverplugins\\SEOBooster\\SB_GSC_Ajax' => __DIR__ . '/../..' . '/inc/SB_GSC_Ajax.php',
-        'Cleverplugins\\SEOBooster\\SB_GSC_Issues_Processor' => __DIR__ . '/../..' . '/inc/SB_GSC_Issues_Processor.php',
         'Cleverplugins\\SEOBooster\\SB_GSC_List_Table' => __DIR__ . '/../..' . '/inc/SB_GSC_List_Table.php',
         'Cleverplugins\\SEOBooster\\SB_GSC_Metaboxes' => __DIR__ . '/../..' . '/inc/SB_GSC_Metaboxes.php',
         'Cleverplugins\\SEOBooster\\SB_GSC_Processor' => __DIR__ . '/../..' . '/inc/SB_GSC_Processor.php',
@@ -209,7 +200,6 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Needs_Analysis' => __DIR__ . '/../..' . '/inc/Tools/Tools_Needs_Analysis.php',
         'Cleverplugins\\SEOBooster\\Tools\\Tools_Page' => __DIR__ . '/../..' . '/inc/Tools/Tools_Page.php',
         'Cleverplugins\\SEOBooster\\Utils' => __DIR__ . '/../..' . '/inc/Utils.php',
-        'Cleverplugins\\SEOBooster\\email_status' => __DIR__ . '/../..' . '/inc/email_status.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Composer\\Installers\\AglInstaller' => __DIR__ . '/..' . '/composer/installers/src/Composer/Installers/AglInstaller.php',
         'Composer\\Installers\\AkauntingInstaller' => __DIR__ . '/..' . '/composer/installers/src/Composer/Installers/AkauntingInstaller.php',
@@ -310,24 +300,6 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
         'Composer\\Installers\\YawikInstaller' => __DIR__ . '/..' . '/composer/installers/src/Composer/Installers/YawikInstaller.php',
         'Composer\\Installers\\ZendInstaller' => __DIR__ . '/..' . '/composer/installers/src/Composer/Installers/ZendInstaller.php',
         'Composer\\Installers\\ZikulaInstaller' => __DIR__ . '/..' . '/composer/installers/src/Composer/Installers/ZikulaInstaller.php',
-        'League\\Plates\\Engine' => __DIR__ . '/..' . '/league/plates/src/Engine.php',
-        'League\\Plates\\Exception\\TemplateNotFound' => __DIR__ . '/..' . '/league/plates/src/Exception/TemplateNotFound.php',
-        'League\\Plates\\Extension\\Asset' => __DIR__ . '/..' . '/league/plates/src/Extension/Asset.php',
-        'League\\Plates\\Extension\\ExtensionInterface' => __DIR__ . '/..' . '/league/plates/src/Extension/ExtensionInterface.php',
-        'League\\Plates\\Extension\\URI' => __DIR__ . '/..' . '/league/plates/src/Extension/URI.php',
-        'League\\Plates\\Template\\Data' => __DIR__ . '/..' . '/league/plates/src/Template/Data.php',
-        'League\\Plates\\Template\\Directory' => __DIR__ . '/..' . '/league/plates/src/Template/Directory.php',
-        'League\\Plates\\Template\\FileExtension' => __DIR__ . '/..' . '/league/plates/src/Template/FileExtension.php',
-        'League\\Plates\\Template\\Folder' => __DIR__ . '/..' . '/league/plates/src/Template/Folder.php',
-        'League\\Plates\\Template\\Folders' => __DIR__ . '/..' . '/league/plates/src/Template/Folders.php',
-        'League\\Plates\\Template\\Func' => __DIR__ . '/..' . '/league/plates/src/Template/Func.php',
-        'League\\Plates\\Template\\Functions' => __DIR__ . '/..' . '/league/plates/src/Template/Functions.php',
-        'League\\Plates\\Template\\Name' => __DIR__ . '/..' . '/league/plates/src/Template/Name.php',
-        'League\\Plates\\Template\\ResolveTemplatePath' => __DIR__ . '/..' . '/league/plates/src/Template/ResolveTemplatePath.php',
-        'League\\Plates\\Template\\ResolveTemplatePath\\NameAndFolderResolveTemplatePath' => __DIR__ . '/..' . '/league/plates/src/Template/ResolveTemplatePath/NameAndFolderResolveTemplatePath.php',
-        'League\\Plates\\Template\\ResolveTemplatePath\\ThemeResolveTemplatePath' => __DIR__ . '/..' . '/league/plates/src/Template/ResolveTemplatePath/ThemeResolveTemplatePath.php',
-        'League\\Plates\\Template\\Template' => __DIR__ . '/..' . '/league/plates/src/Template/Template.php',
-        'League\\Plates\\Template\\Theme' => __DIR__ . '/..' . '/league/plates/src/Template/Theme.php',
         'Normalizer' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
         'PhpToken' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/PhpToken.php',
         'Soundasleep\\Html2Text' => __DIR__ . '/..' . '/soundasleep/html2text/src/Html2Text.php',
@@ -441,9 +413,9 @@ class ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit54b1345fbbee40e5fb6dffb6ecf45708::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit37f4adacf9b166723017e3f75bfb5f76::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit37f4adacf9b166723017e3f75bfb5f76::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit37f4adacf9b166723017e3f75bfb5f76::$classMap;
 
         }, null, ClassLoader::class);
     }

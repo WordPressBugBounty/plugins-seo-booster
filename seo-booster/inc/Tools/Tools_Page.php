@@ -77,7 +77,7 @@ class Tools_Page {
          *
          * @param array $tools Tool registry.
          */
-        return apply_filters( 'sb_tools_registry', $tools );
+        return apply_filters( 'seobooster_tools_registry', $tools );
     }
 
     /**
@@ -154,17 +154,11 @@ class Tools_Page {
     /**
      * Freemius upgrade URL for premium teasers.
      *
+     * @param string $placement utm_content when falling back to seoboosterpro.com.
      * @return string
      */
-    private static function get_upgrade_url() {
-        $upgrade_url = 'https://seoboosterpro.com';
-        if ( function_exists( 'Cleverplugins\\SEOBooster\\seobooster_fs' ) ) {
-            $fs = seobooster_fs();
-            if ( is_object( $fs ) && method_exists( $fs, 'get_upgrade_url' ) ) {
-                $upgrade_url = $fs->get_upgrade_url();
-            }
-        }
-        return $upgrade_url;
+    private static function get_upgrade_url( $placement = 'tools_teaser' ) {
+        return Utils::get_pro_upgrade_url( $placement );
     }
 
     /**
@@ -179,7 +173,11 @@ class Tools_Page {
         $teaser_title = $title;
         $teaser_description = $description;
         $teaser_variant = $variant;
-        $upgrade_url = self::get_upgrade_url();
+        $placement = 'tools_teaser';
+        if ( '' !== $variant ) {
+            $placement = 'tools_teaser_' . sanitize_key( $variant );
+        }
+        $upgrade_url = self::get_upgrade_url( $placement );
         include SEOBOOSTER_PLUGINPATH . 'inc/Tools/views/premium-tool-teaser.php';
     }
 
@@ -377,7 +375,7 @@ class Tools_Page {
      */
     public static function get_page_url( $tab = '' ) {
         $url = admin_url( 'admin.php?page=sb2_tools' );
-        if ( $tab !== '' ) {
+        if ( '' !== $tab ) {
             $url = add_query_arg( 'tab', sanitize_key( $tab ), $url );
         }
         return $url;
@@ -482,7 +480,7 @@ class Tools_Page {
      */
     public static function enqueue_scripts( $hook ) {
         $tools_hook = ( function_exists( 'get_plugin_page_hookname' ) ? get_plugin_page_hookname( 'sb2_tools', 'sb2_dashboard' ) : 'seo-booster_page_sb2_tools' );
-        if ( $hook !== $tools_hook && $hook !== 'seo-booster_page_sb2_tools' && $hook !== 'sb2_dashboard_page_sb2_tools' ) {
+        if ( $tools_hook !== $hook && 'seo-booster_page_sb2_tools' !== $hook && 'sb2_dashboard_page_sb2_tools' !== $hook ) {
             return;
         }
         wp_enqueue_style( 'list-tables' );

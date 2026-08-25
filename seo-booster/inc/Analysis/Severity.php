@@ -50,15 +50,15 @@ class Severity {
 	 * @return string Normalized analysis severity.
 	 */
 	public static function normalize_issue_severity( $severity ) {
-		if ( $severity === self::ERROR || $severity === 'critical' ) {
+		if ( self::ERROR === $severity || 'critical' === $severity ) {
 			return self::ERROR;
 		}
 
-		if ( $severity === self::WARNING || $severity === 'warning' || $severity === 'high' ) {
+		if ( self::WARNING === $severity || 'warning' === $severity || 'high' === $severity ) {
 			return self::WARNING;
 		}
 
-		if ( $severity === self::OPPORTUNITY || $severity === 'low' || $severity === 'improvement' ) {
+		if ( self::OPPORTUNITY === $severity || 'low' === $severity || 'improvement' === $severity ) {
 			return self::OPPORTUNITY;
 		}
 
@@ -160,7 +160,7 @@ class Severity {
 	 * @return bool
 	 */
 	public static function is_good_bucket( $db_severity ) {
-		return $db_severity === self::GOOD;
+		return self::GOOD === $db_severity;
 	}
 
 	/**
@@ -170,7 +170,7 @@ class Severity {
 	 * @return bool
 	 */
 	public static function is_not_applicable_bucket( $db_severity ) {
-		return $db_severity === self::NOT_APPLICABLE;
+		return self::NOT_APPLICABLE === $db_severity;
 	}
 
 	/**

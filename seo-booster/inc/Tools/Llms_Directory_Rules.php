@@ -20,10 +20,11 @@ class Llms_Directory_Rules {
 	 * @return string
 	 */
 	public static function normalize_directory( $dir ) {
-		$dir = trim( (string) $dir );
-		$dir = wp_parse_url( $dir, PHP_URL_PATH ) ?: $dir;
-		$dir = trim( $dir, "/ \t\n\r\0\x0B" );
-		if ( $dir === '' ) {
+		$dir         = trim( (string) $dir );
+		$parsed_path = wp_parse_url( $dir, PHP_URL_PATH );
+		$dir         = is_string( $parsed_path ) && '' !== $parsed_path ? $parsed_path : $dir;
+		$dir         = trim( $dir, "/ \t\n\r\0\x0B" );
+		if ( '' === $dir ) {
 			return '/';
 		}
 		$dir = preg_replace( '/[^a-zA-Z0-9_\-\/\.]/', '', $dir );
@@ -57,7 +58,7 @@ class Llms_Directory_Rules {
 		 *
 		 * @param string[] $prefixes Path prefixes without leading slash.
 		 */
-		return apply_filters( 'sb_tools_llms_blocked_path_prefixes', $prefixes );
+		return apply_filters( 'seobooster_tools_llms_blocked_path_prefixes', $prefixes );
 	}
 
 	/**
@@ -68,13 +69,13 @@ class Llms_Directory_Rules {
 	 */
 	public static function is_hard_blocked_path( $path ) {
 		$path = strtolower( trim( (string) $path, '/' ) );
-		if ( $path === 'xmlrpc.php' ) {
+		if ( 'xmlrpc.php' === $path ) {
 			return true;
 		}
 
 		foreach ( self::get_blocked_path_prefixes() as $prefix ) {
 			$prefix = strtolower( trim( (string) $prefix, '/' ) ) . '/';
-			if ( $prefix !== '/' && strpos( $path . '/', $prefix ) === 0 ) {
+			if ( '/' !== $prefix && 0 === strpos( $path . '/', $prefix ) ) {
 				return true;
 			}
 		}
@@ -119,7 +120,7 @@ class Llms_Directory_Rules {
 
 		foreach ( $rules as $dir => $rule ) {
 			$dir = self::normalize_directory( (string) $dir );
-			if ( $dir === '/' || strpos( $path, $dir ) === 0 ) {
+			if ( '/' === $dir || 0 === strpos( $path, $dir ) ) {
 				if ( strlen( $dir ) >= strlen( $best ) ) {
 					$best   = $dir;
 					$status = $rule;
@@ -138,7 +139,7 @@ class Llms_Directory_Rules {
 	 */
 	public static function auto_status_for_directory( $dir ) {
 		$path = trim( self::normalize_directory( $dir ), '/' );
-		if ( $path !== '' && self::is_hard_blocked_path( $path ) ) {
+		if ( '' !== $path && self::is_hard_blocked_path( $path ) ) {
 			return 'exclude';
 		}
 
@@ -173,10 +174,10 @@ class Llms_Directory_Rules {
 		}
 
 		$rule = self::status_for_path( $path, $rules );
-		if ( $rule === 'exclude' ) {
+		if ( 'exclude' === $rule ) {
 			return false;
 		}
-		if ( $rule === 'include' ) {
+		if ( 'include' === $rule ) {
 			return true;
 		}
 

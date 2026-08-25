@@ -120,7 +120,7 @@ class SB_AI_Referrals_List_Table extends \WP_List_Table {
 		}
 
 		$url = ! empty( $item['normalized_url'] ) ? $item['normalized_url'] : ( isset( $item['landing_path'] ) ? $item['landing_path'] : '' );
-		if ( $url === '' ) {
+		if ( '' === $url ) {
 			return '';
 		}
 
@@ -149,7 +149,7 @@ class SB_AI_Referrals_List_Table extends \WP_List_Table {
 			case 'home':
 				return __( 'Home', 'seo-booster' );
 			default:
-				return $object_type !== '' ? $object_type : __( 'URL', 'seo-booster' );
+				return '' !== $object_type ? $object_type : __( 'URL', 'seo-booster' );
 		}
 	}
 }

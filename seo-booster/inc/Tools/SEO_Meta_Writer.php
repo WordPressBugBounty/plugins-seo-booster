@@ -236,7 +236,7 @@ class SEO_Meta_Writer {
 	 */
 	private static function truncate_at_word_boundary( $text, $max ) {
 		$text = trim( (string) $text );
-		if ( $text === '' ) {
+		if ( '' === $text ) {
 			return '';
 		}
 
@@ -247,7 +247,7 @@ class SEO_Meta_Writer {
 
 			$truncated  = mb_substr( $text, 0, $max );
 			$last_space = mb_strrpos( $truncated, ' ' );
-			if ( $last_space !== false && $last_space > (int) ( $max * 0.6 ) ) {
+			if ( false !== $last_space && $last_space > (int) ( $max * 0.6 ) ) {
 				$truncated = mb_substr( $truncated, 0, $last_space );
 			}
 
@@ -260,7 +260,7 @@ class SEO_Meta_Writer {
 
 		$truncated  = substr( $text, 0, $max );
 		$last_space = strrpos( $truncated, ' ' );
-		if ( $last_space !== false && $last_space > (int) ( $max * 0.6 ) ) {
+		if ( false !== $last_space && $last_space > (int) ( $max * 0.6 ) ) {
 			$truncated = substr( $truncated, 0, $last_space );
 		}
 
@@ -285,18 +285,18 @@ class SEO_Meta_Writer {
 		$before = self::read( $post_id );
 		$after  = array();
 
-		if ( ! empty( $apply_fields['title'] ) && isset( $values['title'] ) && $values['title'] !== '' ) {
+		if ( ! empty( $apply_fields['title'] ) && isset( $values['title'] ) && '' !== $values['title'] ) {
 			$current = trim( $before['title'] );
-			if ( $overwrite || $current === '' ) {
+			if ( $overwrite || '' === $current ) {
 				$title = sanitize_text_field( self::truncate_title( $values['title'] ) );
 				SEO_Plugin_Registry::write_post_title( $post_id, $title );
 				$after['title'] = $title;
 			}
 		}
 
-		if ( ! empty( $apply_fields['description'] ) && isset( $values['description'] ) && $values['description'] !== '' ) {
+		if ( ! empty( $apply_fields['description'] ) && isset( $values['description'] ) && '' !== $values['description'] ) {
 			$current = trim( $before['description'] );
-			if ( $overwrite || $current === '' ) {
+			if ( $overwrite || '' === $current ) {
 				$description = sanitize_textarea_field( self::truncate_description( $values['description'] ) );
 				SEO_Plugin_Registry::write_post_description( $post_id, $description );
 				$after['description'] = $description;
@@ -457,7 +457,7 @@ class SEO_Meta_Writer {
 		}
 
 		$keyword = sanitize_text_field( trim( (string) $keyword ) );
-		if ( $keyword === '' ) {
+		if ( '' === $keyword ) {
 			throw new \Exception( esc_html__( 'Focus keyword is empty.', 'seo-booster' ) );
 		}
 

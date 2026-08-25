@@ -2,6 +2,8 @@
 
 namespace Cleverplugins\SEOBooster;
 
+use Cleverplugins\SEOBooster\Analysis\Content_Context;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -63,14 +65,14 @@ class LLM_Content_Condenser {
 		$profile = isset( $options['profile'] ) ? (string) $options['profile'] : self::PROFILE_FULL;
 		$limits  = $this->get_profile_limits( $profile );
 
-		if ( $profile === self::PROFILE_BULK ) {
+		if ( self::PROFILE_BULK === $profile ) {
 			$html_content = $this->get_editor_html_content( $post_id );
 		} else {
 			$html_content = $this->get_cached_html_content( $post_id );
 		}
 
 		if ( empty( $html_content ) ) {
-			if ( $profile === self::PROFILE_BULK ) {
+			if ( self::PROFILE_BULK === $profile ) {
 				return $this->get_bulk_fallback_text( $post_id );
 			}
 			throw new \Exception( esc_html__( 'Unable to retrieve content for condensation', 'seo-booster' ) );
@@ -79,13 +81,13 @@ class LLM_Content_Condenser {
 		$plain_text = $this->html_to_text( $html_content );
 
 		if ( empty( $plain_text ) ) {
-			if ( $profile === self::PROFILE_BULK ) {
+			if ( self::PROFILE_BULK === $profile ) {
 				return $this->get_bulk_fallback_text( $post_id );
 			}
 			throw new \Exception( esc_html__( 'Unable to convert content to text', 'seo-booster' ) );
 		}
 
-		if ( $profile !== self::PROFILE_BULK ) {
+		if ( self::PROFILE_BULK !== $profile ) {
 			$plain_text = $this->strip_boilerplate( $plain_text );
 		}
 
@@ -99,7 +101,7 @@ class LLM_Content_Condenser {
 
 		$result = LLM_Helper::ensure_utf8( $result );
 
-		if ( $profile === self::PROFILE_BULK ) {
+		if ( self::PROFILE_BULK === $profile ) {
 			/**
 			 * Filters condensed editor content for bulk meta AI prompts.
 			 *
@@ -121,7 +123,7 @@ class LLM_Content_Condenser {
 	 * @return array{max: int, target: int, passthrough: int}
 	 */
 	private function get_profile_limits( $profile ) {
-		if ( $profile === self::PROFILE_BULK ) {
+		if ( self::PROFILE_BULK === $profile ) {
 			return array(
 				'max'         => self::BULK_MAX_TOKENS,
 				'target'      => self::BULK_TARGET_TOKENS,
@@ -148,7 +150,7 @@ class LLM_Content_Condenser {
 			return '';
 		}
 
-		return (string) apply_filters( 'the_content', $post->post_content );
+		return (string) Content_Context::render_post_content( $post->post_content );
 	}
 
 	/**
@@ -205,10 +207,10 @@ class LLM_Content_Condenser {
 		}
 
 		// Apply filters to get rendered content
-		$content = apply_filters( 'the_content', $post->post_content );
+		$content = Content_Context::render_post_content( $post->post_content );
 
 		// Wrap in basic HTML structure if needed
-		if ( strpos( $content, '<html' ) === false ) {
+		if ( false === strpos( $content, '<html' ) ) {
 			$content = '<html><body>' . $content . '</body></html>';
 		}
 
@@ -258,7 +260,7 @@ class LLM_Content_Condenser {
 	 * @return string Cleaned text.
 	 */
 	private function clean_text( $text ) {
-		if ( $text === '' ) {
+		if ( '' === $text ) {
 			return '';
 		}
 		// Decode HTML entities (e.g. &#8211; -> –)
@@ -443,7 +445,7 @@ class LLM_Content_Condenser {
 			}
 
 			// Position bonus (first and last sentences get higher scores)
-			if ( $index === 0 || $index === count( $sentences ) - 1 ) {
+			if ( 0 === $index || ( count( $sentences ) - 1 ) === $index ) {
 				$score *= 1.5;
 			}
 

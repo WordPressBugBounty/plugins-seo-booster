@@ -18,12 +18,6 @@ $gsc_list_table = new SB_GSC_List_Table();
 // Prepare the items for display
 $gsc_list_table->prepare_items();
 
-// On first page load (form not yet submitted) the "Recent Activity" filter is
-// preselected. Once the user submits the filter form we respect their choice,
-// including unchecking it.
-$sb_gsc_filter_submitted    = isset( $_GET['sb_gsc_filtered'] );
-$sb_traffic_30_days_checked = $sb_gsc_filter_submitted ? isset( $_GET['traffic_30_days'] ) : true;
-
 ?>
 <div class="wrap sb-wrap sb-dashboard sb-gsc-page">
 
@@ -60,25 +54,25 @@ $sb_traffic_30_days_checked = $sb_gsc_filter_submitted ? isset( $_GET['traffic_3
 					</label>
 					<select name="filter_options" id="filter-options">
 						<option value=""><?php esc_html_e( 'All Keywords', 'seo-booster' ); ?></option>
-						<option value="new_keywords" <?php selected( isset( $_GET['filter_options'] ) && $_GET['filter_options'] === 'new_keywords' ); ?>>
+						<option value="new_keywords" <?php selected( isset( $_GET['filter_options'] ) && 'new_keywords' === $_GET['filter_options'] ); ?>>
 							<?php esc_html_e( 'New Keywords (Past 30 Days)', 'seo-booster' ); ?>
 						</option>
-						<option value="not_seen" <?php selected( isset( $_GET['filter_options'] ) && $_GET['filter_options'] === 'not_seen' ); ?>>
+						<option value="not_seen" <?php selected( isset( $_GET['filter_options'] ) && 'not_seen' === $_GET['filter_options'] ); ?>>
 							<?php esc_html_e( 'Keywords Not Seen (Over 30 Days)', 'seo-booster' ); ?>
 						</option>
-						<option value="keywords_used" <?php selected( isset( $_GET['filter_options'] ) && $_GET['filter_options'] === 'keywords_used' ); ?>>
+						<option value="keywords_used" <?php selected( isset( $_GET['filter_options'] ) && 'keywords_used' === $_GET['filter_options'] ); ?>>
 							<?php esc_html_e( 'Keywords Found in Content', 'seo-booster' ); ?>
 						</option>
-						<option value="keywords_unused" <?php selected( isset( $_GET['filter_options'] ) && $_GET['filter_options'] === 'keywords_unused' ); ?>>
+						<option value="keywords_unused" <?php selected( isset( $_GET['filter_options'] ) && 'keywords_unused' === $_GET['filter_options'] ); ?>>
 							<?php esc_html_e( 'Keywords Not Used in Content', 'seo-booster' ); ?>
 						</option>
-						<option value="high_position" <?php selected( isset( $_GET['filter_options'] ) && $_GET['filter_options'] === 'high_position' ); ?>>
+						<option value="high_position" <?php selected( isset( $_GET['filter_options'] ) && 'high_position' === $_GET['filter_options'] ); ?>>
 							<?php esc_html_e( 'High Average Position (1-10)', 'seo-booster' ); ?>
 						</option>
-						<option value="medium_position" <?php selected( isset( $_GET['filter_options'] ) && $_GET['filter_options'] === 'medium_position' ); ?>>
+						<option value="medium_position" <?php selected( isset( $_GET['filter_options'] ) && 'medium_position' === $_GET['filter_options'] ); ?>>
 							<?php esc_html_e( 'Medium Average Position (11-50)', 'seo-booster' ); ?>
 						</option>
-						<option value="low_position" <?php selected( isset( $_GET['filter_options'] ) && $_GET['filter_options'] === 'low_position' ); ?>>
+						<option value="low_position" <?php selected( isset( $_GET['filter_options'] ) && 'low_position' === $_GET['filter_options'] ); ?>>
 							<?php esc_html_e( 'Low Average Position (50+)', 'seo-booster' ); ?>
 						</option>
 					</select>
@@ -90,12 +84,6 @@ $sb_traffic_30_days_checked = $sb_gsc_filter_submitted ? isset( $_GET['traffic_3
 						<input type="checkbox" name="exact_match" id="exact-match" value="1" <?php checked( isset( $_GET['exact_match'] ), true ); ?>>
 						<?php esc_html_e( 'Exact Match', 'seo-booster' ); ?>
 						<span class="dashicons dashicons-editor-help" title="<?php esc_attr_e( 'Search for exact keyword matches only', 'seo-booster' ); ?>"></span>
-					</label>
-					
-					<label for="traffic-30-days" class="sb-checkbox-label">
-						<input type="checkbox" name="traffic_30_days" id="traffic-30-days" value="1" <?php checked( $sb_traffic_30_days_checked, true ); ?>>
-						<?php esc_html_e( 'Recent Activity', 'seo-booster' ); ?>
-						<span class="dashicons dashicons-editor-help" title="<?php esc_attr_e( 'Show only keywords with traffic in the past 30 days', 'seo-booster' ); ?>"></span>
 					</label>
 				</div>
 				

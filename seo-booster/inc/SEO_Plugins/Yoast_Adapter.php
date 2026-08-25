@@ -60,7 +60,7 @@ class Yoast_Adapter extends Abstract_Post_Meta_Adapter {
 
 		// Yoast Premium stores additional keyphrases separately; primary stays first.
 		$extra = get_post_meta( (int) $post_id, '_yoast_wpseo_focuskeywords', true );
-		if ( is_string( $extra ) && $extra !== '' ) {
+		if ( is_string( $extra ) && '' !== $extra ) {
 			$decoded = json_decode( $extra, true );
 			if ( is_array( $decoded ) ) {
 				foreach ( $decoded as $entry ) {
@@ -68,7 +68,7 @@ class Yoast_Adapter extends Abstract_Post_Meta_Adapter {
 						continue;
 					}
 					$keyword = sanitize_text_field( (string) $entry['keyword'] );
-					if ( $keyword !== '' && ! in_array( $keyword, $keywords, true ) ) {
+					if ( '' !== $keyword && ! in_array( $keyword, $keywords, true ) ) {
 						$keywords[] = $keyword;
 					}
 				}
@@ -179,11 +179,11 @@ class Yoast_Adapter extends Abstract_Post_Meta_Adapter {
 	 * @return object[]
 	 */
 	public function find_duplicate_terms( $field, $value, $exclude_id ) {
-		if ( $value === '' || ! in_array( $field, array( 'title', 'description' ), true ) ) {
+		if ( '' === $value || ! in_array( $field, array( 'title', 'description' ), true ) ) {
 			return array();
 		}
 
-		$key      = $field === 'title' ? 'wpseo_title' : 'wpseo_desc';
+		$key      = 'title' === $field ? 'wpseo_title' : 'wpseo_desc';
 		$all_meta = get_option( 'wpseo_taxonomy_meta', array() );
 		if ( ! is_array( $all_meta ) || empty( $all_meta ) ) {
 			return array();
@@ -224,10 +224,10 @@ class Yoast_Adapter extends Abstract_Post_Meta_Adapter {
 	 */
 	public function get_meta_keys( $field_type = 'both' ) {
 		$keys = array();
-		if ( $field_type === 'title' || $field_type === 'both' ) {
+		if ( 'title' === $field_type || 'both' === $field_type ) {
 			$keys['title_key'] = '_yoast_wpseo_title';
 		}
-		if ( $field_type === 'description' || $field_type === 'both' ) {
+		if ( 'description' === $field_type || 'both' === $field_type ) {
 			$keys['description_key'] = '_yoast_wpseo_metadesc';
 		}
 
@@ -246,7 +246,7 @@ class Yoast_Adapter extends Abstract_Post_Meta_Adapter {
 				if ( is_object( $meta ) ) {
 					$title = isset( $meta->title ) ? (string) $meta->title : '';
 					$desc  = isset( $meta->description ) ? (string) $meta->description : '';
-					if ( $title !== '' || $desc !== '' ) {
+					if ( '' !== $title || '' !== $desc ) {
 						return array(
 							'title'       => sanitize_text_field( $title ),
 							'description' => sanitize_textarea_field( $desc ),
@@ -272,7 +272,7 @@ class Yoast_Adapter extends Abstract_Post_Meta_Adapter {
 				if ( is_object( $meta ) ) {
 					$title = isset( $meta->title ) ? (string) $meta->title : '';
 					$desc  = isset( $meta->description ) ? (string) $meta->description : '';
-					if ( $title !== '' || $desc !== '' ) {
+					if ( '' !== $title || '' !== $desc ) {
 						return array(
 							'title'       => sanitize_text_field( $title ),
 							'description' => sanitize_textarea_field( $desc ),

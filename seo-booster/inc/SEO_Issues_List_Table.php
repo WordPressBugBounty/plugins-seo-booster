@@ -189,7 +189,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 
 		// Status filter - default to active possibilities if no status filter provided
 		if ( ! empty( $filters['status'] ) ) {
-			if ( $filters['status'] === 'active' ) {
+			if ( 'active' === $filters['status'] ) {
 				$where_conditions[] = '(user_status = %s OR user_status = %s OR user_status IS NULL)';
 				$where_values[]     = 'active';
 				$where_values[]     = '0';
@@ -256,7 +256,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 
 		// Status filter - default to active possibilities if no status filter provided
 		if ( ! empty( $filters['status'] ) ) {
-			if ( $filters['status'] === 'active' ) {
+			if ( 'active' === $filters['status'] ) {
 				$where_conditions[] = '(user_status = %s OR user_status = %s OR user_status IS NULL)';
 				$where_values[]     = 'active';
 				$where_values[]     = '0';
@@ -342,9 +342,9 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 
 		// Try to get edit link
 		$edit_link = null;
-		if ( $item->object_id && $item->object_type === 'post' ) {
+		if ( $item->object_id && 'post' === $item->object_type ) {
 			$edit_link = get_edit_post_link( $item->object_id );
-		} elseif ( $item->object_id && $item->object_type === 'term' ) {
+		} elseif ( $item->object_id && 'term' === $item->object_type ) {
 			$edit_link = get_edit_term_link( $item->object_id );
 		}
 
@@ -390,7 +390,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 	public function column_score( $item ) {
 		$score = isset( $item->score ) ? intval( $item->score ) : null;
 
-		if ( $score === null ) {
+		if ( null === $score ) {
 			return '<span class="sb-seo-score-null">-</span>';
 		}
 
@@ -684,7 +684,7 @@ class SEO_Issues_List_Table extends \WP_List_Table {
 	 * @return void
 	 */
 	protected function extra_tablenav( $which ) {
-		if ( $which === 'top' ) {
+		if ( 'top' === $which ) {
 			$issue_types = $this->get_issue_types();
 			if ( ! is_array( $issue_types ) ) {
 				$issue_types = array();

@@ -5,7 +5,7 @@ namespace Cleverplugins\SEOBooster;
 if ( !defined( 'ABSPATH' ) ) {
     exit;
 }
-$page = ( isset( $_REQUEST['page'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['page'] ) ) : '' );
+$admin_page_slug = ( isset( $_REQUEST['page'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['page'] ) ) : '' );
 $view = ( isset( $_REQUEST['view'] ) ? sanitize_key( wp_unslash( $_REQUEST['view'] ) ) : 'content' );
 $filter_days = ( isset( $_REQUEST['filter_days'] ) ? (int) $_REQUEST['filter_days'] : 30 );
 if ( !in_array( $filter_days, array(7, 30, 90), true ) ) {
@@ -42,7 +42,7 @@ if ( $is_referrals_view ) {
     $top_content = AI_Bot_Tracker::get_top_content_pages( $filter_days, 10 );
     $noisy_bots = AI_Bot_Tracker::get_bots_mostly_noise( $filter_days, 0.8, 5 );
 }
-$tabs = array(
+$view_tabs = array(
     'content'   => __( 'Content crawled', 'seo-booster' ),
     'by_bot'    => __( 'By bot', 'seo-booster' ),
     'noise'     => __( 'Noise / unmapped', 'seo-booster' ),
@@ -93,7 +93,7 @@ if ( !$bot_tracking_on || !$ref_tracking_on ) {
 	<div class="sb-ai-bots-toolbar">
 		<form method="get" class="sb-ai-bots-days-form" id="sb-ai-bots-days-form">
 			<input type="hidden" name="page" value="<?php 
-echo esc_attr( $page );
+echo esc_attr( $admin_page_slug );
 ?>" />
 			<input type="hidden" name="view" value="<?php 
 echo esc_attr( $view );
@@ -539,16 +539,18 @@ if ( $is_referrals_view ) {
 
 		<nav class="nav-tab-wrapper sb-ai-bots-tabs">
 			<?php 
-foreach ( $tabs as $tab_key => $tab_label ) {
+foreach ( $view_tabs as $tab_key => $tab_label ) {
     ?>
 				<a
-					href="<?php 
+					href="
+					<?php 
     echo esc_url( add_query_arg( array(
-        'page'        => $page,
+        'page'        => $admin_page_slug,
         'view'        => $tab_key,
         'filter_days' => $filter_days,
     ), admin_url( 'admin.php' ) ) );
-    ?>"
+    ?>
+							"
 					class="nav-tab <?php 
     echo ( $view === $tab_key ? 'nav-tab-active' : '' );
     ?>"
@@ -564,7 +566,7 @@ foreach ( $tabs as $tab_key => $tab_label ) {
 
 		<form id="ai-bots-filter" method="get">
 			<input type="hidden" name="page" value="<?php 
-echo esc_attr( $page );
+echo esc_attr( $admin_page_slug );
 ?>" />
 			<input type="hidden" name="view" value="<?php 
 echo esc_attr( $view );

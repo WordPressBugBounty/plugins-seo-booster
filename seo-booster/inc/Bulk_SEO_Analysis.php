@@ -46,7 +46,7 @@ class Bulk_SEO_Analysis {
 
 		foreach ( $post_types as $post_type ) {
 			// Skip attachments (handled by Media_Library_Enhancements)
-			if ( $post_type === 'attachment' ) {
+			if ( 'attachment' === $post_type ) {
 				continue;
 			}
 
@@ -80,7 +80,7 @@ class Bulk_SEO_Analysis {
 	 * @return string Modified redirect URL.
 	 */
 	public static function handle_bulk_action( $redirect_to, $action, $post_ids ) {
-		if ( $action !== 'sb_seo_analysis' ) {
+		if ( 'sb_seo_analysis' !== $action ) {
 			return $redirect_to;
 		}
 
@@ -183,7 +183,7 @@ class Bulk_SEO_Analysis {
 		$batch_id = isset( $_POST['batch_id'] ) ? sanitize_text_field( $_POST['batch_id'] ) : '';
 		$post_id  = isset( $_POST['post_id'] ) ? intval( $_POST['post_id'] ) : 0;
 
-		if ( empty( $batch_id ) || $post_id === 0 ) {
+		if ( empty( $batch_id ) || 0 === $post_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid parameters', 'seo-booster' ) ) );
 		}
 
@@ -207,7 +207,7 @@ class Bulk_SEO_Analysis {
 		}
 
 		// Check if batch is cancelled
-		if ( isset( $batch_status['cancelled'] ) && $batch_status['cancelled'] === true ) {
+		if ( isset( $batch_status['cancelled'] ) && true === $batch_status['cancelled'] ) {
 			wp_send_json_error( array( 'message' => __( 'Batch was cancelled', 'seo-booster' ) ) );
 		}
 
@@ -287,9 +287,9 @@ class Bulk_SEO_Analysis {
 			$batch_status['processing_ids'] = array();
 		}
 
-		if ( $status === 'processed' ) {
+		if ( 'processed' === $status ) {
 			$batch_status['processed'] = isset( $batch_status['processed'] ) ? $batch_status['processed'] + 1 : 1;
-			if ( $post_id > 0 && ! in_array( $post_id, $batch_status['processed_ids'] ) ) {
+			if ( $post_id > 0 && ! in_array( $post_id, $batch_status['processed_ids'], true ) ) {
 				$batch_status['processed_ids'][] = $post_id;
 				// Store the title of the last processed post
 				$post_title = get_the_title( $post_id );
@@ -302,9 +302,9 @@ class Bulk_SEO_Analysis {
 			if ( isset( $batch_status['processing'] ) && $batch_status['processing'] > 0 ) {
 				$batch_status['processing'] = $batch_status['processing'] - 1;
 			}
-		} elseif ( $status === 'failed' ) {
+		} elseif ( 'failed' === $status ) {
 			$batch_status['failed'] = isset( $batch_status['failed'] ) ? $batch_status['failed'] + 1 : 1;
-			if ( $post_id > 0 && ! in_array( $post_id, $batch_status['failed_ids'] ) ) {
+			if ( $post_id > 0 && ! in_array( $post_id, $batch_status['failed_ids'], true ) ) {
 				$batch_status['failed_ids'][] = $post_id;
 			}
 			// Remove from processing
@@ -312,9 +312,9 @@ class Bulk_SEO_Analysis {
 			if ( isset( $batch_status['processing'] ) && $batch_status['processing'] > 0 ) {
 				$batch_status['processing'] = $batch_status['processing'] - 1;
 			}
-		} elseif ( $status === 'processing' ) {
+		} elseif ( 'processing' === $status ) {
 			$batch_status['processing'] = isset( $batch_status['processing'] ) ? $batch_status['processing'] + 1 : 1;
-			if ( $post_id > 0 && ! in_array( $post_id, $batch_status['processing_ids'] ) ) {
+			if ( $post_id > 0 && ! in_array( $post_id, $batch_status['processing_ids'], true ) ) {
 				$batch_status['processing_ids'][] = $post_id;
 			}
 		}
@@ -366,8 +366,8 @@ class Bulk_SEO_Analysis {
 		// Calculate remaining (queued minus completed)
 		$remaining = max( 0, $queued - $processed - $failed );
 
-		$completed = ( $remaining === 0 && $queued > 0 && $processing === 0 );
-		$cancelled = isset( $batch_status['cancelled'] ) && $batch_status['cancelled'] === true;
+		$completed = ( 0 === $remaining && $queued > 0 && 0 === $processing );
+		$cancelled = isset( $batch_status['cancelled'] ) && true === $batch_status['cancelled'];
 
 		// Get next post ID to process if not completed
 		$next_post_id = 0;
@@ -378,7 +378,7 @@ class Bulk_SEO_Analysis {
 			$completed_ids  = array_merge( $processed_ids, $failed_ids, $processing_ids );
 
 			foreach ( $batch_status['post_ids'] as $id ) {
-				if ( ! in_array( $id, $completed_ids ) ) {
+				if ( ! in_array( $id, $completed_ids, true ) ) {
 					$next_post_id = $id;
 					break;
 				}
@@ -460,7 +460,11 @@ class Bulk_SEO_Analysis {
 
 		wp_send_json_success(
 			array(
-				'message'         => sprintf( __( 'Cancelled %d pending analysis(es)', 'seo-booster' ), $cancelled_count ),
+				'message'         => sprintf(
+					/* translators: %d: number of pending analyses cancelled */
+					__( 'Cancelled %d pending analysis(es)', 'seo-booster' ),
+					$cancelled_count
+				),
 				'cancelled_count' => $cancelled_count,
 			)
 		);
@@ -496,7 +500,7 @@ class Bulk_SEO_Analysis {
 
 			if ( $batch_status && is_array( $batch_status ) ) {
 				// Skip if batch is cancelled
-				if ( isset( $batch_status['cancelled'] ) && $batch_status['cancelled'] === true ) {
+				if ( isset( $batch_status['cancelled'] ) && true === $batch_status['cancelled'] ) {
 					continue;
 				}
 
@@ -523,7 +527,7 @@ class Bulk_SEO_Analysis {
 	 */
 	public static function enqueue_scripts( $hook ) {
 		// Only on post list pages (edit.php)
-		if ( $hook !== 'edit.php' ) {
+		if ( 'edit.php' !== $hook ) {
 			return;
 		}
 
@@ -542,13 +546,7 @@ class Bulk_SEO_Analysis {
 		// Check for error parameters
 		$error = isset( $_GET['sb_bulk_seo_error'] ) ? sanitize_text_field( $_GET['sb_bulk_seo_error'] ) : '';
 
-		// Only enqueue script if we have a batch ID or error
-		if ( empty( $batch_id ) && empty( $error ) ) {
-			// Check localStorage for batch ID (will be checked in JS)
-			// Still load script but with empty batch_id so JS can check localStorage
-		}
-
-		// Enqueue script
+		// Enqueue script (JS also checks localStorage when batch_id is empty)
 		Utils::enqueue_modal_assets();
 		wp_enqueue_script(
 			'sb-bulk-seo-status',
@@ -573,10 +571,15 @@ class Bulk_SEO_Analysis {
 					'processing'               => __( 'Processing...', 'seo-booster' ),
 					'completed'                => __( 'Completed', 'seo-booster' ),
 					'error'                    => __( 'Error', 'seo-booster' ),
+					/* translators: 1: number of posts processed so far, 2: total number of posts */
 					'processing_status'        => __( 'Processing %1$d of %2$d posts...', 'seo-booster' ),
+					/* translators: %d: number of posts analyzed successfully */
 					'completed_status'         => __( 'Completed: %d analyzed successfully', 'seo-booster' ),
+					/* translators: %d: number of failed analyses */
 					'failed_status'            => __( '%d failed', 'seo-booster' ),
+					/* translators: %d: number of remaining analyses */
 					'remaining_status'         => __( '%d remaining', 'seo-booster' ),
+					/* translators: %s: title of the last processed post */
 					'last_processed'           => __( 'Last: "%s"', 'seo-booster' ),
 					'cancelled'                => __( 'Cancelled', 'seo-booster' ),
 					'cancel'                   => __( 'Cancel', 'seo-booster' ),
@@ -585,6 +588,7 @@ class Bulk_SEO_Analysis {
 					'no_posts'                 => __( 'No posts were selected for analysis.', 'seo-booster' ),
 					'no_valid_posts'           => __( 'No valid posts were selected for analysis.', 'seo-booster' ),
 					'unknown_error'            => __( 'An error occurred while processing bulk analysis.', 'seo-booster' ),
+					/* translators: %1$s: link text for SEO Possibilities page */
 					'completed_message'        => __( 'Click the Reload button to see updated scores, or go to %1$s to see an updated list.', 'seo-booster' ),
 					'completed_message_simple' => __( 'Click the Reload button to see updated scores.', 'seo-booster' ),
 					'seo_possibilities_link'   => __( 'SEO Possibilities', 'seo-booster' ),

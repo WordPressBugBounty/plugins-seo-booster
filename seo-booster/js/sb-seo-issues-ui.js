@@ -92,6 +92,57 @@
     };
 
     /**
+     * Whether an issue matches the current Possibilities type/severity filter.
+     *
+     * @param {object} issue Issue object.
+     * @return {boolean}
+     */
+    window.SB_SEO_Issues.issueMatchesFilter = function(issue) {
+        if (!issue) {
+            return false;
+        }
+        var filterKey = (typeof sb_seo_issues !== 'undefined' && sb_seo_issues.filter_issue_type) ? sb_seo_issues.filter_issue_type : '';
+        if (filterKey) {
+            var key = issue.key || issue.issue_key || '';
+            return key === filterKey;
+        }
+        var filterSeverity = (typeof sb_seo_issues !== 'undefined' && sb_seo_issues.filter_severity) ? sb_seo_issues.filter_severity : '';
+        if (!filterSeverity) {
+            return false;
+        }
+        var severity = issue.severity || '';
+        if (filterSeverity === 'critical') {
+            return severity === 'critical' || severity === 'error';
+        }
+        if (filterSeverity === 'high') {
+            return severity === 'high' || severity === 'warning';
+        }
+        return severity === filterSeverity;
+    };
+
+    /**
+     * Put findings that match the current filter first.
+     *
+     * @param {Array} items Issue objects.
+     * @return {Array}
+     */
+    window.SB_SEO_Issues.sortFilterMatchesFirst = function(items) {
+        if (!items || !items.length) {
+            return items || [];
+        }
+        var matched = [];
+        var rest = [];
+        items.forEach(function(item) {
+            if (window.SB_SEO_Issues.issueMatchesFilter(item)) {
+                matched.push(item);
+            } else {
+                rest.push(item);
+            }
+        });
+        return matched.concat(rest);
+    };
+
+    /**
      * Render a single issue row with actions.
      *
      * @param {object} issue Issue object.
@@ -107,8 +158,10 @@
         var rowEdit = window.SB_SEO_Issues.safeHref(issue.edit_url || editUrl || '');
         var tool = issue.tool || null;
         var toolUrl = tool && tool.url ? window.SB_SEO_Issues.safeHref(tool.url) : '';
+        var matchesFilter = window.SB_SEO_Issues.issueMatchesFilter(issue);
+        var itemClass = 'sb-analysis-item' + (matchesFilter ? ' sb-analysis-item--filter-match' : '');
 
-        html += '<div class="sb-analysis-item" data-issue-id="' + issueId + '">';
+        html += '<div class="' + itemClass + '" data-issue-id="' + issueId + '">';
         html += '<span class="sb-severity-icon dashicons ' + iconClass + '" style="color: ' + color + ';"></span>';
         html += '<div class="sb-issue-content-wrapper">';
         html += '<div class="sb-issue-message">' + window.SB_SEO_Issues.escapeHtml(issue.message) + '</div>';
@@ -219,8 +272,8 @@
         var $cell = $newRow.find('td');
         var html = '<div class="sb-url-issues-inline">';
 
-        var issues = data.issues || [];
-        var opportunities = data.opportunities || [];
+        var issues = window.SB_SEO_Issues.sortFilterMatchesFirst(data.issues || []);
+        var opportunities = window.SB_SEO_Issues.sortFilterMatchesFirst(data.opportunities || []);
         var strings = sb_seo_issues.strings || {};
         var editUrl = data.edit_url || '';
         var hasContent = issues.length + opportunities.length > 0;

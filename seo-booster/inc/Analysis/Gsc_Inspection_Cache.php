@@ -64,7 +64,7 @@ class Gsc_Inspection_Cache {
 	public static function language_code_for_site() {
 		$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
 		$locale = str_replace( '_', '-', (string) $locale );
-		return $locale !== '' ? $locale : 'en-US';
+		return '' !== $locale ? $locale : 'en-US';
 	}
 
 	/**

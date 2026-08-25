@@ -102,10 +102,10 @@ class RankMath_Adapter extends Abstract_Post_Meta_Adapter {
 	 */
 	public function get_meta_keys( $field_type = 'both' ) {
 		$keys = array();
-		if ( $field_type === 'title' || $field_type === 'both' ) {
+		if ( 'title' === $field_type || 'both' === $field_type ) {
 			$keys['title_key'] = 'rank_math_title';
 		}
-		if ( $field_type === 'description' || $field_type === 'both' ) {
+		if ( 'description' === $field_type || 'both' === $field_type ) {
 			$keys['description_key'] = 'rank_math_description';
 		}
 
@@ -153,10 +153,10 @@ class RankMath_Adapter extends Abstract_Post_Meta_Adapter {
 		$title_tpl = $raw['title'];
 		$desc_tpl  = $raw['description'];
 
-		if ( $title_tpl === '' && is_callable( array( '\RankMath\Helper', 'get_settings' ) ) ) {
+		if ( '' === $title_tpl && is_callable( array( '\RankMath\Helper', 'get_settings' ) ) ) {
 			$title_tpl = (string) \RankMath\Helper::get_settings( 'titles.tax_' . $term->taxonomy . '_title', '' );
 		}
-		if ( $desc_tpl === '' && is_callable( array( '\RankMath\Helper', 'get_settings' ) ) ) {
+		if ( '' === $desc_tpl && is_callable( array( '\RankMath\Helper', 'get_settings' ) ) ) {
 			$desc_tpl = (string) \RankMath\Helper::get_settings( 'titles.tax_' . $term->taxonomy . '_description', '' );
 		}
 

@@ -119,7 +119,7 @@ class Html_Document {
 	 */
 	public static function count_words( $text ) {
 		$text = trim( wp_strip_all_tags( (string) $text ) );
-		if ( $text === '' ) {
+		if ( '' === $text ) {
 			return 0;
 		}
 
@@ -144,8 +144,9 @@ class Html_Document {
 			$to_remove[] = $node;
 		}
 		foreach ( $to_remove as $node ) {
-			if ( $node->parentNode ) {
-				$node->parentNode->removeChild( $node );
+			$parent = $node->{'parentNode'};
+			if ( $parent ) {
+				$parent->removeChild( $node );
 			}
 		}
 	}
@@ -171,8 +172,9 @@ class Html_Document {
 			$to_remove[] = $node;
 		}
 		foreach ( $to_remove as $node ) {
-			if ( $node->parentNode ) {
-				$node->parentNode->removeChild( $node );
+			$parent = $node->{'parentNode'};
+			if ( $parent ) {
+				$parent->removeChild( $node );
 			}
 		}
 	}
@@ -195,11 +197,11 @@ class Html_Document {
 			if ( ! $node instanceof \DOMElement ) {
 				continue;
 			}
-			$text = trim( preg_replace( '/\s+/', ' ', $node->textContent ?? '' ) );
-			if ( $text === '' ) {
+			$text = trim( preg_replace( '/\s+/', ' ', $node->{'textContent'} ?? '' ) );
+			if ( '' === $text ) {
 				continue;
 			}
-			$h1 = $xpath->query( './/h1', $node );
+			$h1    = $xpath->query( './/h1', $node );
 			$out[] = array(
 				'node'   => $node,
 				'length' => strlen( $text ),
@@ -217,13 +219,14 @@ class Html_Document {
 	 * @return string
 	 */
 	private static function inner_html( \DOMNode $node ) {
-		if ( ! $node->ownerDocument instanceof \DOMDocument ) {
+		$owner_document = $node->{'ownerDocument'};
+		if ( ! $owner_document instanceof \DOMDocument ) {
 			return '';
 		}
 
 		$html = '';
-		foreach ( $node->childNodes as $child ) {
-			$html .= $node->ownerDocument->saveHTML( $child );
+		foreach ( $node->{'childNodes'} as $child ) {
+			$html .= $owner_document->saveHTML( $child );
 		}
 
 		return $html;
@@ -342,11 +345,12 @@ class Html_Document {
 	 * @return string
 	 */
 	public static function node_to_html( \DOMNode $node ) {
-		if ( ! $node->ownerDocument instanceof \DOMDocument ) {
+		$owner_document = $node->{'ownerDocument'};
+		if ( ! $owner_document instanceof \DOMDocument ) {
 			return '';
 		}
 
-		return (string) $node->ownerDocument->saveHTML( $node );
+		return (string) $owner_document->saveHTML( $node );
 	}
 
 	/**
@@ -426,7 +430,7 @@ class Html_Document {
 		}
 
 		$src = self::get_attr( $node, 'src' );
-		return strpos( $src, 'data:' ) === 0 || $src === '';
+		return 0 === strpos( $src, 'data:' ) || '' === $src;
 	}
 
 	/**

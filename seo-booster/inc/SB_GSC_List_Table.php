@@ -215,7 +215,7 @@ class SB_GSC_List_Table extends \WP_List_Table {
 
 				$output .= '<div class="sbkbd">';
 				// Add "Used" label if keyword is used in content
-				if ( isset( $item['kw_used'] ) && $item['kw_used'] == 1 ) {
+				if ( isset( $item['kw_used'] ) && 1 == $item['kw_used'] ) {
 					$output .= sprintf(
 						' <span class="label label-ok used" title="%s">%s</span>',
 						esc_html__( 'This keyword is used in the content', 'seo-booster' ),
@@ -238,7 +238,7 @@ class SB_GSC_List_Table extends \WP_List_Table {
 				$keyword_id       = intval( $item['id'] );
 				$competition_data = get_transient( 'sb_competition_' . $keyword_id );
 
-				if ( $competition_data === false ) {
+				if ( false === $competition_data ) {
 					// First time - calculate and store
 					$competition_data = $this->calculate_keyword_competition( $keyword_id );
 					set_transient( 'sb_competition_' . $keyword_id, $competition_data, DAY_IN_SECONDS );
@@ -277,7 +277,7 @@ class SB_GSC_List_Table extends \WP_List_Table {
 
 			case 'ctr':
 				$value = $item[ $column_name ];
-				return (float) $value === 0.0 ? '0' : number_format_i18n( $value, 4 );
+				return 0.0 === (float) $value ? '0' : number_format_i18n( $value, 4 );
 
 			case 'first_seen_date':
 				$stored_time    = strtotime( get_date_from_gmt( $item[ $column_name ] ) );
@@ -288,7 +288,7 @@ class SB_GSC_List_Table extends \WP_List_Table {
 				return '<div class="uplot-chart-placeholder" data-sb-kwid="' . intval( $item['id'] ) . '">
 					<div class="sb-chart-placeholder">
 						<span class="dashicons dashicons-chart-line"></span>
-						<span class="sb-placeholder-text">' . esc_html__( 'Hover to load chart', 'seo-booster' ) . '</span>
+						<span class="sb-placeholder-text">' . esc_html__( 'Loading chart…', 'seo-booster' ) . '</span>
 					</div>
 				</div>';
 
@@ -497,7 +497,7 @@ class SB_GSC_List_Table extends \WP_List_Table {
 
 		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 
-		$is_exact_match = isset( $_REQUEST['exact_match'] ) && $_REQUEST['exact_match'] == 1;
+		$is_exact_match = isset( $_REQUEST['exact_match'] ) && 1 == $_REQUEST['exact_match'];
 
 		$search_sql  = '';
 		$search_args = array();
@@ -541,21 +541,6 @@ class SB_GSC_List_Table extends \WP_List_Table {
 			}
 		}
 
-		// Add traffic filter for past 30 days. On first page load (filter form
-		// not yet submitted) the "Recent Activity" filter is preselected; once
-		// the form is submitted we respect the checkbox state.
-		$traffic_filter_query = '';
-		$filter_submitted     = isset( $_GET['sb_gsc_filtered'] );
-		if ( $filter_submitted ) {
-			$traffic_30_days = isset( $_GET['traffic_30_days'] ) && $_GET['traffic_30_days'] == 1;
-		} else {
-			$traffic_30_days = true;
-		}
-
-		if ( $traffic_30_days ) {
-			$traffic_filter_query = ' AND qkh.date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) ';
-		}
-
 		// Sanitize and validate the order parameter
 		$order = isset( $_GET['order'] ) ? sanitize_text_field( wp_unslash( $_GET['order'] ) ) : 'DESC';
 		$order = strtoupper( $order ); // Convert to uppercase for comparison
@@ -564,9 +549,15 @@ class SB_GSC_List_Table extends \WP_List_Table {
 		$orderby = isset( $_GET['orderby'] ) ? sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) : 'impressions';
 		$orderby = $this->sanitize_orderby( $orderby );
 
-		$where_sql = "WHERE 1=1 {$search_sql} {$lp_filter_query} {$traffic_filter_query}";
+		$where_sql = "WHERE 1=1 {$search_sql} {$lp_filter_query}";
 
-		$total_filtered_query = "SELECT COUNT(DISTINCT qk.id) FROM {$wpdb->prefix}sb2_query_keywords AS qk LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh ON qk.id = qkh.query_keywords_id {$where_sql}";
+		$needs_history_join_for_count = in_array( $lp_filter, array( 'high_position', 'medium_position', 'low_position' ), true );
+
+		if ( $needs_history_join_for_count ) {
+			$total_filtered_query = "SELECT COUNT(DISTINCT qk.id) FROM {$wpdb->prefix}sb2_query_keywords AS qk LEFT JOIN {$wpdb->prefix}sb2_query_keywords_history AS qkh ON qk.id = qkh.query_keywords_id {$where_sql}";
+		} else {
+			$total_filtered_query = "SELECT COUNT(*) FROM {$wpdb->prefix}sb2_query_keywords AS qk {$where_sql}";
+		}
 		if ( empty( $search_args ) ) {
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Filter fragments are internally built with sanitized values; no search input here.
 			$total_filtered = $wpdb->get_var( $total_filtered_query );

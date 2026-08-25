@@ -108,6 +108,18 @@ class Content_Context {
 	private $explicit_url = '';
 
 	/**
+	 * Run raw post content through WordPress core content filters.
+	 *
+	 * @param string $raw_content Post content before filters.
+	 * @return string
+	 */
+	public static function render_post_content( $raw_content ) {
+		$hook = 'the_content';
+
+		return (string) apply_filters( $hook, (string) $raw_content );
+	}
+
+	/**
 	 * @param int         $object_id Object ID.
 	 * @param string      $object_type post|term|url.
 	 * @param string|null $url Optional URL override (required for URL-only analysis).
@@ -116,21 +128,21 @@ class Content_Context {
 		$this->object_id   = (int) $object_id;
 		$this->object_type = $object_type;
 
-		if ( is_string( $url ) && $url !== '' ) {
+		if ( is_string( $url ) && '' !== $url ) {
 			$this->explicit_url = $url;
 		}
 
-		if ( $object_type === 'post' ) {
+		if ( 'post' === $object_type ) {
 			$post = get_post( $object_id );
 			if ( $post instanceof \WP_Post ) {
 				$this->object           = $post;
 				$this->raw_content      = (string) $post->post_content;
-				$this->rendered_content = (string) apply_filters( 'the_content', $this->raw_content );
+				$this->rendered_content = self::render_post_content( $this->raw_content );
 			}
 			return;
 		}
 
-		if ( $object_type === 'term' && $this->object_id > 0 ) {
+		if ( 'term' === $object_type && $this->object_id > 0 ) {
 			$term = get_term( $this->object_id );
 			if ( ! is_wp_error( $term ) && $term instanceof \WP_Term ) {
 				$this->object           = $term;
@@ -170,7 +182,7 @@ class Content_Context {
 		$object_id   = $this->object_id;
 
 		// URL-only analysis still needs focus keywords / meta when the URL maps to a post or term.
-		if ( $object_type === 'url' || ( $object_id <= 0 && $this->explicit_url !== '' ) ) {
+		if ( 'url' === $object_type || ( $object_id <= 0 && '' !== $this->explicit_url ) ) {
 			$resolved = SEO_Issues_Manager::resolve_object_from_url( $this->get_object_url() );
 			if ( ! empty( $resolved['object_id'] ) && ! empty( $resolved['object_type'] ) ) {
 				$object_id   = (int) $resolved['object_id'];
@@ -178,7 +190,7 @@ class Content_Context {
 			}
 		}
 
-		if ( $object_type === 'post' && $object_id > 0 ) {
+		if ( 'post' === $object_type && $object_id > 0 ) {
 			$seo_plugin_data = SEO_Plugin_Registry::read_post_seo_resolved( $object_id );
 			$this->seo_data  = array(
 				'title'       => $seo_plugin_data['title'] ?? '',
@@ -198,7 +210,7 @@ class Content_Context {
 			return;
 		}
 
-		if ( $object_type === 'term' && $object_id > 0 ) {
+		if ( 'term' === $object_type && $object_id > 0 ) {
 			$seo_plugin_data = SEO_Plugin_Registry::read_term_seo_resolved( $object_id );
 			$this->seo_data  = array(
 				'title'       => $seo_plugin_data['title'] ?? '',
@@ -227,15 +239,15 @@ class Content_Context {
 	 * @return string
 	 */
 	public function get_object_url() {
-		if ( $this->explicit_url !== '' ) {
+		if ( '' !== $this->explicit_url ) {
 			return $this->explicit_url;
 		}
 
-		if ( $this->object_type === 'post' ) {
+		if ( 'post' === $this->object_type ) {
 			return (string) get_permalink( $this->object_id );
 		}
 
-		if ( $this->object_type === 'term' ) {
+		if ( 'term' === $this->object_type ) {
 			$link = get_term_link( $this->object_id );
 			return is_wp_error( $link ) ? '' : (string) $link;
 		}
@@ -250,7 +262,7 @@ class Content_Context {
 	 * @return void
 	 */
 	public function prepare_full_page_content( $force_download = false ) {
-		if ( $this->object_type !== 'post' && $this->object_type !== 'url' ) {
+		if ( 'post' !== $this->object_type && 'url' !== $this->object_type ) {
 			return;
 		}
 
@@ -271,17 +283,17 @@ class Content_Context {
 	 */
 	public function load_existing_downloaded_content() {
 		$page_url = $this->get_object_url();
-		if ( $page_url === '' ) {
+		if ( '' === $page_url ) {
 			return false;
 		}
 
-		if ( $this->object_type !== 'post' && $this->object_type !== 'url' ) {
+		if ( 'post' !== $this->object_type && 'url' !== $this->object_type ) {
 			return false;
 		}
 
 		$cache_args = array(
 			'post_id'             => $this->object_id > 0 ? $this->object_id : null,
-			'content_type'        => $this->object_type === 'post' ? 'post' : 'url',
+			'content_type'        => 'post' === $this->object_type ? 'post' : 'url',
 			'item_id'             => $this->object_id > 0 ? $this->object_id : null,
 			'require_ok_response' => true,
 		);
@@ -302,17 +314,17 @@ class Content_Context {
 	 */
 	public function download_full_page_content() {
 		$page_url = $this->get_object_url();
-		if ( $page_url === '' ) {
+		if ( '' === $page_url ) {
 			return;
 		}
 
-		if ( $this->object_type !== 'post' && $this->object_type !== 'url' ) {
+		if ( 'post' !== $this->object_type && 'url' !== $this->object_type ) {
 			return;
 		}
 
 		$cache_args = array(
 			'post_id'             => $this->object_id > 0 ? $this->object_id : null,
-			'content_type'        => $this->object_type === 'post' ? 'post' : 'url',
+			'content_type'        => 'post' === $this->object_type ? 'post' : 'url',
 			'item_id'             => $this->object_id > 0 ? $this->object_id : null,
 			'require_ok_response' => true,
 		);
@@ -322,7 +334,7 @@ class Content_Context {
 		if ( ! empty( $cache_response['content'] ) && empty( $cache_response['error'] ) ) {
 			$this->full_page_content = (string) $cache_response['content'];
 			$this->has_full_page     = true;
-			if ( $this->object_type === 'post' && $this->object_id > 0 ) {
+			if ( 'post' === $this->object_type && $this->object_id > 0 ) {
 				update_post_meta( $this->object_id, '_sb_last_page_download', time() );
 			}
 		}

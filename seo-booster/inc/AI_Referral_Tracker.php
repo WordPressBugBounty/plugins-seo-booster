@@ -113,12 +113,12 @@ class AI_Referral_Tracker {
 			$status_code = 200;
 		}
 
-		if ( $status_code === 404 || ( function_exists( 'is_404' ) && is_404() ) ) {
+		if ( 404 === $status_code || ( function_exists( 'is_404' ) && is_404() ) ) {
 			return;
 		}
 
 		$request_path = self::get_request_path();
-		if ( $request_path === '' ) {
+		if ( '' === $request_path ) {
 			return;
 		}
 
@@ -157,7 +157,7 @@ class AI_Referral_Tracker {
 
 		$referer = strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) );
 		$host    = wp_parse_url( $referer, PHP_URL_HOST );
-		if ( ! is_string( $host ) || $host === '' ) {
+		if ( ! is_string( $host ) || '' === $host ) {
 			return array();
 		}
 
@@ -416,7 +416,7 @@ class AI_Referral_Tracker {
 		$where  = 'WHERE hit_date >= %s';
 		$params = array( $since );
 
-		if ( $search !== '' ) {
+		if ( '' !== $search ) {
 			$like     = '%' . $wpdb->esc_like( $search ) . '%';
 			$where   .= ' AND (source LIKE %s OR landing_path LIKE %s OR normalized_url LIKE %s)';
 			$params[] = $like;
@@ -453,9 +453,9 @@ class AI_Referral_Tracker {
 	}
 
 	/**
-	 * Remove referral rows older than the retention window.
+	 * Remove referral rows older than the retention window, then enforce a soft row cap.
 	 *
-	 * @return int Rows deleted.
+	 * @return int Rows deleted (retention + excess).
 	 */
 	public static function cleanup_old_referrals() {
 		global $wpdb;
@@ -465,7 +465,8 @@ class AI_Referral_Tracker {
 			return 0;
 		}
 
-		$days = AI_Bot_Tracker::get_retention_days();
+		$days    = AI_Bot_Tracker::get_retention_days();
+		$deleted = 0;
 
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
 		$wpdb->query(
@@ -475,7 +476,27 @@ class AI_Referral_Tracker {
 			)
 		);
 		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$deleted += (int) $wpdb->rows_affected;
 
-		return (int) $wpdb->rows_affected;
+		$max = AI_Bot_Tracker::get_max_hit_rows();
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table prefix only; aggregate count.
+		$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
+		if ( $count > $max ) {
+			$target            = (int) max( 1000, (int) floor( $max * 0.8 ) );
+			$entries_to_delete = $count - $target;
+			if ( $entries_to_delete > 0 ) {
+				// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
+				$wpdb->query(
+					$wpdb->prepare(
+						"DELETE FROM {$table} ORDER BY hit_date ASC, id ASC LIMIT %d",
+						$entries_to_delete
+					)
+				);
+				// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$deleted += (int) $wpdb->rows_affected;
+			}
+		}
+
+		return $deleted;
 	}
 }

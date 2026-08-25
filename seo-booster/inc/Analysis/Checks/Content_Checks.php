@@ -64,7 +64,14 @@ class Content_Checks extends Abstract_Checks {
 		$content    = $document->text( $scope );
 		$word_count = $this->count_words( $content );
 		if ( $word_count < 300 ) {
-			$results->add_warning( 'content_too_short', sprintf( __( 'The content is too short (%d words detected). Aim for at least 300 words.', 'seo-booster' ), $word_count ) );
+			$results->add_warning(
+				'content_too_short',
+				sprintf(
+					/* translators: %d: detected word count */
+					__( 'The content is too short (%d words detected). Aim for at least 300 words.', 'seo-booster' ),
+					$word_count
+				)
+			);
 			return;
 		}
 
@@ -72,6 +79,7 @@ class Content_Checks extends Abstract_Checks {
 			$results->add_opportunity(
 				'content_below_600_words',
 				sprintf(
+					/* translators: %d: detected word count */
 					__( 'Content is under 600 words (%d detected). Aim higher for AI answer visibility.', 'seo-booster' ),
 					$word_count
 				),
@@ -94,11 +102,11 @@ class Content_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_featured_image( Content_Context $context, Result_Set $results ) {
-		if ( $context->object_type !== 'post' || ! $context->object_id ) {
+		if ( 'post' !== $context->object_type || ! $context->object_id ) {
 			return;
 		}
 
-		if ( $context->object && $context->object->post_type === 'attachment' ) {
+		if ( $context->object && 'attachment' === $context->object->post_type ) {
 			return;
 		}
 
@@ -127,7 +135,7 @@ class Content_Checks extends Abstract_Checks {
 	 */
 	private function check_faq_heading( Content_Context $context, Html_Document $document, Result_Set $results, $scope ) {
 		$scope_html = $document->get_scope_html( $scope );
-		if ( $context->object_type === 'post' && ! empty( $context->rendered_content ) && ! $context->has_full_page ) {
+		if ( 'post' === $context->object_type && ! empty( $context->rendered_content ) && ! $context->has_full_page ) {
 			$scope_html = $context->rendered_content;
 		}
 
@@ -161,21 +169,35 @@ class Content_Checks extends Abstract_Checks {
 		$h1_texts = array();
 
 		foreach ( $h1_nodes as $node ) {
-			$text = trim( wp_strip_all_tags( $node->textContent ?? '' ) );
+			$text = trim( wp_strip_all_tags( $node->{'textContent'} ?? '' ) );
 			if ( ! empty( $text ) ) {
 				++$h1_count;
 				$h1_texts[] = $text;
 			}
 		}
 
-		if ( 0 === $h1_count && $context->object_type === 'post' && $context->object && ! empty( $context->object->post_title ) && ! $context->has_full_page ) {
-			$results->add_good( 'h1_ok', sprintf( __( 'Good H1 heading structure. Found: "%s"', 'seo-booster' ), $context->object->post_title ) );
+		if ( 0 === $h1_count && 'post' === $context->object_type && $context->object && ! empty( $context->object->post_title ) && ! $context->has_full_page ) {
+			$results->add_good(
+				'h1_ok',
+				sprintf(
+					/* translators: %s: H1 heading text */
+					__( 'Good H1 heading structure. Found: "%s"', 'seo-booster' ),
+					$context->object->post_title
+				)
+			);
 		} elseif ( 0 === $h1_count ) {
 			$results->add_warning( 'no_h1', __( 'No H1 heading found. Add an H1 heading to your content.', 'seo-booster' ) );
 		} elseif ( $h1_count > 1 ) {
 			$results->add_warning( 'multiple_h1', __( 'Multiple H1 headings found. Use only one H1 per page.', 'seo-booster' ) );
 		} else {
-			$results->add_good( 'h1_ok', sprintf( __( 'Good H1 heading structure. Found: "%s"', 'seo-booster' ), $h1_texts[0] ) );
+			$results->add_good(
+				'h1_ok',
+				sprintf(
+					/* translators: %s: H1 heading text */
+					__( 'Good H1 heading structure. Found: "%s"', 'seo-booster' ),
+					$h1_texts[0]
+				)
+			);
 		}
 
 		$h2_count   = count( $document->headings( $scope, 'h2' ) );
@@ -183,7 +205,14 @@ class Content_Checks extends Abstract_Checks {
 		if ( 0 === $h2_count && $word_count > 500 ) {
 			$results->add_opportunity( 'no_h2', __( 'Consider adding H2 headings to structure your content.', 'seo-booster' ) );
 		} elseif ( $h2_count > 0 ) {
-			$results->add_good( 'has_h2_headings', sprintf( __( 'Found %d H2 heading(s) for good content structure.', 'seo-booster' ), $h2_count ) );
+			$results->add_good(
+				'has_h2_headings',
+				sprintf(
+					/* translators: %d: number of H2 headings */
+					__( 'Found %d H2 heading(s) for good content structure.', 'seo-booster' ),
+					$h2_count
+				)
+			);
 		}
 	}
 
@@ -242,7 +271,7 @@ class Content_Checks extends Abstract_Checks {
 	 * @return void
 	 */
 	private function check_contact_info( Content_Context $context, Html_Document $document, Result_Set $results, $scope ) {
-		if ( $context->object_type !== 'post' || ! $context->object || $context->object->post_type !== 'page' ) {
+		if ( 'post' !== $context->object_type || ! $context->object || 'page' !== $context->object->post_type ) {
 			return;
 		}
 
@@ -268,7 +297,14 @@ class Content_Checks extends Abstract_Checks {
 			return;
 		}
 
-		$results->add_good( 'has_contact_info', sprintf( __( 'Found contact information (%d type(s)).', 'seo-booster' ), $found ) );
+		$results->add_good(
+			'has_contact_info',
+			sprintf(
+				/* translators: %d: number of contact information types found */
+				__( 'Found contact information (%d type(s)).', 'seo-booster' ),
+				$found
+			)
+		);
 	}
 
 	/**
@@ -318,7 +354,7 @@ class Content_Checks extends Abstract_Checks {
 				return trim( $s ) !== '';
 			}
 		);
-		$words = $this->count_words( $text_content );
+		$words     = $this->count_words( $text_content );
 		if ( ! empty( $sentences ) ) {
 			$avg = $words / count( $sentences );
 			if ( $avg <= 15 ) {
@@ -339,7 +375,7 @@ class Content_Checks extends Abstract_Checks {
 				continue;
 			}
 
-			$p_text = trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $node->textContent ?? '' ) ) );
+			$p_text = trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $node->{'textContent'} ?? '' ) ) );
 			if ( empty( $p_text ) ) {
 				continue;
 			}
@@ -377,7 +413,11 @@ class Content_Checks extends Abstract_Checks {
 
 		$results->add_opportunity(
 			'long_paragraphs',
-			sprintf( __( '%d paragraphs are quite long. Consider breaking them up for better readability.', 'seo-booster' ), $long_paragraphs ),
+			sprintf(
+				/* translators: %d: number of long paragraphs */
+				__( '%d paragraphs are quite long. Consider breaking them up for better readability.', 'seo-booster' ),
+				$long_paragraphs
+			),
 			array( 'long_paragraphs' => $long_paragraphs_list )
 		);
 	}
@@ -401,7 +441,14 @@ class Content_Checks extends Abstract_Checks {
 		}
 
 		if ( $missing > 0 ) {
-			$results->add_opportunity( 'missing_form_labels', sprintf( __( '%d form inputs may be missing labels. Consider adding labels or aria-label attributes.', 'seo-booster' ), $missing ) );
+			$results->add_opportunity(
+				'missing_form_labels',
+				sprintf(
+					/* translators: %d: number of form inputs that may be missing labels */
+					__( '%d form inputs may be missing labels. Consider adding labels or aria-label attributes.', 'seo-booster' ),
+					$missing
+				)
+			);
 			return;
 		}
 

@@ -43,11 +43,11 @@ class SB_AI_Bots_List_Table extends \WP_List_Table {
     }
 
     public function no_items() {
-        if ( $this->view === 'noise' ) {
+        if ( 'noise' === $this->view ) {
             esc_html_e( 'No unmapped or trap traffic recorded for this period.', 'seo-booster' );
             return;
         }
-        if ( $this->view === 'by_bot' ) {
+        if ( 'by_bot' === $this->view ) {
             esc_html_e( 'No AI bot visits recorded for this period.', 'seo-booster' );
             return;
         }
@@ -55,7 +55,7 @@ class SB_AI_Bots_List_Table extends \WP_List_Table {
     }
 
     public function get_columns() {
-        if ( $this->view === 'by_bot' ) {
+        if ( 'by_bot' === $this->view ) {
             return array(
                 'bot_name'     => _x( 'Bot', 'Column label', 'seo-booster' ),
                 'bot_purpose'  => _x( 'Purpose', 'Column label', 'seo-booster' ),
@@ -65,7 +65,7 @@ class SB_AI_Bots_List_Table extends \WP_List_Table {
                 'last_seen'    => _x( 'Last seen', 'Column label', 'seo-booster' ),
             );
         }
-        if ( $this->view === 'noise' ) {
+        if ( 'noise' === $this->view ) {
             return array(
                 'request_path' => _x( 'Request path', 'Column label', 'seo-booster' ),
                 'bot_name'     => _x( 'Bot', 'Column label', 'seo-booster' ),
@@ -88,14 +88,14 @@ class SB_AI_Bots_List_Table extends \WP_List_Table {
     }
 
     protected function get_sortable_columns() {
-        if ( $this->view === 'by_bot' ) {
+        if ( 'by_bot' === $this->view ) {
             return array(
                 'bot_name'  => array('bot_name', false),
                 'visits'    => array('visits', true),
                 'last_seen' => array('last_seen', true),
             );
         }
-        if ( $this->view === 'noise' ) {
+        if ( 'noise' === $this->view ) {
             return array(
                 'request_path' => array('request_path', false),
                 'bot_name'     => array('bot_name', false),
@@ -111,7 +111,7 @@ class SB_AI_Bots_List_Table extends \WP_List_Table {
     }
 
     public function get_bulk_actions() {
-        if ( $this->view === 'noise' ) {
+        if ( 'noise' === $this->view ) {
             return array(
                 'purge_noise' => __( 'Purge all noise data', 'seo-booster' ),
             );
@@ -129,7 +129,7 @@ class SB_AI_Bots_List_Table extends \WP_List_Table {
         $filter_min_visits = ( isset( $_REQUEST['filter_min_visits'] ) ? (int) $_REQUEST['filter_min_visits'] : 1 );
         $crawlers = AI_Bot_Tracker::get_crawlers();
         echo '<div class="alignleft actions">';
-        if ( $this->view === 'content' ) {
+        if ( 'content' === $this->view ) {
             echo '<label class="screen-reader-text" for="filter-object-type">' . esc_html__( 'Filter by type', 'seo-booster' ) . '</label>';
             echo '<select name="filter_object_type" id="filter-object-type">';
             echo '<option value="">' . esc_html__( 'All types', 'seo-booster' ) . '</option>';
@@ -145,11 +145,12 @@ class SB_AI_Bots_List_Table extends \WP_List_Table {
             echo '<label class="screen-reader-text" for="filter-min-visits">' . esc_html__( 'Minimum visits', 'seo-booster' ) . '</label>';
             echo '<select name="filter_min_visits" id="filter-min-visits">';
             foreach ( array(1, 5, 10) as $min ) {
+                /* translators: %d: minimum visit count filter. */
                 echo '<option value="' . esc_attr( $min ) . '"' . selected( $filter_min_visits, $min, false ) . '>' . esc_html( sprintf( __( 'Min %d visits', 'seo-booster' ), $min ) ) . '</option>';
             }
             echo '</select>';
         }
-        if ( $this->view !== 'by_bot' ) {
+        if ( 'by_bot' !== $this->view ) {
             echo '<label class="screen-reader-text" for="filter-bot">' . esc_html__( 'Filter by bot', 'seo-booster' ) . '</label>';
             echo '<select name="filter_bot" id="filter-bot">';
             echo '<option value="">' . esc_html__( 'All bots', 'seo-booster' ) . '</option>';
@@ -377,7 +378,7 @@ class SB_AI_Bots_List_Table extends \WP_List_Table {
         if ( in_array( $orderby, $valid, true ) ) {
             return $orderby;
         }
-        return ( $this->view === 'content' ? 'visits' : 'last_seen' );
+        return ( 'content' === $this->view ? 'visits' : 'last_seen' );
     }
 
     protected function sanitize_order( $order ) {
@@ -402,7 +403,7 @@ class SB_AI_Bots_List_Table extends \WP_List_Table {
         $filter_object_type = ( isset( $_REQUEST['filter_object_type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['filter_object_type'] ) ) : '' );
         $filter_min_visits = ( isset( $_REQUEST['filter_min_visits'] ) ? (int) $_REQUEST['filter_min_visits'] : 1 );
         $orderby = filter_input( INPUT_GET, 'orderby' );
-        $orderby = ( !empty( $orderby ) ? sanitize_text_field( $orderby ) : (( $this->view === 'content' ? 'visits' : 'last_seen' )) );
+        $orderby = ( !empty( $orderby ) ? sanitize_text_field( $orderby ) : (( 'content' === $this->view ? 'visits' : 'last_seen' )) );
         $orderby = $this->sanitize_orderby( $orderby );
         $order = filter_input( INPUT_GET, 'order' );
         $order = ( !empty( $order ) ? $this->sanitize_order( sanitize_text_field( $order ) ) : 'DESC' );
@@ -418,9 +419,9 @@ class SB_AI_Bots_List_Table extends \WP_List_Table {
             'filter_object_type' => $filter_object_type,
             'min_visits'         => max( 1, $filter_min_visits ),
         );
-        if ( $this->view === 'by_bot' ) {
+        if ( 'by_bot' === $this->view ) {
             $result = AI_Bot_Tracker::get_bot_hits( $args );
-        } elseif ( $this->view === 'noise' ) {
+        } elseif ( 'noise' === $this->view ) {
             $result = AI_Bot_Tracker::get_noise_hits( $args );
         } else {
             $result = AI_Bot_Tracker::get_content_hits( $args );

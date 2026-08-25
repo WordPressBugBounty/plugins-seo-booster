@@ -106,10 +106,10 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 				$desc = (string) $meta->description->getDescription( (int) $post_id );
 			}
 
-			if ( $title !== '' || $desc !== '' ) {
+			if ( '' !== $title || '' !== $desc ) {
 				return array(
-					'title'       => sanitize_text_field( $title !== '' ? $title : $raw['title'] ),
-					'description' => sanitize_textarea_field( $desc !== '' ? $desc : $raw['description'] ),
+					'title'       => sanitize_text_field( '' !== $title ? $title : $raw['title'] ),
+					'description' => sanitize_textarea_field( '' !== $desc ? $desc : $raw['description'] ),
 				);
 			}
 		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Keep raw.
@@ -212,11 +212,73 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 	}
 
 	/**
+	 * Resolve taxonomy templates / smart tags via AIOSEO getTermTitle / getTermDescription.
+	 *
+	 * Custom per-term values from `aioseo_terms` (Pro) are preferred when present and not
+	 * template-like; otherwise taxonomy-level templates are expanded.
+	 *
 	 * @param int $term_id Term ID.
 	 * @return array{title: string, description: string}
 	 */
 	public function read_term_seo_resolved( $term_id ) {
-		return $this->read_term_seo( $term_id );
+		$raw  = $this->read_term_seo( $term_id );
+		$term = get_term( (int) $term_id );
+		if ( ! $term || is_wp_error( $term ) || ! isset( $term->term_id, $term->taxonomy ) ) {
+			return $raw;
+		}
+		if ( ! function_exists( 'aioseo' ) ) {
+			return $raw;
+		}
+
+		try {
+			$aioseo = aioseo();
+			if ( ! is_object( $aioseo ) || ! isset( $aioseo->meta ) || ! is_object( $aioseo->meta ) ) {
+				return $raw;
+			}
+
+			$meta  = $aioseo->meta;
+			$title = $raw['title'];
+			$desc  = $raw['description'];
+
+			// Expand smart tags on custom term values when helpers are available.
+			if ( isset( $meta->title ) && is_object( $meta->title ) && isset( $meta->title->helpers ) && is_object( $meta->title->helpers ) && method_exists( $meta->title->helpers, 'prepare' ) ) {
+				if ( '' !== $title && Abstract_Post_Meta_Adapter::looks_like_seo_template( $title ) ) {
+					$prepared = (string) $meta->title->helpers->prepare( $title, (int) $term->term_id );
+					if ( '' !== $prepared ) {
+						$title = $prepared;
+					}
+				}
+			}
+			if ( isset( $meta->description ) && is_object( $meta->description ) && isset( $meta->description->helpers ) && is_object( $meta->description->helpers ) && method_exists( $meta->description->helpers, 'prepare' ) ) {
+				if ( '' !== $desc && Abstract_Post_Meta_Adapter::looks_like_seo_template( $desc ) ) {
+					$prepared = (string) $meta->description->helpers->prepare( $desc, false );
+					if ( '' !== $prepared ) {
+						$desc = $prepared;
+					}
+				}
+			}
+
+			if ( ( '' === $title || Abstract_Post_Meta_Adapter::looks_like_seo_template( $title ) ) && isset( $meta->title ) && is_object( $meta->title ) && method_exists( $meta->title, 'getTermTitle' ) ) {
+				$resolved = (string) $meta->title->getTermTitle( $term );
+				if ( '' !== $resolved ) {
+					$title = $resolved;
+				}
+			}
+			if ( ( '' === $desc || Abstract_Post_Meta_Adapter::looks_like_seo_template( $desc ) ) && isset( $meta->description ) && is_object( $meta->description ) && method_exists( $meta->description, 'getTermDescription' ) ) {
+				$resolved = (string) $meta->description->getTermDescription( $term );
+				if ( '' !== $resolved ) {
+					$desc = $resolved;
+				}
+			}
+
+			return array(
+				'title'       => sanitize_text_field( '' !== $title ? $title : $raw['title'] ),
+				'description' => sanitize_textarea_field( '' !== $desc ? $desc : $raw['description'] ),
+			);
+		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Keep raw.
+		}
+
+		return $raw;
 	}
 
 	/**
@@ -339,11 +401,11 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 	public function find_duplicate_posts( $field, $value, $exclude_id ) {
 		global $wpdb;
 
-		if ( $value === '' || ! in_array( $field, array( 'title', 'description' ), true ) ) {
+		if ( '' === $value || ! in_array( $field, array( 'title', 'description' ), true ) ) {
 			return array();
 		}
 
-		$column = $field === 'title' ? 'title' : 'description';
+		$column = 'title' === $field ? 'title' : 'description';
 		$table  = $wpdb->prefix . 'aioseo_posts';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -378,11 +440,11 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 	public function find_duplicate_terms( $field, $value, $exclude_id ) {
 		global $wpdb;
 
-		if ( $value === '' || ! in_array( $field, array( 'title', 'description' ), true ) ) {
+		if ( '' === $value || ! in_array( $field, array( 'title', 'description' ), true ) ) {
 			return array();
 		}
 
-		$column = $field === 'title' ? 'title' : 'description';
+		$column = 'title' === $field ? 'title' : 'description';
 		$table  = $wpdb->prefix . 'aioseo_terms';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -631,7 +693,7 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 			return $keyword;
 		}
 
-		if ( $keyword === '' ) {
+		if ( '' === $keyword ) {
 			return implode( ', ', $existing );
 		}
 
@@ -650,7 +712,7 @@ class Aioseo_Adapter implements SEO_Plugin_Adapter_Interface {
 	 */
 	private function parse_keyword_list( $raw ) {
 		$raw = trim( (string) $raw );
-		if ( $raw === '' ) {
+		if ( '' === $raw ) {
 			return array();
 		}
 

@@ -815,16 +815,16 @@ class SEO_Plugin_Registry {
 			return false;
 		}
 
-		if ( $object_type === 'term' ) {
-			if ( $field === 'title' ) {
+		if ( 'term' === $object_type ) {
+			if ( 'title' === $field ) {
 				$adapter->write_term_title( $object_id, $value );
 				return true;
 			}
-			if ( $field === 'description' ) {
+			if ( 'description' === $field ) {
 				$adapter->write_term_description( $object_id, $value );
 				return true;
 			}
-			if ( $field === 'focus_keyword' && $adapter->supports_focus_keyword() ) {
+			if ( 'focus_keyword' === $field && $adapter->supports_focus_keyword() ) {
 				$adapter->write_focus_keyword_for_term( $object_id, $value, $append_focus_keyword );
 				return true;
 			}
@@ -832,15 +832,15 @@ class SEO_Plugin_Registry {
 			return false;
 		}
 
-		if ( $field === 'title' ) {
+		if ( 'title' === $field ) {
 			$adapter->write_post_title( $object_id, $value );
 			return true;
 		}
-		if ( $field === 'description' ) {
+		if ( 'description' === $field ) {
 			$adapter->write_post_description( $object_id, $value );
 			return true;
 		}
-		if ( $field === 'focus_keyword' && $adapter->supports_focus_keyword() ) {
+		if ( 'focus_keyword' === $field && $adapter->supports_focus_keyword() ) {
 			$adapter->write_focus_keyword( $object_id, $value, $append_focus_keyword );
 			return true;
 		}
@@ -871,15 +871,15 @@ class SEO_Plugin_Registry {
 		$labels = array_values( array_filter( $labels ) );
 		$count  = count( $labels );
 
-		if ( $count === 0 ) {
+		if ( 0 === $count ) {
 			return '';
 		}
 
-		if ( $count === 1 ) {
+		if ( 1 === $count ) {
 			return $labels[0];
 		}
 
-		if ( $count === 2 ) {
+		if ( 2 === $count ) {
 			return $labels[0] . ' ' . __( 'or', 'seo-booster' ) . ' ' . $labels[1];
 		}
 

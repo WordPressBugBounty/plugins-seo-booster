@@ -56,7 +56,7 @@ class Media_Library_Enhancements {
 		$new_columns = array();
 		foreach ( $columns as $key => $value ) {
 			$new_columns[ $key ] = $value;
-			if ( $key === 'title' ) {
+			if ( 'title' === $key ) {
 				$new_columns['sb_alt_text'] = __( 'Alt Text', 'seo-booster' );
 			}
 		}
@@ -78,7 +78,7 @@ class Media_Library_Enhancements {
 	 * @return void
 	 */
 	public static function display_alt_text_column( $column_name, $post_id ) {
-		if ( $column_name !== 'sb_alt_text' ) {
+		if ( 'sb_alt_text' !== $column_name ) {
 			return;
 		}
 
@@ -117,9 +117,11 @@ class Media_Library_Enhancements {
 	 * @return string Modified redirect URL.
 	 */
 	public static function handle_bulk_action( $redirect_to, $action, $post_ids ) {
-		if ( $action !== 'sb_generate_ai_content' ) {
+		if ( 'sb_generate_ai_content' !== $action ) {
 			return $redirect_to;
 		}
+
+		check_admin_referer( 'bulk-media' );
 
 		$ai_provider = LLM_Helper::get_selected_ai_provider();
 		if ( ! in_array( $ai_provider, array( 'WordPress', 'seobooster' ), true ) ) {
@@ -205,7 +207,7 @@ class Media_Library_Enhancements {
 		$batch_id      = isset( $_POST['batch_id'] ) ? sanitize_text_field( $_POST['batch_id'] ) : '';
 		$attachment_id = isset( $_POST['attachment_id'] ) ? intval( $_POST['attachment_id'] ) : 0;
 
-		if ( empty( $batch_id ) || $attachment_id === 0 ) {
+		if ( empty( $batch_id ) || 0 === $attachment_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid parameters', 'seo-booster' ) ) );
 		}
 
@@ -229,7 +231,7 @@ class Media_Library_Enhancements {
 		}
 
 		// Check if batch is cancelled
-		if ( isset( $batch_status['cancelled'] ) && $batch_status['cancelled'] === true ) {
+		if ( isset( $batch_status['cancelled'] ) && true === $batch_status['cancelled'] ) {
 			wp_send_json_error( array( 'message' => __( 'Batch was cancelled', 'seo-booster' ) ) );
 		}
 
@@ -343,9 +345,9 @@ class Media_Library_Enhancements {
 			$batch_status['processing_ids'] = array();
 		}
 
-		if ( $status === 'processed' ) {
+		if ( 'processed' === $status ) {
 			$batch_status['processed'] = isset( $batch_status['processed'] ) ? $batch_status['processed'] + 1 : 1;
-			if ( $attachment_id > 0 && ! in_array( $attachment_id, $batch_status['processed_ids'] ) ) {
+			if ( $attachment_id > 0 && ! in_array( $attachment_id, $batch_status['processed_ids'], true ) ) {
 				$batch_status['processed_ids'][] = $attachment_id;
 				// Store the title of the last processed image
 				$image_title = get_the_title( $attachment_id );
@@ -358,9 +360,9 @@ class Media_Library_Enhancements {
 			if ( isset( $batch_status['processing'] ) && $batch_status['processing'] > 0 ) {
 				$batch_status['processing'] = $batch_status['processing'] - 1;
 			}
-		} elseif ( $status === 'failed' ) {
+		} elseif ( 'failed' === $status ) {
 			$batch_status['failed'] = isset( $batch_status['failed'] ) ? $batch_status['failed'] + 1 : 1;
-			if ( $attachment_id > 0 && ! in_array( $attachment_id, $batch_status['failed_ids'] ) ) {
+			if ( $attachment_id > 0 && ! in_array( $attachment_id, $batch_status['failed_ids'], true ) ) {
 				$batch_status['failed_ids'][] = $attachment_id;
 			}
 			// Remove from processing
@@ -368,9 +370,9 @@ class Media_Library_Enhancements {
 			if ( isset( $batch_status['processing'] ) && $batch_status['processing'] > 0 ) {
 				$batch_status['processing'] = $batch_status['processing'] - 1;
 			}
-		} elseif ( $status === 'processing' ) {
+		} elseif ( 'processing' === $status ) {
 			$batch_status['processing'] = isset( $batch_status['processing'] ) ? $batch_status['processing'] + 1 : 1;
-			if ( $attachment_id > 0 && ! in_array( $attachment_id, $batch_status['processing_ids'] ) ) {
+			if ( $attachment_id > 0 && ! in_array( $attachment_id, $batch_status['processing_ids'], true ) ) {
 				$batch_status['processing_ids'][] = $attachment_id;
 			}
 		}
@@ -422,8 +424,8 @@ class Media_Library_Enhancements {
 		// Calculate remaining (queued minus completed)
 		$remaining = max( 0, $queued - $processed - $failed );
 
-		$completed = ( $remaining === 0 && $queued > 0 && $processing === 0 );
-		$cancelled = isset( $batch_status['cancelled'] ) && $batch_status['cancelled'] === true;
+		$completed = ( 0 === $remaining && $queued > 0 && 0 === $processing );
+		$cancelled = isset( $batch_status['cancelled'] ) && true === $batch_status['cancelled'];
 
 		// Get next attachment ID to process if not completed
 		$next_attachment_id = 0;
@@ -434,7 +436,7 @@ class Media_Library_Enhancements {
 			$completed_ids  = array_merge( $processed_ids, $failed_ids, $processing_ids );
 
 			foreach ( $batch_status['attachment_ids'] as $id ) {
-				if ( ! in_array( $id, $completed_ids ) ) {
+				if ( ! in_array( $id, $completed_ids, true ) ) {
 					$next_attachment_id = $id;
 					break;
 				}
@@ -517,7 +519,11 @@ class Media_Library_Enhancements {
 		// Clean up transient after a short delay (to allow UI to show cancelled state)
 		wp_send_json_success(
 			array(
-				'message'         => sprintf( __( 'Cancelled %d pending job(s)', 'seo-booster' ), $cancelled_count ),
+				'message'         => sprintf(
+					/* translators: %d: number of cancelled bulk jobs */
+					__( 'Cancelled %d pending job(s)', 'seo-booster' ),
+					$cancelled_count
+				),
 				'cancelled_count' => $cancelled_count,
 			)
 		);
@@ -553,7 +559,7 @@ class Media_Library_Enhancements {
 
 			if ( $batch_status && is_array( $batch_status ) ) {
 				// Skip if batch is cancelled
-				if ( isset( $batch_status['cancelled'] ) && $batch_status['cancelled'] === true ) {
+				if ( isset( $batch_status['cancelled'] ) && true === $batch_status['cancelled'] ) {
 					continue;
 				}
 
@@ -580,7 +586,7 @@ class Media_Library_Enhancements {
 	 */
 	public static function enqueue_scripts( $hook ) {
 		// Only on media library page
-		if ( $hook !== 'upload.php' ) {
+		if ( 'upload.php' !== $hook ) {
 			return;
 		}
 
@@ -599,12 +605,7 @@ class Media_Library_Enhancements {
 		// Check for error parameters
 		$error = isset( $_GET['sb_bulk_error'] ) ? sanitize_text_field( $_GET['sb_bulk_error'] ) : '';
 
-		// Only enqueue script if we have a batch ID or error (no need to load if nothing is happening)
-		if ( empty( $batch_id ) && empty( $error ) ) {
-			// Check localStorage for batch ID (will be checked in JS)
-			// Still load script but with empty batch_id so JS can check localStorage
-			// But we'll optimize JS to not poll if nothing found
-		}
+		// JS also checks localStorage when batch_id is empty.
 
 		// Enqueue script
 		Utils::enqueue_modal_assets();
@@ -630,10 +631,15 @@ class Media_Library_Enhancements {
 					'processing'        => __( 'Processing...', 'seo-booster' ),
 					'completed'         => __( 'Completed', 'seo-booster' ),
 					'error'             => __( 'Error', 'seo-booster' ),
+					/* translators: 1: number processed so far, 2: total images in batch */
 					'processing_status' => __( 'Processing %1$d of %2$d images...', 'seo-booster' ),
+					/* translators: %d: number of images processed successfully */
 					'completed_status'  => __( 'Completed: %d processed successfully', 'seo-booster' ),
+					/* translators: %d: number of failed images */
 					'failed_status'     => __( '%d failed', 'seo-booster' ),
+					/* translators: %d: number of images still pending */
 					'remaining_status'  => __( '%d remaining', 'seo-booster' ),
+					/* translators: %s: title of the last processed image */
 					'last_processed'    => __( 'Last: "%s"', 'seo-booster' ),
 					'cancelled'         => __( 'Cancelled', 'seo-booster' ),
 					'cancel'            => __( 'Cancel', 'seo-booster' ),

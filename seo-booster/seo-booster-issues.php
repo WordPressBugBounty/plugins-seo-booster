@@ -164,13 +164,7 @@ function render_seo_issues_page() {
 	$urls_filter_url  = SEO_Issues_Manager::get_possibilities_page_url( array( 'view' => 'url' ) );
 	$total_filter_url = $filter_clear_url;
 
-	$upgrade_url = 'https://seoboosterpro.com/pricing/';
-	if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) && method_exists( seobooster_fs(), 'get_upgrade_url' ) ) {
-		$fs_upgrade = seobooster_fs()->get_upgrade_url();
-		if ( is_string( $fs_upgrade ) && '' !== $fs_upgrade ) {
-			$upgrade_url = $fs_upgrade;
-		}
-	}
+	$upgrade_url = Utils::get_pro_upgrade_url( 'possibilities_pro_strip' );
 
 	?>
 	<div class="wrap sb-wrap sb-dashboard sb-seo-issues-page">
@@ -374,9 +368,9 @@ function render_seo_issues_page() {
 										<?php
 										$type_urls_url = SEO_Issues_Manager::get_possibilities_page_url(
 											array(
-												'view'       => 'url',
+												'view'     => 'url',
 												'issue_type' => $type_row['issue_key'],
-												'severity'   => $current_severity,
+												'severity' => $current_severity,
 											)
 										);
 										?>
@@ -426,6 +420,7 @@ function render_seo_issues_page() {
 							esc_html( $active_type_label )
 						);
 						?>
+						<?php esc_html_e( 'Each row still lists every open possibility on that URL.', 'seo-booster' ); ?>
 					</p>
 				<?php endif; ?>
 

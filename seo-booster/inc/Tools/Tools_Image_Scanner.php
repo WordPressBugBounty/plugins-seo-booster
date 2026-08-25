@@ -50,7 +50,7 @@ class Tools_Image_Scanner {
 		 * @since 7.0.4
 		 * @param string[] $types MIME type strings.
 		 */
-		return apply_filters( 'sb_tools_processable_mime_types', $types );
+		return apply_filters( 'seobooster_tools_processable_mime_types', $types );
 	}
 
 	/**
@@ -142,15 +142,17 @@ class Tools_Image_Scanner {
 				continue;
 			}
 
-			$thumb   = wp_get_attachment_image_src( $attachment_id, 'thumbnail' );
-			$items[] = array(
+			$thumb     = wp_get_attachment_image_src( $attachment_id, 'thumbnail' );
+			$edit_link = get_edit_post_link( $attachment_id, 'raw' );
+			$view_link = wp_get_attachment_url( $attachment_id );
+			$items[]   = array(
 				'id'        => $attachment_id,
 				'title'     => $meta['title'],
-				'filename'  => wp_basename( get_attached_file( $attachment_id ) ?: '' ),
+				'filename'  => wp_basename( get_attached_file( $attachment_id ) ? get_attached_file( $attachment_id ) : '' ),
 				'thumb_url' => $thumb ? $thumb[0] : '',
 				'issues'    => $issues,
-				'edit_url'  => get_edit_post_link( $attachment_id, 'raw' ),
-				'view_url'  => wp_get_attachment_url( $attachment_id ) ?: '',
+				'edit_url'  => $edit_link ? $edit_link : '',
+				'view_url'  => $view_link ? $view_link : '',
 				'meta'      => array(
 					'alt_text'    => $meta['alt_text'],
 					'caption'     => $meta['caption'],
@@ -324,11 +326,11 @@ class Tools_Image_Scanner {
 	public static function ai_is_available() {
 		$ai_provider = LLM_Helper::get_selected_ai_provider();
 
-		if ( $ai_provider === 'WordPress' ) {
+		if ( 'WordPress' === $ai_provider ) {
 			return AI_Image_Generator::model_supports_vision();
 		}
 
-		if ( $ai_provider === 'seobooster' ) {
+		if ( 'seobooster' === $ai_provider ) {
 			return Credits_Service::is_credits_provider_usable() && AI_Image_Generator::model_supports_vision();
 		}
 
@@ -343,11 +345,11 @@ class Tools_Image_Scanner {
 	public static function get_ai_unavailable_message() {
 		$ai_provider = LLM_Helper::get_selected_ai_provider();
 
-		if ( $ai_provider === 'WordPress' ) {
+		if ( 'WordPress' === $ai_provider ) {
 			return LLM_Helper::wp_ai_image_metadata_unavailable_message();
 		}
 
-		if ( $ai_provider === 'seobooster' ) {
+		if ( 'seobooster' === $ai_provider ) {
 			if ( ! Credits_Service::is_credits_provider_usable() ) {
 				return __( 'SEO Booster Credits are not available yet.', 'seo-booster' );
 			}
@@ -369,12 +371,12 @@ class Tools_Image_Scanner {
 	public static function get_ai_notice_type() {
 		$ai_provider = LLM_Helper::get_selected_ai_provider();
 
-		if ( $ai_provider === 'WordPress' ) {
+		if ( 'WordPress' === $ai_provider ) {
 			$context = LLM_Helper::wp_ai_image_metadata_notice_context();
 			return $context['type'];
 		}
 
-		if ( $ai_provider === 'seobooster' ) {
+		if ( 'seobooster' === $ai_provider ) {
 			return AI_Image_Generator::model_supports_vision() ? 'ok' : 'credits';
 		}
 

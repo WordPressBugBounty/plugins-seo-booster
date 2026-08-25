@@ -52,7 +52,7 @@ class SB_Autolink_Ajax {
 			array( '%d' )
 		);
 
-		if ( $result !== false ) {
+		if ( false !== $result ) {
 			Utils::log( "Keyword or URL updated successfully for ID: $id", 0 );
 			Seobooster2::flush_autolink_caches();
 			wp_send_json_success();

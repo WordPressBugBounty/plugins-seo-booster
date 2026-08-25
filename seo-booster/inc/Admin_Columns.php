@@ -43,7 +43,7 @@ class Admin_Columns {
 		$post_types = get_post_types( array( 'public' => true ), 'objects' );
 
 		foreach ( $post_types as $post_type ) {
-			if ( $post_type->name === 'attachment' ) {
+			if ( 'attachment' === $post_type->name ) {
 				continue;
 			}
 
@@ -65,7 +65,7 @@ class Admin_Columns {
 
 		// Insert SEO column before the date column
 		$date_index = array_search( 'date', array_keys( $columns ) );
-		if ( $date_index !== false ) {
+		if ( false !== $date_index ) {
 			$columns = array_merge(
 				array_slice( $columns, 0, $date_index ),
 				$seo_columns,
@@ -102,7 +102,7 @@ class Admin_Columns {
 	 * @return void
 	 */
 	public static function display_seo_column_content( $column_name, $post_id ) {
-		if ( $column_name !== 'seo_status' ) {
+		if ( 'seo_status' !== $column_name ) {
 			return;
 		}
 
@@ -117,7 +117,7 @@ class Admin_Columns {
 		$seo_score        = null;
 
 		// Check if score exists and is not null (score can be 0, which is valid)
-		if ( $analysis_results && array_key_exists( 'score', $analysis_results ) && $analysis_results['score'] !== null ) {
+		if ( $analysis_results && array_key_exists( 'score', $analysis_results ) && null !== $analysis_results['score'] ) {
 			$seo_score = (int) $analysis_results['score'];
 		}
 
@@ -129,7 +129,7 @@ class Admin_Columns {
 		}
 
 		// Add SEO analysis score if available
-		if ( $seo_score !== null ) {
+		if ( null !== $seo_score ) {
 			$score_class = 'sb-seo-score';
 			if ( $seo_score >= 80 ) {
 				$score_class .= ' sb-seo-score-good';
@@ -160,7 +160,7 @@ class Admin_Columns {
 	 * @return string Modified content.
 	 */
 	public static function display_taxonomy_column_content( $content, $column_name, $term_id ) {
-		if ( $column_name !== 'seo_status' ) {
+		if ( 'seo_status' !== $column_name ) {
 			return $content;
 		}
 
@@ -168,7 +168,7 @@ class Admin_Columns {
 		$analysis_results = \Cleverplugins\SEOBooster\SEO_Analysis::get_saved_analysis( $term_id, 'term' );
 		$seo_score        = null;
 		// Check if score exists and is not null (score can be 0, which is valid)
-		if ( $analysis_results && array_key_exists( 'score', $analysis_results ) && $analysis_results['score'] !== null ) {
+		if ( $analysis_results && array_key_exists( 'score', $analysis_results ) && null !== $analysis_results['score'] ) {
 			$seo_score = (int) $analysis_results['score'];
 		}
 
@@ -180,7 +180,7 @@ class Admin_Columns {
 		}
 
 		// Add SEO analysis score if available
-		if ( $seo_score !== null ) {
+		if ( null !== $seo_score ) {
 			$score_class = 'sb-seo-score';
 			if ( $seo_score >= 80 ) {
 				$score_class .= ' sb-seo-score-good';

@@ -62,7 +62,7 @@ class LLM_Helper {
 
 		// Try WPML post language details (modern WPML hook)
 		if ( ! $detected_locale && has_filter( 'wpml_post_language_details' ) ) {
-			$lang_details = apply_filters( 'wpml_post_language_details', null, $post_id );
+			$lang_details = apply_filters( 'wpml_post_language_details', null, $post_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML third-party hook.
 			if ( $lang_details ) {
 				// Handle both object and array formats
 				$locale = is_object( $lang_details ) ? ( $lang_details->locale ?? null ) : ( $lang_details['locale'] ?? null );
@@ -82,7 +82,7 @@ class LLM_Helper {
 
 		// Fallback to WPML current site language (modern WPML hook)
 		if ( ! $detected_locale && has_filter( 'wpml_current_language' ) ) {
-			$current_lang = apply_filters( 'wpml_current_language', null );
+			$current_lang = apply_filters( 'wpml_current_language', null ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML third-party hook.
 			if ( $current_lang ) {
 				$detected_locale  = self::convert_language_code_to_locale( $current_lang );
 				$detection_method = 'WPML (current)';
@@ -167,7 +167,7 @@ class LLM_Helper {
 	 */
 	private static function convert_language_code_to_locale( $language_code ) {
 		$language_code = strtolower( trim( (string) $language_code ) );
-		if ( $language_code === '' ) {
+		if ( '' === $language_code ) {
 			return get_locale();
 		}
 
@@ -189,7 +189,7 @@ class LLM_Helper {
 	 */
 	private static function normalize_locale( $locale ) {
 		$locale = trim( (string) $locale );
-		if ( $locale === '' ) {
+		if ( '' === $locale ) {
 			return get_locale();
 		}
 
@@ -303,7 +303,7 @@ class LLM_Helper {
 	 */
 	public static function ensure_utf8( $value ) {
 		$string = (string) $value;
-		if ( $string === '' ) {
+		if ( '' === $string ) {
 			return '';
 		}
 
@@ -574,7 +574,7 @@ class LLM_Helper {
 					return true;
 				}
 			}
-		} catch ( \Throwable $e ) {
+		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Fall through to connector option check.
 			// Fall through to connector option check.
 		}
 
@@ -694,7 +694,7 @@ class LLM_Helper {
 		 * @since 7.0.4
 		 * @param string[] $ids Provider IDs.
 		 */
-		return apply_filters( 'sb_ai_text_only_provider_ids', $ids );
+		return apply_filters( 'sb_ai_text_only_provider_ids', $ids ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Legacy sb_ hook prefix.
 	}
 
 	/**
@@ -712,7 +712,7 @@ class LLM_Helper {
 		 * @since 7.0.4
 		 * @param string[] $ids Provider IDs.
 		 */
-		return apply_filters( 'sb_ai_vision_capable_provider_ids', $ids );
+		return apply_filters( 'sb_ai_vision_capable_provider_ids', $ids ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Legacy sb_ hook prefix.
 	}
 
 	/**
@@ -734,7 +734,7 @@ class LLM_Helper {
 						}
 					}
 				}
-			} catch ( \Throwable $e ) {
+			} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Fall through to connector options.
 				// Fall through.
 			}
 		}
@@ -833,7 +833,7 @@ class LLM_Helper {
 	/**
 	 * Normalize a raw AI provider value to a canonical option string.
 	 *
-	 * Accepts form slugs and legacy values case-insensitively, e.g. "wordpress",
+	 * Accepts form slugs and legacy values case-insensitively, e.g. "WordPress",
 	 * "WordPress", and legacy "openai" all map to "WordPress".
 	 *
 	 * @since 7.4.0
@@ -851,8 +851,8 @@ class LLM_Helper {
 			return 'disabled';
 		}
 
-		// Form radio historically posted "wordpress"; legacy installs used "openai".
-		if ( 'wordpress' === $lower || 'openai' === $lower ) {
+		// Form radio historically posted "WordPress"; legacy installs used "openai".
+		if ( 'WordPress' === $lower || 'openai' === $lower ) {
 			return 'WordPress';
 		}
 

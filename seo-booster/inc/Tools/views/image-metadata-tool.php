@@ -44,11 +44,11 @@ $docs_url = \Cleverplugins\SEOBooster\Utils::generate_cp_web_link( 'tools_image_
 				<a href="<?php echo esc_url( $settings_url ); ?>"><?php esc_html_e( 'SEO Booster Settings (Credits)', 'seo-booster' ); ?></a>
 				<?php endif; ?>
 			</p>
-			<?php elseif ( $ai_notice_type === 'support_check_failed' ) : ?>
+			<?php elseif ( 'support_check_failed' === $ai_notice_type ) : ?>
 			<p>
 				<a href="<?php echo esc_url( $connectors_url ); ?>"><?php esc_html_e( 'Settings → Connectors', 'seo-booster' ); ?></a>
 			</p>
-			<?php elseif ( $ai_notice_type === 'disabled' ) : ?>
+			<?php elseif ( 'disabled' === $ai_notice_type ) : ?>
 			<p>
 				<a href="<?php echo esc_url( $settings_url ); ?>"><?php esc_html_e( 'SEO Booster Settings', 'seo-booster' ); ?></a>
 			</p>
@@ -117,11 +117,11 @@ $docs_url = \Cleverplugins\SEOBooster\Utils::generate_cp_web_link( 'tools_image_
 							<a href="<?php echo esc_url( $settings_url ); ?>"><?php esc_html_e( 'SEO Booster Settings (Credits)', 'seo-booster' ); ?></a>
 							<?php endif; ?>
 						</p>
-						<?php elseif ( $ai_notice_type === 'support_check_failed' ) : ?>
+						<?php elseif ( 'support_check_failed' === $ai_notice_type ) : ?>
 						<p class="sb-tools-ai-warning__actions">
 							<a href="<?php echo esc_url( $connectors_url ); ?>"><?php esc_html_e( 'Settings → Connectors', 'seo-booster' ); ?></a>
 						</p>
-						<?php elseif ( $ai_notice_type === 'disabled' ) : ?>
+						<?php elseif ( 'disabled' === $ai_notice_type ) : ?>
 						<p class="sb-tools-ai-warning__actions">
 							<a href="<?php echo esc_url( $settings_url ); ?>"><?php esc_html_e( 'SEO Booster Settings', 'seo-booster' ); ?></a>
 						</p>

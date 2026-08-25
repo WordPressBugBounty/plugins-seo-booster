@@ -100,7 +100,7 @@ class Settings_Utils {
 	public static function render_field_with_inserter( $field_name, $field_type, $current_value = '', $placeholder = '', $field_type_input = 'text', $rows = 3 ) {
 		$html = '<div class="sb-seo-field-with-inserter">';
 
-		if ( $field_type_input === 'textarea' ) {
+		if ( 'textarea' === $field_type_input ) {
 			$html .= '<textarea id="' . esc_attr( $field_name ) . '" name="' . esc_attr( $field_name ) . '" rows="' . esc_attr( $rows ) . '" cols="50" class="large-text" placeholder="' . esc_attr( $placeholder ) . '">' . esc_textarea( $current_value ) . '</textarea>';
 		} else {
 			$html .= '<input type="text" id="' . esc_attr( $field_name ) . '" name="' . esc_attr( $field_name ) . '" value="' . esc_attr( $current_value ) . '" class="regular-text" placeholder="' . esc_attr( $placeholder ) . '">';

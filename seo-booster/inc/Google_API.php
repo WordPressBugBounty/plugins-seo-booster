@@ -44,8 +44,8 @@ class Google_API {
 		}
 
 		// Get parameters from AJAX request
-		$step     = isset( $_POST['step'] ) ? intval( $_POST['step'] ) : 0;
-		$startRow = $step * 1000; // Calculate startRow from step
+		$step      = isset( $_POST['step'] ) ? intval( $_POST['step'] ) : 0;
+		$start_row = $step * 1000; // Calculate start_row from step
 
 		global $wpdb;
 
@@ -70,7 +70,7 @@ class Google_API {
 			update_option( 'seobooster_selected_site', $site_url, 'no' );
 		}
 		if ( seobooster_fs()->can_use_premium_code() && 1 === $step ) {
-			do_action( 'sb_gsc_schedule_all_pages' );
+			do_action( 'seobooster_gsc_schedule_all_pages' );
 			Utils::log( 'Scheduled keyword analysis for first batch of pages', 5 );
 		}
 		try {
@@ -82,11 +82,11 @@ class Google_API {
 				throw new \Exception( $error_message );
 			}
 			// startRow and step are now from AJAX request
-			$rowLimit     = 1000;
-			$totalFetched = 0;
-			$lastKeyword  = '';
-			$lastDate     = '';
-			$api_site_url = $site_url;
+			$row_limit     = 1000;
+			$total_fetched = 0;
+			$last_keyword  = '';
+			$last_date     = '';
+			$api_site_url  = $site_url;
 			if ( strpos( $site_url, 'sc-domain:' ) === 0 ) {
 				// For domain properties, we need to keep the sc-domain: prefix and encode the domain part
 				$domain_part  = substr( $site_url, strlen( 'sc-domain:' ) );
@@ -111,8 +111,8 @@ class Google_API {
 							'startDate'  => gmdate( 'Y-m-d', strtotime( "-{$days} days" ) ),
 							'endDate'    => gmdate( 'Y-m-d' ),
 							'dimensions' => array( 'query', 'page', 'date' ),
-							'rowLimit'   => $rowLimit,
-							'startRow'   => $startRow,
+							'rowLimit'   => $row_limit,
+							'startRow'   => $start_row,
 						)
 					),
 					'method'      => 'POST',
@@ -146,8 +146,8 @@ class Google_API {
 										'startDate'  => gmdate( 'Y-m-d', strtotime( "-{$days} days" ) ),
 										'endDate'    => gmdate( 'Y-m-d' ),
 										'dimensions' => array( 'query', 'page', 'date' ),
-										'rowLimit'   => $rowLimit,
-										'startRow'   => $startRow,
+										'rowLimit'   => $row_limit,
+										'startRow'   => $start_row,
 									)
 								),
 								'method'      => 'POST',
@@ -174,7 +174,7 @@ class Google_API {
 
 			if ( ! $data || ! is_array( $data ) || ! isset( $data['rows'] ) || ! is_array( $data['rows'] ) ) {
 				$error_details = '';
-				if ( $data === null ) {
+				if ( null === $data ) {
 					$error_details = 'Received null data';
 				} elseif ( ! is_array( $data ) ) {
 					$error_details = 'Received non-array data type: ' . gettype( $data );
@@ -244,7 +244,7 @@ class Google_API {
 							)
 						);
 
-						if ( $insert_result === false ) {
+						if ( false === $insert_result ) {
 							Utils::log( 'Failed to insert keyword: ' . wp_json_encode( $row ) . ' - Error: ' . $wpdb->last_error . ' - Query: ' . $query . ' - Page: ' . $page, 3 );
 							$wpdb->query( 'ROLLBACK' );
 							continue;
@@ -299,12 +299,12 @@ class Google_API {
 						$history_data['date']              = $date;
 						$result_history                    = $wpdb->insert( "{$wpdb->prefix}sb2_query_keywords_history", $history_data );
 					}
-					if ( $result_history === false ) {
+					if ( false === $result_history ) {
 						Utils::log( 'Failed to insert/update history entry: ' . wp_json_encode( $row ) . ' - Error: ' . $wpdb->last_error, 3 );
 					} else {
-						++$totalFetched;
-						$lastKeyword = $query;
-						$lastDate    = $date;
+						++$total_fetched;
+						$last_keyword = $query;
+						$last_date    = $date;
 					}
 				} else {
 					Utils::log( 'Failed to insert/update keyword entry: ' . wp_json_encode( $row ) . ' - Error: ' . $wpdb->last_error, 3 );
@@ -312,15 +312,15 @@ class Google_API {
 
 				++$processed_count;
 			}
-			$more_results = $total_rows >= $rowLimit;
+			$more_results = $total_rows >= $row_limit;
 
-			/* translators: 1: number of processed records, 2: current keyword being processed, 3: date of the keyword */
 			Utils::log(
 				sprintf(
+					/* translators: 1: number of processed records, 2: current keyword being processed, 3: date of the keyword */
 					__( 'Processed %1$s records. Current keyword: "%2$s" (%3$s)', 'seo-booster' ),
-					number_format_i18n( $totalFetched ),
-					$lastKeyword,
-					$lastDate
+					number_format_i18n( $total_fetched ),
+					$last_keyword,
+					$last_date
 				),
 				10
 			);
@@ -331,30 +331,31 @@ class Google_API {
 			$response = array(
 				'message'            => $more_results ?
 				sprintf(
+					/* translators: 1: number of processed records, 2: current keyword being processed, 3: date of the keyword */
 					__( 'Processed %1$s records. Current keyword: "%2$s" (%3$s)', 'seo-booster' ),
-					number_format_i18n( $totalFetched ),
-					$lastKeyword,
-					$lastDate
+					number_format_i18n( $total_fetched ),
+					$last_keyword,
+					$last_date
 				) :
 				__( 'Import complete!', 'seo-booster' ),
 				'time'               => Utils::timerstop( 'sb_gsc_import_data' ),
 				'more_results'       => $more_results,
-				'last_keyword'       => $lastKeyword,
+				'last_keyword'       => $last_keyword,
 				'total_keywords'     => number_format_i18n( $total_keywords ),
-				'last_date'          => $lastDate,
-				'keywords_processed' => number_format_i18n( $totalFetched ),
+				'last_date'          => $last_date,
+				'keywords_processed' => number_format_i18n( $total_fetched ),
 				'total_entries'      => number_format_i18n( $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sb2_query_keywords_history;" ) ), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table prefix only; aggregate count query.
 			'next_step'              => $more_results ? ( $step + 1 ) : 0,
 			);
 
 			if ( ! $more_results ) {
 				Utils::log( 'Import complete!', 10 );
-				if ( ! wp_next_scheduled( 'sb_gsc_schedule_all_pages' ) ) {
-					wp_schedule_single_event( time(), 'sb_gsc_schedule_all_pages' );
+				if ( ! wp_next_scheduled( 'seobooster_gsc_schedule_all_pages' ) ) {
+					wp_schedule_single_event( time(), 'seobooster_gsc_schedule_all_pages' );
 					Utils::log( 'Scheduled keyword analysis for all pages', 5 );
 				}
 				update_option( 'sb_gsc_last_refreshed', current_time( 'mysql' ) );
-				email_status::send_email_update( 7, true );
+				Email_Status::send_email_update( 7, true );
 			}
 			wp_send_json_success( $response );
 		} catch ( \Exception $e ) {
@@ -418,7 +419,7 @@ class Google_API {
 			}
 		}
 
-		if ( $public_url === '' ) {
+		if ( '' === $public_url ) {
 			$current_url = Utils::seobooster_currenturl( true );
 			if ( is_string( $current_url ) ) {
 				if ( strpos( $current_url, '?' ) !== false ) {
@@ -503,39 +504,41 @@ class Google_API {
 			'edit_url'     => $context['edit_url'],
 			'auto_open'    => isset( $_GET['seobooster_showdetails'] ) && ( '1' === $_GET['seobooster_showdetails'] || 'true' === $_GET['seobooster_showdetails'] ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Deep-link flag only.
 			'text'         => array(
-				'title'            => __( 'SEO Booster: Page overview', 'seo-booster' ),
-				'error'            => __( 'Error', 'seo-booster' ),
-				'loading'          => __( 'Loading…', 'seo-booster' ),
-				'score'            => __( 'SEO score', 'seo-booster' ),
-				'analyzed_at'      => __( 'Last analyzed', 'seo-booster' ),
-				'stale'            => __( 'Content has changed since the last analysis. Re-run analysis from the editor.', 'seo-booster' ),
-				'seo_title'        => __( 'SEO title', 'seo-booster' ),
-				'seo_description'  => __( 'Meta description', 'seo-booster' ),
-				'empty_meta'       => __( '(empty)', 'seo-booster' ),
-				'issues'           => __( 'Issues', 'seo-booster' ),
-				'opportunities'    => __( 'Opportunities', 'seo-booster' ),
-				'ai_suggestions'   => __( 'Saved AI suggestions', 'seo-booster' ),
-				'titles'           => __( 'Titles', 'seo-booster' ),
-				'descriptions'     => __( 'Descriptions', 'seo-booster' ),
-				'keywords'         => __( 'Top keywords', 'seo-booster' ),
-				'keywords_more'    => __( 'Showing top %1$d of %2$d keywords.', 'seo-booster' ),
-				'query'            => __( 'Query', 'seo-booster' ),
-				'clicks'           => __( 'Clicks', 'seo-booster' ),
-				'impressions'      => __( 'Impressions', 'seo-booster' ),
-				'ctr'              => __( 'CTR', 'seo-booster' ),
-				'position'         => __( 'Pos.', 'seo-booster' ),
-				'used'             => __( 'Used', 'seo-booster' ),
-				'copy'             => __( 'Copy', 'seo-booster' ),
-				'copied'           => __( 'Copied', 'seo-booster' ),
-				'no_analysis'      => __( 'This page has not been analyzed yet.', 'seo-booster' ),
-				'no_suggestions'   => __( 'No saved AI title or meta suggestions for this page.', 'seo-booster' ),
-				'no_keywords'      => __( 'No Search Console keywords for this page.', 'seo-booster' ),
-				'no_issues'        => __( 'No open issues.', 'seo-booster' ),
-				'no_opportunities' => __( 'No opportunities listed.', 'seo-booster' ),
-				'cta_analyze'      => __( 'Open in editor to run analysis', 'seo-booster' ),
-				'cta_suggestions'  => __( 'Open in editor to generate AI suggestions', 'seo-booster' ),
-				'cta_editor'       => __( 'Open in editor', 'seo-booster' ),
-				'unavailable'      => __( 'Page overview is only available on a post, page, or term.', 'seo-booster' ),
+				'title'                     => __( 'SEO Booster: Page overview', 'seo-booster' ),
+				'error'                     => __( 'Error', 'seo-booster' ),
+				'loading'                   => __( 'Loading…', 'seo-booster' ),
+				'score'                     => __( 'SEO score', 'seo-booster' ),
+				'analyzed_at'               => __( 'Last analyzed', 'seo-booster' ),
+				'stale'                     => __( 'Content has changed since the last analysis. Re-run analysis from the editor.', 'seo-booster' ),
+				'seo_title'                 => __( 'SEO title', 'seo-booster' ),
+				'seo_description'           => __( 'Meta description', 'seo-booster' ),
+				'empty_meta'                => __( '(empty)', 'seo-booster' ),
+				'issues'                    => __( 'Issues', 'seo-booster' ),
+				'opportunities'             => __( 'Opportunities', 'seo-booster' ),
+				'ai_suggestions'            => __( 'Saved AI suggestions', 'seo-booster' ),
+				'titles'                    => __( 'Titles', 'seo-booster' ),
+				'descriptions'              => __( 'Descriptions', 'seo-booster' ),
+				'keywords'                  => __( 'Top keywords', 'seo-booster' ),
+				/* translators: 1: number of keywords shown, 2: total keywords available */
+				'keywords_more'             => __( 'Showing top %1$d of %2$d keywords.', 'seo-booster' ),
+				'query'                     => __( 'Query', 'seo-booster' ),
+				'clicks'                    => __( 'Clicks', 'seo-booster' ),
+				'impressions'               => __( 'Impressions', 'seo-booster' ),
+				'ctr'                       => __( 'CTR', 'seo-booster' ),
+				'position'                  => __( 'Pos.', 'seo-booster' ),
+				'used'                      => __( 'Used', 'seo-booster' ),
+				'copy'                      => __( 'Copy', 'seo-booster' ),
+				'copied'                    => __( 'Copied', 'seo-booster' ),
+				'no_analysis'               => __( 'No on-page SEO analysis yet.', 'seo-booster' ),
+				'no_analysis_with_keywords' => __( 'No on-page SEO analysis yet. Search Console keywords for this page are listed below.', 'seo-booster' ),
+				'no_suggestions'            => __( 'No saved AI title or meta suggestions for this page.', 'seo-booster' ),
+				'no_keywords'               => __( 'No Search Console keywords for this page.', 'seo-booster' ),
+				'no_issues'                 => __( 'No open issues.', 'seo-booster' ),
+				'no_opportunities'          => __( 'No opportunities listed.', 'seo-booster' ),
+				'cta_analyze'               => __( 'Open in editor to run analysis', 'seo-booster' ),
+				'cta_suggestions'           => __( 'Open in editor to generate AI suggestions', 'seo-booster' ),
+				'cta_editor'                => __( 'Open in editor', 'seo-booster' ),
+				'unavailable'               => __( 'Page overview is only available on a post, page, or term.', 'seo-booster' ),
 			),
 		);
 	}
@@ -641,106 +644,99 @@ class Google_API {
 			return false;
 		}
 
+		// Preserve literal "%" (sanitize_text_field strips %XX sequences).
+		$normalized_keyword = Utils::normalize_keyword_for_match( $keyword );
+		if ( '' === $normalized_keyword ) {
+			return false;
+		}
+
+		$keyword_variations = self::get_keyword_variations( $normalized_keyword );
+		$occurrences        = array();
+
 		$html = HtmlDomParser::str_get_html( $content );
 		if ( ! $html ) {
 			// Translators: %d is the post ID
 			Utils::log( sprintf( 'Failed to parse HTML content for post ID: %d', absint( $post_id ) ), 2 );
-			return false;
 		}
 
-		// Normalize keyword for accurate comparison
-		$normalized_keyword = strtolower( sanitize_text_field( $keyword ) );
+		if ( $html ) {
+			$content_excluding_headlines = (string) $html->plaintext;
 
-		// Create normalized versions of the keyword (with spaces and with hyphens)
-		$keyword_variations = self::get_keyword_variations( $normalized_keyword );
-
-		$occurrences               = array();
-		$contentExcludingHeadlines = $html->plaintext;
-
-		// Check if keyword is within an href tag
-		foreach ( $html->find( 'a' ) as $a ) {
-			foreach ( $keyword_variations as $variation ) {
-				if ( stripos( $a->href, $variation ) !== false ) {
+			// Check if keyword is within an href tag
+			foreach ( $html->find( 'a' ) as $a ) {
+				if ( Utils::text_contains_keyword_variations( (string) $a->href, $keyword_variations ) ) {
 					$occurrences[] = array(
 						'location_id' => 1,
 						'message'     => __( 'Href attribute', 'seo-booster' ),
 					);
-					break; // Found a match, no need to check other variations
 				}
-			}
 
-			foreach ( $keyword_variations as $variation ) {
-				if ( stripos( $a->innertext(), $variation ) !== false ) {
+				if ( Utils::text_contains_keyword_variations( (string) $a->innertext(), $keyword_variations ) ) {
 					$occurrences[] = array(
 						'location_id' => 2,
 						'message'     => __( 'In a link', 'seo-booster' ),
 					);
-					break; // Found a match, no need to check other variations
 				}
 			}
-		}
 
-		// Enhanced check for headlines to consider nested structures
-		foreach ( array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' ) as $tag ) {
-			foreach ( $html->find( $tag ) as $heading ) {
-				$heading_text = $heading->plaintext;
-				foreach ( $keyword_variations as $variation ) {
-					if ( stripos( $heading_text, $variation ) !== false ) {
-						$occurrences[]             = array(
+			// Enhanced check for headlines to consider nested structures
+			foreach ( array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' ) as $tag ) {
+				foreach ( $html->find( $tag ) as $heading ) {
+					$heading_text = (string) $heading->plaintext;
+					if ( Utils::text_contains_keyword_variations( $heading_text, $keyword_variations ) ) {
+						$occurrences[]               = array(
 							'location_id' => 3,
 							'message'     => __( 'Headline', 'seo-booster' ),
 						);
-						$contentExcludingHeadlines = str_ireplace( $heading_text, '', $contentExcludingHeadlines );
-						break; // Found a match, no need to check other variations
+						$content_excluding_headlines = str_ireplace( $heading_text, '', $content_excluding_headlines );
 					}
 				}
 			}
-		}
 
-		// Check if keyword is within an img alt attribute
-		foreach ( $html->find( 'img' ) as $img ) {
-			foreach ( $keyword_variations as $variation ) {
-				if ( stripos( $img->alt, $variation ) !== false ) {
+			// Check if keyword is within an img alt attribute
+			foreach ( $html->find( 'img' ) as $img ) {
+				if ( Utils::text_contains_keyword_variations( (string) $img->alt, $keyword_variations ) ) {
 					$occurrences[] = array(
 						'location_id' => 4,
 						'message'     => __( 'Img alt= attribute', 'seo-booster' ),
 					);
-					break; // Found a match, no need to check other variations
 				}
 			}
-		}
 
-		// Check for keyword in the title tag and meta description (resolved templates; no capability gate for cron).
-		$seo_data = SEO_Plugin_Registry::read_post_seo_resolved( absint( $post_id ) );
-		foreach ( $keyword_variations as $variation ) {
-			if ( stripos( $seo_data['title'], $variation ) !== false ) {
+			// Check for keyword in the title tag and meta description (resolved templates; no capability gate for cron).
+			$seo_data        = SEO_Plugin_Registry::read_post_seo_resolved( absint( $post_id ) );
+			$seo_title       = isset( $seo_data['title'] ) ? (string) $seo_data['title'] : '';
+			$seo_description = isset( $seo_data['description'] ) ? (string) $seo_data['description'] : '';
+
+			if ( Utils::text_contains_keyword_variations( $seo_title, $keyword_variations ) ) {
 				$occurrences[] = array(
 					'location_id' => 6,
 					'message'     => __( 'Title tag', 'seo-booster' ),
 				);
-				break; // Found a match, no need to check other variations
 			}
-		}
 
-		foreach ( $keyword_variations as $variation ) {
-			if ( stripos( $seo_data['description'], $variation ) !== false ) {
+			if ( Utils::text_contains_keyword_variations( $seo_description, $keyword_variations ) ) {
 				$occurrences[] = array(
 					'location_id' => 7,
 					'message'     => __( 'Meta description', 'seo-booster' ),
 				);
-				break; // Found a match, no need to check other variations
 			}
-		}
 
-		// Check if keyword is within the normal content, excluding headlines
-		foreach ( $keyword_variations as $variation ) {
-			if ( stripos( $contentExcludingHeadlines, $variation ) !== false ) {
+			// Check if keyword is within the normal content, excluding headlines
+			if ( Utils::text_contains_keyword_variations( $content_excluding_headlines, $keyword_variations ) ) {
 				$occurrences[] = array(
 					'location_id' => 5,
 					'message'     => __( 'Content', 'seo-booster' ),
 				);
-				break; // Found a match, no need to check other variations
 			}
+		}
+
+		// Fallback when DOM parse fails or misses text (entities, large pages, builder markup).
+		if ( empty( $occurrences ) && Utils::text_contains_keyword_variations( $content, $keyword_variations ) ) {
+			$occurrences[] = array(
+				'location_id' => 5,
+				'message'     => __( 'Content', 'seo-booster' ),
+			);
 		}
 
 		return ! empty( $occurrences ) ? $occurrences : false;
@@ -822,7 +818,7 @@ class Google_API {
 		}
 		$end_date = gmdate( 'Y-m-d' );
 		// Prepare and execute query using wpdb->prepare to prevent SQL injection
-		$query   = $wpdb->prepare(
+		$query = $wpdb->prepare(
 			"
          SELECT 
          history.date,
@@ -895,7 +891,7 @@ class Google_API {
 				Utils::log( 'Cron job failed: ' . $access_token->get_error_message(), 2 );
 
 				// Set the reauth flag if it's an authentication error
-				if ( in_array( $access_token->get_error_code(), array( 'invalid_grant', 'authentication_required' ) ) ) {
+				if ( in_array( $access_token->get_error_code(), array( 'invalid_grant', 'authentication_required' ), true ) ) {
 					update_option( 'seobooster_needs_reauth', '1' );
 					Utils::log( 'Authentication required - setting reauth flag', 2 );
 				}
@@ -1111,7 +1107,7 @@ class Google_API {
 						array( '%s' ),
 						array( '%d' )
 					);
-					if ( $result === false ) {
+					if ( false === $result ) {
 						// Translators: %s is the entry details
 						Utils::log( sprintf( 'Failed to update keyword entry: %s', wp_json_encode( $entry ) ), 2 );
 						continue;
@@ -1136,7 +1132,7 @@ class Google_API {
 						'%s',
 					)
 				);
-				if ( $result === false ) {
+				if ( false === $result ) {
 					// Translators: %s is the entry details
 					Utils::log( sprintf( 'Failed to insert new keyword entry: %s', wp_json_encode( $entry ) ), 2 );
 					continue;
@@ -1171,7 +1167,7 @@ class Google_API {
 					),
 					array( '%d' )
 				);
-				if ( $result === false ) {
+				if ( false === $result ) {
 					// Translators: %s is the entry details
 					Utils::log( sprintf( 'Failed to update history entry: %s', wp_json_encode( $entry ) ), 2 );
 				}
@@ -1190,7 +1186,7 @@ class Google_API {
 						'%s',
 					)
 				);
-				if ( $result === false ) {
+				if ( false === $result ) {
 					// Translators: %s is the entry details
 					Utils::log( sprintf( 'Failed to insert new history entry: %s', wp_json_encode( $entry ) ), 2 );
 				}
@@ -1240,7 +1236,15 @@ class Google_API {
 
 			$access_token = self::get_access_token();
 			if ( ! $access_token || is_wp_error( $access_token ) ) {
-				$error_message = ( is_wp_error( $access_token ) ? sprintf( esc_html__( 'Access token error: %1$s', 'seo-booster' ), $access_token->get_error_message() ) : sprintf( esc_html__( 'Access token is not set or invalid: %1$s', 'seo-booster' ), $access_token ) );
+				$error_message = ( is_wp_error( $access_token ) ? sprintf(
+					/* translators: %s: error message from access token */
+					esc_html__( 'Access token error: %1$s', 'seo-booster' ),
+					$access_token->get_error_message()
+				) : sprintf(
+					/* translators: %s: access token value */
+					esc_html__( 'Access token is not set or invalid: %1$s', 'seo-booster' ),
+					$access_token
+				) );
 				Utils::log( $error_message, 5 );
 
 				// Set reauth flag for authentication errors
@@ -1355,7 +1359,7 @@ class Google_API {
 					$data = json_decode( wp_remote_retrieve_body( $response ), true );
 
 					// Handle 401 authentication errors with retry logic
-					if ( $data && is_array( $data ) && isset( $data['error'] ) && is_array( $data['error'] ) && isset( $data['error']['code'] ) && $data['error']['code'] === 401 ) {
+					if ( $data && is_array( $data ) && isset( $data['error'] ) && is_array( $data['error'] ) && isset( $data['error']['code'] ) && 401 === $data['error']['code'] ) {
 						if ( $retry_count < $max_retries ) {
 							++$retry_count;
 							Utils::log( sprintf( 'Token expired, attempting refresh (attempt %d of %d)', $retry_count, $max_retries ), 3 );
@@ -1428,7 +1432,7 @@ class Google_API {
 							);
 
 							// Save progress (less frequently)
-							if ( $start_row % 1000 === 0 ) { // Only save every 1000 rows
+							if ( 0 === $start_row % 1000 ) { // Only save every 1000 rows
 								set_transient(
 									$progress_key,
 									array(
@@ -1474,7 +1478,7 @@ class Google_API {
 				1
 			);
 
-			as_schedule_single_action( time(), 'sb_gsc_schedule_all_pages' );
+			as_schedule_single_action( time(), 'seobooster_gsc_schedule_all_pages' );
 			Utils::log( 'Scheduled keyword analysis for all pages', 10 );
 		} catch ( \Exception $e ) {
 			Utils::log( sprintf( 'Error fetching query keywords: %s', $e->getMessage() ), 2 );
@@ -1492,7 +1496,7 @@ class Google_API {
 	 */
 	private static function get_memory_limit_bytes() {
 		$memory_limit = ini_get( 'memory_limit' );
-		if ( $memory_limit == -1 ) {
+		if ( -1 === (int) $memory_limit ) {
 			return PHP_INT_MAX; // Unlimited
 		}
 
@@ -1527,7 +1531,8 @@ class Google_API {
 			return false;
 		}
 
-		$query     = sanitize_text_field( (string) $row['keys'][0] );
+		// Keep literal "%" in queries (sanitize_text_field strips %XX sequences).
+		$query     = Utils::sanitize_gsc_query( (string) $row['keys'][0] );
 		$url_parts = explode( '#', (string) $row['keys'][1], 2 );
 		$page      = esc_url_raw( $url_parts[0] );
 		$date      = sanitize_text_field( (string) $row['keys'][2] );
@@ -1625,7 +1630,7 @@ class Google_API {
 				$keyword_id = null;
 			}
 
-			$hist_key                   = $key . '|' . $row['date'];
+			$hist_key                    = $key . '|' . $row['date'];
 			$history_by_key[ $hist_key ] = array(
 				'lookup_key'  => $key,
 				'keyword_id'  => $keyword_id,
@@ -1787,7 +1792,7 @@ class Google_API {
 		if ( is_wp_error( $access_token ) ) {
 			// Auth expired (401/invalid_grant from API) or legacy invalid_grant: prompt re-auth
 			$code = $access_token->get_error_code();
-			if ( $code === 'auth_expired' || $code === 'invalid_grant' ) {
+			if ( 'auth_expired' === $code || 'invalid_grant' === $code ) {
 				Utils::log( 'Google connection expired - re-authentication required', 2 );
 				self::reset_authentication();
 				return new \WP_Error(
@@ -1862,11 +1867,11 @@ class Google_API {
 		$body          = wp_remote_retrieve_body( $response );
 		$data          = json_decode( $body, true );
 
-		if ( $response_code !== 200 ) {
+		if ( 200 !== $response_code ) {
 			$error_message = isset( $data['error'] ) ? $data['error'] : 'HTTP ' . $response_code;
 			$details       = isset( $data['details'] ) ? $data['details'] : '';
 			// 401 or auth-related body: treat as auth expired so UI can show "Reconnect with Google"
-			if ( $response_code === 401 || in_array( $details, array( 'invalid_grant', 'invalid_token' ), true ) ) {
+			if ( 401 === $response_code || in_array( $details, array( 'invalid_grant', 'invalid_token' ), true ) ) {
 				return new \WP_Error(
 					'auth_expired',
 					isset( $data['message'] ) ? $data['message'] : __( 'Google connection expired. Please reconnect with Google.', 'seo-booster' ),
@@ -1893,9 +1898,9 @@ class Google_API {
 			$expires_at_timestamp = strtotime( $data['expires_at_date'] );
 		}
 
-		if ( $expires_at_timestamp !== null ) {
+		if ( null !== $expires_at_timestamp ) {
 			// Validate the parsed timestamp - check for reasonable year range
-			if ( $expires_at_timestamp === false || $expires_at_timestamp < 0 || $expires_at_timestamp > 2147483647 ) {
+			if ( false === $expires_at_timestamp || $expires_at_timestamp < 0 || $expires_at_timestamp > 2147483647 ) {
 				// Don't store invalid expiration, but continue with token
 				// Clear any existing invalid expiration
 				delete_option( 'seobooster_access_token_expiration' );
@@ -2023,7 +2028,7 @@ class Google_API {
 		$data        = json_decode( $body, true );
 
 		// Check specifically for authentication issues (401 Unauthorized)
-		if ( $status_code === 401 ) {
+		if ( 401 === $status_code ) {
 			Utils::log( 'Authentication failed with 401 status code', 5 );
 
 			// Check for specific error message about invalid credentials
@@ -2055,20 +2060,20 @@ class Google_API {
 		if ( isset( $data['siteEntry'] ) && is_array( $data['siteEntry'] ) ) {
 			$sitelist = array_map(
 				function ( $site ) {
-					$siteUrl         = $site['siteUrl'];
-					$permissionLevel = isset( $site['permissionLevel'] ) ? sanitize_text_field( $site['permissionLevel'] ) : '';
+					$site_url_item    = $site['siteUrl'];
+					$permission_level = isset( $site['permissionLevel'] ) ? sanitize_text_field( $site['permissionLevel'] ) : '';
 
 					// If it's a domain property (starts with sc-domain:), don't use esc_url_raw
-					if ( strpos( $siteUrl, 'sc-domain:' ) === 0 ) {
-						$url = sanitize_text_field( $siteUrl );
+					if ( strpos( $site_url_item, 'sc-domain:' ) === 0 ) {
+						$url = sanitize_text_field( $site_url_item );
 					} else {
 						// Otherwise it's a URL, so use esc_url_raw
-						$url = esc_url_raw( $siteUrl );
+						$url = esc_url_raw( $site_url_item );
 					}
 
 					return array(
 						'siteUrl'         => $url,
-						'permissionLevel' => $permissionLevel,
+						'permissionLevel' => $permission_level,
 					);
 				},
 				$data['siteEntry']
@@ -2149,7 +2154,7 @@ class Google_API {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		if ( isset( $_GET['action'] ) && $_GET['action'] === 'reset_authentication' ) {
+		if ( isset( $_GET['action'] ) && 'reset_authentication' === $_GET['action'] ) {
 			check_admin_referer( 'reset_authentication_nonce' );
 			Utils::log( 'Resetting authentication settings.', 5 );
 			self::reset_authentication();
@@ -2229,11 +2234,103 @@ class Google_API {
 	}
 
 	/**
+	 * Build HMAC signature for the OAuth callback redirect.
+	 *
+	 * seoboosterauth.com must append `sb_oauth_sig` on redirect:
+	 * hash_hmac( 'sha256', $oauth_state . '|' . $access_token, $site_secret_key )
+	 * where $oauth_state is sb_oauth_state from return_to and $site_secret_key matches
+	 * the install secret used to verify auth_token.
+	 *
+	 * @param string $oauth_state  One-time state (sb_oauth_state / transient value).
+	 * @param string $access_token Google access token for the connected account.
+	 * @return string Hex-encoded HMAC-SHA256, or empty when inputs are missing.
+	 */
+	public static function build_oauth_callback_signature( $oauth_state, $access_token ) {
+		$oauth_state  = (string) $oauth_state;
+		$access_token = (string) $access_token;
+		if ( '' === $oauth_state || '' === $access_token ) {
+			return '';
+		}
+
+		return hash_hmac( 'sha256', $oauth_state . '|' . $access_token, self::get_site_private_key() );
+	}
+
+	/**
+	 * Verify sb_oauth_sig from seoboosterauth.com on OAuth callback.
+	 *
+	 * @param string $oauth_state  Expected one-time state.
+	 * @param string $access_token Access token from the redirect.
+	 * @param string $signature    sb_oauth_sig query value.
+	 * @return bool
+	 */
+	public static function verify_oauth_callback_signature( $oauth_state, $access_token, $signature ) {
+		$signature = (string) $signature;
+		if ( '' === $signature ) {
+			return false;
+		}
+
+		$expected = self::build_oauth_callback_signature( $oauth_state, $access_token );
+		if ( '' === $expected ) {
+			return false;
+		}
+
+		return hash_equals( $expected, $signature );
+	}
+
+	/**
+	 * Validate OAuth callback CSRF (URL nonce+state, or cookie+proxy signature).
+	 *
+	 * @param array $context {
+	 *     @type string $oauth_nonce      sb_oauth_nonce query param.
+	 *     @type string $oauth_state      sb_oauth_state query param.
+	 *     @type string $oauth_sig        sb_oauth_sig from seoboosterauth.com.
+	 *     @type string $cookie_state     seobooster_oauth_csrf cookie value.
+	 *     @type string $transient_state  seobooster_oauth_state_{user} transient.
+	 *     @type string $access_token     access_token query param.
+	 * }
+	 * @return array{ valid: bool, used_cookie_fallback: bool }
+	 */
+	public static function validate_oauth_callback_csrf( array $context ) {
+		$oauth_nonce     = isset( $context['oauth_nonce'] ) ? (string) $context['oauth_nonce'] : '';
+		$oauth_state     = isset( $context['oauth_state'] ) ? (string) $context['oauth_state'] : '';
+		$oauth_sig       = isset( $context['oauth_sig'] ) ? (string) $context['oauth_sig'] : '';
+		$cookie_state    = isset( $context['cookie_state'] ) ? (string) $context['cookie_state'] : '';
+		$transient_state = isset( $context['transient_state'] ) ? (string) $context['transient_state'] : '';
+		$access_token    = isset( $context['access_token'] ) ? (string) $context['access_token'] : '';
+
+		$nonce_ok    = ( '' !== $oauth_nonce && wp_verify_nonce( $oauth_nonce, 'seobooster_oauth_callback' ) );
+		$state_ok    = ( '' !== $oauth_state && '' !== $transient_state && hash_equals( $transient_state, $oauth_state ) );
+		$url_csrf_ok = ( $nonce_ok && $state_ok );
+
+		if ( $url_csrf_ok ) {
+			return array(
+				'valid'               => true,
+				'used_cookie_fallback' => false,
+			);
+		}
+
+		$cookie_ok = ( '' !== $cookie_state && '' !== $transient_state && hash_equals( $transient_state, $cookie_state ) );
+		if ( ! $cookie_ok ) {
+			return array(
+				'valid'               => false,
+				'used_cookie_fallback' => false,
+			);
+		}
+
+		$proxy_sig_ok = self::verify_oauth_callback_signature( $transient_state, $access_token, $oauth_sig );
+
+		return array(
+			'valid'               => $proxy_sig_ok,
+			'used_cookie_fallback' => $proxy_sig_ok,
+		);
+	}
+
+	/**
 	 * Build OAuth authentication parameters for seoboosterauth.com links.
 	 *
 	 * Appends CSRF params to return_to and stores a one-time state in a
 	 * user-scoped transient + HttpOnly cookie. The auth proxy may strip
-	 * nested return_to query args; the cookie is verified on callback.
+	 * nested return_to query args; the cookie + sb_oauth_sig path covers that.
 	 *
 	 * @param string|null $return_to Optional return URL after OAuth.
 	 * @return array{install_id: string, auth_token: string, return_to: string}
@@ -2478,7 +2575,7 @@ class Google_API {
 	 */
 	public static function load_gsc_highlight_scripts() {
 		// Check if GSC highlighting is requested
-		if ( ! isset( $_GET['seobooster_showgsc'] ) || $_GET['seobooster_showgsc'] !== '1' ) {
+		if ( ! isset( $_GET['seobooster_showgsc'] ) || '1' !== $_GET['seobooster_showgsc'] ) {
 			return;
 		}
 
@@ -2560,6 +2657,7 @@ class Google_API {
 
 			return array(
 				'valid'      => true,
+				/* translators: %s: hours until the next token validation check */
 				'message'    => sprintf( __( 'Token validation skipped. Next check in %s hours.', 'seo-booster' ), $hours_until_next ),
 				'last_check' => $last_check,
 				'next_check' => $last_check + $check_interval,
@@ -2604,7 +2702,7 @@ class Google_API {
 
 					if ( ! is_wp_error( $fresh_test_response ) ) {
 						$fresh_response_code = wp_remote_retrieve_response_code( $fresh_test_response );
-						if ( $fresh_response_code === 200 ) {
+						if ( 200 === $fresh_response_code ) {
 							Utils::log( 'Token validation - Fresh token is valid after access token error', 2 );
 							self::clear_reauth_flag();
 
@@ -2691,7 +2789,7 @@ class Google_API {
 
 					if ( ! is_wp_error( $fresh_test_response ) ) {
 						$fresh_response_code = wp_remote_retrieve_response_code( $fresh_test_response );
-						if ( $fresh_response_code === 200 ) {
+						if ( 200 === $fresh_response_code ) {
 							Utils::log( 'Token validation - Fresh token is valid after network error', 2 );
 							self::clear_reauth_flag();
 
@@ -2730,7 +2828,7 @@ class Google_API {
 		$response_body = wp_remote_retrieve_body( $test_response );
 		$response_data = json_decode( $response_body, true );
 
-		if ( $response_code === 200 && isset( $response_data['expires_in'] ) ) {
+		if ( 200 === $response_code && isset( $response_data['expires_in'] ) ) {
 			$expires_in         = $response_data['expires_in'];
 			$hours_until_expiry = round( $expires_in / 3600, 1 );
 
@@ -2748,6 +2846,7 @@ class Google_API {
 
 					return array(
 						'valid'            => true,
+						/* translators: %s: hours until the refreshed token expires */
 						'message'          => sprintf( __( 'Token refreshed successfully. New token expires in %s hours.', 'seo-booster' ), $hours_until_expiry ),
 						'last_check'       => $current_time,
 						'next_check'       => $current_time + $check_interval,
@@ -2766,6 +2865,7 @@ class Google_API {
 
 			return array(
 				'valid'            => true,
+				/* translators: %s: hours until the current token expires */
 				'message'          => sprintf( __( 'Token is valid. Expires in %s hours.', 'seo-booster' ), $hours_until_expiry ),
 				'last_check'       => $current_time,
 				'next_check'       => $current_time + $check_interval,
@@ -2818,7 +2918,7 @@ class Google_API {
 
 					if ( ! is_wp_error( $fresh_test_response ) ) {
 						$fresh_response_code = wp_remote_retrieve_response_code( $fresh_test_response );
-						if ( $fresh_response_code === 200 ) {
+						if ( 200 === $fresh_response_code ) {
 							Utils::log( 'Token validation - Fresh token is valid', 2 );
 							self::clear_reauth_flag();
 
@@ -3001,10 +3101,10 @@ class Google_API {
 		$url           = esc_url_raw( $url );
 		$site_url      = sanitize_text_field( $site_url );
 		$language_code = sanitize_text_field( $language_code );
-		if ( $language_code === '' ) {
+		if ( '' === $language_code ) {
 			$locale        = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
 			$language_code = str_replace( '_', '-', (string) $locale );
-			if ( $language_code === '' ) {
+			if ( '' === $language_code ) {
 				$language_code = 'en-US';
 			}
 		}
@@ -3092,12 +3192,16 @@ class Google_API {
 
 		// Check HTTP response code
 		$response_code = wp_remote_retrieve_response_code( $response );
-		if ( $response_code !== 200 ) {
+		if ( 200 !== $response_code ) {
 			$response_body = wp_remote_retrieve_body( $response );
 			$error_data    = json_decode( $response_body, true );
 			$error_message = isset( $error_data['error']['message'] )
 				? $error_data['error']['message']
-				: sprintf( __( 'API request failed with status code: %d', 'seo-booster' ), $response_code );
+				: sprintf(
+					/* translators: %d: HTTP status code from the URL Inspection API */
+					__( 'API request failed with status code: %d', 'seo-booster' ),
+					$response_code
+				);
 			Utils::log( 'URL Inspection API error: ' . $error_message, 2 );
 			return new \WP_Error( 'api_error', $error_message );
 		}
@@ -3158,11 +3262,17 @@ class Google_API {
 
 		// Get daily quota tracking (use transient)
 		$daily_quota_key = 'sb_gsc_daily_quota_' . gmdate( 'Y-m-d' );
-		$daily_count     = get_transient( $daily_quota_key ) ?: 0;
+		$daily_count     = get_transient( $daily_quota_key );
+		if ( false === $daily_count ) {
+			$daily_count = 0;
+		}
 
 		// Get minute quota tracking (use transient with 60 second expiration)
 		$minute_quota_key = 'sb_gsc_minute_quota_' . gmdate( 'Y-m-d-H-i' );
-		$minute_count     = get_transient( $minute_quota_key ) ?: 0;
+		$minute_count     = get_transient( $minute_quota_key );
+		if ( false === $minute_count ) {
+			$minute_count = 0;
+		}
 
 		$processed  = 0;
 		$total_urls = count( $urls );
@@ -3171,7 +3281,12 @@ class Google_API {
 			// Check daily quota
 			if ( $daily_count >= $rate_limit_per_day ) {
 				Utils::log( sprintf( 'Daily quota limit reached (%d/%d). Stopping batch inspection.', $daily_count, $rate_limit_per_day ), 2 );
-				$results['error'] = sprintf( __( 'Daily quota limit reached (%1$d/%2$d). Please try again tomorrow.', 'seo-booster' ), $daily_count, $rate_limit_per_day );
+				$results['error'] = sprintf(
+					/* translators: 1: daily requests used, 2: daily request limit */
+					__( 'Daily quota limit reached (%1$d/%2$d). Please try again tomorrow.', 'seo-booster' ),
+					$daily_count,
+					$rate_limit_per_day
+				);
 				break;
 			}
 

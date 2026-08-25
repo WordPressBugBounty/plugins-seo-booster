@@ -17,12 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 $teaser_variant = isset( $teaser_variant ) ? (string) $teaser_variant : '';
 
 ?>
-<div class="sb-tools-tool sb-tools-premium-teaser<?php echo $teaser_variant !== '' ? ' sb-tools-premium-teaser--' . esc_attr( $teaser_variant ) : ''; ?>">
+<div class="sb-tools-tool sb-tools-premium-teaser<?php echo '' !== $teaser_variant ? ' sb-tools-premium-teaser--' . esc_attr( $teaser_variant ) : ''; ?>">
 	<div class="sb-card sb-card--locked">
 		<h2><?php echo esc_html( $teaser_title ); ?></h2>
 		<p class="description"><?php echo esc_html( $teaser_description ); ?></p>
 
-		<?php if ( $teaser_variant === 'entity-map' ) : ?>
+		<?php if ( 'entity-map' === $teaser_variant ) : ?>
 			<ul class="sb-tools-premium-teaser__list">
 				<li><?php esc_html_e( 'Serve /entitymap.json for machines and /entitymap.html for humans', 'seo-booster' ); ?></li>
 				<li><?php esc_html_e( 'Build from GSC clicks and AI bot traffic, then edit names, relations, and source chunks', 'seo-booster' ); ?></li>

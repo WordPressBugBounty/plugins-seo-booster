@@ -82,7 +82,7 @@ class Llms_Faq_Extractor {
 		foreach ( $blocks as $block ) {
 			$name = $block['blockName'] ?? '';
 
-			if ( $name === 'yoast/faq-block' && ! empty( $block['attrs']['questions'] ) ) {
+			if ( 'yoast/faq-block' === $name && ! empty( $block['attrs']['questions'] ) ) {
 				foreach ( (array) $block['attrs']['questions'] as $question ) {
 					$answer_html = (string) ( $question['jsonAnswer'] ?? '' );
 					$out[]       = array(
@@ -158,7 +158,7 @@ class Llms_Faq_Extractor {
 
 		$filtered = array();
 		foreach ( $out as $item ) {
-			if ( $item['question'] !== '' && $item['answer'] !== '' ) {
+			if ( '' !== $item['question'] && '' !== $item['answer'] ) {
 				$filtered[] = $item;
 			}
 		}

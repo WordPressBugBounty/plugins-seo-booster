@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name: SEO Booster
- * Version: 7.4.5
+ * Version: 7.4.8
  * Plugin URI: https://seoboosterpro.com/
  * Description: SEO Booster integrates with Google Search Console data - bringing the data to life on your website like never before. Optimize keywords and content, track your rankings, and get actionable insights to improve your SEO.
  * Author: seoboosterpro.com
@@ -56,9 +56,9 @@ define( 'SEOBOOSTER_PLUGINPATH', plugin_dir_path( __FILE__ ) );
 define( 'SEOBOOSTER_PLUGINURL', plugin_dir_url( __FILE__ ) );
 define( 'SEOBOOSTER_DB_VERSION', '7.4.2' );
 if ( function_exists( 'seobooster_fs' ) ) {
-    $fs_instance = seobooster_fs();
-    if ( $fs_instance && is_object( $fs_instance ) ) {
-        $fs_instance->set_basename( false, __FILE__ );
+    $seobooster_fs_instance = seobooster_fs();
+    if ( $seobooster_fs_instance && is_object( $seobooster_fs_instance ) ) {
+        $seobooster_fs_instance->set_basename( false, __FILE__ );
     }
 } else {
     if ( !function_exists( 'seobooster_fs' ) ) {
@@ -106,24 +106,24 @@ if ( function_exists( 'seobooster_fs' ) ) {
 
         // Init Freemius with error handling.
         try {
-            $fs_instance = seobooster_fs();
-            if ( $fs_instance && is_object( $fs_instance ) ) {
+            $seobooster_fs_instance = seobooster_fs();
+            if ( $seobooster_fs_instance && is_object( $seobooster_fs_instance ) ) {
                 // Signal that SDK was initiated.
                 do_action( 'seobooster_fs_loaded' );
             }
         } catch ( \Exception $e ) {
-            // Freemius initialization failed; plugin continues without SDK.
+            // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Freemius bootstrap may fail without blocking the plugin.
         }
     }
     // Add Freemius filters with safety checks
     try {
-        $fs_instance = seobooster_fs();
-        if ( $fs_instance && is_object( $fs_instance ) ) {
-            $fs_instance->add_filter( 'handle_gdpr_admin_notice', '__return_true' );
-            $fs_instance->add_filter( 'after_uninstall', array(__NAMESPACE__ . '\\Seobooster2', 'seobooster_do_after_uninstall') );
+        $seobooster_fs_instance = seobooster_fs();
+        if ( $seobooster_fs_instance && is_object( $seobooster_fs_instance ) ) {
+            $seobooster_fs_instance->add_filter( 'handle_gdpr_admin_notice', '__return_true' );
+            $seobooster_fs_instance->add_filter( 'after_uninstall', array(__NAMESPACE__ . '\\Seobooster2', 'seobooster_do_after_uninstall') );
         }
     } catch ( \Exception $e ) {
-        // Freemius filter registration failed; plugin continues without SDK filters.
+        // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Freemius filter registration is optional at bootstrap.
     }
     // Prevent cannot redeclare
     if ( !function_exists( 'seobooster_do_after_uninstall' ) ) {
@@ -148,7 +148,6 @@ if ( function_exists( 'seobooster_fs' ) ) {
     require_once SEOBOOSTER_PLUGINPATH . 'inc/AI_Page_Assistant.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/AI_Site_Assistant.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/SEO_Output.php';
-    require_once SEOBOOSTER_PLUGINPATH . 'inc/AI_Writing_Outline.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/Admin_Columns.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/Form_Processor.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/Media/AI_Image_Generator.php';
@@ -168,7 +167,6 @@ if ( function_exists( 'seobooster_fs' ) ) {
     require_once SEOBOOSTER_PLUGINPATH . 'inc/Tools/Tools_Page.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/SEO_Issues_Manager.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/SEO_Issues_Ajax.php';
-    require_once SEOBOOSTER_PLUGINPATH . 'inc/SB_GSC_Issues_Processor.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/AI_Bot_Tracker.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/AI_Referral_Tracker.php';
     require_once SEOBOOSTER_PLUGINPATH . 'inc/AI_Readiness.php';
@@ -216,8 +214,6 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 add_action( 'add_meta_boxes', array(__CLASS__, 'do_custom_meta') );
                 // Initialize SEO Output
                 SEO_Output::init();
-                // Initialize AI Writing Outline
-                AI_Writing_Outline::init();
                 // Page-scoped AI assistant (editor AI tools tab)
                 AI_Page_Assistant::init();
                 // Site-scoped Pro AI advisor (dashboard Ask about your SEO)
@@ -249,7 +245,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 AI_Referral_Tracker::init();
                 AI_Readiness::init();
                 SB_AI_Bots_Ajax::init();
-                add_action( 'seobooster_email_update', array(email_status::class, 'send_email_update') );
+                add_action( 'seobooster_email_update', array(Email_Status::class, 'send_email_update') );
                 add_action( 'seobooster_dailymaintenance', array(Utils::class, 'do_seobooster_dailymaintenance') );
                 add_action( 'admin_notices', array(__CLASS__, 'do_admin_notices') );
                 add_action( 'wp_ajax_seobooster_dismiss_scanner_polish_notice', array(__CLASS__, 'ajax_dismiss_scanner_polish_notice') );
@@ -367,7 +363,8 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 // Process logs to include additional data/formatting as needed
                 foreach ( $logs as &$log ) {
                     $log['query'] = esc_html( $log['query'] );
-                    $log['page'] = '<a href="' . esc_url( $log['page'] ) . '" target="_blank">' . esc_html( parse_url( $log['page'], PHP_URL_PATH ) ) . '</a>';
+                    $page_path = wp_parse_url( $log['page'], PHP_URL_PATH );
+                    $log['page'] = '<a href="' . esc_url( $log['page'] ) . '" target="_blank">' . esc_html( ( is_string( $page_path ) ? $page_path : '' ) ) . '</a>';
                     $log['first_seen_date'] = date_i18n( get_option( 'date_format' ), strtotime( $log['first_seen_date'] ) );
                     $log['latest_date'] = date_i18n( get_option( 'date_format' ), strtotime( $log['latest_date'] ) );
                     $log['ctr'] = number_format_i18n( $log['ctr'], 2 );
@@ -494,30 +491,34 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 if ( !in_array( $page, array('sb2_dashboard', 'sb2_settings', 'sb2_setup'), true ) ) {
                     return;
                 }
-                $user_id = get_current_user_id();
-                $oauth_nonce = ( isset( $_GET['sb_oauth_nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['sb_oauth_nonce'] ) ) : '' );
-                $state = ( isset( $_GET['sb_oauth_state'] ) ? sanitize_text_field( wp_unslash( $_GET['sb_oauth_state'] ) ) : '' );
-                $transient = get_transient( 'seobooster_oauth_state_' . $user_id );
-                $cookie = ( isset( $_COOKIE['seobooster_oauth_csrf'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['seobooster_oauth_csrf'] ) ) : '' );
-                $nonce_ok = $oauth_nonce && wp_verify_nonce( $oauth_nonce, 'seobooster_oauth_callback' );
-                $state_ok = !empty( $state ) && !empty( $transient ) && hash_equals( (string) $transient, $state );
-                // Auth proxy often keeps only `page` from return_to; cookie + transient cover that path.
-                $cookie_ok = !empty( $cookie ) && !empty( $transient ) && hash_equals( (string) $transient, $cookie );
-                $url_csrf_ok = $nonce_ok && $state_ok;
-                if ( !$url_csrf_ok && !$cookie_ok ) {
-                    Utils::log( 'OAuth callback rejected: missing or invalid CSRF (url_params=' . (( $oauth_nonce || $state ? 'present' : 'stripped' )) . ', cookie=' . (( $cookie ? 'yes' : 'no' )) . ', transient=' . (( $transient ? 'yes' : 'no' )) . ').', 2 );
-                    Google_API::clear_oauth_csrf_cookie();
-                    wp_die( esc_html__( 'Invalid OAuth request.', 'seo-booster' ) );
-                }
-                if ( $cookie_ok && !$url_csrf_ok ) {
-                    Utils::log( 'OAuth callback: return_to CSRF params were stripped; verified via cookie.', 3 );
-                }
-                delete_transient( 'seobooster_oauth_state_' . $user_id );
-                Google_API::clear_oauth_csrf_cookie();
                 $access_token = sanitize_text_field( wp_unslash( $_GET['access_token'] ) );
                 if ( empty( $access_token ) ) {
                     wp_die( esc_html__( 'Missing something.', 'seo-booster' ) );
                 }
+                $user_id = get_current_user_id();
+                $oauth_nonce = ( isset( $_GET['sb_oauth_nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['sb_oauth_nonce'] ) ) : '' );
+                $oauth_state = ( isset( $_GET['sb_oauth_state'] ) ? sanitize_text_field( wp_unslash( $_GET['sb_oauth_state'] ) ) : '' );
+                $oauth_sig = ( isset( $_GET['sb_oauth_sig'] ) ? sanitize_text_field( wp_unslash( $_GET['sb_oauth_sig'] ) ) : '' );
+                $transient = get_transient( 'seobooster_oauth_state_' . $user_id );
+                $cookie = ( isset( $_COOKIE['seobooster_oauth_csrf'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['seobooster_oauth_csrf'] ) ) : '' );
+                $csrf_result = Google_API::validate_oauth_callback_csrf( array(
+                    'oauth_nonce'     => $oauth_nonce,
+                    'oauth_state'     => $oauth_state,
+                    'oauth_sig'       => $oauth_sig,
+                    'cookie_state'    => $cookie,
+                    'transient_state' => ( false !== $transient ? (string) $transient : '' ),
+                    'access_token'    => $access_token,
+                ) );
+                if ( empty( $csrf_result['valid'] ) ) {
+                    Utils::log( 'OAuth callback rejected: missing or invalid CSRF (url_params=' . (( $oauth_nonce || $oauth_state ? 'present' : 'stripped' )) . ', cookie=' . (( $cookie ? 'yes' : 'no' )) . ', transient=' . (( $transient ? 'yes' : 'no' )) . ', proxy_sig=' . (( $oauth_sig ? 'present' : 'missing' )) . ').', 2 );
+                    Google_API::clear_oauth_csrf_cookie();
+                    wp_die( esc_html__( 'Invalid OAuth request.', 'seo-booster' ) );
+                }
+                if ( !empty( $csrf_result['used_cookie_fallback'] ) ) {
+                    Utils::log( 'OAuth callback: return_to CSRF params were stripped; verified via cookie and proxy signature.', 3 );
+                }
+                delete_transient( 'seobooster_oauth_state_' . $user_id );
+                Google_API::clear_oauth_csrf_cookie();
                 update_option( 'seobooster_access_token', $access_token, false );
                 $google_email = ( isset( $_GET['google_email'] ) ? sanitize_text_field( wp_unslash( $_GET['google_email'] ) ) : '' );
                 update_option( 'seobooster_google_email', $google_email, false );
@@ -629,6 +630,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 if ( function_exists( 'wp_cache_clear_cache' ) ) {
                     \wp_cache_clear_cache();
                 }
+                // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals -- LiteSpeed Cache third-party hook.
                 do_action( 'litespeed_purge_all' );
             }
 
@@ -1049,14 +1051,14 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     $object_type = $url['object_type'] ?? null;
                     $url = $url['url'] ?? '';
                 } else {
-                    $url = ( $url !== null ? trim( (string) $url ) : '' );
+                    $url = ( null !== $url ? trim( (string) $url ) : '' );
                 }
                 if ( empty( $url ) ) {
                     Utils::log( 'SEO analysis failed: no URL provided', 2 );
                     return;
                 }
                 // Exclude private posts and WooCommerce special pages
-                if ( $object_id && $object_type === 'post' && \Cleverplugins\SEOBooster\SEO_Issues_Manager::should_exclude_from_analysis( $object_id ) ) {
+                if ( $object_id && 'post' === $object_type && \Cleverplugins\SEOBooster\SEO_Issues_Manager::should_exclude_from_analysis( $object_id ) ) {
                     return;
                 }
                 try {
@@ -1089,7 +1091,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
             public static function process_pending_seo_analysis() {
                 // Check if auto-scan is enabled
                 $enabled = get_option( 'seobooster_seo_possibilities_enabled', 'on' );
-                if ( $enabled !== 'on' ) {
+                if ( 'on' !== $enabled ) {
                     return;
                 }
                 if ( !class_exists( '\\Cleverplugins\\SEOBooster\\SEO_Issues_Manager' ) ) {
@@ -1143,7 +1145,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         $resolved = \Cleverplugins\SEOBooster\SEO_Issues_Manager::resolve_object_from_url( $url );
                         $object_id = $resolved['object_id'];
                         $object_type = $resolved['object_type'];
-                        if ( $object_id && $object_type === 'post' ) {
+                        if ( $object_id && 'post' === $object_type ) {
                             if ( \Cleverplugins\SEOBooster\SEO_Issues_Manager::should_exclude_from_analysis( $object_id ) ) {
                                 continue;
                             }
@@ -1193,30 +1195,6 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 if ( $scheduled_count > 0 ) {
                     Utils::log( sprintf( 'Scheduled %d SEO analyses from Search Console data', $scheduled_count ), 5 );
                 }
-            }
-
-            /**
-             * Helper function to generate tagged links
-             *
-             * @param  string $placement [description]
-             * @param  string $page      [description]
-             * @param  array  $params    [description]
-             * @return string            Full URL with utm_ parameters added
-             */
-            public static function gen_web_link( $placement = '', $page = '/', $params = array() ) {
-                $base_url = 'https://seoboosterpro.com';
-                if ( '/' !== $page ) {
-                    $page = '/' . trim( $page, '/' ) . '/';
-                }
-                $utm_source = 'seobooster_free';
-                $parts = array_merge( array(
-                    'utm_source'   => esc_attr( $utm_source ),
-                    'utm_medium'   => 'plugin',
-                    'utm_content'  => esc_attr( $placement ),
-                    'utm_campaign' => esc_attr( 'seobooster_v' . Utils::get_plugin_version() ),
-                ), $params );
-                $out = $base_url . $page . '?' . http_build_query( $parts, '', '&amp;' );
-                return $out;
             }
 
             /**
@@ -1319,13 +1297,14 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     }
                     // Used on dashboard page
                     $sbdata_array = array(
-                        'ajaxurl'       => admin_url( 'admin-ajax.php' ),
-                        'user_name'     => $username,
-                        'email'         => $usermail,
-                        'website'       => esc_url_raw( site_url() ),
-                        'enablecontact' => false,
-                        'nonce'         => wp_create_nonce( 'seobooster-nonce' ),
-                        'strings'       => array(
+                        'ajaxurl'                   => admin_url( 'admin-ajax.php' ),
+                        'user_name'                 => $username,
+                        'email'                     => $usermail,
+                        'website'                   => esc_url_raw( site_url() ),
+                        'enablecontact'             => false,
+                        'nonce'                     => wp_create_nonce( 'seobooster-nonce' ),
+                        'troubleshooting_guide_url' => Utils::generate_cp_web_link( 'gsc_chart_troubleshooting', 'docs/errors-and-troubleshooting/failed-to-fetch-data/' ),
+                        'strings'                   => array(
                             'pleaseSelectSite'            => __( 'Please select a site', 'seo-booster' ),
                             'areYouSure'                  => __( 'Are you sure you want to do this?', 'seo-booster' ),
                             'pleaseWait'                  => __( 'Please wait', 'seo-booster' ),
@@ -1518,6 +1497,8 @@ if ( function_exists( 'seobooster_fs' ) ) {
                                 'visitTroubleshootingGuide'   => __( 'Visit our', 'seo-booster' ),
                                 'troubleshootingGuide'        => __( 'Troubleshooting Guide', 'seo-booster' ),
                                 'uniqueKeywords'              => __( 'Unique Keywords', 'seo-booster' ),
+                                'loadingChart'                => __( 'Loading chart…', 'seo-booster' ),
+                                'chartPaused'                 => __( 'Scroll to reload', 'seo-booster' ),
                             ),
                         ) );
                     }
@@ -1613,7 +1594,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     );
                 }
                 // Enqueue SEO Possibilities scripts and styles
-                if ( isset( $_GET['page'] ) && $_GET['page'] === 'sb2_seo_issues' ) {
+                if ( isset( $_GET['page'] ) && 'sb2_seo_issues' === $_GET['page'] ) {
                     Utils::enqueue_modal_assets();
                     wp_enqueue_style(
                         'sb-ui',
@@ -1648,19 +1629,19 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         filemtime( plugin_dir_path( __FILE__ ) . 'css/sb-seo-issues.css' )
                     );
                     $can_triage = SEO_Issues_Manager::user_can_triage_possibilities();
-                    $upgrade_url = 'https://seoboosterpro.com/pricing/';
-                    if ( function_exists( __NAMESPACE__ . '\\seobooster_fs' ) && method_exists( seobooster_fs(), 'get_upgrade_url' ) ) {
-                        $fs_upgrade = seobooster_fs()->get_upgrade_url();
-                        if ( is_string( $fs_upgrade ) && '' !== $fs_upgrade ) {
-                            $upgrade_url = $fs_upgrade;
-                        }
-                    }
+                    $upgrade_url = Utils::get_pro_upgrade_url( 'possibilities_pro_strip' );
+                    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only view filter for expansion highlighting.
+                    $filter_issue_type = ( isset( $_GET['issue_type'] ) ? sanitize_text_field( wp_unslash( $_GET['issue_type'] ) ) : '' );
+                    $filter_severity = ( isset( $_GET['severity'] ) ? sanitize_text_field( wp_unslash( $_GET['severity'] ) ) : '' );
+                    // phpcs:enable WordPress.Security.NonceVerification.Recommended
                     wp_localize_script( 'sb-seo-issues-js', 'sb_seo_issues', array(
-                        'ajaxurl'     => admin_url( 'admin-ajax.php' ),
-                        'nonce'       => wp_create_nonce( 'sb_seo_issues_nonce' ),
-                        'can_triage'  => $can_triage,
-                        'upgrade_url' => $upgrade_url,
-                        'strings'     => array(
+                        'ajaxurl'           => admin_url( 'admin-ajax.php' ),
+                        'nonce'             => wp_create_nonce( 'sb_seo_issues_nonce' ),
+                        'can_triage'        => $can_triage,
+                        'upgrade_url'       => $upgrade_url,
+                        'filter_issue_type' => $filter_issue_type,
+                        'filter_severity'   => $filter_severity,
+                        'strings'           => array(
                             'analyzing'          => __( 'Analyzing…', 'seo-booster' ),
                             'error'              => __( 'An error occurred', 'seo-booster' ),
                             'possibilities'      => __( 'Possibilities', 'seo-booster' ),
@@ -1770,7 +1751,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 if ( function_exists( 'as_schedule_recurring_action' ) ) {
                     $enabled = get_option( 'seobooster_seo_possibilities_enabled', 'on' );
                     $frequency = get_option( 'seobooster_seo_possibilities_frequency', 60 );
-                    if ( $enabled === 'on' ) {
+                    if ( 'on' === $enabled ) {
                         as_schedule_recurring_action(
                             time(),
                             $frequency,
@@ -1930,7 +1911,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         Utils::create_database_tables();
                     }
                 }
-                // One-time migration: map legacy "openai" / case variants of "wordpress" to canonical "WordPress".
+                // One-time migration: map legacy "openai" / case variants of "WordPress" to canonical "WordPress".
                 $ai_provider_option = get_option( 'seobooster_ai_provider', 'disabled' );
                 $ai_provider_norm = LLM_Helper::normalize_ai_provider( $ai_provider_option );
                 if ( 'WordPress' === $ai_provider_norm && 'WordPress' !== $ai_provider_option ) {
@@ -2037,7 +2018,7 @@ if ( function_exists( 'seobooster_fs' ) ) {
                         $site_data['url'] = ( is_array( $site ) ? $site['siteUrl'] : $site );
                         $site_data['permission'] = ( is_array( $site ) && isset( $site['permissionLevel'] ) ? $site['permissionLevel'] : '' );
                         // Sites with siteUnverifiedUser permission don't have enough access
-                        if ( $site_data['permission'] === 'siteUnverifiedUser' ) {
+                        if ( 'siteUnverifiedUser' === $site_data['permission'] ) {
                             $unavailable_sites[] = $site_data;
                         } else {
                             $available_sites[] = $site_data;
@@ -2332,8 +2313,8 @@ if ( function_exists( 'seobooster_fs' ) ) {
                 if ( !is_admin() ) {
                     // Get current URL and check if highlighting is active
                     $current_url = home_url( $_SERVER['REQUEST_URI'] );
-                    $is_highlighting = isset( $_GET['seobooster_showlinks'] ) && $_GET['seobooster_showlinks'] === '1';
-                    $is_gsc_highlighting = isset( $_GET['seobooster_showgsc'] ) && $_GET['seobooster_showgsc'] === '1';
+                    $is_highlighting = isset( $_GET['seobooster_showlinks'] ) && '1' === $_GET['seobooster_showlinks'];
+                    $is_gsc_highlighting = isset( $_GET['seobooster_showgsc'] ) && '1' === $_GET['seobooster_showgsc'];
                     // Show Internal Links submenu as a toggle
                     $wp_admin_bar->add_node( array(
                         'parent' => 'seobooster',
@@ -2522,9 +2503,9 @@ if ( function_exists( 'seobooster_fs' ) ) {
                     return $buffer;
                 }
                 $trimmed_buffer = ltrim( $buffer );
-                if ( $trimmed_buffer !== '' ) {
+                if ( '' !== $trimmed_buffer ) {
                     $first_char = $trimmed_buffer[0];
-                    if ( $first_char === '{' || $first_char === '[' ) {
+                    if ( '{' === $first_char || '[' === $first_char ) {
                         return $buffer;
                     }
                     $lower_start = strtolower( substr( $trimmed_buffer, 0, 8 ) );

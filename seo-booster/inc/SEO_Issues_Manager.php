@@ -36,7 +36,7 @@ class SEO_Issues_Manager {
     ) {
         global $wpdb;
         // Exclude private posts and WooCommerce special pages
-        if ( $object_id && $object_type === 'post' && self::should_exclude_from_analysis( $object_id ) ) {
+        if ( $object_id && 'post' === $object_type && self::should_exclude_from_analysis( $object_id ) ) {
             return false;
         }
         $urls_table = $wpdb->prefix . 'sb2_seo_urls';
@@ -45,11 +45,11 @@ class SEO_Issues_Manager {
         // Get post title for display
         $post_title = null;
         $is_attachment = false;
-        if ( $object_id && $object_type === 'post' ) {
+        if ( $object_id && 'post' === $object_type ) {
             $post = get_post( $object_id );
             $post_title = ( $post ? $post->post_title : null );
-            $is_attachment = $post && $post->post_type === 'attachment';
-        } elseif ( $object_id && $object_type === 'term' ) {
+            $is_attachment = $post && 'attachment' === $post->post_type;
+        } elseif ( $object_id && 'term' === $object_type ) {
             $term = get_term( $object_id );
             $post_title = ( $term && !is_wp_error( $term ) ? $term->name : null );
         }
@@ -71,7 +71,7 @@ class SEO_Issues_Manager {
                 'last_analyzed'  => current_time( 'mysql' ),
                 'analysis_count' => 1,
             ), $reachability_fields ) );
-            if ( $url_result === false ) {
+            if ( false === $url_result ) {
                 return false;
             }
             $url_id = $wpdb->insert_id;
@@ -101,7 +101,7 @@ class SEO_Issues_Manager {
         if ( !$is_attachment && !empty( $results['issues'] ) ) {
             foreach ( $results['issues'] as $issue ) {
                 // Only count issues that are not "good" severity
-                if ( isset( $issue['severity'] ) && $issue['severity'] !== 'good' ) {
+                if ( isset( $issue['severity'] ) && 'good' !== $issue['severity'] ) {
                     ++$possibility_count;
                 }
             }
@@ -122,7 +122,7 @@ class SEO_Issues_Manager {
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         // Insert new analysis record
         $analysis_result = $wpdb->insert( $analysis_table, $insert_data );
-        if ( $analysis_result === false ) {
+        if ( false === $analysis_result ) {
             return false;
         }
         $analysis_id = $wpdb->insert_id;
@@ -227,7 +227,17 @@ class SEO_Issues_Manager {
         $url_id = (int) $url_id;
         $issues_table = $wpdb->prefix . 'sb2_seo_issues';
         // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug.
-        $keys = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT issue_key FROM {$issues_table}\n\t\t\t\tWHERE url_id = %d\n\t\t\t\tAND is_sitewide = 0\n\t\t\t\tAND (user_status = 'active' OR user_status = '0' OR user_status IS NULL)\n\t\t\t\tAND (\n\t\t\t\t\tissue_key LIKE 'gsc_indexing_%%'\n\t\t\t\t\tOR issue_key LIKE 'gsc_structured_%%'\n\t\t\t\t\tOR issue_key LIKE 'gsc_fetch_%%'\n\t\t\t\t\tOR issue_key LIKE 'gsc_coverage_%%'\n\t\t\t\t\tOR issue_key LIKE 'gsc_canonical_%%'\n\t\t\t\t\tOR issue_key LIKE 'gsc_soft_404%%'\n\t\t\t\t\tOR issue_key LIKE 'gsc_robots_%%'\n\t\t\t\t)", $url_id ) );
+        $keys = $wpdb->get_col( $wpdb->prepare(
+            "SELECT DISTINCT issue_key FROM {$issues_table}\n\t\t\t\tWHERE url_id = %d\n\t\t\t\tAND is_sitewide = 0\n\t\t\t\tAND (user_status = 'active' OR user_status = '0' OR user_status IS NULL)\n\t\t\t\tAND (\n\t\t\t\t\tissue_key LIKE %s\n\t\t\t\t\tOR issue_key LIKE %s\n\t\t\t\t\tOR issue_key LIKE %s\n\t\t\t\t\tOR issue_key LIKE %s\n\t\t\t\t\tOR issue_key LIKE %s\n\t\t\t\t\tOR issue_key LIKE %s\n\t\t\t\t\tOR issue_key LIKE %s\n\t\t\t\t)",
+            $url_id,
+            $wpdb->esc_like( 'gsc_indexing_' ) . '%',
+            $wpdb->esc_like( 'gsc_structured_' ) . '%',
+            $wpdb->esc_like( 'gsc_fetch_' ) . '%',
+            $wpdb->esc_like( 'gsc_coverage_' ) . '%',
+            $wpdb->esc_like( 'gsc_canonical_' ) . '%',
+            $wpdb->esc_like( 'gsc_soft_404' ) . '%',
+            $wpdb->esc_like( 'gsc_robots_' ) . '%'
+        ) );
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         if ( empty( $keys ) || !is_array( $keys ) ) {
             return array();
@@ -282,9 +292,9 @@ class SEO_Issues_Manager {
         if ( !$analysis && $object_id ) {
             // Check if URL record exists but with different object_id/object_type
             $object_url = null;
-            if ( $object_type === 'post' ) {
+            if ( 'post' === $object_type ) {
                 $object_url = get_permalink( $object_id );
-            } elseif ( $object_type === 'term' ) {
+            } elseif ( 'term' === $object_type ) {
                 $term_link = get_term_link( $object_id );
                 if ( !is_wp_error( $term_link ) ) {
                     $object_url = $term_link;
@@ -338,9 +348,9 @@ class SEO_Issues_Manager {
             } elseif ( in_array( $item->severity, array('opportunity', 'low'), true ) ) {
                 $saved_opportunities[] = $item_data;
                 $saved_improvements[] = $item_data;
-            } elseif ( $item->severity === 'good' ) {
+            } elseif ( 'good' === $item->severity ) {
                 $saved_good[] = $item_data;
-            } elseif ( $item->severity === 'not_applicable' ) {
+            } elseif ( 'not_applicable' === $item->severity ) {
                 $saved_not_applicable[] = $item_data;
             }
         }
@@ -397,7 +407,7 @@ class SEO_Issues_Manager {
         }
         // Status filter - default to active possibilities if no status filter provided
         if ( !empty( $filters['status'] ) ) {
-            if ( $filters['status'] === 'active' ) {
+            if ( 'active' === $filters['status'] ) {
                 $where_conditions[] = '(i.user_status = %s OR i.user_status = %s OR i.user_status IS NULL)';
                 $where_values[] = 'active';
                 $where_values[] = '0';
@@ -458,7 +468,7 @@ class SEO_Issues_Manager {
     public static function get_analysis_stats() {
         $cache_key = 'sb_seo_analysis_stats';
         $cached = get_transient( $cache_key );
-        if ( $cached !== false ) {
+        if ( false !== $cached ) {
             return $cached;
         }
         global $wpdb;
@@ -522,7 +532,7 @@ class SEO_Issues_Manager {
             if ( $url ) {
                 $url_hash = hash( 'sha256', $url );
                 // Skip if already in our list
-                if ( in_array( $url_hash, $url_hashes ) ) {
+                if ( in_array( $url_hash, $url_hashes, true ) ) {
                     continue;
                 }
                 // Check if already analyzed using new structure
@@ -585,7 +595,7 @@ class SEO_Issues_Manager {
         return array(
             'reachability'            => $reachability,
             'http_status'             => $http_status,
-            'redirect_to'             => ( $redirect_to !== '' ? $redirect_to : null ),
+            'redirect_to'             => ( '' !== $redirect_to ? $redirect_to : null ),
             'reachability_checked_at' => current_time( 'mysql' ),
         );
     }
@@ -629,7 +639,7 @@ class SEO_Issues_Manager {
         ), array(
             'url_id' => $url_record->id,
         ) );
-        if ( $result !== false ) {
+        if ( false !== $result ) {
             self::clear_stats_cache();
             return true;
         }
@@ -676,7 +686,7 @@ class SEO_Issues_Manager {
         if ( '' === $url ) {
             return false;
         }
-        $message = ( $reason !== '' ? $reason : __( 'URL not found or unavailable.', 'seo-booster' ) );
+        $message = ( '' !== $reason ? $reason : __( 'URL not found or unavailable.', 'seo-booster' ) );
         $results = array(
             'score'  => 0,
             'issues' => array(array(
@@ -801,7 +811,7 @@ class SEO_Issues_Manager {
             $front_id = absint( get_option( 'page_on_front' ) );
             if ( $front_id > 0 ) {
                 $home = untrailingslashit( home_url( '/' ) );
-                if ( $normalized === $home || $normalized === untrailingslashit( home_url() ) ) {
+                if ( $home === $normalized || untrailingslashit( home_url() ) === $normalized ) {
                     return $front_id;
                 }
             }
@@ -866,7 +876,7 @@ class SEO_Issues_Manager {
                     $fallback_url = (string) $term_link;
                 }
             }
-            if ( $fallback_url !== '' ) {
+            if ( '' !== $fallback_url ) {
                 $row = self::get_url_record_by_url( $fallback_url );
                 if ( $row ) {
                     $wpdb->update( $urls_table, array(
@@ -886,7 +896,7 @@ class SEO_Issues_Manager {
         ), array(
             'url_id' => $url_record->id,
         ) );
-        if ( $result !== false ) {
+        if ( false !== $result ) {
             self::clear_stats_cache();
             return true;
         }
@@ -921,7 +931,7 @@ class SEO_Issues_Manager {
             return true;
         }
         // Also check if post content has changed since last analysis
-        if ( $object_type === 'post' && $object_id ) {
+        if ( 'post' === $object_type && $object_id ) {
             $post = get_post( $object_id );
             if ( $post && $post->post_modified ) {
                 // Get the most recent analyzed analysis
@@ -1207,11 +1217,6 @@ class SEO_Issues_Manager {
         $where_values = array();
         // Only show URLs with possibilities
         $where_conditions[] = 'i.id IS NOT NULL';
-        // Severity filter
-        if ( !empty( $filters['severity'] ) ) {
-            $where_conditions[] = 'i.severity = %s';
-            $where_values[] = $filters['severity'];
-        }
         // Status filter: default to active so overview/list counts match the triage worklist.
         // Explicit status filters remain available for fixed/ignored records.
         $status_filter = self::normalize_user_status_filter( $filters['status'] ?? '' );
@@ -1236,10 +1241,12 @@ class SEO_Issues_Manager {
             $where_values[] = $search_term;
             $where_values[] = $search_term;
         }
-        list( $issue_filter_sql, $issue_filter_values ) = self::build_issue_key_filter_sql( $filters, 'i.issue_key' );
-        if ( $issue_filter_sql !== '' ) {
-            $where_conditions[] = $issue_filter_sql;
-            $where_values = array_merge( $where_values, $issue_filter_values );
+        // Type/severity/category select which URLs appear. Per-URL counts still
+        // include every matching-status finding so the collapsed number matches expand.
+        list( $exists_sql, $exists_values ) = self::build_url_has_matching_issue_sql( $filters, $status_filter, $issues_table );
+        if ( '' !== $exists_sql ) {
+            $where_conditions[] = $exists_sql;
+            $where_values = array_merge( $where_values, $exists_values );
         }
         $where_clause = implode( ' AND ', $where_conditions );
         $issue_join_condition = '';
@@ -1262,7 +1269,7 @@ class SEO_Issues_Manager {
             $gsc_select = 'COALESCE(MAX(gsc.gsc_clicks), 0) as gsc_clicks';
             $gsc_join = "LEFT JOIN (\n\t\t\t\tSELECT qk.page AS page_url, COALESCE(SUM(qkh.clicks), 0) AS gsc_clicks\n\t\t\t\tFROM {$qk_table} qk\n\t\t\t\tLEFT JOIN {$qkh_table} qkh ON qk.id = qkh.query_keywords_id\n\t\t\t\tGROUP BY qk.page\n\t\t\t) gsc ON gsc.page_url = u.url";
         }
-        $sql = "SELECT \n                    u.id,\n                    u.url,\n                    u.post_title,\n                    u.object_id,\n                    u.object_type,\n                    u.last_analyzed,\n                    u.reachability,\n                    u.http_status,\n                    u.redirect_to,\n                    COUNT(DISTINCT CASE WHEN {$actionable_sql} AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as total_issues,\n                    COUNT(DISTINCT CASE WHEN i.severity = 'critical' AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as critical_count,\n                    COUNT(DISTINCT CASE WHEN i.severity = 'high' AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as high_count,\n                    COUNT(DISTINCT CASE WHEN i.severity = 'medium' AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as medium_count,\n                    COUNT(DISTINCT CASE WHEN i.severity = 'low' AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as low_count,\n                    COUNT(DISTINCT CASE WHEN {$opportunity_sql} AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as opportunity_count,\n                    {$gsc_select},\n                    a.score,\n                    a.analyzed_at\n                FROM {$urls_table} u\n                LEFT JOIN {$analysis_table} a ON u.id = a.url_id\n                    AND a.status = 'analyzed'\n                    AND a.id = (\n                        SELECT MAX(a2.id) FROM {$analysis_table} a2\n                        WHERE a2.url_id = u.id AND a2.status = 'analyzed'\n                    )\n                LEFT JOIN {$issues_table} i ON u.id = i.url_id AND i.severity != 'good' AND i.is_sitewide = 0 {$issue_join_condition}\n                LEFT JOIN {$wpdb->posts} p ON u.object_type = 'post' AND u.object_id = p.ID\n                {$gsc_join}\n                WHERE {$where_clause}\n                AND (u.object_type != 'post' OR (p.post_type != 'attachment' AND {$exclusion_condition}) OR p.post_type IS NULL)\n                GROUP BY u.id, u.url, u.post_title, u.object_id, u.object_type, u.last_analyzed, u.reachability, u.http_status, u.redirect_to, a.score, a.analyzed_at";
+        $sql = "SELECT \n                    u.id,\n                    u.url,\n                    u.post_title,\n                    u.object_id,\n                    u.object_type,\n                    u.last_analyzed,\n                    u.reachability,\n                    u.http_status,\n                    u.redirect_to,\n                    COUNT(DISTINCT CASE WHEN {$actionable_sql} AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as total_issues,\n                    COUNT(DISTINCT CASE WHEN i.severity IN ('critical', 'error') AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as critical_count,\n                    COUNT(DISTINCT CASE WHEN i.severity IN ('high', 'warning') AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as high_count,\n                    COUNT(DISTINCT CASE WHEN i.severity = 'medium' AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as medium_count,\n                    COUNT(DISTINCT CASE WHEN i.severity = 'low' AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as low_count,\n                    COUNT(DISTINCT CASE WHEN {$opportunity_sql} AND {$active_status_sql} AND i.issue_key IS NOT NULL THEN i.issue_key END) as opportunity_count,\n                    {$gsc_select},\n                    a.score,\n                    a.analyzed_at\n                FROM {$urls_table} u\n                LEFT JOIN {$analysis_table} a ON u.id = a.url_id\n                    AND a.status = 'analyzed'\n                    AND a.id = (\n                        SELECT MAX(a2.id) FROM {$analysis_table} a2\n                        WHERE a2.url_id = u.id AND a2.status = 'analyzed'\n                    )\n                LEFT JOIN {$issues_table} i ON u.id = i.url_id AND i.severity != 'good' AND i.is_sitewide = 0 {$issue_join_condition}\n                LEFT JOIN {$wpdb->posts} p ON u.object_type = 'post' AND u.object_id = p.ID\n                {$gsc_join}\n                WHERE {$where_clause}\n                AND (u.object_type != 'post' OR (p.post_type != 'attachment' AND {$exclusion_condition}) OR p.post_type IS NULL)\n                GROUP BY u.id, u.url, u.post_title, u.object_id, u.object_type, u.last_analyzed, u.reachability, u.http_status, u.redirect_to, a.score, a.analyzed_at";
         // Active-default worklist: only URLs with at least one matching active finding.
         $sql .= " HAVING COUNT(DISTINCT CASE WHEN (i.user_status = 'active' OR i.user_status = '0' OR i.user_status IS NULL) AND i.issue_key IS NOT NULL THEN i.issue_key END) > 0";
         // Handle sorting
@@ -1285,7 +1292,7 @@ class SEO_Issues_Manager {
             case 'score':
                 // For score sorting, use COALESCE to put NULLs last (treat NULL as -1)
                 // Higher scores first for DESC, lower scores first for ASC
-                if ( $order_safe === 'DESC' ) {
+                if ( 'DESC' === $order_safe ) {
                     $sql .= ' ORDER BY COALESCE(a.score, -1) DESC, u.last_analyzed DESC';
                 } else {
                     $sql .= ' ORDER BY COALESCE(a.score, 999) ASC, u.last_analyzed DESC';
@@ -1295,8 +1302,8 @@ class SEO_Issues_Manager {
                 // Critical first, then high, then GSC clicks, then remaining issue count.
                 $sql .= ' ORDER BY
 					CASE
-						WHEN COUNT(DISTINCT CASE WHEN i.severity = \'critical\' AND ' . $active_status_sql . ' AND i.issue_key IS NOT NULL THEN i.issue_key END) > 0 THEN 1
-						WHEN COUNT(DISTINCT CASE WHEN i.severity = \'high\' AND ' . $active_status_sql . ' AND i.issue_key IS NOT NULL THEN i.issue_key END) > 0 THEN 2
+						WHEN COUNT(DISTINCT CASE WHEN i.severity IN (\'critical\', \'error\') AND ' . $active_status_sql . ' AND i.issue_key IS NOT NULL THEN i.issue_key END) > 0 THEN 1
+						WHEN COUNT(DISTINCT CASE WHEN i.severity IN (\'high\', \'warning\') AND ' . $active_status_sql . ' AND i.issue_key IS NOT NULL THEN i.issue_key END) > 0 THEN 2
 						WHEN COUNT(DISTINCT CASE WHEN i.severity = \'medium\' AND ' . $active_status_sql . ' AND i.issue_key IS NOT NULL THEN i.issue_key END) > 0 THEN 3
 						ELSE 4
 					END ASC,
@@ -1359,7 +1366,7 @@ class SEO_Issues_Manager {
             $where_values[] = $search_term;
         }
         list( $issue_filter_sql, $issue_filter_values ) = self::build_issue_key_filter_sql( $filters, 'i.issue_key' );
-        if ( $issue_filter_sql !== '' ) {
+        if ( '' !== $issue_filter_sql ) {
             $where_conditions[] = $issue_filter_sql;
             $where_values = array_merge( $where_values, $issue_filter_values );
         }
@@ -1455,12 +1462,12 @@ class SEO_Issues_Manager {
         }
         // Check user-defined exclusion preference first (highest priority)
         $user_excluded = get_post_meta( $post_id, '_sb_exclude_from_analysis', true );
-        if ( $user_excluded === '1' ) {
+        if ( '1' === $user_excluded ) {
             return true;
         }
         // Check if post status is 'private'
         $post_status = get_post_status( $post_id );
-        if ( $post_status === 'private' ) {
+        if ( 'private' === $post_status ) {
             return true;
         }
         // Check if WooCommerce is active and this is a WooCommerce special page
@@ -1495,7 +1502,7 @@ class SEO_Issues_Manager {
         }
         // Check if post status is 'private'
         $post_status = get_post_status( $post_id );
-        if ( $post_status === 'private' ) {
+        if ( 'private' === $post_status ) {
             return true;
         }
         // Check if WooCommerce is active and this is a WooCommerce special page
@@ -1588,7 +1595,7 @@ class SEO_Issues_Manager {
                 'last_analyzed'  => current_time( 'mysql' ),
                 'analysis_count' => 1,
             ) );
-            if ( $url_result === false ) {
+            if ( false === $url_result ) {
                 Utils::log( 'Failed to save homepage URL record for sitewide analysis', 2 );
                 return false;
             }
@@ -1609,7 +1616,7 @@ class SEO_Issues_Manager {
         if ( !empty( $results['issues'] ) ) {
             foreach ( $results['issues'] as $issue ) {
                 // Only count issues that are not "good" severity
-                if ( isset( $issue['severity'] ) && $issue['severity'] !== 'good' ) {
+                if ( isset( $issue['severity'] ) && 'good' !== $issue['severity'] ) {
                     ++$possibility_count;
                 }
             }
@@ -1623,7 +1630,7 @@ class SEO_Issues_Manager {
         );
         // Insert new analysis record
         $analysis_result = $wpdb->insert( $analysis_table, $insert_data );
-        if ( $analysis_result === false ) {
+        if ( false === $analysis_result ) {
             Utils::log( 'Sitewide SEO analysis failed: could not save analysis record', 2 );
             return false;
         }
@@ -1802,7 +1809,7 @@ class SEO_Issues_Manager {
         // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix + hardcoded slug; values use placeholders.
         $stats = $wpdb->get_row( "SELECT \n                COUNT(*) as total_issues,\n                SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END) as critical,\n                SUM(CASE WHEN severity = 'error' THEN 1 ELSE 0 END) as error,\n                SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) as high,\n                SUM(CASE WHEN severity = 'warning' THEN 1 ELSE 0 END) as warning,\n                SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END) as medium,\n                SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END) as low,\n                SUM(CASE WHEN severity = 'good' THEN 1 ELSE 0 END) as good\n            FROM {$issues_table}\n            WHERE is_sitewide = 1\n            AND (user_status = 'active' OR user_status = '0' OR user_status IS NULL)", ARRAY_A );
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        return ( $stats ?: array(
+        return ( $stats ? $stats : array(
             'total_issues' => 0,
             'critical'     => 0,
             'error'        => 0,
@@ -1950,7 +1957,7 @@ class SEO_Issues_Manager {
         $out = array();
         foreach ( $rows as $row ) {
             $url = ( isset( $row['url'] ) ? (string) $row['url'] : '' );
-            if ( $url === '' ) {
+            if ( '' === $url ) {
                 continue;
             }
             $out[] = array(
@@ -1965,6 +1972,46 @@ class SEO_Issues_Manager {
     }
 
     /**
+     * Type/severity/category filters as an EXISTS clause.
+     *
+     * Used so those filters pick which URLs appear without shrinking the
+     * per-URL possibility counts shown in the list.
+     *
+     * @since 7.4.8
+     * @param array  $filters       Request filters.
+     * @param string $status_filter Normalized user_status (active, fixed, ignored_*).
+     * @param string $issues_table  Prefixed sb2_seo_issues table name.
+     * @return array{0: string, 1: array<int, string>} EXISTS SQL (or empty) and values.
+     */
+    public static function build_url_has_matching_issue_sql( $filters, $status_filter, $issues_table ) {
+        $match_conditions = array('i_match.url_id = u.id', 'i_match.is_sitewide = 0', "i_match.severity != 'good'");
+        $match_values = array();
+        $has_finding_filter = false;
+        if ( !empty( $filters['severity'] ) ) {
+            $match_conditions[] = 'i_match.severity = %s';
+            $match_values[] = $filters['severity'];
+            $has_finding_filter = true;
+        }
+        list( $issue_filter_sql, $issue_filter_values ) = self::build_issue_key_filter_sql( $filters, 'i_match.issue_key' );
+        if ( '' !== $issue_filter_sql ) {
+            $match_conditions[] = $issue_filter_sql;
+            $match_values = array_merge( $match_values, $issue_filter_values );
+            $has_finding_filter = true;
+        }
+        if ( !$has_finding_filter ) {
+            return array('', array());
+        }
+        if ( 'active' === $status_filter ) {
+            $match_conditions[] = "(i_match.user_status = 'active' OR i_match.user_status = '0' OR i_match.user_status IS NULL)";
+        } elseif ( in_array( $status_filter, array('fixed', 'ignored_temp', 'ignored_permanent'), true ) ) {
+            $match_conditions[] = 'i_match.user_status = %s';
+            $match_values[] = $status_filter;
+        }
+        $sql = 'EXISTS (SELECT 1 FROM ' . $issues_table . ' i_match WHERE ' . implode( ' AND ', $match_conditions ) . ')';
+        return array($sql, $match_values);
+    }
+
+    /**
      * Build SQL fragment for issue key / category filters.
      *
      * @since 7.2.3
@@ -1976,7 +2023,7 @@ class SEO_Issues_Manager {
         if ( !empty( $filters['issue_type'] ) ) {
             return array("{$column} = %s", array($filters['issue_type']));
         }
-        if ( !empty( $filters['issue_category'] ) && $filters['issue_category'] === 'ai_readiness' ) {
+        if ( !empty( $filters['issue_category'] ) && 'ai_readiness' === $filters['issue_category'] ) {
             $keys = Ai_Readiness_Registry::get_issue_keys();
             if ( empty( $keys ) ) {
                 return array('1=0', array());

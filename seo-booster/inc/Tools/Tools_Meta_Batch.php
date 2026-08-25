@@ -78,7 +78,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 
 		if ( ! self::ai_is_available() ) {
 			$message = Tools_Meta_Scanner::get_ai_unavailable_message();
-			return $message !== '' ? $message : __( 'AI is not configured for meta generation.', 'seo-booster' );
+			return '' !== $message ? $message : __( 'AI is not configured for meta generation.', 'seo-booster' );
 		}
 
 		return '';
@@ -106,7 +106,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 				: Tools_Meta_Scanner::get_user_post_types()
 		);
 
-		if ( $process_scope === 'all_matching' ) {
+		if ( 'all_matching' === $process_scope ) {
 			if ( empty( $filters ) ) {
 				wp_send_json_error( array( 'message' => __( 'Select at least one scan filter.', 'seo-booster' ) ) );
 			}
@@ -207,7 +207,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 				'post_id'      => $post_id,
 				'post_title'   => $post->post_title,
 				'post_type'    => $post->post_type,
-				'edit_url'     => get_edit_post_link( $post_id, 'raw' ) ?: '',
+				'edit_url'     => get_edit_post_link( $post_id, 'raw' ) ? get_edit_post_link( $post_id, 'raw' ) : '',
 				'skipped'      => true,
 				'message'      => __( 'Skipped: selected fields already have values. Enable overwrite to update.', 'seo-booster' ),
 				'before'       => $before,
@@ -245,7 +245,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 			'post_id'      => $post_id,
 			'post_title'   => $post->post_title,
 			'post_type'    => $post->post_type,
-			'edit_url'     => get_edit_post_link( $post_id, 'raw' ) ?: '',
+			'edit_url'     => get_edit_post_link( $post_id, 'raw' ) ? get_edit_post_link( $post_id, 'raw' ) : '',
 			'before'       => $before,
 			'after'        => $after,
 			'generated'    => $picked,
@@ -259,7 +259,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 		return array(
 			'post_id'    => (int) $item_id,
 			'post_title' => $post ? $post->post_title : '',
-			'edit_url'   => get_edit_post_link( $item_id, 'raw' ) ?: '',
+			'edit_url'   => get_edit_post_link( $item_id, 'raw' ) ? get_edit_post_link( $item_id, 'raw' ) : '',
 		);
 	}
 
@@ -308,7 +308,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 		}
 
 		$batch_id = isset( $_POST['batch_id'] ) ? sanitize_text_field( wp_unslash( $_POST['batch_id'] ) ) : '';
-		if ( $batch_id === '' ) {
+		if ( '' === $batch_id ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid batch ID', 'seo-booster' ) ) );
 		}
 
@@ -375,7 +375,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 		if ( ! empty( $writable_fields['title'] ) && ! empty( $generated['titles'] ) && is_array( $generated['titles'] ) ) {
 			foreach ( $generated['titles'] as $title ) {
 				$title = trim( (string) $title );
-				if ( $title !== '' ) {
+				if ( '' !== $title ) {
 					$picked['title'] = SEO_Meta_Writer::truncate_title( $title );
 					break;
 				}
@@ -385,7 +385,7 @@ class Tools_Meta_Batch extends Tools_Batch_Base {
 		if ( ! empty( $writable_fields['description'] ) && ! empty( $generated['descriptions'] ) && is_array( $generated['descriptions'] ) ) {
 			foreach ( $generated['descriptions'] as $description ) {
 				$description = trim( (string) $description );
-				if ( $description !== '' ) {
+				if ( '' !== $description ) {
 					$picked['description'] = SEO_Meta_Writer::truncate_description( $description );
 					break;
 				}

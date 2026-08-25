@@ -67,7 +67,14 @@ class Link_Checks extends Abstract_Checks {
 		}
 
 		if ( $internal > 0 ) {
-			$results->add_good( 'has_internal_links', sprintf( __( 'Found %d internal link(s).', 'seo-booster' ), $internal ) );
+			$results->add_good(
+				'has_internal_links',
+				sprintf(
+					/* translators: %d: number of internal links */
+					__( 'Found %d internal link(s).', 'seo-booster' ),
+					$internal
+				)
+			);
 		}
 	}
 
@@ -87,7 +94,14 @@ class Link_Checks extends Abstract_Checks {
 		}
 
 		if ( $external > 0 ) {
-			$results->add_good( 'has_external_links', sprintf( __( 'Found %d external link(s).', 'seo-booster' ), $external ) );
+			$results->add_good(
+				'has_external_links',
+				sprintf(
+					/* translators: %d: number of external links */
+					__( 'Found %d external link(s).', 'seo-booster' ),
+					$external
+				)
+			);
 		}
 	}
 
@@ -115,7 +129,14 @@ class Link_Checks extends Abstract_Checks {
 		}
 
 		if ( $suspicious > 0 ) {
-			$results->add_warning( 'suspicious_links', sprintf( __( '%d link(s) use URL shorteners. Consider using direct links for better SEO.', 'seo-booster' ), $suspicious ) );
+			$results->add_warning(
+				'suspicious_links',
+				sprintf(
+					/* translators: %d: number of links using URL shorteners */
+					__( '%d link(s) use URL shorteners. Consider using direct links for better SEO.', 'seo-booster' ),
+					$suspicious
+				)
+			);
 		}
 	}
 
@@ -191,7 +212,11 @@ class Link_Checks extends Abstract_Checks {
 		if ( ! empty( $broken ) ) {
 			$results->add_error(
 				'broken_external_links',
-				sprintf( __( '%d broken external link(s) found. These links return a 404 and should be fixed or removed.', 'seo-booster' ), count( $broken ) ),
+				sprintf(
+					/* translators: %d: number of broken external links */
+					__( '%d broken external link(s) found. These links return a 404 and should be fixed or removed.', 'seo-booster' ),
+					count( $broken )
+				),
 				array(
 					'broken_links'  => $broken,
 					'total_checked' => $checked,
@@ -202,7 +227,11 @@ class Link_Checks extends Abstract_Checks {
 		if ( ! empty( $redirected ) ) {
 			$results->add_warning(
 				'redirected_external_links',
-				sprintf( __( '%d redirected external link(s) found. Consider updating these links to point directly to the final destination.', 'seo-booster' ), count( $redirected ) ),
+				sprintf(
+					/* translators: %d: number of redirected external links */
+					__( '%d redirected external link(s) found. Consider updating these links to point directly to the final destination.', 'seo-booster' ),
+					count( $redirected )
+				),
 				array(
 					'redirected_links' => $redirected,
 					'total_checked'    => $checked,
@@ -211,7 +240,14 @@ class Link_Checks extends Abstract_Checks {
 		}
 
 		if ( empty( $broken ) && empty( $redirected ) && $checked > 0 ) {
-			$results->add_good( 'external_links_ok', sprintf( __( 'All %d checked external link(s) are working correctly.', 'seo-booster' ), $checked ) );
+			$results->add_good(
+				'external_links_ok',
+				sprintf(
+					/* translators: %d: number of external links checked */
+					__( 'All %d checked external link(s) are working correctly.', 'seo-booster' ),
+					$checked
+				)
+			);
 		}
 	}
 
@@ -274,7 +310,11 @@ class Link_Checks extends Abstract_Checks {
 		if ( ! empty( $broken ) ) {
 			$results->add_error(
 				'broken_internal_links',
-				sprintf( __( '%d broken internal link(s) found. These links return a 404 and should be fixed or removed.', 'seo-booster' ), count( $broken ) ),
+				sprintf(
+					/* translators: %d: number of broken internal links */
+					__( '%d broken internal link(s) found. These links return a 404 and should be fixed or removed.', 'seo-booster' ),
+					count( $broken )
+				),
 				array(
 					'broken_links'  => $broken,
 					'total_checked' => $checked,
@@ -285,7 +325,11 @@ class Link_Checks extends Abstract_Checks {
 		if ( ! empty( $redirected ) ) {
 			$results->add_warning(
 				'redirected_internal_links',
-				sprintf( __( '%d redirected internal link(s) found. Consider updating these links to point directly to the final destination.', 'seo-booster' ), count( $redirected ) ),
+				sprintf(
+					/* translators: %d: number of redirected internal links */
+					__( '%d redirected internal link(s) found. Consider updating these links to point directly to the final destination.', 'seo-booster' ),
+					count( $redirected )
+				),
 				array(
 					'redirected_links' => $redirected,
 					'total_checked'    => $checked,
@@ -294,7 +338,14 @@ class Link_Checks extends Abstract_Checks {
 		}
 
 		if ( empty( $broken ) && empty( $redirected ) && $checked > 0 ) {
-			$results->add_good( 'internal_links_ok', sprintf( __( 'All %d checked internal link(s) are working correctly.', 'seo-booster' ), $checked ) );
+			$results->add_good(
+				'internal_links_ok',
+				sprintf(
+					/* translators: %d: number of internal links checked */
+					__( 'All %d checked internal link(s) are working correctly.', 'seo-booster' ),
+					$checked
+				)
+			);
 		}
 	}
 }
